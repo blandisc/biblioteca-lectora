@@ -1,165 +1,191 @@
-# Biblioteca Lectora: visión de producto (v0.1)
+# Biblioteca Lectora: visión de producto (v0.2)
 
-> Documento de trabajo. Fecha: octubre 2026. Las suposiciones están marcadas con **[Supuesto]** y las preguntas abiertas están al final.
+> Documento de trabajo, octubre 2026.
+> **Cambios desde v0.1:** se confirman el contexto (Calibre + Google Drive, uso personal, iPhone Pro), la investigación de las guías oficiales del iPhone Duo, el soporte nativo para macOS y la decisión del motor de lectura.
+
+## 0. Contexto confirmado
+
+| Tema | Respuesta |
+|---|---|
+| Biblioteca actual | **Calibre**, con la biblioteca en Google Drive para no perder libros |
+| Dispositivo principal | iPhone Pro de última generación (compatible con Apple Intelligence) |
+| Plataformas | **iPhone, iPhone Duo, iPad, macOS nativo y web** |
+| Alcance | **Uso personal** ahora; más adelante, versión pública quitando módulos |
 
 ## 1. La tesis en una frase
 
-**Tu biblioteca, tu servidor y tu cerebro en un solo lector.** Calibre te da control pero tiene mala experiencia de lectura. Kindle y Apple Books leen bien pero te encierran. Readwise saca valor de tus subrayados pero no gestiona libros. Nadie junta las tres cosas, y ese hueco es el producto.
+**Tu biblioteca, tu servidor y tu cerebro en un solo lector.** Calibre te da control pero tiene mala experiencia de lectura. Kindle y Apple Books leen bien pero te encierran. Readwise saca valor de los subrayados pero no gestiona libros. Nadie cubre el ciclo completo: conseguir el libro (bot), leerlo, subrayar, recibir insights y que todo se quede en tu sistema.
 
 ## 2. Panorama del mercado
 
 | Producto | En qué gana | En qué falla (tu oportunidad) |
 |---|---|---|
-| **Calibre / calibre-web** | Metadatos, conversión, control total | La experiencia de lectura es fea, no tiene app nativa buena y no saca insights |
-| **Kindle** | Tipografía, sincronización, ecosistema | Cerrado, DRM, mal con tus EPUB, los subrayados quedan atrapados |
+| **Calibre / calibre-web** | Metadatos, conversión, control total | Lectura fea, sin app nativa buena, sin insights |
+| **Kindle** | Tipografía, sincronización | Cerrado, DRM, los subrayados quedan atrapados |
 | **Apple Books** | Pulido nativo | Gestión de biblioteca pobre, sin API, sin insights |
-| **Readwise Reader** | Subrayados, repaso espaciado, IA | Pensado para artículos. Lo de "biblioteca de libros" es secundario y no es tu servidor |
-| **KOReader / Moon+ / Yomu / Readest** | Lectores potentes y abiertos | Interfaz técnica o sin capa de conocimiento |
-| **Thorium (Readium)** | Estándares, accesibilidad | Solo escritorio, experiencia genérica |
+| **Readwise Reader** | Subrayados, repaso, IA | Pensado para artículos; no es tu servidor |
+| **Readest / KOReader / Yomu** | Lectores abiertos y potentes | Sin capa de conocimiento personal ni integración con tu bot |
 
-**Conclusión:** la diferencia no estará en "otro lector EPUB". Estará en el **ciclo completo**: conseguir el libro (bot), leerlo (lector excelente), subrayar, que el modelo te devuelva algo (insights) y que eso se quede en tu sistema (Readwise / servidor).
-
-## 3. Usuario objetivo
-
-**Primario (v1): tú.** Un lector intenso y técnico, con un servidor propio y un bot de Telegram, que lee en iPhone y Mac y quiere ser dueño de sus datos.
-
-**Secundario (si después se vuelve producto):** lectores de no ficción que ya pagan Readwise, usuarios de Calibre que odian su interfaz y la comunidad self-hosted (r/selfhosted, usuarios de calibre-web, Kavita o Audiobookshelf).
-
-> Recomendación: **construye primero para ti (single-user, self-hosted)**. Es más rápido, evita problemas legales y de App Store (ver §9) y te da un producto real que luego puedes abrir.
-
-## 4. Arquitectura conceptual
+## 3. Arquitectura
 
 ```
-┌──────────── Clientes ────────────┐
-│  iPhone / iPhone plegable        │
-│  iPad · Mac · Web                │
-└───────────────┬──────────────────┘
-                │ API propia (REST/GraphQL + sync)
-┌───────────────▼──────────────────┐        ┌──────────────┐
-│     TU SERVIDOR (fuente de verdad)│◄──────►│ Bot Telegram │
-│  · Archivos (EPUB/PDF)           │ misma  └──────────────┘
-│  · Metadatos (Calibre DB/OPDS)   │ API / cola de trabajos
-│  · Subrayados + progreso         │
-│  · LLM local (Ollama) + vectores │
-└───────────────┬──────────────────┘
-                │ push de subrayados (v2 API)
-         ┌──────▼──────┐
-         │  Readwise   │  ← destino de conocimiento, no backend
-         └─────────────┘
+┌────────────────────────── Clientes ───────────────────────────┐
+│  App Apple (SwiftUI multiplataforma)          Web (TypeScript)│
+│  iPhone · iPhone Duo · iPad · Mac nativo                      │
+│        └──── Motor de lectura compartido (foliate-js) ────┘   │
+└───────────────────────────────┬───────────────────────────────┘
+                                │ API propia + sincronización
+┌───────────────────────────────▼───────────────────────────────┐
+│                     TU SERVIDOR (fuente de verdad)            │
+│  API (FastAPI)  ◄──────────────►  Bot de Telegram             │
+│     │                cola de trabajos compartida              │
+│     ├─ Adaptador Calibre (calibredb / content server)         │
+│     ├─ Postgres + pgvector: subrayados, progreso, embeddings  │
+│     └─ LLM local (Ollama)                                     │
+└──────┬─────────────────────────────────────────┬──────────────┘
+       │ respaldo programado (rclone, 1 vía)     │ push de subrayados
+  ┌────▼─────────┐                         ┌─────▼────┐
+  │ Google Drive │                         │ Readwise │
+  └──────────────┘                         └──────────┘
 ```
 
-### Decisión clave: Readwise **no** debe ser el backend
+### 3.1 Calibre + Google Drive: cambiar de "sincronizar" a "respaldar"
+**Riesgo real:** tener la biblioteca *viva* de Calibre dentro de una carpeta sincronizada con Drive es una causa conocida de corrupción. Hay reportes de que Drive renombra carpetas, que choca con Calibre mientras escribe en `metadata.db` y que da errores de "archivo no sincronizable" al editar metadatos.
 
-Readwise es un servicio de **subrayados y repaso**. Su API pública sirve para exportar e importar subrayados (endpoint `v2/export` con paginación) y para manejar documentos de Reader, con límites de unos 20 req/min **[verificar en la documentación oficial]**. No está hecha para guardar y servir tu biblioteca de archivos, ni para metadatos estilo Calibre, ni para sincronizar la posición de lectura en tiempo real.
+**Recomendación:**
+- La biblioteca de Calibre vive en **disco local del servidor**.
+- Un respaldo programado de **una sola vía** (`rclone sync` o `rclone copy` a Drive, por ejemplo cada noche y con versionado) mantiene tu seguridad sin el riesgo de corrupción.
+- La app **nunca escribe directo** en `metadata.db`. Las lecturas se hacen por el content server de Calibre o leyendo la base en modo solo lectura. Las escrituras de metadatos pasan por `calibredb`, que respeta los bloqueos de Calibre.
+- Los subrayados, el progreso y los embeddings van en **una base propia** (Postgres) y se ligan al libro por el ID de Calibre más un hash del archivo. Calibre sigue siendo el catálogo; tu base es la memoria.
 
-**Rol correcto:** Readwise funciona como **integración de primera clase**. Cada subrayado se envía a Readwise para que aparezca en tu Daily Review, y de forma opcional se importan los subrayados que ya tienes allí. Si Readwise cambia precios o API, tu app sigue funcionando.
+### 3.2 Readwise: destino, no backend
+Su API sirve para subrayados y repaso, no para servir archivos ni metadatos. Cada subrayado se envía a Readwise para tu Daily Review; si Readwise cambia, tu app sigue funcionando.
 
-### El bot de Telegram como "otro cliente"
+### 3.3 El bot de Telegram como otro cliente
+La lógica del bot se pasa a un **servicio de trabajos compartido** (`fetch_book`, `import_to_calibre`, `notify`). El bot y la app lo invocan igual. Los flujos quedan así:
+- `/libro X` en Telegram → el libro entra a Calibre y la app recibe un push: "listo para leer".
+- "Conseguir" en la app → se dispara el mismo trabajo.
+- Desde el bot se puede pedir el digest semanal de insights o "mándame mis subrayados de X".
 
-El bot y la app no deben hablar entre sí. Los dos hablan con **el mismo servidor**:
+## 4. Decisión técnica central: un solo motor de lectura para las 4 plataformas
 
-- En Telegram escribes `/libro Sapiens`. El servidor descarga el libro, normaliza metadatos y lo agrega a la biblioteca. La app recibe un push: *"Sapiens está listo"* y lo descarga para leer sin conexión.
-- En la app buscas un libro que no tienes y tocas "Conseguir". Se dispara **el mismo trabajo** que usa el bot.
-- Desde el bot: `/progreso`, `/insights semana` o "mándame mis subrayados de X".
+Hallazgo: **Readium Swift no soporta macOS nativo** (solo iOS/iPadOS; para Mac habría que usar Catalyst o "Designed for iPad"). Como quieres **Mac nativo + web**, tener dos motores (Readium en Apple y otro en web) implica dos paginaciones distintas y **anclas de subrayados que no coinciden** entre plataformas.
 
-Eso implica refactorizar la lógica del bot a un **servicio o cola de trabajos** (por ejemplo `jobs/fetch_book`) que ambos invoquen.
+**Recomendación: shell nativo + motor compartido**
+- **Shell 100 % nativo en SwiftUI** (un target multiplataforma para iOS, iPadOS y macOS reales, no Catalyst): biblioteca, navegación, ajustes, panel de insights, gestos, Duo y widgets.
+- **Motor de lectura: foliate-js** dentro de `WKWebView` en Apple y directo en la web. Soporta EPUB, MOBI, AZW3, FB2, CBZ y PDF (experimental vía PDF.js). Readest lo usa en producción en macOS e iOS.
+- **Por qué no se nota "web":** Apple Books también renderiza EPUB con WebKit. Lo que da la sensación premium son el shell, la tipografía, las transiciones y los gestos nativos, y eso queda en SwiftUI.
+- **Beneficio clave:** las mismas anclas (EPUB CFI) en las cuatro plataformas. Subrayas en el iPhone y aparece exacto en el Mac y la web.
+- **Puntos técnicos a cuidar** (según el README de foliate-js): WebKit obliga a `allow-scripts` en el iframe, así que no se ejecutan scripts del libro. Además, la desofuscación de fuentes usa Web Crypto, que requiere un contexto seguro: hay que servir el motor con un *URL scheme handler* propio o incluir SHA-1 en JS.
 
-## 5. Pilares de la experiencia ("inigualable")
+Alternativa descartada: Readium en iOS + Catalyst en Mac + Readium Web. Da más pulido "de fábrica" en iOS, pero el Mac no sería nativo y habría dos motores que mantener.
 
-### 5.1 Lectura que se siente premium
-- Tipografía de verdad: separación silábica en español, justificado con buen espaciado, ligaduras, interlineado ajustable y fuentes curadas (Literata, Charter, Iowan, Atkinson para accesibilidad).
-- Paso de página con física convincente, sin lag y con modo scroll continuo.
-- Temas con intención: papel, sepia y noche OLED real, además de un modo "luz de vela" con temperatura cálida.
-- Cero interfaz mientras lees: un toque muestra todo y otro lo esconde.
+## 5. iPhone Duo: lo que dicen las guías oficiales de Apple
 
-### 5.2 Diseño para el iPhone plegable **[Supuesto: "iPhone Duo" = el iPhone plegable]**
-Los rumores apuntan a unas **5.3–5.5″ cerrado y unas 7.6–7.8″ abierto**. Hay que confirmarlo con las especificaciones oficiales de Apple.
-- **Cerrado:** una columna, pensado para leer con una mano.
-- **Abierto:** **doble página real**, como un libro físico. O bien un modo "estudio": libro a la izquierda y subrayados con insights a la derecha.
-- **Continuidad:** al abrir o cerrar el teléfono no se pierde ni una línea de la posición.
-- La misma lógica adaptativa sirve para iPad y Mac con ventanas redimensionables. Se diseña una vez con *size classes* y layouts adaptativos.
+El iPhone Duo se anunció el 9 de septiembre de 2026 y sale a la venta el 23 de octubre. Apple publicó la página *Designing for iPhone Duo* en las HIG y una serie de Tech Talks. Estas son las reglas que aplican a una app de lectura:
 
-### 5.3 Biblioteca estilo Calibre, pero bonita
-- Metadatos automáticos (Open Library, Google Books, ISBN) con portadas en alta resolución, corrección manual y edición por lotes.
-- Series, autores, etiquetas, estanterías inteligentes ("no ficción sin terminar", "agregados por el bot este mes").
-- Deduplicación y elección del mejor formato.
-- Compatibilidad con tu biblioteca Calibre existente (leer `metadata.db` u OPDS) para no migrar a mano.
+### 5.1 Reglas de la plataforma
+- **Decidir con size classes, nunca con la orientación ni con el idiom.** La pantalla exterior se comporta como cualquier iPhone (compact horizontal). La interior es **regular × regular**, como un iPad, y **no respeta las orientaciones soportadas**.
+- **Evitar `UIScreen.main`**, que es ambiguo con dos pantallas y quedará deprecado. Hay que usar el entorno o `window.windowScene.screen`.
+- **Safe areas asimétricas:** en la pantalla exterior la cámara está siempre presente y las barras (toolbars, tab bars) se colocan **en vertical, en el borde**. No hay que asumir márgenes iguales a ambos lados.
+- **Reserved regions (iOS 27.1):** `proxy.reservedRegions(kind: .division)` devuelve la bisagra y `.occlusion` devuelve la cámara FaceTime. La bisagra solo está *activa* cuando el teléfono está doblado; con `.includeInactive` se puede saber de antemano que existe.
+- **ArrangementView (iOS 27.1):** un contenedor entre la navegación y el contenido, con dos estilos. `.split` (principal | secundario) sirve para contenido que nunca debe taparse. `.overlay` (primer plano sobre fondo) sirve para controles sobre contenido.
+- **Poses:** libro (doblado a medias), mesa (apoyado; la región de arriba es para ver y la de abajo para tocar) y abierto plano. Hay que probarlas todas, más Split View en ambos lados.
+- **No desplazar contenido de scroll continuo** a través de la bisagra; el scroll ya se adapta solo.
+- **Herramientas:** Xcode 27.1, SDK de iOS 27.1, simulador iPhone Duo en Device Hub (abrir, cerrar, rotar, doblar) y el skill "App Resizability" de Xcode.
 
-### 5.4 Subrayar y pensar (el diferenciador)
-Al subrayar, el modelo local puede ofrecer:
-| Momento | Insight |
+### 5.2 Cómo se traduce al lector
+| Pose / pantalla | Experiencia |
 |---|---|
-| Al subrayar | "Explícame esto", "dame contexto", "¿qué contradice esta idea?" |
-| Al terminar el capítulo | Resumen basado **en tus subrayados**, no en todo el texto |
-| Entre libros | "Esta idea conecta con lo que subrayaste en *Pensar rápido, pensar despacio*" (búsqueda semántica sobre embeddings) |
-| Semanal | Digest: temas recurrentes en lo que lees y preguntas para reflexionar |
-| Repaso | Tarjetas generadas a partir de subrayados, que se sincronizan con Readwise |
+| **Cerrado** (exterior, compact) | Una columna para leer con una mano. Los controles van en la barra vertical que pone el sistema junto a la cámara. |
+| **Abierto plano** (interior, regular) | Por defecto, **doble página real**. Como hay una región `.division` (aunque esté inactiva), el lector elige un número par de columnas: dos páginas. |
+| **Pose libro** (bisagra activa) | Cada página ocupa exactamente una mitad, alineada a la región `.division`. **El teléfono se convierte en un libro físico.** El paso de página es un gesto de hojear. |
+| **Pose mesa** | Arriba el texto (lectura a distancia, ideal con TTS o leyendo en la mesa). Abajo los controles: página, reproducción de TTS, nota rápida. |
+| **Modo estudio** | `ArrangementView(.split)`: libro a la izquierda y subrayados con insights a la derecha. Ningún lado tapa al otro. |
+| **Panel de insights rápido** | `.overlay` con `overlayArrangementZIndex`: colapsado cuando está encima del texto y expandido cuando hay espacio al lado. |
+| **Biblioteca** | `NavigationSplitView` + `TabView` con `.defaultTabBarPlacement(.sidebar)` en la pantalla interior. |
+| **Continuidad** | Al abrir o cerrar se conserva el **CFI exacto**: la misma frase queda arriba, sin saltos. |
 
-**El modelo local, en dos niveles:**
-1. **En el dispositivo** (Apple Foundation Models, disponible desde iOS/macOS 26 en equipos con Apple Intelligence): explicaciones rápidas, privadas, sin conexión y sin costo.
-2. **En tu servidor** (Ollama u otro modelo de pesos abiertos): embeddings de toda tu biblioteca, conexiones entre libros y digests. La web usa este nivel.
+El modo scroll continuo **no** se parte en la bisagra; solo el modo paginado usa las mitades. Esto sigue la regla de Apple.
 
-## 6. Plataformas y stack recomendado
+La misma lógica adaptativa resuelve el **iPad** (regular, doble página en horizontal, Split View y Stage Manager) y el **Mac** (ventanas redimensionables). Se diseña una vez.
 
-| Opción | Pros | Contras |
+## 6. Plataformas y stack
+
+| Capa | Tecnología |
+|---|---|
+| App Apple | **SwiftUI multiplataforma** (iOS/iPadOS/macOS nativo), SDK de iOS 27.1 para Duo, SwiftData como caché local |
+| Motor de lectura | foliate-js en `WKWebView`, con un puente JS ↔ Swift para eventos de selección, CFI y paginación |
+| IA en dispositivo | **Apple Foundation Models**: compatible con tu iPhone Pro, en español desde la versión 26.1, sin conexión y sin costo; disponible también en Mac |
+| Web | TypeScript (Next.js o SvelteKit) + foliate-js; la IA viene del servidor |
+| Servidor | FastAPI (Python, encaja con Calibre y con bots típicos) + Postgres/pgvector + Ollama + adaptador de Calibre |
+| Sincronización | Progreso y subrayados como eventos con marca de tiempo, para fusionar sin conflictos entre dispositivos |
+
+### IA en dos niveles
+1. **En el dispositivo** (Foundation Models): "explícame esto", contexto de un pasaje y definiciones. Es instantáneo y privado.
+2. **En el servidor** (Ollama + embeddings): conexiones entre libros, "conversa con tu biblioteca" y digest semanal. La web y el bot usan este nivel.
+
+## 7. De uso personal a público: diseñar los "cortes" desde hoy
+
+Para poder quitar cosas después sin reescribir, cada integración va detrás de una interfaz y una *feature flag*:
+
+| Módulo | Personal | Público |
 |---|---|---|
-| **A. Nativo Apple (SwiftUI) + web aparte** ✅ | Mejor experiencia posible, acceso a Foundation Models, layouts del plegable y widgets | Dos bases de código de UI |
-| B. React Native / Expo | Un solo código | El motor de lectura y la tipografía fina pelean con el framework; se siente "app web" |
-| C. Flutter (+ flutter_readium) | Un solo código, hay wrapper de Readium | Menos nativo en Apple; Foundation Models vía puente |
+| `LibrarySource` | Calibre en tu servidor | Calibre, OPDS, carpeta local, iCloud ("trae tu biblioteca") |
+| `Acquisition` (bot/descargas) | ✅ Activo | ❌ Fuera de la app (riesgo con App Store y derechos de autor) |
+| `KnowledgeSink` | Readwise | Readwise, Obsidian, Markdown |
+| `AIProvider` | Foundation Models + tu Ollama | Foundation Models + servidor opcional |
+| Autenticación | Token único | Cuentas multiusuario |
 
-**Recomendación: opción A.** El objetivo es "experiencia inigualable", y eso en Apple significa nativo.
-- **iOS/iPadOS:** SwiftUI + **Readium Swift Toolkit** (EPUB, PDF, OPDS).
-- **Mac:** Readium Swift no da soporte nativo a macOS, así que se usa **Mac Catalyst** o "Designed for iPad" en Apple Silicon. Una alternativa es renderizar con WebKit y un motor JS compartido.
-- **Web:** TypeScript + Readium Web (`@readium/navigator`) o **foliate-js**. La web se trata como **compañera** (leer, gestionar biblioteca, ver insights), no como la experiencia principal.
-- **Servidor:** una API propia (Python/FastAPI encaja si tu bot ya está en Python) + Postgres con pgvector + Ollama + almacenamiento de archivos. Calibre puede quedar detrás para conversión y metadatos.
+**Distribución personal:** iOS por Xcode o TestFlight (testers internos); Mac firmado y notarizado fuera de la App Store; web detrás de un acceso privado (Tailscale o Cloudflare Access).
 
-## 7. MVP y fases
+## 8. Fases
 
-**Fase 0: Fundación (2–3 semanas)**
-- API del servidor: listar libros, descargar archivo, metadatos, guardar progreso y subrayados.
-- Refactor del bot a un servicio de trabajos compartido.
+**Fase 0: Fundación del servidor**
+- Mover la biblioteca de Calibre a disco local y montar el respaldo con rclone a Drive.
+- API: catálogo (desde Calibre), descarga, progreso y subrayados.
+- Refactor del bot a la cola de trabajos compartida.
 
-**Fase 1: "Lo uso todos los días" (iOS)**
-- Biblioteca sincronizada con el servidor, lectura sin conexión, lector EPUB con buena tipografía.
-- Subrayados y notas sincronizados con el servidor y enviados a Readwise.
-- Push al llegar un libro desde Telegram.
+**Fase 1: Lector diario en iPhone**
+- Shell SwiftUI con biblioteca, foliate-js en WKWebView y tipografía cuidada.
+- Subrayados y progreso sincronizados; envío a Readwise; push cuando el bot agrega un libro.
 
-**Fase 2: Inteligencia**
-- "Explícame esto" con el modelo en el dispositivo.
-- Embeddings y conexiones entre libros en el servidor; digest semanal (en la app y por Telegram).
+**Fase 2: iPhone Duo + iPad + Mac**
+- Doble página, pose libro, pose mesa y modo estudio con `ArrangementView`.
+- El mismo target multiplataforma en Mac, con menús, atajos de teclado y varias ventanas.
 
-**Fase 3: Experiencia plegable + Mac + Web**
-- Doble página y modo estudio; Mac por Catalyst; web compañera.
+**Fase 3: Inteligencia**
+- "Explícame esto" con Foundation Models.
+- Embeddings, conexiones entre libros y digest semanal (en la app y por Telegram).
 
-**Fase 4 (opcional): Producto público**
-- Multiusuario, onboarding "conecta tu servidor / tu Calibre", modelo de precios.
+**Fase 4: Web compañera**
+- Biblioteca, lectura e insights desde cualquier navegador.
 
-**Métricas que importan (aunque seas el único usuario):** minutos leídos por semana, libros terminados, subrayados por libro y **% de subrayados que vuelves a ver** (la verdadera prueba del valor de los insights).
-
-## 8. Funciones "wow" para considerar
-- **Conversa con el libro**, con citas que llevan a la página exacta.
-- **Mapa de ideas** de tu biblioteca: un grafo con los temas que más subrayas.
-- **Lectura híbrida**: TTS de alta calidad que continúa donde te quedaste, por ejemplo al subirte al coche.
-- **Widget / Live Activity**: progreso del libro actual y "la cita de hoy".
-- **Atajos y App Intents**: "Siri, ¿qué subrayé ayer?"
+**Fase 5 (opcional): Versión pública** con los cortes del §7.
 
 ## 9. Riesgos
 
 | Riesgo | Mitigación |
 |---|---|
-| **Legal / App Store:** si el bot descarga libros de fuentes sin licencia, Apple rechazará una app pública que lo integre | Para uso personal: distribuye por TestFlight o build propio. Para producto público: plantéalo como "trae tu propia biblioteca" (OPDS, Calibre, archivos propios) y deja la descarga fuera de la app |
-| Dependencia de Readwise | Usarlo solo como destino; la fuente de verdad es tu servidor |
-| El motor de lectura consume todo el tiempo | Usar Readium/foliate en lugar de escribir un motor desde cero |
-| Foundation Models: idiomas y dispositivos limitados | El servidor sirve como respaldo; español ya está soportado |
-| Alcance excesivo | Fases estrictas; el MVP es solo iOS + servidor |
+| Corrupción de Calibre por Drive | Biblioteca local + respaldo de una vía (§3.1) |
+| Las APIs del Duo (iOS 27.1) son nuevas y pueden cambiar | Empezar por size classes y contenedores estándar; las APIs de reserved regions y ArrangementView van detrás de `if #available` |
+| La calidad de foliate-js en WKWebView | Hacer primero un *spike* de una semana: paginación, selección, CFI y rendimiento en un libro largo |
+| Bot y App Store en la versión pública | Módulo `Acquisition` removible (§7) |
+| Alcance excesivo | Fases estrictas; el MVP es servidor + iPhone |
 
-## 10. Preguntas abiertas (necesito tus respuestas)
-1. **¿Qué corre hoy en tu servidor?** ¿Calibre, calibre-web, una carpeta de EPUB? ¿En qué lenguaje está el bot?
-2. **"iPhone Duo"**: ¿te refieres al iPhone plegable o a otra cosa (por ejemplo, tener dos dispositivos a la vez)?
-3. **¿Uso personal o producto para el mercado?** Esto cambia el tema legal, multiusuario y precios.
-4. **¿Qué modelo local tienes en mente?** ¿Ya usas Ollama u otro en el servidor? ¿Qué GPU o RAM tiene?
-5. **Formatos:** ¿solo EPUB, o también PDF, cómics (CBZ) y artículos web?
-6. **¿Lees más en español, inglés o ambos?** Influye en la separación silábica y en el modelo.
+## 10. Siguientes decisiones
+1. ¿En qué lenguaje está tu bot de Telegram y dónde corre el servidor (VPS, casa, NAS)? ¿Tiene GPU para Ollama?
+2. ¿Qué formatos lees: solo EPUB, o también PDF y cómics?
+3. ¿Lees más en español, inglés o ambos?
+4. ¿Hacemos primero el *spike* técnico (foliate-js en una app SwiftUI) o primero la API del servidor?
 
 ---
-Fuentes: [Readium Projects](https://readium.org/development/projects) · [flutter_readium (nota sobre macOS)](https://github.com/Notalib/flutter_readium) · [Apple Foundation Models (9to5Mac)](https://9to5mac.com/2025/09/29/apple-intelligence-ios-26-models-developers/) · [iPhone Fold: rumores (AppleInsider)](https://appleinsider.com/articles/26/04/24/iphone-fold-or-iphone-ultra-what-to-expect-from-the-folding-iphone) · [Readwise MCP (referencia de la API)](https://github.com/arnaldo-delisio/readwise-mcp-enhanced)
+**Fuentes**
+- Apple Tech Talk: [Prepare your app for iPhone Duo](https://developer.apple.com/videos/play/tech-talks/111461/)
+- Apple Tech Talk: [Strike a Pose with Adaptive Layouts on iPhone Duo](https://developer.apple.com/videos/play/tech-talks/111463/)
+- HIG: [Designing for iPhone Duo](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo)
+- [Apple finally folded (Muzli, fechas del evento)](https://muz.li/blog/apple-event-2026-iphone-duo-designers/)
+- [foliate-js](https://github.com/johnfactotum/foliate-js) · [Readest vs Foliate](https://readest.com/compare/readest-vs-foliate)
+- [Readium Projects](https://readium.org/development/projects) · [flutter_readium (nota sobre macOS)](https://github.com/Notalib/flutter_readium)
+- [Apple Intelligence: idiomas y dispositivos](https://support.apple.com/en-mt/121115) · [Foundation Models (9to5Mac)](https://9to5mac.com/2025/09/29/apple-intelligence-ios-26-models-developers/)
+- MobileRead sobre Calibre en Google Drive: [hilo 1](https://www.mobileread.com/forums/showthread.php?p=2770892), [hilo 2](https://www.mobileread.com/forums/showthread.php?p=3154349)
