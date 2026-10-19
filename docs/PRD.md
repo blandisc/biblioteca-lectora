@@ -1,6 +1,12 @@
-# Biblioteca Lectora: PRD v2.0
+# Biblioteca Lectora: PRD v2.1
 
-> **Estado:** borrador para revisión · **Versión:** 2.0 · **Fecha:** 19 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+> **Estado:** borrador para revisión · **Versión:** 2.1 · **Fecha:** 19 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+>
+> **Cambios en v2.1:**
+> - **Readwise Reader** entra como integración de primera clase: importar originales y artículos, subrayados en ambos sentidos y progreso de Reader a la app (§4.6, investigación [06](investigacion/06-readwise-reader.md)).
+> - **IA:** ya no depende del Mac. Funciona en el iPhone y, de forma opcional, en la nube de Apple o con tu propia clave de Anthropic, OpenAI, xAI o Google (§4.5, investigación [07](investigacion/07-ia-dispositivo-y-nube.md)).
+> - **Subrayados de Kindle** (vía Readwise) ligados a tus libros: pasa a P0/P1.
+> - Sin columnas personalizadas ni plugins de Calibre.
 >
 > **Cambios en v2.0 (giro de arquitectura):**
 > - **Sin servidor propio.** Todo corre en tus dispositivos y la nube es **iCloud (CloudKit)**. Google Drive y OneDrive quedan como fuentes para importar.
@@ -49,7 +55,8 @@ Hoy, leer "en serio" con una biblioteca propia obliga a usar varias herramientas
 | U3 | Leo en el iPhone, lo despliego (Duo) y aparecen dos páginas enfrentadas en la misma frase. | P0 |
 | U4 | Subrayo con un gesto; aparece en el Mac, en la web y en Readwise con un enlace que vuelve al pasaje. | P0 |
 | U5 | Edito los metadatos de 30 libros a la vez en el Mac (serie, etiquetas, autor) en una tabla rápida. | P0 |
-| U6 | Mis subrayados de Kindle o Apple Books que están en Readwise aparecen en la app y alimentan los insights. | P1 |
+| U6 | Mis subrayados de Kindle que están en Readwise aparecen **dentro de mis EPUB**, en su lugar exacto, y alimentan los insights. | P0 |
+| U12 | Empiezo un libro en Reader y lo sigo en la app (o al revés); mis subrayados están en los dos lados. | P1 |
 | U7 | Activo la lectura guiada: un marcador avanza a mi ritmo y me ayuda a leer más rápido sin perder el contexto. | P1 |
 | U8 | Toco "Explícame" sobre un subrayado y recibo una respuesta local en menos de 2 s. | P1 |
 | U9 | Retomo una novela tras 2 semanas y leo "lo que va hasta aquí" sin spoilers. | P1 |
@@ -62,24 +69,23 @@ Hoy, leer "en serio" con una biblioteca propia obliga a usar varias herramientas
 ┌────────────── Tus dispositivos (todo el cómputo) ──────────────┐
 │  iPhone / iPhone Duo     iPad          Mac (centro de mando)   │
 │  · lector                · lector      · lector                │
-│  · IA ligera             · IA ligera   · administración tipo   │
-│  · índice local          · índice      │  Calibre              │
-│                                        · IA pesada en segundo  │
-│                                        │  plano (opcional)     │
+│  · IA nivel 0            · IA nivel 0  · administración tipo   │
+│  · índice semántico      · índice      │  Calibre              │
 │                                        · importación y OCR     │
-└───────────────┬────────────────────────────────┬───────────────┘
-                │ CKSyncEngine                   │ API de Readwise (v2)
-        ┌───────▼─────────────────────┐   ┌──────▼──────┐
-        │  iCloud: tu base de datos   │   │  Readwise   │ ⇄ subrayados
-        │  privada (CloudKit)         │   └─────────────┘
-        │  · catálogo y metadatos     │
-        │  · subrayados y progreso    │   Fuentes de importación:
-        │  · archivos (CKAsset)       │   Google Drive · OneDrive ·
-        └───────▲─────────────────────┘   Archivos · biblioteca Calibre
-                │ CloudKit JS
-        ┌───────┴───────┐
-        │ Web (estática)│  ← solo HTML y JS publicados; no es un servidor tuyo
-        └───────────────┘
+└───────┬───────────────────────┬────────────────────┬───────────┘
+        │ CKSyncEngine          │ HTTPS (opcional)   │ API Reader v3 + Readwise v2
+┌───────▼───────────────────┐ ┌─▼────────────────┐ ┌─▼─────────────────────────┐
+│ iCloud: tu base privada   │ │ IA en la nube:   │ │ Readwise Reader/Readwise  │
+│ (CloudKit)                │ │ PCC de Apple o   │ │ ⇄ subrayados              │
+│ · catálogo y metadatos    │ │ tu clave         │ │ ← originales, progreso,   │
+│ · subrayados y progreso   │ │ (Anthropic,      │ │   subrayados de Kindle    │
+│ · archivos (CKAsset)      │ │ OpenAI, xAI…)    │ └───────────────────────────┘
+│ · índice e insights       │ └──────────────────┘   Fuentes de importación:
+└───────▲───────────────────┘   Drive · OneDrive · Archivos · Calibre
+        │ CloudKit JS
+┌───────┴───────┐
+│ Web (estática)│  ← solo HTML y JS publicados; no es un servidor tuyo
+└───────────────┘
 ```
 
 ### 4.1 ¿Por qué iCloud y no Google Drive u OneDrive como base?
@@ -148,65 +154,92 @@ Hoy, leer "en serio" con una biblioteca propia obliga a usar varias herramientas
 - **PDF reflow:** en la v1.1 se apoyaba en Docling, en el servidor. Ahora pasa a **P2**: texto de PDFKit + análisis de layout con Vision para generar una vista reflow en el Mac, que se sincroniza como derivado.
 - **Guided View de cómics** (detección de viñetas) pasa a **P3**, con un modelo Core ML en el dispositivo.
 
-### 4.5 IA solo en el dispositivo
-| Nivel | Dónde | Para qué |
+### 4.5 IA: iPhone primero, nube opcional *[07]*
+
+Todo pasa por **una sola API** (`LanguageModelSession` de Foundation Models). En iOS 27, el protocolo `LanguageModel` permite poner otros modelos detrás de ella: MLX, Claude, Gemini y servidores compatibles con Chat Completions ✅. Cambiar de proveedor es un ajuste, no reescribir código.
+
+| Nivel | Qué es | Costo | Qué sale del dispositivo | Para qué |
+|---|---|---|---|---|
+| **0 · En el iPhone** | Modelo de Apple (iOS 27: nuevo, acepta imágenes, ~8K de contexto ✅) + opcional un modelo abierto de ~4B con MLX (Qwen3.5-4B, Gemma 4 E4B) | Gratis | Nada | Definir, explicar, traducir, etiquetar, flashcards, reflexión, "tus ideas clave", pre-lectura; resúmenes de capítulo por partes (lentos) |
+| **1 · Nube privada de Apple (PCC)** | Modelo más grande de Apple, ~32K de contexto, con razonamiento ✅ | Gratis para el desarrollador; límites diarios por usuario | Texto enviado a la nube privada de Apple (no se guarda) | Resúmenes de capítulo, "lo que va hasta aquí", personajes. ⚠️ Requiere el Small Business Program y un entitlement que se pide a Apple; hay que confirmar si aplica a una app personal en TestFlight |
+| **2 · Tu propia clave de API** | Anthropic, OpenAI, xAI, Google u OpenRouter, en el Llavero de iCloud | ~0.25–13 USD/mes para un lector intenso, según el modelo ⚠️ | **Solo los fragmentos necesarios**, siempre limitados a lo ya leído | Chat con tu biblioteca, conexiones profundas, digest, contraargumentos, mapas de argumentos |
+| **3 · Suscripciones** | Ver la tabla siguiente | Lo que ya pagas | Igual que el nivel 2 | Igual que el nivel 2 |
+
+**¿Se pueden usar tus suscripciones?**
+| Suscripción | ¿Se puede? | Cómo |
 |---|---|---|
-| **Ligera** | **Apple Foundation Models** en iPhone, iPad y Mac (~3B parámetros, contexto de ~4K tokens, español soportado) | Definir, explicar, traducir, etiquetar, flashcards, preguntas de reflexión, "ideas clave" a partir de tus subrayados |
-| **Pesada** | **El Mac como "cerebro"**, opcional: un modelo abierto con **MLX** (p. ej. Qwen3 8–14B, si tu Mac tiene 16–32 GB) en segundo plano | Resúmenes de capítulo, "lo que va hasta aquí", personajes, conexiones entre libros, digest. Los resultados se guardan como `Insight` en CloudKit y **aparecen en el iPhone aunque el Mac esté apagado después** |
-| **Búsqueda semántica** | Embeddings en cada dispositivo (`NLContextualEmbedding` de Apple o un modelo multilingüe pequeño en Core ML) + índice vectorial local (SQLite + sqlite-vec) | Indexar **tus subrayados** en todos los dispositivos (es poco texto); el texto completo solo del libro que estás leyendo, o de toda la biblioteca en el Mac |
+| **Claude Pro/Max** | ❌ con el inicio de sesión de claude.ai: Anthropic lo **prohíbe explícitamente** en apps de terceros ✅. ✅ **Max incluye créditos de API** (100 o 200 USD/mes): creas una API key en la consola y la pegas en la app ⚠️ confirmar en tu cuenta | Nivel 2 con tu clave |
+| **ChatGPT Plus/Pro** | ⚠️ Parcial. Existe **"Sign in with ChatGPT"** con uso del plan, pero en autoservicio solo para apps open-source que corren en tu máquina (encajaría en el Mac). En iOS no está documentado | Lo más seguro: API key de OpenAI |
+| **SuperGrok / X Premium** | ❌ No hay vía oficial | API key de xAI |
+| **Google AI Pro (Gemini)** | ❌ Google ha suspendido cuentas por usar su OAuth en terceros | API key de Gemini **con facturación** (el nivel gratis entrena con tus datos) |
+| **ChatGPT dentro de Apple Intelligence** | ❌ No hay API para que una app use esa integración | — |
 
-- **Sin Mac encendido:** todo lo ligero funciona en el iPhone. Los resúmenes de capítulo también pueden hacerse en el iPhone por partes (map-reduce con ~4K tokens), pero son lentos: se ejecutan cargando y con la app en segundo plano (`BGProcessingTask`).
-- **Antispoiler:** solo texto hasta la posición más lejana alcanzada, más una instrucción explícita al modelo, más validación de citas *[05 §5.0]*.
-- **iOS 27** ⚠️: nuevo modelo en el dispositivo y un modelo en **Private Cloud Compute** con más contexto. Sería una opción "en la nube privada de Apple", **apagada por defecto** y a verificar.
-- **Web:** muestra los insights ya calculados (sincronizados vía CloudKit); no genera IA propia.
+**Al revés: que tu Claude o ChatGPT lean tu biblioteca**
+- **Readwise MCP oficial:** Claude y ChatGPT ya pueden consultar tus subrayados de Readwise, incluidos los que la app sincroniza. Funciona sin hacer nada.
+- **P2:** un servidor MCP local en la app de Mac para Claude Desktop o Codex, con filtro antispoiler.
 
-### 4.6 Readwise: qué se puede meter y qué se puede sacar
+**Búsqueda semántica sin servidor**
+- Embeddings en el iPhone con **EmbeddingGemma-300M** (Core ML) e índice local en **sqlite-vec**.
+- **Tus subrayados** se indexan al instante, porque son poco texto.
+- **El texto completo** se indexa por etapas: primero el libro que estás leyendo, después los terminados, y el resto de noche con el iPhone cargando. Toda la biblioteca son ~600k fragmentos y **12–30 h de cómputo** acumulado ⚠️. El índice (~150 MB) se sincroniza por iCloud para no repetirlo en cada dispositivo.
+- Si el Mac lo permite, también puede ayudar a indexar; no es obligatorio.
 
-**Resumen:** Readwise **sí puede ser el "servidor" de tus subrayados**, en los dos sentidos. **No puede ser el almacén de tus libros**: su API no permite subir ni descargar archivos EPUB o PDF.
+**Reglas fijas**
+- **Antispoiler:** nunca se envía ni se usa texto posterior a tu posición más lejana; instrucción explícita al modelo; citas validadas *[05 §5.0]*.
+- **Privacidad:** el nivel 0 es el predeterminado. Los niveles 2 y 3 requieren activarlos y se muestra qué se envía. En "chat con tu biblioteca" solo salen los fragmentos recuperados; las citas se resuelven en el dispositivo para saltar a la frase exacta.
+- **Web:** muestra los insights ya calculados; con una clave de API puede hacer consultas de nivel 2.
 
-**Lo que podemos METER (desde la app)**
-| Qué | Cómo | Notas |
-|---|---|---|
-| **Subrayados con nota, etiquetas, color, fecha y ubicación** | `POST /api/v2/highlights/` (en lotes) ✅ | Campos: `text` (obligatorio), `title`, `author`, `image_url`, `source_url`, `source_type`, `category=books`, `note`, `location` + `location_type` (`page`/`order`), `highlighted_at`, **`highlight_url`** |
-| **Enlace de vuelta al pasaje exacto** | `highlight_url` = universal link `…/h/{uuid}` ✅ | Desde Readwise (web o Daily Review) tocas el subrayado y **abre la app en esa frase**. Reenviar con el mismo `highlight_url` **actualiza** en vez de duplicar |
-| Etiquetas en línea | Nota que empieza con `.etiqueta` ⚠️ | Por confirmar |
-| Editar o borrar un subrayado | `PATCH` / `DELETE /api/v2/highlights/{id}/` ⚠️ | Guardamos el `readwiseId` en `Annotation` |
-| Etiquetas del libro | `/api/v2/books/{id}/tags/` ⚠️ | |
-| Marcar la Daily Review como hecha | `POST /api/v2/review/complete/` ✅ | Si repasas dentro de la app |
+### 4.6 Readwise Reader y Readwise: qué se puede hacer *[06]*
 
-**Lo que podemos SACAR (hacia la app)**
-| Qué | Cómo | Para qué |
-|---|---|---|
-| **Todos tus subrayados de todas las fuentes** (Kindle, Apple Books, Kobo, Reader, artículos, podcasts…) con libro, autor, portada, nota, etiquetas y ubicación | `GET /api/v2/export/` con `updatedAfter` y `pageCursor` ✅ | Que tus **subrayados de Kindle** aparezcan junto al libro correspondiente de tu biblioteca y alimenten los insights. También trae **cambios hechos en Readwise** (notas o etiquetas editadas allá), que se fusionan de vuelta |
-| La **Daily Review** de hoy | `GET /api/v2/review/` ✅ | Mostrar tu repaso de Readwise dentro de la app y en el widget |
-| Documentos de **Reader** (artículos, PDFs guardados) y sus subrayados | `GET /api/v3/list/` (con `withHtmlContent`) ⚠️ | Opcional: leer artículos de Reader en nuestro lector. Devuelve **HTML procesado, no el archivo original** |
+**Resumen:** Reader **no puede ser el almacén** de tu biblioteca, pero sí puede ser **otra puerta de entrada y salida**. Puedes leer un libro en Reader o en la app y que tus subrayados estén en los dos lados. iCloud sigue siendo la fuente de verdad de archivos, metadatos, anclas exactas y progreso.
 
-**Lo que NO se puede hacer** (y por qué Readwise no sirve como almacén de libros)
-- ❌ **Subir un EPUB o PDF por API.** `POST /api/v3/save/` solo acepta una `url` pública (y HTML opcional); Reader descarga el archivo desde ahí. Sin servidor no tenemos una URL pública estable, y subir libros a Reader los mete en *su* biblioteca, no en la tuya.
-- ❌ **Descargar el archivo original** de un libro guardado en Reader: no hay endpoint para eso.
-- ❌ **Crear subrayados dentro de un documento de Reader** por API *[05 §2.5]*.
-- ❌ Guardar posiciones exactas (CFI), progreso o metadatos de tu biblioteca: Readwise solo guarda una `location` entera.
-- ⚠️ Límites: 240 peticiones/min en general, **20/min en listados**; con lotes y export incremental no es problema para una persona.
+**Reader (API v3): lo que SÍ se puede**
+| Capacidad | Detalle |
+|---|---|
+| **Descargar el EPUB o PDF original** que subiste a Reader ✅ | `GET /api/v3/list/?withRawSourceUrl=true` devuelve `raw_source_url`, un enlace firmado de S3 válido 1 hora (vacío si el documento no es distribuible). **Importar desde Reader** a tu biblioteca es P1 |
+| **Crear subrayados en un documento de Reader** ✅ (desde el 18 sep 2026) | `POST /api/v3/save/` con `parent_id` + `content` (+ `notes`, `tags`). Reader ancla por coincidencia de texto (400 si no lo encuentra). Desde el 25 sep, `PATCH` (notas y etiquetas) y `DELETE` sobre subrayados. *Corrige lo dicho en v2.0 y en la investigación 05* |
+| **Leer subrayados de Reader** ✅ | Son documentos `category=highlight` con `parent_id`. El `id` coincide con el `external_id` de la API v2 |
+| **Leer el progreso** de Reader ✅ | `reading_progress` (0–1, solo lectura). Fluye de Reader a la app como sugerencia: "en Reader vas en el 43 %, ¿saltar?" |
+| **Editar el documento** ✅ | Título, autor, resumen, etiquetas, notas, idioma, imagen, `location` (archivar), `seen`; `bulk_update` hasta 50 documentos por llamada |
+| **Guardar artículos o URLs** ✅ | `POST /save/` con `url` (o `html`). Para la app: "leer después" de artículos que se leen en nuestro lector |
+| Enviar un EPUB a Reader | ✅ por correo a `<alias>@library.readwise.io` (la app puede abrir el compositor de correo con el archivo adjunto). ⚠️ Guardar una URL temporal de iCloud con `category=epub` podría funcionar, pero es frágil |
 
-**Decisión: sync bidireccional de subrayados, iCloud como fuente de verdad**
-- Cada subrayado nuevo o editado se envía a Readwise con su `highlight_url` (idempotente).
-- Cada 15 minutos (o al abrir la app) se hace `export?updatedAfter=…`.
-  - Los subrayados que vinieron de la app se fusionan (gana la edición más reciente).
-  - Los subrayados **de otras fuentes** se guardan como `Annotation` importada (sin ancla precisa) ligada al libro por ISBN o título y autor; si el libro existe en tu biblioteca, se intenta anclarlos buscando la cita en el texto.
-- **Como no hay servidor, la sync con Readwise la hace el dispositivo que esté activo.** Para no duplicar envíos entre dispositivos se usa el `highlight_url` (idempotente) y un "cursor" de export guardado en CloudKit.
-- El token de Readwise se guarda en el **Llavero de iCloud** (sincronizado y cifrado).
+**Reader: lo que NO se puede**
+- ❌ Subir archivos por API (solo `url` o `html`).
+- ❌ Escribir el progreso de lectura.
+- ❌ Posiciones de subrayado utilizables: solo texto (y campos no documentados ⚠️). Las anclas exactas viven en iCloud; hacia Reader se envía el texto y Reader lo ancla.
+- ❌ Cómics, metadatos de biblioteca (series, número, ISBN) y estantes.
+- ❌ Webhooks sin servidor: existen, pero piden un endpoint público. Usamos sondeo con `updatedAfter` (límite de 20 listados/min, suficiente).
+- Requiere la suscripción **Readwise Full**.
+
+**Readwise (API v2): lo que se usa**
+| Uso | Detalle |
+|---|---|
+| **Subrayados de libros que no están en Reader** | `POST /api/v2/highlights/` con `highlight_url` (enlace de vuelta e idempotencia) |
+| **Subrayados de Kindle** ✅ | `GET /api/v2/export/` trae los libros con `source: "kindle"`, `asin`, título y autor, y sus subrayados con `location`. **Emparejamiento:** ASIN (los identificadores `amazon:` de Calibre) → título y autor normalizados → confirmación buscando citas en el texto. Después cada subrayado se **re-ancla** por búsqueda difusa de la cita, conservando el orden de Kindle. **Tus subrayados de Kindle aparecen dentro de tus EPUB** |
+| **Borrados** | `export?includeDeleted=true` (Reader no avisa de borrados) |
+| Daily Review | `GET /api/v2/review/` y `/review/complete/` |
+
+**Reglas de sincronización**
+1. **Libro vinculado a Reader** (el mismo libro en los dos): subrayados en ambos sentidos vía v3, emparejados por texto; progreso solo de Reader a la app.
+2. **Libro solo en la app:** subrayados → Readwise v2.
+3. **Libros de Kindle:** importar sus subrayados y anclarlos en tu EPUB si lo tienes, o guardarlos como "subrayados sin libro" si no.
+- Sin servidor, la sync la hace el dispositivo activo. El cursor `updatedAfter` vive en CloudKit para que los dispositivos no repitan trabajo; la idempotencia viene del `highlight_url` y de los ids de Reader.
+- **Web:** las llamadas a Readwise desde el navegador pueden fallar por CORS ⚠️ (ver investigación 06). La web hereda los datos ya sincronizados vía CloudKit.
+- **Términos de uso:** para uso personal, con tu propio token, no hay problema. Para una app pública, hablar antes con Readwise y que la integración sea opcional.
+- **Spike R:** 9 pruebas con tu token real antes de programar (investigación 06).
 
 ### 4.7 Módulos removibles (para la versión pública)
 `StorageProvider` (iCloud; en el futuro Google Drive para Android), `ImportSource` (Archivos, Drive, OneDrive, Calibre), `MetadataProvider` (Open Library, Google Books, Hardcover), `KnowledgeSink` (Readwise, Markdown, Obsidian), `AIProvider` (Foundation Models, MLX, PCC opcional) y `Acquisition` (el futuro bot). Cada uno detrás de una interfaz y una *feature flag*.
 
 ### 4.8 Bot de Telegram (diferido, solo una nota)
-Sin servidor, el bot necesitará **algo encendido** cuando llegue su momento: el Mac haciendo de "cerebro" o una función mínima en la nube que deje el archivo en una carpeta de importación. Se decide en su fase; nada de la arquitectura actual lo bloquea.
+Sin servidor, el bot necesitará **algo encendido** cuando llegue su momento: el Mac encendido o una función mínima en la nube que deje el archivo en una carpeta de importación. Se decide en su fase; nada de la arquitectura actual lo bloquea.
 
 ### 4.9 Traducción de las investigaciones (servidor → dispositivo)
 | En las investigaciones decía | Ahora |
 |---|---|
 | Postgres + pgvector | Índice local (SQLite + sqlite-vec) + CloudKit para lo que se sincroniza |
-| Ollama en el servidor | Foundation Models + MLX en el Mac (opcional) |
+| Ollama en el servidor | Foundation Models en el iPhone + PCC de Apple o tu clave de API |
 | `calibre-server` / `calibredb` | Catálogo propio en CloudKit; Calibre solo para migrar |
 | PDFium / OCRmyPDF / Docling | PDFKit + Vision en el dispositivo |
 | Conversión de cómics a CBZ en el servidor | libarchive en el dispositivo |
@@ -274,7 +307,6 @@ Sin servidor, el bot necesitará **algo encendido** cuando llegue su momento: el
 | Editor de portadas (buscar alternativas, recortar, usar una imagen propia) | P1 |
 | Búsqueda con sintaxis (`autor:x serie:y etiqueta:z`) y **estantes inteligentes** | P1 |
 | Detección y fusión de duplicados | P1 |
-| Columnas personalizadas | P2 |
 | Exportar la biblioteca (archivos con metadatos incrustados, estructura `Autor/Título`) | P1 |
 | Descarga para leer sin conexión y gestión del espacio por dispositivo | P0 |
 | "Seguir leyendo" como inicio; series con "siguiente de la serie" | P0 |
@@ -285,7 +317,9 @@ Sin servidor, el bot necesitará **algo encendido** cuando llegue su momento: el
 | Subrayado instantáneo con un gesto, 4–5 colores, subrayado que cruza páginas | P0 | T |
 | Notas y etiquetas; panel filtrable por color, capítulo y etiqueta | P0 | T |
 | **Envío a Readwise** con enlace que vuelve al pasaje | P0 | D |
-| **Traer de Readwise** cambios y subrayados de otras fuentes (Kindle, Apple Books…) y ligarlos a tus libros | P1 | D |
+| **Subrayados de Kindle (vía Readwise) anclados dentro de tus EPUB** | P0 | M |
+| **Reader:** importar originales, subrayados en ambos sentidos para libros vinculados, progreso de Reader a la app | P1 | D |
+| Traer subrayados de otras fuentes (Apple Books, artículos, podcasts) | P1 | D |
 | Daily Review de Readwise dentro de la app y en el widget | P2 | D |
 | Export ilimitado a Markdown y JSON; "libro en una página" para Obsidian | P0 | M |
 | Copiar con cita y deep link | P1 | D |
@@ -311,12 +345,13 @@ Velocidad de 150 a 700 ppm, con arranque gradual y **ritmo adaptativo** (más le
 | Etiquetado automático, pregunta de reflexión, flashcard | Foundation Models | P1 |
 | "Tus ideas clave" al terminar un libro (desde tus subrayados) | Foundation Models | P1 |
 | **"Esto conecta con…"**: subrayados relacionados de otros libros (incluidos los de Kindle vía Readwise) | Embeddings locales | P1 |
-| Resumen de capítulo y **"lo que va hasta aquí"** | Mac con MLX, o iPhone en segundo plano | P1 |
-| Personajes y conceptos hasta aquí (X-Ray sin spoilers) | Mac con MLX | P2 |
-| **Digest semanal** en la app (notificación + pantalla) | Mac o iPhone | P1 |
+| Resumen de capítulo y **"lo que va hasta aquí"** | iPhone por partes · PCC · tu clave | P1 |
+| Personajes y conceptos hasta aquí (X-Ray sin spoilers) | PCC · tu clave | P2 |
+| **Digest semanal** en la app (notificación + pantalla) | iPhone · tu clave | P1 |
 | Repaso espaciado (FSRS), sin duplicar la Daily Review de Readwise | Dispositivo | P2 |
-| **Chatea con tu biblioteca**, con citas clicables | Mac (índice completo); iPhone (subrayados) | P2 |
-| Temas a lo largo del tiempo, contradicciones, mapa de argumentos | Mac | P2 |
+| **Chatea con tu biblioteca**, con citas clicables | Índice en el iPhone + PCC o tu clave | P2 |
+| Temas a lo largo del tiempo, contradicciones, mapa de argumentos | Tu clave | P2 |
+| Configurar proveedor de IA (Apple, Anthropic, OpenAI, xAI, Google, OpenRouter) y ver qué se envía | Ajustes | P1 |
 
 ### 5.9 Audio y TTS
 | Función | P |
@@ -363,18 +398,20 @@ VoiceOver con lectura continua dentro del WKWebView, Dynamic Type, Reduce Motion
 - S3: **CloudKit**: `CKSyncEngine` con 2,000 registros `Book` y 10,000 `Annotation`; subir y bajar un `CKAsset` de 300 MB; límites reales en CloudKit JS.
 - S4: **lector de `metadata.db` de Calibre** en Swift contra una copia de tu biblioteca.
 - S5: lectura guiada: marcador por línea a 300 ppm en un libro en español, fluido a 120 Hz.
+- S6 (**Spike R**): las 9 pruebas de Reader y Readwise con tu token real (investigación 06): subrayado en un documento, `raw_source_url`, export de Kindle, emparejamiento por ASIN.
+- S7: Foundation Models en tu iPhone: explicar en español, resumen de capítulo por partes, embeddings con EmbeddingGemma.
 
 **Fase 1: MVP en iPhone + Mac (8–10 semanas)**
 - Migración desde Calibre; catálogo y tabla de administración en el Mac.
 - Lector EPUB y PDF con todos los P0; sync CloudKit; Duo (doble página).
-- Envío a Readwise.
+- Envío a Readwise y **subrayados de Kindle anclados en tus EPUB**.
 - *Salida:* dejas de usar Calibre, Apple Books y Kindle para tus libros.
 
 **Fase 2: Diferenciadores (6–8 semanas)**
-- Lectura guiada, cómics, P1 de biblioteca, traer subrayados de Readwise, IA ligera, poses del Duo y modo estudio.
+- Lectura guiada, cómics, P1 de biblioteca, **integración con Reader**, IA de nivel 0 y configuración de proveedores, poses del Duo y modo estudio.
 
 **Fase 3: Capa de conocimiento (4–6 semanas)**
-- Embeddings locales, "esto conecta con…", resúmenes (MLX en el Mac) y digest semanal.
+- Embeddings en el iPhone, "esto conecta con…", resúmenes (PCC o tu clave) y digest semanal.
 
 **Fase 4: Web + P2.** **Fase 5:** bot de Telegram. **Fase 6 (opcional):** versión pública.
 
@@ -384,8 +421,10 @@ VoiceOver con lectura continua dentro del WKWebView, Dynamic Type, Reduce Motion
 | Gestos y selección en WKWebView se sienten "web" | Media | Alto | Spike S1 primero; gestos nativos; parches de Readest como referencia |
 | Límites de CloudKit (archivos grandes, web, cuota de iCloud) | Media | Medio | Spike S3; aviso de espacio; los archivos se descargan bajo demanda |
 | Edición masiva y metadatos: subestimar lo que hace Calibre | Media | Medio | Alcance acotado en §4.3; Calibre se conserva en solo lectura los primeros meses |
-| IA sin servidor: el iPhone solo tiene un modelo pequeño | Alta | Medio | El Mac hace el trabajo pesado y sincroniza los resultados; lo ligero va en el iPhone |
-| Varios dispositivos sincronizando con Readwise a la vez | Baja | Bajo | `highlight_url` idempotente + cursor compartido en CloudKit |
+| IA sin servidor: el iPhone solo tiene un modelo pequeño | Alta | Medio | PCC de Apple o tu clave de API para lo pesado; lo ligero va en el iPhone |
+| Acceso a PCC de Apple para una app personal | Media | Medio | Si no aplica, el nivel 2 con tu clave cubre lo mismo |
+| La API de Reader es reciente (subrayados desde sep 2026) y puede cambiar | Media | Medio | Spike R; la integración aislada en `KnowledgeSink` |
+| Varios dispositivos sincronizando con Readwise y Reader a la vez | Baja | Bajo | `highlight_url` e ids de Reader idempotentes + cursor compartido en CloudKit |
 | Limitaciones de foliate-js | Alta | Medio | Fork fijado; scroll continuo en P2 |
 | APIs del iPhone Duo (iOS 27.1) nuevas | Media | Medio | Size classes primero; APIs nuevas detrás de `#available` |
 | Datos de Readwise e iOS 27 sin verificar (⚠️) | — | Bajo | Verificar antes de programar cada integración |
@@ -393,14 +432,14 @@ VoiceOver con lectura continua dentro del WKWebView, Dynamic Type, Reduce Motion
 
 ## 10. Preguntas abiertas
 1. **¿Qué plan de iCloud tienes** (50 GB, 200 GB, 2 TB)? ¿Cuánto pesa tu biblioteca de Calibre hoy?
-2. **¿Qué Mac tienes** (chip y RAM)? Define si el Mac puede ser el "cerebro" de la IA.
-3. De los 1,000–2,000 libros, **¿cuántos son PDF y cómics?**
-4. **¿Usas columnas personalizadas en Calibre** o plugins que te importen?
-5. **¿Tienes subrayados de Kindle en Readwise** que quieras ver junto a tus libros?
-6. ¿Usas la Daily Review de Readwise? Define si el repaso espaciado propio es P2 o se omite.
-7. Nombre del producto ("Biblioteca Lectora" es provisional).
+2. De los 1,000–2,000 libros, **¿cuántos son PDF y cómics?**
+3. **¿Qué suscripción de Claude tienes** (Pro o Max)? Con Max, los créditos de API cubrirían la IA de nivel 2.
+4. ¿Tus libros de Calibre tienen el **ASIN de Amazon** (identificador `amazon:`)? Facilita ligar los subrayados de Kindle.
+5. ¿Usas la Daily Review de Readwise? Define si el repaso espaciado propio es P2 o se omite.
+6. Nombre del producto ("Biblioteca Lectora" es provisional).
+7. ~~Columnas personalizadas o plugins de Calibre~~ (no) · ~~Subrayados de Kindle en Readwise~~ (sí) · ~~Mac para IA pesada~~ (no se asume).
 
 ---
 **Fuentes nuevas de esta versión:** [CKAsset: límite de tamaño (foro de Apple)](https://developer.apple.com/forums/thread/827897) · [CKAsset (documentación)](https://developer.apple.com/tutorials/data/documentation/cloudkit/ckasset.md) · [Readwise API](https://readwise.io/api_deets) · [Reader API](https://readwise.io/reader_api) · [pyreadwise: Reader API](https://rwxd.github.io/pyreadwise/readwise-reader-api/) · [Rayner et al. 2016 (APS)](https://www.psychologicalscience.org/publications/speed_reading.html)
 
-**Investigaciones de soporte:** [01 Calibre](investigacion/01-calibre.md) · [02 Servidores de biblioteca](investigacion/02-servidores-biblioteca.md) · [03 Lectores](investigacion/03-lectores.md) · [04 PDF y cómics](investigacion/04-pdf-y-comics.md) · [05 IA e insights](investigacion/05-ia-e-insights.md)
+**Investigaciones de soporte:** [06 Reader y Readwise](investigacion/06-readwise-reader.md) · [07 IA en el dispositivo y en la nube](investigacion/07-ia-dispositivo-y-nube.md) · [01 Calibre](investigacion/01-calibre.md) · [02 Servidores de biblioteca](investigacion/02-servidores-biblioteca.md) · [03 Lectores](investigacion/03-lectores.md) · [04 PDF y cómics](investigacion/04-pdf-y-comics.md) · [05 IA e insights](investigacion/05-ia-e-insights.md)
