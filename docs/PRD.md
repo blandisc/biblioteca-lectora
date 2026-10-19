@@ -1,6 +1,7 @@
-# Biblioteca Lectora: PRD v1.0
+# Biblioteca Lectora: PRD v1.1
 
-> **Estado:** borrador para revisión · **Fecha:** 19 oct 2026 · **Alcance:** uso personal (single-user, self-hosted), diseñado para poder abrirse al público después.
+> **Estado:** borrador para revisión · **Versión:** 1.1 · **Fecha:** 19 oct 2026 · **Alcance:** uso personal (single-user, self-hosted), diseñado para poder abrirse al público después.
+> **Cambios en v1.1:** el bot de Telegram queda **diferido** (se diseña después); se agrega la **lectura guiada** (§5.12); se confirman los idiomas (español + inglés) y el tamaño de la biblioteca (1,000–2,000 libros); se agrega el dimensionamiento del servidor (D11).
 > **Base:** [`vision-producto.md`](vision-producto.md) y las 5 investigaciones en [`investigacion/`](investigacion/). Cada decisión cita su fuente (p. ej. *[01 §3]* = `01-calibre.md`, sección 3).
 
 ---
@@ -21,7 +22,7 @@ Hoy, leer "en serio" con una biblioteca propia obliga a usar varias herramientas
 **Objetivos (v1, uso personal)**
 1. Ser el **único lector** que uses en iPhone, iPhone Duo, iPad y Mac, y como respaldo en la web, para EPUB, PDF y cómics.
 2. **Cero pérdida** de subrayados o progreso. La sincronización debe ser confiable entre dispositivos.
-3. Que un libro pedido al **bot de Telegram** esté listo para leer en la app en menos de 2 minutos, sin pasos manuales.
+3. Que un libro agregado a Calibre (o subido desde la app) esté listo para leer en todos tus dispositivos en menos de 2 minutos, sin pasos manuales.
 4. **Insights útiles y sin spoilers** a partir de tus subrayados, generados en local.
 5. Que **todo lo tuyo sea exportable** (Markdown, JSON, Readwise), sin límites.
 
@@ -29,20 +30,22 @@ Hoy, leer "en serio" con una biblioteca propia obliga a usar varias herramientas
 - Tienda de libros, DRM, red social o multiusuario.
 - Reemplazar la interfaz de Calibre para tareas masivas: Calibre sigue siendo la herramienta de administración.
 - Android y Windows nativos (la web los cubre de forma básica).
+- **Bot de Telegram** (diferido: se diseña en una fase posterior; la arquitectura deja el hueco listo, ver D3).
 - Escribir un motor de render propio.
 
 ## 3. Usuario y casos de uso
 
-**Persona principal: tú.** Lector intenso, técnico, con iPhone Pro y pronto iPhone Duo, Mac, servidor propio y bot de Telegram. Lee en español y en inglés (por confirmar).
+**Persona principal: tú.** Lector intenso, técnico, con iPhone Pro y pronto iPhone Duo, Mac, servidor propio y bot de Telegram. Lee en **español y en inglés**. Biblioteca de **1,000–2,000 libros**.
 
 | # | Historia | Prioridad |
 |---|---|---|
-| U1 | Pido un libro en Telegram y me llega un push "listo": lo abro y leo sin conexión. | P0 |
+| U1 | Agrego un libro a Calibre (o lo arrastro a la app en el Mac) y aparece en todos mis dispositivos; lo descargo y lo leo sin conexión. | P0 |
 | U2 | Leo en el iPhone, lo despliego (Duo) y aparecen dos páginas enfrentadas en la misma frase. | P0 |
 | U3 | Subrayo con un gesto; aparece en el Mac, en la web y en Readwise con un enlace que vuelve al pasaje. | P0 |
 | U4 | Toco "Explícame" sobre un subrayado y recibo una respuesta local en menos de 2 s. | P1 |
 | U5 | Retomo una novela tras 2 semanas y leo "lo que va hasta aquí" sin spoilers. | P1 |
-| U6 | Los domingos, Telegram me manda un digest: subrayados destacados, una conexión entre libros, una pregunta. | P1 |
+| U6 | Los domingos, la app me muestra un digest: subrayados destacados, una conexión entre libros, una pregunta. | P1 |
+| U11 | Activo la lectura guiada: un marcador avanza por el texto a mi ritmo y me ayuda a leer más rápido y concentrado, sin perder el contexto de la página. | P1 |
 | U7 | Leo un PDF académico en el iPhone con reflow o recorte de márgenes y lo subrayo. | P1 |
 | U8 | Leo un manga en el Duo desplegado: cada doble página impresa cae sobre la bisagra, de derecha a izquierda. | P1 |
 | U9 | Le pregunto a mi biblioteca "¿dónde leí sobre X?" y obtengo citas clicables. | P2 |
@@ -63,7 +66,7 @@ Hoy, leer "en serio" con una biblioteca propia obliga a usar varias herramientas
 - **Respaldo:** `sqlite3 .backup` a un snapshot, y de ahí `rclone copy` en una sola dirección hacia Google Drive. Se elimina la sincronización en vivo con Drive.
 - Se fija la versión de Calibre (9.16.x) y se escriben tests de contrato del adaptador, porque esos endpoints son internos y sin versión.
 
-**D3. Bot de Telegram = cliente del servidor.** La lógica del bot pasa a una cola de trabajos compartida (`fetch_book → import → enrich → notify`) que también usa la app. Para archivos de más de 20 MB (PDFs y cómics) se monta el **servidor local de la Bot API** de Telegram, que admite hasta 2000 MB *[02 §Telegram]*.
+**D3. Cola de trabajos en el servidor (bot diferido).** Importar, enriquecer metadatos, OCR, indexar para la IA y notificar son trabajos de una cola (`import → enrich → index → notify`). Cuando se diseñe el bot de Telegram, será **otro cliente** que dispara los mismos trabajos. Nota para entonces: archivos de más de 20 MB requieren el **servidor local de la Bot API** *[02 §Telegram]*.
 
 **D4. Motor de render por formato** (corrige v0.2: foliate-js deja de ser el motor universal) *[04, 03 §5]*
 
@@ -96,6 +99,28 @@ Hoy, leer "en serio" con una biblioteca propia obliga a usar varias herramientas
 **D9. Protocolos:** v1 = API REST propia (OpenAPI). v2 = OPDS 1.2 + PSE y el endpoint de sincronización de **KOReader** (kosync, requiere el hash MD5 parcial de cada archivo al importarlo), para que un e-reader con KOReader funcione como un cliente más. v3 = OPDS 2.0; la sincronización con Kobo queda como opcional *[02]*.
 
 **D10. Módulos removibles para la versión pública:** `LibrarySource`, `Acquisition` (bot y descargas), `KnowledgeSink`, `AIProvider` y `Auth`, cada uno detrás de una interfaz y una *feature flag*. Los componentes AGPL (MuPDF, Kumiko) se quedan **solo en el servidor** *[04, 05 §7]*.
+
+**D11. Dimensionamiento del servidor (1,000–2,000 libros)**
+
+"Servidor" = **una computadora que está siempre prendida** y guarda tus libros. Ahí corren Calibre, la API de la app, la base de datos de subrayados y progreso, y el modelo de IA local. Tus dispositivos se conectan a ella desde casa o desde fuera (con Tailscale, sin abrir puertos). No tiene que ser un equipo de centro de datos.
+
+| Recurso | Estimación para 2,000 libros | Comentario |
+|---|---|---|
+| Archivos | EPUB: ~2–8 GB · PDF y cómics: +10–100 GB según cuántos sean | Un disco de 256–512 GB alcanza; el respaldo va a Google Drive |
+| Catálogo y sync (Postgres) | < 1 GB | Trivial; Calibre y Postgres manejan cientos de miles de libros |
+| Índice de IA (embeddings) | ~250 fragmentos por libro → ~500k fragmentos → ~1–2 GB con `halfvec` | Se indexa **cuando empiezas a leer un libro**, no toda la biblioteca de golpe |
+| Modelo local | Qwen3 14B cuantizado: ~10 GB de RAM · 30B-A3B: ~20 GB | Esto es lo único que pide hardware "serio" |
+
+**Conclusión: 2,000 libros es una biblioteca pequeña para el servidor.** Lo que define el hardware es la IA, no los libros.
+
+| Opción | Pros | Contras | Veredicto |
+|---|---|---|---|
+| **Mac mini (M4 / M4 Pro, 24–48 GB) en casa** | Silencioso, consume poco, muy bueno con modelos locales (memoria unificada) | Inversión inicial | ✅ **Recomendado** |
+| Tu Mac de uso diario | Gratis para empezar | Tiene que estar prendido; no sirve si es laptop | Bien para los spikes y la Fase 1 |
+| NAS (Synology, etc.) | Ideal para archivos y Calibre | Muy lento para un LLM | Solo si la IA vive en otro lado |
+| VPS en la nube (p. ej. Hetzner) | Siempre disponible, barato | Sin GPU (LLM lento o caro); tus libros en manos de un tercero | No para este proyecto |
+
+La IA en el dispositivo (Foundation Models en tu iPhone Pro) funciona aunque el servidor esté apagado; lo que depende del servidor son los resúmenes, el chat y las conexiones entre libros.
 
 ## 5. Catálogo de funcionalidades priorizado
 
@@ -174,13 +199,12 @@ Etiquetas: **[T]** básico que todos tienen · **[D]** diferenciador · **[M]** 
 | Búsqueda de texto completo en toda la biblioteca (Postgres FTS) | P1 |
 | Send-to-Kindle por correo | P3 |
 
-### 5.7 Adquisición (bot de Telegram) — módulo removible
+### 5.7 Importar libros
 | Función | P |
 |---|---|
-| `/libro X` → importar a Calibre → enriquecer → push "listo" a la app | P0 |
-| "Conseguir" desde la app (el mismo trabajo) y estado de trabajos en la app | P1 |
-| Servidor local de la Bot API (archivos de más de 20 MB) | P1 |
-| Comandos del bot: `/progreso`, `/subrayados <libro>`, `/digest`, `/pregunta` | P1 / P2 |
+| Detectar libros nuevos en Calibre y avisar con un push "listo para leer" | P0 |
+| Subir libros desde la app (arrastrar al Mac, menú Compartir en iOS) → Calibre | P1 |
+| **Bot de Telegram** (`/libro X`, `/progreso`, `/digest`…) | **Diferido**: se diseña después, como cliente de la cola de trabajos (D3) |
 
 ### 5.8 IA e insights *[05 §5]*
 | Función | Nivel | P |
@@ -191,7 +215,7 @@ Etiquetas: **[T]** básico que todos tienen · **[D]** diferenciador · **[M]** 
 | Resumen al terminar cada capítulo; **"lo que va hasta aquí"** al retomar | Servidor | P1 |
 | Personajes y conceptos hasta aquí (X-Ray sin spoilers) | Servidor | P1 |
 | "Tus ideas clave" al terminar un libro (a partir de tus subrayados) | Servidor | P1 |
-| **Digest semanal por Telegram** con botones que alimentan el repaso | Servidor | P1 |
+| **Digest semanal** en la app (notificación + pantalla), con botones que alimentan el repaso; por Telegram cuando exista el bot | Servidor | P1 |
 | Repaso espaciado (FSRS) en la app, sin duplicar la Daily Review de Readwise | Dispositivo + servidor | P2 |
 | **Chatea con tu biblioteca**, con citas clicables por ámbito | Servidor | P2 |
 | Temas a lo largo del tiempo, contradicciones entre subrayados, mapa de argumentos | Servidor | P2 |
@@ -219,6 +243,29 @@ Etiquetas: **[T]** básico que todos tienen · **[D]** diferenciador · **[M]** 
 ### 5.11 Accesibilidad (P0 de forma transversal)
 VoiceOver con lectura continua dentro del WKWebView, Dynamic Type en la UI, Reduce Motion, alto contraste, fuentes para dislexia, teclado completo en Mac y zonas de toque configurables (incluido modo zurdo).
 
+
+### 5.12 Lectura guiada (modo de lectura rápida) — nuevo
+Objetivo: **leer más rápido y con más foco sin perder comprensión.** La evidencia científica (Rayner et al., 2016) indica que los métodos de "lectura veloz" que eliminan el contexto (palabra por palabra) o las relecturas bajan la comprensión por encima de ~400–500 ppm. Por eso el modo por defecto **guía dentro de la página** en vez de quitar el texto.
+
+| Modo | Cómo funciona | Para qué | P |
+|---|---|---|---|
+| **Marcador guiado** (por defecto) | Una banda suave resalta la línea actual y avanza a tu velocidad (ppm); el resto se atenúa un poco; la página pasa sola | Foco y ritmo constante, conservando el contexto y la posibilidad de volver atrás | P1 |
+| **Foco por frase** | Resalta grupos de 3–5 palabras (unidades de sentido) que avanzan por la línea | Entrenar a leer por bloques en lugar de palabra por palabra | P1 |
+| **Lectura con voz** | TTS a 1.2–2× con resaltado sincronizado de la frase | Leer y escuchar a la vez (*immersion reading*); muy bueno para no ficción | P1 (con §5.9) |
+| **RSVP** (estilo Spritz) | Una palabra a la vez en el centro, con la letra de enfoque (ORP) en color | Textos cortos, la pantalla exterior del Duo, momentos de "solo 5 minutos" | P2, con aviso de comprensión |
+| **Pre-lectura con IA** | Antes del capítulo: esquema de 5 puntos y conceptos clave (solo no ficción; nunca en novela) | Saber qué buscar, lo que acelera la lectura real | P2 |
+
+**Comportamiento común**
+- Velocidad de 150 a 700 ppm, con **arranque gradual** y **ritmo adaptativo**: más lento en palabras largas, números, nombres propios y signos de puntuación; pausa breve al cambiar de párrafo.
+- **Bilingüe:** segmentación de palabras y sílabas con `NLTokenizer` / `Intl.Segmenter`, con velocidades separadas para español y para inglés (se lee distinto en cada idioma).
+- Toque = pausa. Deslizar hacia atrás = volver a la frase anterior (**las relecturas están permitidas**, son parte de entender).
+- Mantener presionado = pausa y selecciona, para **subrayar sin salir del modo**.
+- **Estadísticas:** ppm real por libro y por idioma, tiempo en modo guiado y tendencia semanal. Opcional: 2 preguntas de comprensión con IA al final del capítulo para comprobar que la velocidad no está costando entender.
+- **iPhone Duo:** en pose mesa, lectura guiada manos libres arriba y control de velocidad abajo.
+- **Accesibilidad:** respeta Reduce Motion (la banda salta en vez de deslizarse) y es compatible con VoiceOver.
+- **Implementación:** foliate-js expone el texto y los rangos de la página. Las líneas se calculan con `Range.getClientRects()` dentro del WebView y la banda se anima con CSS a 120 Hz. RSVP es una vista nativa SwiftUI alimentada con el texto del capítulo por el puente JS. En PDF, el marcador funciona en la vista reflow.
+- **Referentes:** Readest (RSVP, modo párrafo, regla de lectura), Spritz, Outread y la técnica clásica del "pacer" (seguir la línea con el dedo).
+
 ## 6. Requisitos no funcionales
 | Área | Meta |
 |---|---|
@@ -234,7 +281,7 @@ VoiceOver con lectura continua dentro del WKWebView, Dynamic Type en la UI, Redu
 - **Adopción:** más del 90 % del tiempo de lectura semanal ocurre en la app (frente a Kindle o Apple Books) a los 2 meses.
 - **Confianza:** 0 incidencias de subrayados perdidos o progreso que retrocede.
 - **Valor de la IA:** abres al menos el 30 % de los digests y vuelves a ver al menos el 20 % de los subrayados en 90 días.
-- **Fricción:** pedir un libro en Telegram y empezar a leerlo toma menos de 2 minutos (p50).
+- **Fricción:** de agregar un libro a Calibre a empezar a leerlo en el iPhone, menos de 2 minutos (p50).
 
 ## 8. Plan por fases y criterios de salida
 
@@ -242,24 +289,24 @@ VoiceOver con lectura continua dentro del WKWebView, Dynamic Type en la UI, Redu
 - S1: foliate-js en WKWebView dentro de SwiftUI: paginación, **gestos interrumpibles nativos**, selección con menú nativo, CFI, guiones en español, VoiceOver y un libro de 1,000 páginas. *Criterio de salida:* se siente como Apple Books en un test a ciegas contigo.
 - S2: PDFKit con un PDF de 500 páginas y 300 subrayados en una capa propia. *Plan B:* PDFium compilado para Apple.
 - S3: adaptador de Calibre: lectura SQLite en solo lectura más `/cdb/add-book` contra un `calibre-server` 9.16 en Docker.
-- S4: inventario del bot. *Pendiente tuyo:* lenguaje, dónde corre, cómo importa los libros.
+- S4: lectura guiada (§5.12) sobre foliate-js: marcador por línea a 300 ppm en un libro en español, fluido a 120 Hz.
 
 **Fase 1: Fundación del servidor (3–4 semanas)**
 - Migrar la biblioteca a disco local con respaldo a Drive.
-- API v1 (catálogo, archivos, progreso, anotaciones), cola de trabajos y refactor del bot.
+- API v1 (catálogo, archivos, progreso, anotaciones) y cola de trabajos.
 - Push vía APNs.
 
 **Fase 2: MVP de lectura en iPhone + Duo (6–8 semanas)**
-- Todos los P0 de §5.1, §5.2, §5.3, §5.5, §5.6, §5.7, §5.10 y §5.11.
+- Todos los P0 de §5.1, §5.2, §5.3, §5.5, §5.6, §5.7, §5.10 y §5.11, más la lectura guiada básica (§5.12).
 - *Salida:* dejas de usar Apple Books y Kindle para EPUB y PDF.
 
 **Fase 3: iPad + Mac + cómics (4–6 semanas)**
 - Los P1 de §5.2 y §5.4, más los extras de Mac.
 
 **Fase 4: Capa de conocimiento (4–6 semanas)**
-- Ingesta RAG, P1 de §5.8 y digest por Telegram.
+- Ingesta RAG, P1 de §5.8 y digest en la app.
 
-**Fase 5: Web compañera + P2.** **Fase 6 (opcional):** versión pública con los módulos de D10.
+**Fase 5: Web compañera + P2 + bot de Telegram.** **Fase 6 (opcional):** versión pública con los módulos de D10.
 
 ## 9. Riesgos principales
 | Riesgo | Prob. | Impacto | Mitigación |
@@ -273,13 +320,15 @@ VoiceOver con lectura continua dentro del WKWebView, Dynamic Type en la UI, Redu
 | Alcance enorme para un proyecto personal | Alta | Alto | Fases con criterios de salida; P2 y P3 no entran hasta usar la app a diario |
 
 ## 10. Preguntas abiertas
-1. **Bot:** ¿lenguaje, dónde corre (VPS, casa, NAS) y cómo mete los libros a Calibre hoy?
-2. **Hardware del servidor:** ¿CPU, RAM y GPU? Esto decide el tamaño del modelo.
-3. **Idiomas de lectura:** ¿español, inglés o ambos? Afecta los guiones y el modelo.
-4. **Tamaño de la biblioteca:** ¿cuántos libros, PDFs y cómics?
-5. **¿Usas la Daily Review de Readwise hoy?** Define si el repaso espaciado (FSRS) en la app es P2 o se omite.
-6. **Audiolibros:** ¿tienes y te interesan, para Storyteller y Audiobookshelf?
-7. **Nombre del producto:** "Biblioteca Lectora" es provisional.
+1. **¿Dónde corre hoy Calibre?** ¿En tu Mac, en otra computadora o en un servidor? (Ver D11 para elegir el servidor.)
+2. **Hardware disponible:** si es un Mac, ¿qué chip y cuánta RAM? Esto decide el tamaño del modelo local.
+3. **Composición de la biblioteca:** de los 1,000–2,000, ¿cuántos son PDF y cómics?
+4. **¿Usas la Daily Review de Readwise hoy?** Define si el repaso espaciado (FSRS) en la app es P2 o se omite.
+5. **Audiolibros:** ¿tienes y te interesan, para Storyteller y Audiobookshelf?
+6. **Nombre del producto:** "Biblioteca Lectora" es provisional.
+7. ~~Bot de Telegram~~ (diferido) · ~~Idiomas~~ (español + inglés).
 
 ---
+**Fuente de lectura guiada:** [Rayner et al. 2016, *So Much to Read, So Little Time* (APS)](https://www.psychologicalscience.org/publications/speed_reading.html)
+
 **Investigaciones de soporte:** [01 Calibre](investigacion/01-calibre.md) · [02 Servidores de biblioteca](investigacion/02-servidores-biblioteca.md) · [03 Lectores](investigacion/03-lectores.md) · [04 PDF y cómics](investigacion/04-pdf-y-comics.md) · [05 IA e insights](investigacion/05-ia-e-insights.md)
