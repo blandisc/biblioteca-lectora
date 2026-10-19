@@ -1,6 +1,8 @@
 # Biblioteca Lectora: visión de producto (v0.2)
 
 > Documento de trabajo, octubre 2026.
+> ⚠️ **Actualizado por [`PRD.md`](PRD.md)** tras la investigación profunda. Hay dos correcciones importantes. (1) §3.1: `calibredb` no puede correr junto al `calibre-server`, así que todas las escrituras pasan por el servidor (PRD D2). (2) §4: foliate-js queda solo para EPUB; PDF usa PDFKit/pdf.js y los cómics, un lector nativo (PRD D4).
+>
 > **Cambios desde v0.1:** se confirman el contexto (Calibre + Google Drive, uso personal, iPhone Pro), la investigación de las guías oficiales del iPhone Duo, el soporte nativo para macOS y la decisión del motor de lectura.
 
 ## 0. Contexto confirmado
