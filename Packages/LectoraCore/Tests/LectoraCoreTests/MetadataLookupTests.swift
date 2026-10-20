@@ -225,6 +225,21 @@ final class MetadataLookupTests: XCTestCase {
         XCTAssertEqual(CoverCheck.evaluate(Data(count: 43)), .unusable, "La imagen vacía de 1×1")
     }
 
+    func testEditionCoversPreferModernEditionsInYourLanguage() {
+        let json = Data(#"""
+        {"entries":[
+          {"covers":[1],"languages":[{"key":"/languages/spa"}],"publish_date":"1951"},
+          {"covers":[2],"languages":[{"key":"/languages/eng"}],"isbn_13":["9780000000001"],"publish_date":"2010"},
+          {"covers":[3],"languages":[{"key":"/languages/spa"}],"isbn_13":["9788466331845"],"publish_date":"2016"},
+          {"covers":[-1],"languages":[{"key":"/languages/spa"}]}
+        ]}
+        """#.utf8)
+        let covers = OpenLibrary.editionCovers(from: json, language: "es")
+        XCTAssertEqual(covers.first, OpenLibrary.coverURL(id: 3), "Moderna, en español y con ISBN")
+        XCTAssertEqual(covers.count, 3, "Sin la portada -1")
+        XCTAssertEqual(covers.last, OpenLibrary.coverURL(id: 2), "En inglés, al final")
+    }
+
     // MARK: Servicio (con red simulada)
 
     private struct FakeFetcher: MetadataFetching {

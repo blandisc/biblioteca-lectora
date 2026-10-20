@@ -73,8 +73,8 @@ struct ReviewScreen: View {
         guard let candidates = model.library.reviews[id], let best = candidates.first else {
             return "No lo encontré en internet"
         }
-        let count = candidates.count == 1 ? "1 posible coincidencia" : "\(candidates.count) posibles coincidencias"
-        return "\(count) · la mejor: \(best.verdict.lowercased())"
+        let count = candidates.count == 1 ? "1 opción" : "\(candidates.count) opciones"
+        return "\(count) · \(best.verdict)"
     }
 }
 

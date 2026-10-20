@@ -40,6 +40,33 @@ public enum OpenLibrary {
         URL(string: "https://openlibrary.org\(key).json")!
     }
 
+    /// Ediciones de una obra, para elegir la mejor portada.
+    public static func editionsURL(workKey: String) -> URL {
+        URL(string: "https://openlibrary.org\(workKey)/editions.json?limit=60")!
+    }
+
+    /// Portadas de las ediciones, de la mejor a la peor: en tu idioma, con ISBN
+    /// (ediciones modernas, con arte de la editorial) y recientes. Las de
+    /// ejemplares viejos escaneados en bibliotecas (tela lisa, etiquetas de
+    /// código de barras) quedan al final.
+    public static func editionCovers(from data: Data, language: String?) -> [URL] {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let entries = root["entries"] as? [[String: Any]] else { return [] }
+        let scored: [(score: Double, cover: Int)] = entries.compactMap { entry in
+            guard let cover = (entry["covers"] as? [Int])?.first(where: { $0 > 0 }) else { return nil }
+            let codes = (entry["languages"] as? [[String: Any]] ?? []).compactMap { ($0["key"] as? String)?.components(separatedBy: "/").last }
+            let languages = codes.compactMap(MetadataCleaner.cleanLanguage)
+            var score = 0.0
+            if let language { score += languages.isEmpty ? 1 : (languages.contains(language) ? 3 : 0) }
+            if !((entry["isbn_13"] as? [String]) ?? []).isEmpty { score += 1.5 } else if entry["isbn_10"] != nil { score += 1 }
+            if let year = (entry["publish_date"] as? String).flatMap(year).flatMap(Int.init) {
+                score += year >= 2000 ? 1 : (year >= 1980 ? 0.5 : 0)
+            }
+            return (score, cover)
+        }
+        return scored.sorted { $0.score > $1.score }.prefix(4).compactMap { coverURL(id: $0.cover) }
+    }
+
     /// Portada por número; `default=false` da 404 en vez de una imagen vacía.
     public static func coverURL(id: Int) -> URL? {
         id > 0 ? URL(string: "https://covers.openlibrary.org/b/id/\(id)-L.jpg?default=false") : nil

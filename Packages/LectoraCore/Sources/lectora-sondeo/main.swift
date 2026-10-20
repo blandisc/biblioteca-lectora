@@ -5,7 +5,7 @@ import LectoraCore
 // contra Open Library real con el corpus de scripts/sondeo y escribe un
 // informe en Markdown. Lo ejecuta la CI (.github/workflows/sondeo.yml).
 //
-// Uso: lectora-sondeo corpus.json informe.md
+// Uso: lectora-sondeo corpus.json informe.md [carpeta-de-portadas]
 
 struct Case: Decodable {
     struct Expect: Decodable {
@@ -46,7 +46,17 @@ for item in corpus {
     let best = result.candidates.first
     var coverNote = "—"
     if let best, result.decision != .notFound {
-        coverNote = await service.cover(for: best).map { "\($0.count / 1024) KB" } ?? "sin portada"
+        if let data = await service.cover(for: best, language: book.language) {
+            coverNote = "\(data.count / 1024) KB"
+            // Las portadas elegidas, para verlas (tercer argumento: carpeta).
+            if arguments.count >= 4 {
+                let folder = URL(fileURLWithPath: arguments[3], isDirectory: true)
+                try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try? data.write(to: folder.appendingPathComponent("\(item.id).jpg"))
+            }
+        } else {
+            coverNote = "sin portada"
+        }
     }
     let seconds = Date().timeIntervalSince(started)
 

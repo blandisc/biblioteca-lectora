@@ -271,7 +271,7 @@ final class LibraryStore: ObservableObject {
         setPending(bookID, false)
         if result.decision == .apply, !askAlways, let best = result.candidates.first {
             var cover: Data?
-            if coverURL(for: book) == nil { cover = await service.cover(for: best) }
+            if coverURL(for: book) == nil { cover = await service.cover(for: best, language: book.language) }
             // Pudo cambiar mientras se buscaba (lo editaste): se completa lo más reciente.
             let current = self.book(id: bookID) ?? book
             try? update(MetadataMatcher.fillMissing(current, from: best), cover: cover)
@@ -310,7 +310,7 @@ final class LibraryStore: ObservableObject {
     func apply(_ candidate: MetadataCandidate, to bookID: UUID, includeCover: Bool = true) async throws {
         guard let book = book(id: bookID) else { throw LibraryError.bookNotFound }
         let detailed = await service.withSummary(candidate, for: book)
-        let cover = includeCover ? await service.cover(for: detailed) : nil
+        let cover = includeCover ? await service.cover(for: detailed, language: book.language) : nil
         let current = self.book(id: bookID) ?? book
         try update(MetadataMatcher.replace(current, with: detailed), cover: cover)
         setReview(bookID, candidates: nil)

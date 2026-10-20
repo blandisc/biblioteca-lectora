@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p "out/${GITHUB_SHA::7}"
           swift run -c release --package-path Packages/LectoraCore lectora-sondeo \
-            scripts/sondeo/corpus.json "out/${GITHUB_SHA::7}/informe.md"
+            scripts/sondeo/corpus.json "out/${GITHUB_SHA::7}/informe.md" "out/${GITHUB_SHA::7}/portadas"
       - name: Bajar respuestas crudas (para pruebas y para afinar)
         if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[crudo]') }}
         run: |
