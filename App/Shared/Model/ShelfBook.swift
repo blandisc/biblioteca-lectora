@@ -40,13 +40,13 @@ enum SampleLibrary {
     static let books: [ShelfBook] = [
         current,
         ShelfBook(title: "Pensar rápido, pensar despacio", author: "Daniel Kahneman", progress: 0, addedDaysAgo: 0, inCloudOnly: false,
-                  cover: CoverStyle(background: Color(hex: 0xF6F4EE), foreground: Theme.ink, illustration: .circles, bordered: true)),
+                  cover: CoverStyle(background: Color(hex: 0xF6F4EE), foreground: Color(hex: 0x1C1B19), illustration: .circles, bordered: true)),
         ShelfBook(title: "Meditaciones", author: "Marco Aurelio", progress: 0.12, addedDaysAgo: 12, inCloudOnly: false,
                   cover: CoverStyle(background: Color(hex: 0x2A2927), foreground: Color(hex: 0xEDEAE2))),
         ShelfBook(title: "Fundación", author: "Isaac Asimov", progress: 0, addedDaysAgo: 3, inCloudOnly: true,
                   cover: CoverStyle(background: Color(hex: 0x3E4A6B), foreground: Color(hex: 0xEEF0F6), illustration: .rings)),
         ShelfBook(title: "Rayuela", author: "Julio Cortázar", progress: 0.68, addedDaysAgo: 90, inCloudOnly: true,
-                  cover: CoverStyle(background: Color(hex: 0xF1EEE7), foreground: Theme.ink, bordered: true)),
+                  cover: CoverStyle(background: Color(hex: 0xF1EEE7), foreground: Color(hex: 0x1C1B19), bordered: true)),
         ShelfBook(title: "Pedro Páramo", author: "Juan Rulfo", progress: 1, addedDaysAgo: 200, inCloudOnly: false,
                   cover: CoverStyle(background: Color(hex: 0x8C6A4F), foreground: Color(hex: 0xF6EEE6))),
     ]

@@ -3,6 +3,7 @@ import SwiftUI
 /// Portada de respaldo para libros sin imagen: color, tipografía y, a veces,
 /// una ilustración a línea. Tiene lomo (sombra en el borde izquierdo) para
 /// que se lea como un objeto.
+/// Los colores de una portada son fijos: no cambian con el modo oscuro.
 struct CoverStyle: Hashable {
     enum Illustration: Hashable {
         case none
@@ -60,8 +61,8 @@ struct CoverView: View {
                 if showsRibbon {
                     Ribbon()
                         .fill(Theme.pencil)
-                        .frame(width: max(6, width * 0.08), height: proxy.size.height + 22)
-                        .offset(x: width * 0.74, y: -3)
+                        .frame(width: max(5, width * 0.065), height: proxy.size.height + 22)
+                        .offset(x: width * 0.86, y: -3)
                         .shadow(color: .black.opacity(0.2), radius: 1, y: 1)
                 }
             }
