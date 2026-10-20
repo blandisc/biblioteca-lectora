@@ -49,6 +49,11 @@ for style in native editorial; do
   done
 done
 
+# Variante del inicio Nativo sin título ni tarjeta.
+for mode in light dark; do
+  shoot "native-$mode-reading-plain" 4 -appearance.style native -appearance.mode "$mode" -screenshot.tab reading -appearance.plainHome YES
+done
+
 # Lector: se copia un EPUB de muestra a la app y se abre al arrancar.
 DATA=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data)
 mkdir -p "$DATA/Library/Application Support/Spike"

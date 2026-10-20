@@ -50,6 +50,7 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 enum AppearanceKeys {
     static let style = "appearance.style"
     static let mode = "appearance.mode"
+    static let plainHome = "appearance.plainHome"
 }
 
 /// Cuenta, conexiones y apariencia. Se abre desde el inicio en los dos estilos.
@@ -57,6 +58,7 @@ struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .native
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
+    @AppStorage(AppearanceKeys.plainHome) private var plainHome = false
 
     var body: some View {
         NavigationStack {
@@ -70,6 +72,9 @@ struct AccountView: View {
                         ForEach(AppearanceMode.allCases) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                    if style == .native {
+                        Toggle("Inicio sin título ni tarjeta", isOn: $plainHome)
+                    }
                 } header: {
                     Text("Apariencia")
                 } footer: {

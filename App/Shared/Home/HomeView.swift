@@ -4,12 +4,14 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @State private var showsAccount = false
+    /// Variante sin el título «Leyendo» y sin tarjeta: el libro va directo sobre el fondo.
+    @AppStorage(AppearanceKeys.plainHome) private var plain = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 30) {
-                    CurrentBookCard(book: model.currentBook, onContinue: model.continueReading)
+                    CurrentBookCard(book: model.currentBook, plain: plain, onContinue: model.continueReading)
                     if !model.desk.isEmpty {
                         DeskSection(books: model.desk)
                     }
@@ -19,7 +21,10 @@ struct HomeView: View {
                 .padding(.bottom, 32)
             }
             .background(Theme.groupedBackground.ignoresSafeArea())
-            .navigationTitle("Leyendo")
+            .navigationTitle(plain ? "" : "Leyendo")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(plain ? .inline : .large)
+            #endif
             .navigationDestination(for: ShelfBook.self) { BookDetailView(book: $0) }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -36,6 +41,7 @@ struct HomeView: View {
 
 private struct CurrentBookCard: View {
     let book: ShelfBook
+    var plain = false
     let onContinue: () -> Void
 
     var body: some View {
@@ -88,15 +94,15 @@ private struct CurrentBookCard: View {
                         .font(.title3)
                         .foregroundStyle(Theme.ink)
                         .frame(width: 48, height: 48)
-                        .background(Theme.groupedBackground, in: Circle())
+                        .background(plain ? Theme.surface : Theme.groupedBackground, in: Circle())
                 }
                 .buttonStyle(PressableStyle())
                 .accessibilityLabel("Escuchar desde aquí")
             }
         }
-        .padding(18)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.04), radius: 1, y: 1)
+        .padding(plain ? 4 : 18)
+        .background(plain ? .clear : Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .shadow(color: .black.opacity(plain ? 0 : 0.04), radius: 1, y: 1)
     }
 }
 
