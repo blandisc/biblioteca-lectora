@@ -1,0 +1,179 @@
+{
+ "description": "Un amanecer de 1945, un muchacho es conducido por su padre a un misterioso lugar oculto en el corazón de la ciudad vieja: el Cementerio de los Libros Olvidados. Allí, Daniel Sempere encuentra un libro maldito que cambia el rumbo de su vida y le arrastra a un laberinto de intrigas y secretos enterrados en el alma oscura de la ciudad. La Sombra del Viento es un misterio literario ambientado en la Barcelona de la primera mitad del siglo xx, desde los últimos esplendores del Modernismo hasta las tinieblas de la posguerra.\r\n\r\nAunando las técnicas del relato de intriga y suspense, la novela histórica y la comedia de costumbres, La Sombra del Viento es sobre todo una trágica historia de amor cuyo eco se proyecta a través del tiempo. Con gran fuerza narrativa, el autor entrelaza tramas y enigmas a modo de muñecas rusas en un inolvidable relato sobre los secretos del corazón y el embrujo de los libros cuya intriga se mantiene hasta la última página.\r\n\r\nTodavía recuerdo aquel amanecer en que mi padre me llevó por primera vez a visitar El Cementerio de los Libros Olvidados",
+ "links": [
+  {
+   "title": "La Sombra del Viento de Carlos Ruiz Zafón",
+   "url": "http://www.carlosruizzafon.com/es/la-sombra-del-viento/index.php",
+   "type": {
+    "key": "/type/link"
+   }
+  },
+  {
+   "title": "La sombra del viento - Wikipedia",
+   "url": "https://es.wikipedia.org/wiki/La_sombra_del_viento",
+   "type": {
+    "key": "/type/link"
+   }
+  },
+  {
+   "title": "Fiction Book Review: La Sombra del Viento by Carlos Ruiz Zafon ...",
+   "url": "https://www.publishersweekly.com/978-84-08-03881-8",
+   "type": {
+    "key": "/type/link"
+   }
+  }
+ ],
+ "title": "La sombra del viento",
+ "covers": [
+  10107644,
+  10448164,
+  10486828,
+  10403846,
+  10489212,
+  10673676,
+  10805769,
+  -1,
+  9862951,
+  10152428,
+  10201248,
+  10205428,
+  10506866,
+  10597587,
+  10715980,
+  10840838,
+  12218744,
+  12331271,
+  12338893,
+  12359675,
+  12372205,
+  12659511,
+  12843831,
+  12918762,
+  10869582,
+  13989796,
+  13989795,
+  14492031
+ ],
+ "subject_places": [
+  "Barcelona",
+  "Spain",
+  "España",
+  "El Cementerio de los Libros Olvidados",
+  "Barcelona (Spain)"
+ ],
+ "first_publish_date": "2006",
+ "subject_people": [
+  "Daniel Sempere",
+  "Julián Carax",
+  "Señor Sempere",
+  "Fermín Romero de Torres",
+  "Francisco Javier Fumero",
+  "Nuria Monfort",
+  "Tomás Aguilar",
+  "Bea Aguilar",
+  "Clara Barceló",
+  "Penélope Aldaya",
+  "Isaac Monfort",
+  "Laín Coubert"
+ ],
+ "key": "/works/OL278437W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL2632116A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "subject_times": [
+  "1945",
+  "1933-1966"
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "subjects": [
+  "Mothers and sons",
+  "Verschollenheit",
+  "Widowers",
+  "Fiction",
+  "Autor",
+  "Books",
+  "Buch",
+  "Young men",
+  "Faszination",
+  "Rare books",
+  "Junge",
+  "Antiquarian booksellers",
+  "Antiquarian booksellers in fiction",
+  "Books in fiction",
+  "Rare books in fiction",
+  "Young men in fiction",
+  "Mothers and sons in fiction",
+  "Widowers in fiction",
+  "novel",
+  "Roman",
+  "Literary fiction",
+  "Spanish: Adult Fiction",
+  "Detective and mystery stories",
+  "out-of-print books",
+  "Spanish novelists",
+  "Novela de misterio",
+  "Viudos",
+  "Libros raros",
+  "Madres e hijos",
+  "Jóvenes (Hombres)",
+  "Ficción",
+  "Libros",
+  "Libreros anticuarios",
+  "Spanish fiction",
+  "Fiction, suspense",
+  "Authors, fiction",
+  "Barcelona (spain), fiction",
+  "Booksellers and bookselling, fiction",
+  "Noveller",
+  "Mystery fiction",
+  "Books and reading",
+  "Social conditions",
+  "nyt:trade-fiction-paperback=2009-07-12",
+  "New York Times bestseller",
+  "Fiction, thrillers, suspense",
+  "Fortellinger",
+  "Forteljingar",
+  "Fiction, thrillers, general",
+  "Spanish Detective and mystery stories",
+  "Jeunes hommes",
+  "Romans, nouvelles",
+  "Livres rares",
+  "Jóvenes (Varones)",
+  "Novela"
+ ],
+ "lc_classifications": [
+  "PQ"
+ ],
+ "identifiers": {
+  "wikidata": [
+   "Q52910"
+  ],
+  "librarything": [
+   "5174"
+  ]
+ },
+ "genres": [
+  "/tags/OL174T",
+  "/tags/OL175T",
+  "/tags/OL180T"
+ ],
+ "latest_revision": 40,
+ "revision": 40,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-10-25T14:08:14.552984"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2026-08-30T18:10:11.208451"
+ }
+}

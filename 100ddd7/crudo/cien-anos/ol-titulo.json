@@ -1,0 +1,966 @@
+{
+ "numFound": 12,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 12,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL27363A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "cover_edition_key": "OL37050600M",
+   "cover_i": 12627383,
+   "edition_count": 208,
+   "first_publish_year": 1967,
+   "isbn": [
+    "9789588774060",
+    "880431463X",
+    "202023811X",
+    "0060114185",
+    "9789580470328",
+    "0241972353",
+    "9029083409",
+    "9789871138142",
+    "9789500726092",
+    "0380452782",
+    "5870870119",
+    "5699055959",
+    "9780241971826",
+    "8470176811",
+    "9788401301544",
+    "0140278761",
+    "9789500728249",
+    "9785224050581",
+    "9780965018944",
+    "9780307350428",
+    "8423919005",
+    "9580431035",
+    "8439732473",
+    "3462032003",
+    "9788439732471",
+    "9583007846",
+    "2020015374",
+    "9788439728368",
+    "5224050588",
+    "9788423921003",
+    "4105090011",
+    "9780140035247",
+    "0785950109",
+    "0060740450",
+    "0241968585",
+    "3462050214",
+    "8501012076",
+    "9780060883287",
+    "9780224618533",
+    "0060929790",
+    "9780613174183",
+    "9780679444657",
+    "0307474720",
+    "0613174186",
+    "0060919655",
+    "9780330255592",
+    "9780062377395",
+    "9580470324",
+    "8439711085",
+    "9788804404071",
+    "0141045639",
+    "0330329537",
+    "8501078891",
+    "9788497592208",
+    "9783596162505",
+    "847017681",
+    "9780380452781",
+    "9782020055826",
+    "0241968593",
+    "9780224032353",
+    "9788470176814",
+    "9788422656777",
+    "0241971829",
+    "8467200669",
+    "9789573333579",
+    "9789722000314",
+    "0060883286",
+    "9787532706907",
+    "9781856953214",
+    "0525562443",
+    "9755101586",
+    "081615483X",
+    "0224618539",
+    "9782020238113",
+    "0307350428",
+    "0330255592",
+    "9789588886213",
+    "0224032356",
+    "9789647196222",
+    "9780141181400",
+    "9781417619146",
+    "9780828825672",
+    "9780065023961",
+    "9788501078896",
+    "9789588089126",
+    "843972067X",
+    "9780060740450",
+    "0062380443",
+    "9789755101583",
+    "9781595693013",
+    "9780060750763",
+    "0140157514",
+    "9780785950103",
+    "9785171041557",
+    "0060750766",
+    "9602360097",
+    "143512605X",
+    "9782020015370",
+    "6070714865",
+    "9781482939675",
+    "1417619147",
+    "9580482179",
+    "9785267000635",
+    "842392100X",
+    "9789575452919",
+    "9780140157512",
+    "9789602360095",
+    "8420471836",
+    "9783462015096",
+    "8328706210",
+    "9789580439875",
+    "060630052X",
+    "9780061120091",
+    "9788447306190",
+    "5267000639",
+    "9871138148",
+    "968131574X",
+    "8804404078",
+    "9780060919658",
+    "8482800000",
+    "9390085683",
+    "9788439703877",
+    "9788482800004",
+    "9785870870113",
+    "6070704355",
+    "9783596509812",
+    "9780330329538",
+    "0785949836",
+    "9781482939682",
+    "9788437604947",
+    "9500711060",
+    "0307350274",
+    "848130123X",
+    "9788439719786",
+    "9789500767170",
+    "9781417735983",
+    "9785699055951",
+    "9780060531041",
+    "9588089123",
+    "9789580600022",
+    "082882567X",
+    "8372008922",
+    "3596162505",
+    "848450770X",
+    "8422656779",
+    "9781435126053",
+    "9500710684",
+    "3462026291",
+    "9588774063",
+    "958888621X",
+    "9029000147",
+    "9783462050219",
+    "0060531045",
+    "9788372008923",
+    "8501110361",
+    "9780816154845",
+    "9580439524",
+    "9787544253994",
+    "9500726092",
+    "7544253996",
+    "9788484507703",
+    "1857152239",
+    "0062377396",
+    "9575452917",
+    "9786070728792",
+    "9783462013115",
+    "9580439877",
+    "9789583007842",
+    "9783462026290",
+    "9789580431039",
+    "9780380015030",
+    "9780307474728",
+    "978-8804809845",
+    "9780241968598",
+    "9780525562443",
+    "9647196229",
+    "9789580482178",
+    "9788439720676",
+    "7532706907",
+    "9783462032000",
+    "8401242266",
+    "9789500700290",
+    "9788467200669",
+    "9780606300520",
+    "9788481301236",
+    "8447306194",
+    "8401301548",
+    "9780241972359",
+    "1482939681",
+    "9788328706217",
+    "8439728360",
+    "0141181400",
+    "0816154848",
+    "8497592204",
+    "3462015095",
+    "3423102497",
+    "9784105090012",
+    "9780785949831",
+    "9788423919000",
+    "9789390085682",
+    "843760494X",
+    "9780060114183",
+    "9788189848620",
+    "5040048270",
+    "9780060929794",
+    "038001503X",
+    "9781857152234",
+    "8439703872",
+    "9785352006290",
+    "9788439711087",
+    "9780062380449",
+    "5171041555",
+    "9786070714863",
+    "8420421367",
+    "006112009X",
+    "9780606349154",
+    "9580600023",
+    "9722000314",
+    "0965018946",
+    "9786070704352",
+    "3462013114",
+    "9789580439523",
+    "9789500710688",
+    "9788420471839",
+    "0679444653",
+    "8189848623",
+    "9780241968581",
+    "9780141184999",
+    "9780141045634",
+    "1417735988",
+    "9788804314639",
+    "9780140278767",
+    "6070728793",
+    "9780307350275",
+    "2020055821",
+    "0673787931",
+    "0899667031",
+    "9780816154838",
+    "9788420471837",
+    "0140035249",
+    "9573333570",
+    "8439719787",
+    "9780673787934",
+    "9500700298",
+    "8804809841",
+    "014118499X",
+    "3596509815",
+    "5352006298",
+    "1595693017",
+    "9780899667034",
+    "9785040048274",
+    "9788804809845",
+    "9788501110367",
+    "9789681315740",
+    "9783423102490",
+    "9788501012074",
+    "9789029000147",
+    "9500728249",
+    "9500767171",
+    "9788420421360",
+    "0606349154",
+    "9789500711067",
+    "006502396X",
+    "9789029083409",
+    "1856953211",
+    "9788401242267",
+    "1482939673"
+   ],
+   "key": "/works/OL274505W",
+   "language": [
+    "gre",
+    "ara",
+    "por",
+    "eng",
+    "fre",
+    "jpn",
+    "ger",
+    "ita",
+    "und",
+    "kor",
+    "guj",
+    "spa",
+    "chi",
+    "tur",
+    "pol",
+    "rus"
+   ],
+   "publisher": [
+    "ĖKSMO",
+    "Arnoldo Mondadori Editore",
+    "Easton Press",
+    "Livani",
+    "Sagebrush Education Resources",
+    "Huang Guan",
+    "Grupo Editorial Norma",
+    "Ediciones Alfaguara",
+    "Not Avail",
+    "RBA Ediciones S.A.",
+    "Huang guan wen hua chu ban you xian gong si",
+    "G.K. Hall",
+    "Editorial Norma",
+    "Random House Mondadori",
+    "Harper and Row",
+    "Nan hai chu ban gong si",
+    "Harper & Row, Publishers",
+    "Alfred A. Knopf",
+    "Warszawskie Wydawnictwo Literackie MUZA",
+    "Vintage Español",
+    "Penguin Modern Classics",
+    "Real academia española",
+    "Seuil",
+    "Tandem Library",
+    "Kiepenheuer & Witsch GmbH",
+    "Munhak Sasangsa",
+    "Mondadori",
+    "Azbuka",
+    "Penguin Books Ltd",
+    "SUDAMERICANA",
+    "Editions du Seuil",
+    "LITERATURA RANDOM HOUSE",
+    "Unidad editorial",
+    "Kiepenheuer & Witsch",
+    "Plaza & Janes",
+    "Panamericana Editorial",
+    "Elliot's Books",
+    "Penguin Books, Limited",
+    "RECORD",
+    "E ksmo",
+    "Espasa-Calpe",
+    "Círculo de Lectores",
+    "Izd-vo \"Azbuka\"",
+    "Zhi wen chu ban she",
+    "Penguin",
+    "Ca tedra",
+    "Deutscher Taschenbuch Verlag",
+    "Avon Books",
+    "Universidad Nacional Autónoma de México",
+    "Penguin Random House",
+    "J. Cape",
+    "Alfaguara",
+    "HarperCollins Publishers",
+    "Picador",
+    "Norma",
+    "Al Kalima",
+    "Editorial Sud-Americana",
+    "Casa Editorial El Tiempo",
+    "Mondial",
+    "Santillana USA Publishing Co.",
+    "Plaza & Janés",
+    "Plaza & Janés Editores",
+    "Harsha Prakāśana",
+    "HarperCollins",
+    "Buccaneer Books",
+    "Kiepenheuer & Witsch Verlag",
+    "Ediciones Cátedra",
+    "Gardners Books",
+    "Avon",
+    "Cátedra",
+    "Feltrinelli",
+    "Brand: Sudamericana",
+    "distributed by Random House Inc.",
+    " Penguin Random House",
+    "Harper & Row",
+    "Limited Editions Club",
+    "Jonathan Cape",
+    "Oveja Negra",
+    "Plaza y Janes",
+    "Eksmo (M.)",
+    "Editorial Diana, S. A.",
+    "Can Yayinlari",
+    "Shanghai yi wen chu ban she",
+    "Editorial Argos Vergara",
+    "Asociación de Academias de la Lengua Española",
+    "Selecciones austral",
+    "Shinchōsha",
+    "Grijalbo Mondadori Sa",
+    "Penguin India",
+    "I.B.D. Limited",
+    "ISIS Large Print",
+    "Literatura Random House",
+    "RH Canada UK Dist",
+    "French and European Publications Inc",
+    "Editorial Oveja Negra",
+    "MUZA SA",
+    "imusti",
+    "Norma S a Editorial",
+    "Perennial Classics",
+    "Cátedra",
+    "Debolsillo",
+    "Harper and Rowe",
+    "Record",
+    "Ariaban",
+    "Meulenhoff Editie",
+    "Harper Perennial Modern Classics",
+    "al-Muʼassasah al-ʻArabīyah lil-Dirāsāt wa-al-Nashr",
+    "Plaza & Janes Editories Sa",
+    "Éditions du Seuil",
+    "Al Muassasa Al Arabin",
+    "Grijalbo Mondadori, S.A.",
+    "Diana",
+    "Penguin Books",
+    "Harper Perennial",
+    "French & European Pubns",
+    "Real Academia Española",
+    "MANJUL PUBLISHING HOUSE",
+    "Franklin Library",
+    "Quality Paperback Book Club",
+    "Koch, Neff & Oetinger & Co",
+    "Editorial Sud-americana",
+    "Addison Wesley",
+    "Editorial Diana S.A. De C.V.",
+    "Turtleback Books Distributed by Demco Media",
+    "Ed.Costa Rica",
+    "FISCHER Taschenbuch",
+    "Casa de las Americas",
+    "Editorial Sudamericana",
+    "Sudamericana",
+    "Blackstone Audio",
+    "Barnes and Noble",
+    "Argos Vergara",
+    "Fischer Taschenbuch Verlag"
+   ],
+   "title": "Cien años de soledad",
+   "subject": [
+    "Spanish language books",
+    "Fiction",
+    "Social conditions",
+    "Macondo (Imaginary place)",
+    "novel",
+    "magic realism",
+    "Latinamerican literature",
+    "Condiciones sociales",
+    "Novela",
+    "Literatura épica",
+    "Epic literature",
+    "Macondo (Lugar imaginario)",
+    "Ficción",
+    "Spanish language materials",
+    "Ficcion",
+    "Translations into Arabic",
+    "Latin American fiction",
+    "Spanish fiction",
+    "Translations into Gujarati",
+    "Chang pian xiao shuo",
+    "Translations into Russian",
+    "Colombian fiction",
+    "Cliffs Notes",
+    "Magic realism (Literature)",
+    "Large type books",
+    "Dorf",
+    "Familie",
+    "Unabhängigkeitsbewegung",
+    "Romans, nouvelles",
+    "Conditions sociales",
+    "Macondo (imaginary place), fiction",
+    "Fiction (fictional works by one author)",
+    "Latin america, fiction",
+    "Fiction, general",
+    "Garcia marquez, gabriel, 1928-2014",
+    "Criticism and interpretation",
+    "Cien años de soledad (García Márquez, Gabriel)",
+    "Spanish American fiction",
+    "In English",
+    "Texts",
+    "Macondo (Lieu imaginaire)",
+    "Romance literature",
+    "América Latina",
+    "Romans, nouvelles, etc. pour la jeunesse",
+    "Roman colombien",
+    "Littérature épique",
+    "Epic poems",
+    "General",
+    "Spanish language",
+    "Fantasy",
+    "Literature",
+    "Macondo (imaginary place)--fiction",
+    "Pq8180.17.a73 c513 1970",
+    "Pz4.g2164",
+    "863",
+    "Language study",
+    "Spanish",
+    "Long Now Manual for Civilization",
+    "Translations into French"
+   ],
+   "ratings_average": 4.101124,
+   "editions": {
+    "numFound": 105,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL38570141M",
+      "title": "Cien años de soledad",
+      "cover_i": 12808734,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Diana"
+      ],
+      "publish_date": [
+       "2012"
+      ],
+      "isbn": [
+       "9786070714863",
+       "6070714865"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL27363A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "cover_edition_key": "OL34980171M",
+   "cover_i": 13215914,
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9781644734728",
+    "1644734729"
+   ],
+   "key": "/works/OL25917022W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Penguin Random House Grupo Editorial"
+   ],
+   "title": "Cien años de Soledad. Edición Conmemorativa de la RAE / One Hundred Years of Sol Itude. Conmemorative Edition",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL34980171M",
+      "title": "Cien años de Soledad. Edición Conmemorativa de la RAE / One Hundred Years of Sol Itude. Conmemorative Edition",
+      "cover_i": 13215914,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Penguin Random House Grupo Editorial"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9781644734728",
+       "1644734729"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL27363A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "cover_edition_key": "OL9153311M",
+   "cover_i": 4918600,
+   "edition_count": 1,
+   "first_publish_year": 2004,
+   "isbn": [
+    "8495761378",
+    "9788495761378"
+   ],
+   "key": "/works/OL28027117W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Art Enterprise",
+    "distributed by] Ediciones Norte, Inc.",
+    "Ediciones Norte"
+   ],
+   "title": "Cien Años de Soledad",
+   "subject": [
+    "Readers",
+    "Spanish language, juvenile literature",
+    "Criticism and interpretation",
+    "Macondo (Imaginary place)",
+    "Fiction",
+    "Social conditions"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9153311M",
+      "title": "Cien anos de soledad",
+      "subtitle": "Analisis y estudio sobre la obra, el autor y su epoca (Compendios Vosgos series)",
+      "cover_i": 4918600,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Ediciones Norte",
+       "Art Enterprise",
+       "distributed by] Ediciones Norte, Inc."
+      ],
+      "publish_date": [
+       "April 1, 2004"
+      ],
+      "isbn": [
+       "9788495761378",
+       "8495761378"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL15193084A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1972,
+   "key": "/works/OL43144891W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Editorial Sudamericana"
+   ],
+   "title": "Cien Años De Soledad",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL58761792M",
+      "title": "Cien Años De Soledad",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Editorial Sudamericana"
+      ],
+      "publish_date": [
+       "1972-01-01"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL27363A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "cover_edition_key": "OL31995573M",
+   "cover_i": 10666982,
+   "edition_count": 1,
+   "first_publish_year": 2015,
+   "isbn": [
+    "9781481518468",
+    "1481518461"
+   ],
+   "key": "/works/OL24213362W",
+   "publisher": [
+    "Blackstone Audio, Inc.",
+    "Blackstone Audiobooks"
+   ],
+   "title": "Cien años de soledad / One Hundred Years of Solitude",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL31995573M",
+      "title": "Cien años de soledad / One Hundred Years of Solitude",
+      "cover_i": 10666982,
+      "publisher": [
+       "Blackstone Audio, Inc.",
+       "Blackstone Audiobooks"
+      ],
+      "publish_date": [
+       "Jan 06, 2015"
+      ],
+      "isbn": [
+       "9781481518468",
+       "1481518461"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL27363A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2016,
+   "isbn": [
+    "9781532996467",
+    "1532996462"
+   ],
+   "key": "/works/OL40693424W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Cien años de Soledad",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55316217M",
+      "title": "Cien años de Soledad",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2016"
+      ],
+      "isbn": [
+       "9781532996467",
+       "1532996462"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL27363A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "cover_edition_key": "OL1326812M",
+   "cover_i": 3921791,
+   "edition_count": 1,
+   "first_publish_year": 1989,
+   "isbn": [
+    "9802761109",
+    "9789802761104"
+   ],
+   "key": "/works/OL20800146W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Ayacucho"
+   ],
+   "title": "El coronel no tiene quien le escriba / Cien años de soledad",
+   "subject": [
+    "Macondo (Imaginary place)",
+    "Fiction",
+    "Social conditions"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL1326812M",
+      "title": "El coronel no tiene quien le escriba ; Cien años de soledad",
+      "cover_i": 3921791,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Ayacucho"
+      ],
+      "publish_date": [
+       "1989"
+      ],
+      "isbn": [
+       "9802761109",
+       "9789802761104"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL15389184A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1974,
+   "key": "/works/OL43951156W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Editorial Sudamericana"
+   ],
+   "title": "Cien anõs de soledad",
+   "subject": [
+    "Macondo (Imaginary place)",
+    "Fiction",
+    "Social conditions"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL59939050M",
+      "title": "Cien anõs de soledad",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Editorial Sudamericana"
+      ],
+      "publish_date": [
+       "1974"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL27363A",
+    "OL4333664A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez",
+    "Carlos Fuentes"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2007,
+   "isbn": [
+    "968168513X",
+    "9789681685133"
+   ],
+   "key": "/works/OL28811888W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Fondo de Cultura Economica"
+   ],
+   "title": "Cien Años de Soledad y un Homenaje",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39572197M",
+      "title": "Cien Años de Soledad y un Homenaje",
+      "subtitle": "Discursos de Gabriel García Márquez y Carlos Fuentes",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Fondo de Cultura Economica"
+      ],
+      "publish_date": [
+       "2007"
+      ],
+      "isbn": [
+       "9789681685133",
+       "968168513X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL27363A",
+    "OL10779545A"
+   ],
+   "author_name": [
+    "Gabriel García Márquez",
+    "Luisa Rivera"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "9798890981745"
+   ],
+   "key": "/works/OL38390718W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Knopf Doubleday Publishing Group"
+   ],
+   "title": "Cien años de Soledad (Edición de Regalo) / One Hundred Years of Solitude (Gift Edition)",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL52221757M",
+      "title": "Cien años de Soledad (Edición de Regalo) / One Hundred Years of Solitude (Gift Edition)",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Knopf Doubleday Publishing Group"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9798890981745"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

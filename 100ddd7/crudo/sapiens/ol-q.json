@@ -1,0 +1,464 @@
+{
+ "numFound": 4,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 4,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Sapiens: De animales a dioses Yuval Noah Harari",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL3778242A"
+   ],
+   "author_name": [
+    "Yuval Noah Harari"
+   ],
+   "cover_edition_key": "OL26234146M",
+   "cover_i": 8634250,
+   "edition_count": 86,
+   "first_publish_year": 2011,
+   "isbn": [
+    "9781716994982",
+    "006342200X",
+    "9786559213016",
+    "9788466347518",
+    "9788490277300",
+    "8377059967",
+    "9789588806839",
+    "0063387417",
+    "6559213013",
+    "1973896680",
+    "9780771038747",
+    "2226257012",
+    "9788429779776",
+    "0063387425",
+    "9781529913934",
+    "7521721403",
+    "841939971X",
+    "1784709042",
+    "9780063422001",
+    "2226448454",
+    "9781494556907",
+    "2226445501",
+    "8490277303",
+    "077103850X",
+    "6052205695",
+    "9782226257017",
+    "9788535933925",
+    "6559212998",
+    "9780063212244",
+    "9789734668472",
+    "9780063422018",
+    "9780062316110",
+    "9789602216651",
+    "9780063387430",
+    "9788499926223",
+    "8466342281",
+    "1473582911",
+    "9782226448453",
+    "0063212234",
+    "9784309226712",
+    "9781473582910",
+    "1529913934",
+    "9788419951182",
+    "6055029359",
+    "9783421045959",
+    "9789537213657",
+    "9789734648887",
+    "8535933921",
+    "8525432180",
+    "9780099590088",
+    "9788466361903",
+    "9780062316097",
+    "9781784709044",
+    "9734648888",
+    "9789388241175",
+    "1494556901",
+    "9780063387423",
+    "9788419399717",
+    "9781494506902",
+    "1846558247",
+    "9602216654",
+    "9783570552698",
+    "9786055029739",
+    "1716994985",
+    "191171726X",
+    "0062316117",
+    "8934972467",
+    "9734668463",
+    "1784873640",
+    "9788418056925",
+    "9784309226729",
+    "1846558239",
+    "9780063212220",
+    "9781787332812",
+    "9786559212996",
+    "0063422018",
+    "4309226728",
+    "144819069X",
+    "9788466342285",
+    "9788499924212",
+    "342104595X",
+    "8418006811",
+    "1494506904",
+    "9781787333765",
+    "8466347518",
+    "9865258900",
+    "8845296490",
+    "9788377059968",
+    "9788429775174",
+    "8535933824",
+    "9788525432186",
+    "430922671X",
+    "0771038518",
+    "8499924212",
+    "9780063055087",
+    "9788535933826",
+    "9788418006814",
+    "9788845296499",
+    "9781473598140",
+    "0063051338",
+    "0062316095",
+    "9786052205693",
+    "9781973896685",
+    "9780063051331",
+    "1473598141",
+    "9789865258900",
+    "9780771038501",
+    "9781784873646",
+    "953721365X",
+    "9782226479822",
+    "0771038747",
+    "8419951188",
+    "9780063212237",
+    "9781538456590",
+    "9588806836",
+    "0063212226",
+    "9789734668465",
+    "9781448190690",
+    "8418056924",
+    "8429779779",
+    "9788934972464",
+    "0063387433",
+    "1538456591",
+    "5905891648",
+    "9781846558245",
+    "9781911717263",
+    "9785905891649",
+    "9781846558238",
+    "1787333760",
+    "842977517X",
+    "8499926223",
+    "9786055029357",
+    "2226479821",
+    "8466361901",
+    "9388241177",
+    "9734668471",
+    "9780771038518",
+    "0063055082",
+    "0099590085",
+    "0063212242",
+    "9787521721409",
+    "9782226445506",
+    "3570552691",
+    "9780063387416",
+    "1787332810",
+    "6055029731"
+   ],
+   "key": "/works/OL17075811W",
+   "language": [
+    "fre",
+    "spa",
+    "hrv",
+    "pol",
+    "jpn",
+    "tur",
+    "rum",
+    "kor",
+    "ita",
+    "urd",
+    "ger",
+    "eng",
+    "por"
+   ],
+   "publisher": [
+    "Blackstone Pub",
+    "Albin Michel",
+    "CreateSpace Independent Publishing Platform",
+    "Bompiani",
+    "HarperCollins Publishers",
+    "RANDOM HOUSE INDIA",
+    "seksok",
+    "Elkar",
+    "Tian Xia Wen Hua",
+    "Harpercollins",
+    "Penguin Random House",
+    "Deutsche Verlags-Anstalt",
+    "ALBIN MICHEL",
+    "Companhia Das Letras",
+    "Harper",
+    "Quadrinhos na Cia",
+    "Tantor Audio",
+    "Penguin Random House Grupo Editorial (Debate)",
+    "Kolektif Kitap",
+    "DVA Dt.Verlags-Anstalt",
+    "Signal",
+    "Vintage Books",
+    "McClelland & Stewart",
+    "Harper Perennial",
+    "Vintage Publishing",
+    "Sindbad",
+    "Harvill Secker",
+    "Debolsillo",
+    "Alexandria",
+    "Self-Published",
+    "Pantheon Verlag",
+    "Wydawnictwo Naukowe PWN",
+    "Dom Wydawniczy PWN",
+    "L&PM",
+    "Debate",
+    "Editura Polirom",
+    "CITIC Press Corporation",
+    "Random House Espanol",
+    "Pantheon",
+    "Manjul Publishing House",
+    "Vintage",
+    "Edicions 62",
+    "Companhia das Letras",
+    "DEBOLSILLO"
+   ],
+   "subtitle": "A Brief History of Humankind",
+   "title": "Sapiens",
+   "subject": [
+    "Technology and civilization",
+    "Human beings",
+    "Historical Chronology",
+    "Historia universal",
+    "Historia",
+    "Civilization",
+    "Hombre",
+    "World history",
+    "History",
+    "Non-Fiction",
+    "Science",
+    "SCIENCE / Life Sciences / General",
+    "SCIENCE / General",
+    "SCIENCE / Life Sciences / Evolution",
+    "Weltgeschichte",
+    "Civilization, history",
+    "Chronology, historical",
+    "Chronologie historique",
+    "Technologie et civilisation",
+    "Histoire universelle",
+    "Histoire",
+    "Humans",
+    "Civilisation",
+    "Homme",
+    "nyt:combined-print-and-e-book-nonfiction=2015-03-01",
+    "New York Times bestseller",
+    "Life Sciences",
+    "Evolution",
+    "General",
+    "Menschheit",
+    "Humanité",
+    "Människan",
+    "Fysisk antropologi",
+    "Human",
+    "Sapiens",
+    "nyt:paperback-nonfiction=2018-06-03",
+    "Comics & graphic novels, adaptations",
+    "Zivilisation",
+    "Society",
+    "Psychology",
+    "Economic history",
+    "Cognition and culture",
+    "Civilization--history",
+    "Human beings--history",
+    "Technology and civilization--history",
+    "Cb113.h4 h3713 2015",
+    "599.9",
+    "Sci027000 sci086000 sci000000",
+    "Cronología histórica",
+    "Tecnología y civilización",
+    "Anthropology",
+    "Long Now Manual for Civilization",
+    "Comic books, strips"
+   ],
+   "ratings_average": 4.193396,
+   "editions": {
+    "numFound": 86,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25881939M",
+      "title": "Sapiens",
+      "subtitle": "De animales a dioses",
+      "cover_i": 7387235,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Debate"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9788499926223",
+       "8499926223"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3778242A"
+   ],
+   "author_name": [
+    "Yuval Noah Harari"
+   ],
+   "cover_edition_key": "OL46525594M",
+   "cover_i": 13154716,
+   "edition_count": 1,
+   "first_publish_year": 2018,
+   "isbn": [
+    "9974881293",
+    "9789974881297"
+   ],
+   "key": "/works/OL34306254W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Editorial Sudamericana Uruguaya SA"
+   ],
+   "subtitle": "Breve historia de la humanidad",
+   "title": "De animales a dioses",
+   "subject": [
+    "History"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL46525594M",
+      "title": "De animales a dioses: Breve historia de la humanidad",
+      "cover_i": 13154716,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Editorial Sudamericana Uruguaya SA"
+      ],
+      "publish_date": [
+       "2018"
+      ],
+      "isbn": [
+       "9789974881297",
+       "9974881293"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL10904448A"
+   ],
+   "author_name": [
+    "Libros Mentores"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2019,
+   "isbn": [
+    "9781797670102",
+    "1797670107"
+   ],
+   "key": "/works/OL29807415W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumen Extendido de Sapiens",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL40991700M",
+      "title": "Resumen Extendido de Sapiens",
+      "subtitle": "de Animales a Dioses - Basado en el Libro de Yuval Noah Harari",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2019"
+      ],
+      "isbn": [
+       "9781797670102",
+       "1797670107"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL10867122A"
+   ],
+   "author_name": [
+    "Sapiens Editorial"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2017,
+   "isbn": [
+    "1521050198",
+    "9781521050194"
+   ],
+   "key": "/works/OL29431510W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumen de Sapiens",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL40522978M",
+      "title": "Resumen de Sapiens",
+      "subtitle": "de Animales a Dioses , de Yuval Noah Harari",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781521050194",
+       "1521050198"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

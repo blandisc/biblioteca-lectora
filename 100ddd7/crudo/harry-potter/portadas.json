@@ -1,0 +1,38 @@
+[
+ {
+  "url": "https://covers.openlibrary.org/b/id/15155833-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 58885,
+  "segundos": 0.26,
+  "sha1": "e735cfce8f1d",
+  "ancho": 307,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL82563W"
+ },
+ {
+  "url": "https://covers.openlibrary.org/b/id/14925450-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 54434,
+  "segundos": 0.26,
+  "sha1": "d8903114608e",
+  "ancho": 332,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL82563W"
+ },
+ {
+  "url": "https://covers.openlibrary.org/b/id/15158666-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 48425,
+  "segundos": 0.28,
+  "sha1": "f7a57463308b",
+  "ancho": 304,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL82548W"
+ }
+]
