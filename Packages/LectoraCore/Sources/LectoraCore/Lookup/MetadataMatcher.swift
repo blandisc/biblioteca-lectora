@@ -75,15 +75,16 @@ public enum MetadataMatcher {
     /// Open Library cuenta una vez, completada con lo de sus copias), del más
     /// al menos probable.
     public static func rank(_ candidates: [MetadataCandidate], for book: Book) -> [MetadataCandidate] {
-        let scored = candidates.map { candidate -> MetadataCandidate in
-            var scored = candidate
+        var scored: [MetadataCandidate] = []
+        for candidate in candidates {
             let result = match(candidate, for: book)
-            scored.confidence = result.confidence
-            scored.notes = result.notes
-            return scored
+            guard result.confidence >= minimumShown else { continue }
+            var copy = candidate
+            copy.confidence = result.confidence
+            copy.notes = result.notes
+            scored.append(copy)
         }
-        .filter { $0.confidence >= minimumShown }
-        .sorted { $0.confidence != $1.confidence ? $0.confidence > $1.confidence : ($0.editionCount ?? 0) > ($1.editionCount ?? 0) }
+        scored.sort(by: isMoreLikely)
 
         var result: [MetadataCandidate] = []
         for candidate in scored {
@@ -94,6 +95,11 @@ public enum MetadataMatcher {
             }
         }
         return result
+    }
+
+    private static func isMoreLikely(_ a: MetadataCandidate, _ b: MetadataCandidate) -> Bool {
+        if a.confidence != b.confidence { return a.confidence > b.confidence }
+        return (a.editionCount ?? 0) > (b.editionCount ?? 0)
     }
 
     /// ¿Se aplica solo? Hace falta: confianza alta, título y autor seguros (o

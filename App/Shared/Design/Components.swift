@@ -464,6 +464,13 @@ struct LinkRow: View {
 struct CandidateRow: View {
     let candidate: MetadataCandidate
 
+    private var verdictLine: Text {
+        let sure = candidate.confidence >= MetadataMatcher.autoApplyThreshold
+        let verdict = Text(candidate.verdict).foregroundStyle(sure ? Theme.ink : Theme.secondaryInk)
+        guard !candidate.reasons.isEmpty else { return verdict }
+        return verdict + Text(" · \(candidate.reasons)").foregroundStyle(Theme.tertiaryInk)
+    }
+
     private var detail: String {
         [candidate.authors.first, candidate.published.map { String($0.prefix(4)) }, candidate.publisher]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
@@ -480,9 +487,7 @@ struct CandidateRow: View {
                 if !detail.isEmpty {
                     Text(detail).font(.footnote).foregroundStyle(Theme.secondaryInk).lineLimit(2)
                 }
-                (Text(candidate.verdict).foregroundStyle(candidate.confidence >= MetadataMatcher.autoApplyThreshold ? Theme.ink : Theme.secondaryInk)
-                    + Text(candidate.reasons.isEmpty ? "" : " · " + candidate.reasons).foregroundStyle(Theme.tertiaryInk))
-                    .font(.caption)
+                verdictLine.font(.caption)
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
