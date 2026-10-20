@@ -1,6 +1,8 @@
-# Biblioteca Lectora: PRD v3.2 — el hub
+# Biblioteca Lectora: PRD v3.3 — el hub
 
-> **Estado:** borrador para revisión · **Versión:** 3.2 · **Fecha:** 20 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+> **Estado:** borrador para revisión · **Versión:** 3.3 · **Fecha:** 20 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+>
+> **Qué cambia en la v3.3:** entra el **modo audiolibro con voz de IA** (§6.5): una IA lee el capítulo como director de escena y una voz neuronal lo narra. Sale el repaso diario de Readwise, porque no se usa.
 >
 > **Qué cambia en la v3.2:** la **v1 es iPhone (incluido el Duo) + Mac nativo**. El iPhone es para leer y el Mac es la estación de administración (§5). El **iPad llega después** y sale barato, porque los diseños amplios del Duo ya lo cubren casi por completo (§5.1).
 >
@@ -162,7 +164,7 @@ La pantalla interior del Duo usa el mismo tipo de diseño que el iPad (ancho y a
 | Duo: pose libro, pose mesa, modo estudio | P1 |
 | **Lectura guiada:** marcador por línea, foco por frase, lectura con voz | P1 |
 | Cómics y manga (de derecha a izquierda, dobles páginas sobre la bisagra) | P1 |
-| TTS con voces del sistema | P1 |
+| Leer en voz alta con voces del sistema (gratis, sin conexión); el modo audiolibro con IA está en §6.5 | P1 |
 | OCR de PDFs escaneados, recorte de márgenes | P1 |
 | RSVP, pre-lectura con IA, webtoon, page curl, scroll entre capítulos | P2 |
 
@@ -174,7 +176,6 @@ La pantalla interior del Duo usa el mismo tipo de diseño que el iPad (ancho y a
 | **Subrayados de Kindle (vía Readwise) anclados dentro de tus EPUB** | P0 |
 | Export ilimitado a Markdown y JSON | P0 |
 | Reader: importar originales, subrayados en ambos sentidos, progreso | P1 |
-| Daily Review de Readwise en la app y en el widget | P2 |
 | Quote cards como imagen | P2 |
 
 ### 6.4 IA
@@ -190,7 +191,29 @@ La pantalla interior del Duo usa el mismo tipo de diseño que el iPad (ancho y a
 | Preguntarle a tu biblioteca, con citas clicables | Índice 📱 + ☁︎ | P2 |
 | Personajes sin spoilers, mapa de argumentos | ☁︎ | P3 |
 
-### 6.5 Plataforma
+### 6.5 Modo audiolibro con IA *[08]*
+
+Cualquier libro de tu biblioteca se escucha como audiolibro, con una voz que suena humana y una IA que entiende lo que está leyendo. Se cambia entre leer y escuchar sin perder el lugar.
+
+**Cómo funciona.** Dos pasos por capítulo, siempre uno por delante de donde vas:
+1. **Director de escena (LLM, el mismo conector de IA).** Lee el capítulo y devuelve un guion: qué es narración y qué es diálogo, quién habla, el tono de cada pasaje, pausas, cómo se pronuncian nombres y palabras en otro idioma, y qué saltar (notas al pie, números de página). Si lo pides, también traduce.
+2. **Voz (TTS).** Narra cada fragmento del guion con su voz e indicaciones de tono. El audio se guarda en el dispositivo; un capítulo ya generado no se vuelve a pagar.
+
+| Función | Dónde | P |
+|---|---|---|
+| Escuchar cualquier libro con voces del sistema (gratis, sin conexión) | 📱 | P1 |
+| **Modo audiolibro con voz de IA**, generando el siguiente capítulo por adelantado | ☁︎ | P1 |
+| Director de escena: diálogos, personajes, tono, pronunciación | ☁︎ (📱 después) | P1 |
+| Leer y escuchar sincronizados: la frase que suena se resalta y el lugar se conserva al cambiar | 📱 | P1 |
+| Pantalla de bloqueo, CarPlay, AirPods, velocidad, temporizador para dormir | 📱 | P1 |
+| Tope de gasto mensual y costo estimado antes de generar un libro | Ajustes | P1 |
+| Voces distintas por personaje | ☁︎ | P2 |
+| Escuchar un libro en otro idioma (traducción + voz) | ☁︎ | P2 |
+| Voz de IA en el dispositivo, sin conexión (cuando un modelo abierto en español suene bien en el iPhone) | 📱 | P3 |
+
+**Proveedores.** OpenRouter ya expone un endpoint de voz compatible con OpenAI (`/api/v1/audio/speech`) con GPT-4o mini TTS, Gemini Flash TTS y Voxtral TTS; así, la misma clave sirve para el director y para la voz. ElevenLabs queda como conector opcional si la prueba muestra que vale su precio. Costo estimado, por verificar en S7: de menos de 1 a unos 10 dólares por libro de 10 horas con las opciones baratas, contra unos 30 con ElevenLabs Flash.
+
+### 6.6 Plataforma
 | Función | P |
 |---|---|
 | Sincronización offline-first con registros por dispositivo; conflictos visibles ("vas más adelante en el Mac, ¿saltar?") | P0 |
@@ -228,10 +251,11 @@ La pantalla interior del Duo usa el mismo tipo de diseño que el iPad (ancho y a
 - S4 · Calibre en el Mac: leer `metadata.db` de una copia de tu biblioteca e importar 100 libros.
 - S5 · Readwise y Reader: las 9 pruebas con tu token, incluido el emparejamiento de Kindle.
 - S6 · IA: modelo de Apple en español + OpenRouter con `zdr` y `data_collection: deny`.
+- S7 · **Audiolibro:** un capítulo en español y otro en inglés, narrados con 3 voces (OpenAI, Gemini y Voxtral vía OpenRouter, más la voz del sistema), con y sin el director de escena. Prueba a ciegas contigo y costo real por hora. *Salida:* la voz elegida y el costo por libro.
 
 **Fase 1: MVP (8–10 semanas):** P0 de biblioteca, lector, subrayados y plataforma, en **iPhone y Mac**. *Salida:* dejas de usar Calibre, Apple Books y Kindle para tus libros.
 
-**Fase 2: Diferenciadores (6–8 semanas):** lectura guiada, Duo completo, cómics, Reader, IA P1, buzones de Google Drive y OneDrive.
+**Fase 2: Diferenciadores (6–8 semanas):** **modo audiolibro con IA**, lectura guiada, Duo completo, cómics, Reader, IA P1, buzones de Google Drive y OneDrive.
 
 **Fase 3:** IA P2 (conexiones, digest, preguntas a tu biblioteca) y estadísticas.
 
@@ -242,8 +266,8 @@ La pantalla interior del Duo usa el mismo tipo de diseño que el iPad (ancho y a
 ## 9. Preguntas abiertas
 1. ¿Tus libros de Calibre tienen el **ASIN** de Amazon? Facilita anclar los subrayados de Kindle.
 2. ¿Cuántos son **PDF y cómics**? Define cuánto pesa la prioridad de OCR y cómics.
-3. ¿Usas la Daily Review de Readwise? Define si la app tiene repaso propio.
-4. Nombre del producto ("Biblioteca Lectora" es provisional).
+3. Nombre del producto ("Biblioteca Lectora" es provisional).
+4. **Audiolibro:** qué voz gana la prueba a ciegas (S7) y cuánto quieres gastar al mes como tope.
 
 ---
 **Fuentes nuevas de esta versión:**
@@ -251,4 +275,4 @@ La pantalla interior del Duo usa el mismo tipo de diseño que el iPad (ancho y a
 - [OpenRouter: V4 Flash 0731](https://openrouter.ai/deepseek/deepseek-v4-flash-0731) · [OpenRouter: V4.1 Flash 1017](https://openrouter.ai/deepseek/deepseek-v4.1-flash-1017) · [OpenRouter ProviderPreferences (`data_collection`, `zdr`)](https://openrouter.ai/docs/agent-sdk/typescript/models/providerpreferences) · [Pydantic AI: OpenRouter (`only`, `ignore`)](https://pydantic.dev/docs/ai/api/models/openrouter/)
 - [Privacidad de DeepSeek en 2026](https://deepseekai.guide/guides/deepseek-privacy/) · [Is DeepSeek safe for business data](https://sagnikbhattacharya.com/blog/is-deepseek-safe-business-data)
 
-**Investigaciones (anexo técnico):** [01 Calibre](investigacion/01-calibre.md) · [02 Servidores de biblioteca](investigacion/02-servidores-biblioteca.md) · [03 Lectores](investigacion/03-lectores.md) · [04 PDF y cómics](investigacion/04-pdf-y-comics.md) · [05 IA e insights](investigacion/05-ia-e-insights.md) · [06 Reader y Readwise](investigacion/06-readwise-reader.md) · [07 IA en dispositivo y nube](investigacion/07-ia-dispositivo-y-nube.md)
+**Investigaciones (anexo técnico):** [01 Calibre](investigacion/01-calibre.md) · [02 Servidores de biblioteca](investigacion/02-servidores-biblioteca.md) · [03 Lectores](investigacion/03-lectores.md) · [04 PDF y cómics](investigacion/04-pdf-y-comics.md) · [05 IA e insights](investigacion/05-ia-e-insights.md) · [06 Reader y Readwise](investigacion/06-readwise-reader.md) · [07 IA en dispositivo y nube](investigacion/07-ia-dispositivo-y-nube.md) · [08 Audiolibro con voz de IA](investigacion/08-audiolibro-ia.md)
