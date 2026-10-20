@@ -211,7 +211,7 @@ Cualquier libro de tu biblioteca se escucha como audiolibro, con una voz que sue
 | Escuchar un libro en otro idioma (traducción + voz) | ☁︎ | P2 |
 | Voz de IA en el dispositivo, sin conexión (cuando un modelo abierto en español suene bien en el iPhone) | 📱 | P3 |
 
-**Proveedores.** OpenRouter ya expone un endpoint de voz compatible con OpenAI (`/api/v1/audio/speech`) con GPT-4o mini TTS, Gemini Flash TTS y Voxtral TTS; así, la misma clave sirve para el director y para la voz. ElevenLabs queda como conector opcional si la prueba muestra que vale su precio. Costo estimado, por verificar en S7: de menos de 1 a unos 10 dólares por libro de 10 horas con las opciones baratas, contra unos 30 con ElevenLabs Flash.
+**Proveedores.** OpenRouter ya expone un endpoint de voz compatible con OpenAI (`/api/v1/audio/speech`) con GPT-4o mini TTS, Gemini Flash TTS y Voxtral TTS; así, la misma clave sirve para el director y para la voz. ElevenLabs queda como conector opcional si la prueba muestra que vale su precio. Costo estimado, por verificar en S7: unos 8–10 dólares por libro de 10 horas con cualquiera de las tres (OpenAI calcula ~0.015 USD por minuto para GPT-4o mini TTS; OpenRouter solo muestra el precio del texto de entrada, 0.60 USD por millón de caracteres, que no es el costo total), contra unos 30 con ElevenLabs Flash. Las voces de Apple son gratis.
 
 ### 6.6 Plataforma
 | Función | P |
