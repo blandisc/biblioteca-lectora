@@ -1,0 +1,26 @@
+[
+ {
+  "url": "https://covers.openlibrary.org/b/id/3706128-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 1985,
+  "segundos": 0.57,
+  "sha1": "c182662cafc8",
+  "ancho": 128,
+  "alto": 201,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL712032W"
+ },
+ {
+  "url": "https://covers.openlibrary.org/b/id/15210072-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 35040,
+  "segundos": 0.23,
+  "sha1": "0a74f4237b2f",
+  "ancho": 313,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL712032W"
+ }
+]

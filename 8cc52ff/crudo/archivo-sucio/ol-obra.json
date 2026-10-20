@@ -1,0 +1,34 @@
+{
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-12-10T11:10:09.961485"
+ },
+ "subjects": [
+  "Readers",
+  "Spanish language"
+ ],
+ "latest_revision": 3,
+ "key": "/works/OL5730500W",
+ "title": "Selections from Cervantes' Don Quijote de la Mancha",
+ "authors": [
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL1393250A"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2018-09-10T05:04:34.191067"
+ },
+ "covers": [
+  8242661
+ ],
+ "revision": 3
+}

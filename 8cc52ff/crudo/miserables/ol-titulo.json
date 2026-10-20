@@ -1,0 +1,576 @@
+{
+ "numFound": 59,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 59,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL107571A"
+   ],
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 19,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9781987549805",
+    "9781534648531",
+    "1548180068",
+    "9781523954551",
+    "1537551272",
+    "9781548166236",
+    "1517369843",
+    "9781546482215",
+    "1987549805",
+    "9781502739995",
+    "9781507600962",
+    "1507600968",
+    "1533526893",
+    "9781535190077",
+    "9781539313410",
+    "9781517236328",
+    "1535186798",
+    "1535190078",
+    "9781981673841",
+    "1548166235",
+    "150273981X",
+    "1532827725",
+    "9781548180065",
+    "1537574507",
+    "9781517369842",
+    "1546482210",
+    "9781537551272",
+    "1534648534",
+    "9781502739810",
+    "1502739992",
+    "1523954558",
+    "9781532827723",
+    "9781537574509",
+    "9781535186797",
+    "9781533526892",
+    "1517236320",
+    "1981673849",
+    "1539313417"
+   ],
+   "key": "/works/OL40516131W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Los Miserables",
+   "subject": [
+    "Paris (france), fiction",
+    "Fiction, general"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 19,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL56493621M",
+      "title": "Los Miserables",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2016"
+      ],
+      "isbn": [
+       "9781535190077",
+       "1535190078"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL107571A",
+    "OL9780889A"
+   ],
+   "author_name": [
+    "Victor Hugo",
+    "Andrés Ruiz Merino"
+   ],
+   "cover_edition_key": "OL37857441M",
+   "cover_i": 12733432,
+   "edition_count": 3,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9788435010825",
+    "9798709892040",
+    "9788491041542",
+    "8435010821",
+    "8491041540"
+   ],
+   "key": "/works/OL25863254W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published",
+    "Edhasa",
+    "Alianza"
+   ],
+   "title": "Los miserables",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37857441M",
+      "title": "Los miserables",
+      "cover_i": 12733432,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alianza"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9788491041542",
+       "8491041540"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7521654A",
+    "OL107571A",
+    "OL8110287A"
+   ],
+   "author_name": [
+    "Crystal Silvermoon",
+    "Victor Hugo",
+    "Sunneko Lee"
+   ],
+   "cover_edition_key": "OL31417948M",
+   "cover_i": 10517103,
+   "edition_count": 7,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9788469866405",
+    "8467922087",
+    "9788467922080",
+    "9798591828332",
+    "9781494410810",
+    "1494410818",
+    "9798750160600",
+    "9781981119455",
+    "9798750957125",
+    "8469866400",
+    "1981119450"
+   ],
+   "key": "/works/OL23612379W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published",
+    "ANAYA INFANTIL Y JUVENIL",
+    "CreateSpace Independent Publishing Platform",
+    "Createspace Independent Publishing Platform",
+    "Norma Editorial"
+   ],
+   "title": "Los miserables",
+   "subject": [
+    "Paris (france), fiction",
+    "Fiction, general"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL46741392M",
+      "title": "Los Miserables",
+      "subtitle": "Literatura Francesa",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798750957125"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL107571A"
+   ],
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 5,
+   "first_publish_year": 2020,
+   "isbn": [
+    "9798667513384",
+    "9798653658433",
+    "9798664089974",
+    "9798667509899",
+    "9798667509851"
+   ],
+   "key": "/works/OL30655027W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Los Miserables",
+   "editions": {
+    "numFound": 5,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL42136689M",
+      "title": "Los Miserables",
+      "subtitle": "Edición Completa",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2020"
+      ],
+      "isbn": [
+       "9798653658433"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL107571A"
+   ],
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2013,
+   "isbn": [
+    "0274951991",
+    "6071415292",
+    "9786071415295",
+    "9780274951994"
+   ],
+   "key": "/works/OL28883098W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Editores mexicanos unidos",
+    "Creative Media Partners, LLC"
+   ],
+   "title": "Los Miserables...",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39703386M",
+      "title": "Los Miserables...",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Creative Media Partners, LLC"
+      ],
+      "publish_date": [
+       "2018"
+      ],
+      "isbn": [
+       "9780274951994",
+       "0274951991"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL107571A"
+   ],
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2020,
+   "isbn": [
+    "9798666739907",
+    "9798683615055"
+   ],
+   "key": "/works/OL34419807W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Los Miserables",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL46763635M",
+      "title": "Los Miserables",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2020"
+      ],
+      "isbn": [
+       "9798666739907"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL6679705A",
+    "OL107571A"
+   ],
+   "author_name": [
+    "Nemesio Fernández Cuesta",
+    "Victor Hugo"
+   ],
+   "cover_edition_key": "OL47106420M",
+   "cover_i": 13482823,
+   "edition_count": 9,
+   "first_publish_year": 2018,
+   "isbn": [
+    "9798735849575",
+    "9798798870271",
+    "9798809160964",
+    "9798700593267",
+    "9798838853479",
+    "9788408197515",
+    "9798462253607",
+    "9798735812180",
+    "8408197517"
+   ],
+   "key": "/works/OL31023853W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Austral",
+    "Independently Published"
+   ],
+   "title": "Los Miserables",
+   "editions": {
+    "numFound": 9,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL49050300M",
+      "title": "Los Miserables",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798735849575"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL107571A"
+   ],
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "edition_count": 3,
+   "first_publish_year": 2020,
+   "isbn": [
+    "9798667507369",
+    "9798667507376",
+    "9798424236228"
+   ],
+   "key": "/works/OL30716078W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Los Miserables",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL48518637M",
+      "title": "Los Miserables",
+      "subtitle": "Clásico Recomendado",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2020"
+      ],
+      "isbn": [
+       "9798667507369"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL107571A"
+   ],
+   "author_name": [
+    "Victor Hugo"
+   ],
+   "cover_edition_key": "OL32607767M",
+   "cover_i": 12733433,
+   "edition_count": 1,
+   "first_publish_year": 2020,
+   "isbn": [
+    "9788491041542",
+    "8491041540"
+   ],
+   "key": "/works/OL24586695W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Alianza Editorial",
+    "Alianza"
+   ],
+   "title": "Los miserables",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL32607767M",
+      "title": "Los miserables",
+      "cover_i": 12733433,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alianza",
+       "Alianza Editorial"
+      ],
+      "publish_date": [
+       "2020"
+      ],
+      "isbn": [
+       "9788491041542",
+       "8491041540"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL107571A",
+    "OL12616860A"
+   ],
+   "author_name": [
+    "Victor Hugo",
+    "MS Aventuras Literarias"
+   ],
+   "cover_edition_key": "OL47276611M",
+   "cover_i": 13732722,
+   "edition_count": 3,
+   "first_publish_year": 2008,
+   "isbn": [
+    "9789500395786",
+    "6074530289",
+    "9788412048339",
+    "9500395789",
+    "8412048334",
+    "9786074530285"
+   ],
+   "key": "/works/OL34918585W",
+   "publisher": [
+    "Losada",
+    "Selector, S.A. de C.V.",
+    "Aventuras Literarias",
+    "AVENTURAS LITERARIAS"
+   ],
+   "title": "Los miserables",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47426385M",
+      "title": "Los Miserables",
+      "subtitle": "Clasicos para ninos",
+      "cover_i": 14026514,
+      "publisher": [
+       "Selector, S.A. de C.V."
+      ],
+      "publish_date": [
+       "Dec 12, 2017"
+      ],
+      "isbn": [
+       "9786074530285",
+       "6074530289"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+{
+ "type": {
+  "key": "/type/work"
+ },
+ "title": "Los Miserables",
+ "subjects": [
+  "Paris (france), fiction",
+  "Fiction, general"
+ ],
+ "authors": [
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL107571A"
+   }
+  }
+ ],
+ "key": "/works/OL40516131W",
+ "latest_revision": 2,
+ "revision": 2,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2024-09-25T05:10:48.705627"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2025-08-04T07:37:19.115092"
+ }
+}

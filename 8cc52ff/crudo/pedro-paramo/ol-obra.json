@@ -1,0 +1,90 @@
+{
+ "title": "Pedro Páramo",
+ "covers": [
+  5419076,
+  2270161,
+  4901503,
+  900357,
+  900653,
+  4909498,
+  5272911,
+  5419075,
+  8573240,
+  11160297,
+  9286827,
+  10795118,
+  12315635,
+  13722621
+ ],
+ "first_sentence": {
+  "type": "/type/text",
+  "value": "I came to Comala because I had been told that my father, a man named Pedro Paramo, lived there."
+ },
+ "subject_places": [
+  "Mexico",
+  "México"
+ ],
+ "first_publish_date": "1955",
+ "subject_people": [
+  "Juan Rulfo",
+  "Juan Rulfo (1918-)"
+ ],
+ "key": "/works/OL1731119W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL199285A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "subjects": [
+  "Ficción",
+  "Fiction",
+  "Readers",
+  "Spanish language",
+  "Translations into Irish",
+  "Jalisco (México)",
+  "Peasants",
+  "Campesinos",
+  "Fiction, family life",
+  "Mexico, fiction",
+  "Despotisme",
+  "Romans, nouvelles",
+  "Fantastique",
+  "Histoires de fantômes",
+  "Fiction, family life, general",
+  "Mexican fiction",
+  "Spanish imprints",
+  "Spanish language, readers",
+  "Fiction, general",
+  "Campesinado",
+  "Novela",
+  "Novela mexicana",
+  "Literatura mexicana",
+  "Spanish language books",
+  "Film and video adaptations"
+ ],
+ "description": {
+  "type": "/type/text",
+  "value": "Dentro de su brevedad -determinada por el rigor y la concentración expresiva-, *Pedro Páramo* sintetiza la mayor parte de los temas que han interesado -y afligido- siempre a los mexicanos: ese misterio nacional que el talento de Juan Rulfo ha sabido condensar por medio rural del sur de Jalisco -de Comala en particular, región inscrita ya en la mitología literia universal-; sus personajes muertos que \"evasivos, reticentes, convierten en secreto el aire mismo, y se vuelven elocuentes como consecuencia de callarse.\""
+ },
+ "subject_times": [
+  "Siglo XX"
+ ],
+ "latest_revision": 25,
+ "revision": 25,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-12-09T22:13:47.474183"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2025-07-19T18:22:05.448576"
+ }
+}

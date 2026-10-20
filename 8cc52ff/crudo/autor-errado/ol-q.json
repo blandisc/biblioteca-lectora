@@ -1,0 +1,130 @@
+{
+ "numFound": 1,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 1,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "La ciudad y los perros Gabriel García Márquez",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL6608033A"
+   ],
+   "author_name": [
+    "Gustavo González Villanueva"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2007,
+   "isbn": [
+    "9968411639",
+    "9789968411448",
+    "9789968411356",
+    "9789968411493",
+    "9968411302",
+    "9968411574",
+    "9968411442",
+    "9789968411424",
+    "9968411221",
+    "9789968411271",
+    "9789968411288",
+    "9968411272",
+    "9789968411431",
+    "9968411353",
+    "9789968411790",
+    "9789968411226",
+    "9789968411301",
+    "9789968411264",
+    "9968411485",
+    "9968411280",
+    "9789968411547",
+    "9968411248",
+    "9789968411578",
+    "9789968411639",
+    "996841154X",
+    "9968411264",
+    "9968411795",
+    "9789968411486",
+    "996841123X",
+    "9789968411240",
+    "9968411434",
+    "9968411493",
+    "9789968411233",
+    "9968411426"
+   ],
+   "key": "/works/OL33096183W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "II Encuentro Mesoamericano Escritura-Cultura",
+    "Promesa",
+    "Municipalidad de San José"
+   ],
+   "title": "Escritores latinoamericanos",
+   "subject": [
+    "Spanish American literature",
+    "History and criticism"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL44965703M",
+      "title": "Escritores latinoamericanos",
+      "subtitle": "estudio y comentarios leo-pienso-opino",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Promesa",
+       "II Encuentro Mesoamericano Escritura-Cultura",
+       "Municipalidad de San José"
+      ],
+      "publish_date": [
+       "2007"
+      ],
+      "isbn": [
+       "9789968411226",
+       "9789968411240",
+       "9789968411233",
+       "9789968411264",
+       "9789968411271",
+       "9789968411288",
+       "9789968411301",
+       "9789968411356",
+       "9789968411424",
+       "9789968411431",
+       "9789968411448",
+       "9789968411486",
+       "9789968411493",
+       "9789968411547",
+       "9789968411578",
+       "9789968411639",
+       "9789968411790",
+       "9968411221",
+       "9968411248",
+       "996841123X",
+       "9968411264",
+       "9968411272",
+       "9968411280",
+       "9968411302",
+       "9968411353",
+       "9968411426",
+       "9968411434",
+       "9968411442",
+       "9968411485",
+       "9968411493",
+       "996841154X",
+       "9968411574",
+       "9968411639",
+       "9968411795"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

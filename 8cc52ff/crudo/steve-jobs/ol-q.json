@@ -1,0 +1,816 @@
+{
+ "numFound": 12,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 12,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Steve Jobs Walter Isaacson",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL832299A"
+   ],
+   "author_name": [
+    "Walter Isaacson"
+   ],
+   "cover_edition_key": "OL35672473M",
+   "cover_i": 12374726,
+   "edition_count": 56,
+   "first_publish_year": 2011,
+   "isbn": [
+    "357010124X",
+    "9788804680246",
+    "1501127624",
+    "9780349139593",
+    "9788937483943",
+    "9781501189012",
+    "0748131329",
+    "7508630068",
+    "9862168374",
+    "6056180182",
+    "9781408703748",
+    "9788202410445",
+    "8499921183",
+    "034914043X",
+    "8361428488",
+    "9787508630069",
+    "9788499897318",
+    "4062171279",
+    "9781451648546",
+    "9788401387968",
+    "9780349140438",
+    "9781451648539",
+    "1442369043",
+    "9731931937",
+    "9781442369047",
+    "7508643291",
+    "9789000325481",
+    "0002160633",
+    "6047705219",
+    "1442346272",
+    "1594136793",
+    "4062171260",
+    "1442346949",
+    "2709638320",
+    "9781442394933",
+    "1501189018",
+    "9783570101247",
+    "9788499924168",
+    "9780307950284",
+    "2253168521",
+    "9789100127084",
+    "0349139598",
+    "1451648537",
+    "9784062171274",
+    "1410445224",
+    "8937483947",
+    "9788202369873",
+    "1101873159",
+    "9789862168370",
+    "9781982176860",
+    "9788401388569",
+    "527139378X",
+    "9789871786237",
+    "9788563560902",
+    "9780748131327",
+    "9785271393785",
+    "9875669113",
+    "9780002160636",
+    "9782709638326",
+    "9100127086",
+    "030795028X",
+    "8499924166",
+    "9781982130428",
+    "5170778716",
+    "1982176865",
+    "9781501127625",
+    "9782253168522",
+    "9789731931937",
+    "9781594136795",
+    "1442394935",
+    "6047703739",
+    "8499897312",
+    "9871786239",
+    "9786047703739",
+    "8401388562",
+    "8804680245",
+    "9786056180187",
+    "8365315203",
+    "9784062171267",
+    "1408703742",
+    "9781442346277",
+    "9788535919714",
+    "900032548X",
+    "9786047705214",
+    "8202410444",
+    "9787508643298",
+    "8202369878",
+    "8535919716",
+    "9781410445223",
+    "9781442346949",
+    "8401387965",
+    "9788361428480",
+    "9781101873151",
+    "9785170778713",
+    "8563560905",
+    "9788499921181",
+    "1451648545",
+    "9789875669116",
+    "9788365315205",
+    "1982130423"
+   ],
+   "key": "/works/OL16085155W",
+   "language": [
+    "jpn",
+    "cat",
+    "swe",
+    "eng",
+    "kor",
+    "nob",
+    "rus",
+    "heb",
+    "fre",
+    "vie",
+    "spa",
+    "chi"
+   ],
+   "publisher": [
+    "Tian xia yuan jian chu ban gu fen you xian gong si",
+    "Ast",
+    "CITIC Publishing House",
+    "Debolsillo",
+    "Dogan Kitap",
+    "Editura Publica",
+    "Bonnier",
+    "Vintage Espanol",
+    "Астрель",
+    "Kodansha America",
+    "Thorndike Press",
+    "SIMON & SCHUSTER",
+    "Nhà xuất bản Thế Giới",
+    "Simon & Schuster Audio",
+    "LATTES",
+    "Tian Xia Wen Hua",
+    "Debate",
+    "Kobunsha/Tsai Fong Books",
+    "Companhia das Letras",
+    "Little, Brown",
+    "DEBATE",
+    "Random House Mondadori (Debate)",
+    "Simon & Schuster, Incorporated",
+    "Modan",
+    "CITIC Press Corporation",
+    "Simon & Schuster",
+    "Thế Giới",
+    "Mondadori",
+    "Isccan",
+    "Editions J.C. Lattes",
+    "Bertelsmann Verlag",
+    "민음사",
+    "Cappelen Damm",
+    "Abacus",
+    "中信出版社",
+    "Librairie générale française",
+    "Little, Brown Book Group Limited",
+    "imusti",
+    "Insignis Media",
+    "Unieboek Bv",
+    "Rosa dels Vents"
+   ],
+   "subtitle": "Lecciones de liderazgo",
+   "title": "Steve Jobs",
+   "subject": [
+    "TECHNOLOGY & ENGINEERING / General",
+    "History",
+    "Inc Apple Computer",
+    "BIOGRAPHY & AUTOBIOGRAPHY / Business",
+    "Computer engineers",
+    "Businesspeople",
+    "Biography",
+    "BUSINESS & ECONOMICS / General",
+    "New York Times bestseller",
+    "nyt:hardcover_business_books=2012-02-25",
+    "Chief executive officers",
+    "TECHNOLOGY & ENGINEERING",
+    "Life Change Events",
+    "Biographies",
+    "Businessmen",
+    "Autoformation",
+    "Business",
+    "Développement d'aptitudes",
+    "General",
+    "BIOGRAPHY & AUTOBIOGRAPHY",
+    "Relations humaines",
+    "Computer industry",
+    "BUSINESS & ECONOMICS",
+    "Reading Level-Grade 11",
+    "Reading Level-Grade 12",
+    "Apple computer, inc.",
+    "Jobs, steve, 1955-2011",
+    "Businesspeople, biography",
+    "Large type books",
+    "Negociantes",
+    "Ingenieros",
+    "Biografía",
+    "Ingenieros en computación",
+    "Empresarios",
+    "Industria de computadoras",
+    "Historia",
+    "nyt:combined-print-and-e-book-nonfiction=2011-11-13",
+    "New York Times reviewed",
+    "nyt:paperback-nonfiction=2013-09-29",
+    "Success in business",
+    "Leadership",
+    "Liderazgo",
+    "Apple Computers",
+    "University of Berkeley",
+    "Celebrities",
+    "Informaticiens",
+    "Apple Computer",
+    "Histoire",
+    "Chefs de direction",
+    "Vietnamese language materials",
+    "Gens d'affaires",
+    "Qi ye jia",
+    "Zhuan ji",
+    "Événements stressants de la vie",
+    "BUSINESS & ECONOMICS/Leadership/",
+    "BIOGRAPHY & AUTOBIOGRAPHY/Business/",
+    "COMPUTERS/History/",
+    "Science & Technology",
+    "Mechanical",
+    "Apple Computer Inc",
+    "Popular Works"
+   ],
+   "ratings_average": 4.183908,
+   "editions": {
+    "numFound": 56,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26358327M",
+      "title": "Steve Jobs",
+      "cover_i": 8043056,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Random House Mondadori (Debate)"
+      ],
+      "publish_date": [
+       "2011"
+      ],
+      "isbn": [
+       "9788499921181",
+       "8499921183"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL832299A",
+    "OL7953597A",
+    "OL12542923A",
+    "OL10828018A"
+   ],
+   "author_name": [
+    "Walter Isaacson",
+    "Francisco José Ramos Mena",
+    "Marcos Pérez Sánchez",
+    "Inga Pellisa Díaz"
+   ],
+   "cover_edition_key": "OL25643817M",
+   "cover_i": 7313659,
+   "edition_count": 18,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9782253194453",
+    "6054729853",
+    "1471138798",
+    "9786073160643",
+    "9781476708690",
+    "9781410474971",
+    "9781476708706",
+    "1442376244",
+    "1101873280",
+    "9781101873281",
+    "9781471138812",
+    "9781476708713",
+    "9781471138805",
+    "9788499924663",
+    "1471138801",
+    "9781442376229",
+    "607316064X",
+    "1476708703",
+    "9781442376243",
+    "9788466359917",
+    "8466359915",
+    "147670869X",
+    "147113881X",
+    "1410474976",
+    "9786054729852",
+    "1442376228",
+    "8499924662",
+    "9781594138850",
+    "1594138850",
+    "1476708711",
+    "225319445X",
+    "9781471138799"
+   ],
+   "key": "/works/OL17074268W",
+   "language": [
+    "eng",
+    "spa"
+   ],
+   "publisher": [
+    "Simon & Schuster, Incorporated",
+    "LGF",
+    "Simon & Schuster",
+    "Simon & Schuster Audio",
+    "DEBOLSILLO",
+    "Simon & Schuster, Limited",
+    "Debate",
+    "Penguin Random House Grupo Editorial",
+    "Domingo Yayinevi",
+    "Simon & Schuster Ltd",
+    "imusti",
+    "Large Print Press, a part of Gale, Cengage Learning"
+   ],
+   "subtitle": "How a Group of Hackers, Geniuses, and Geeks Created the Digital Revolution",
+   "title": "The Innovators",
+   "subject": [
+    "Biography",
+    "Computer scientists",
+    "History",
+    "Internet",
+    "Computer science",
+    "Bell Telephone Laboratories",
+    "BIOGRAPHY & AUTOBIOGRAPHY",
+    "Science & Technology",
+    "BUSINESS & ECONOMICS",
+    "Industries",
+    "Computer Industry",
+    "TECHNOLOGY & ENGINEERING",
+    "TECHNOLOGY & ENGINEERING / History",
+    "BIOGRAPHY & AUTOBIOGRAPHY / Science & Technology",
+    "BUSINESS & ECONOMICS / Industries / Computer Industry",
+    "Scientists, biography",
+    "Computers, history",
+    "Technological innovations",
+    "Large type books",
+    "nyt:hardcover-nonfiction=2014-10-26",
+    "New York Times bestseller",
+    "New York Times reviewed",
+    "Informatiker",
+    "Informatik",
+    "Creative ability in technology",
+    "Atarazanas",
+    "Histoire",
+    "Ordinateurs",
+    "Informaticiens",
+    "Biographies",
+    "Datavetenskap",
+    "Historia",
+    "Informáticos",
+    "Biografías",
+    "Innovaciones tecnológicas",
+    "Aspectos económicos",
+    "Inventores",
+    "Informática",
+    "Computadoras",
+    "Computación",
+    "Científicos",
+    "Industria",
+    "Biografía",
+    "nyt:science=2015-11-08",
+    "Digital",
+    "20th century",
+    "General",
+    "English & college success -> english -> biography & autobiography",
+    "Business & economics -> business -> industries",
+    "Trades & technology -> technology & engineering -> history",
+    "Professional, career & trade -> electronics -> general",
+    "Professional, career & trade -> computer science -> history",
+    "Social sciences -> history -> american history"
+   ],
+   "ratings_average": 3.9545455,
+   "editions": {
+    "numFound": 18,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26936333M",
+      "title": "Los innovadores",
+      "subtitle": "los genios que inventaron el futuro",
+      "cover_i": 10668813,
+      "language": [
+       "spa"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9781101873281",
+       "1101873280"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL832299A"
+   ],
+   "author_name": [
+    "Walter Isaacson"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2011,
+   "isbn": [
+    "9787508630786",
+    "7508630785"
+   ],
+   "key": "/works/OL36992662W",
+   "language": [
+    "chi"
+   ],
+   "publisher": [
+    "Zhong xin chu ban she"
+   ],
+   "title": "Steve Jobs",
+   "subject": [
+    "History",
+    "Computer engineers",
+    "Biography",
+    "Chief executive officers",
+    "Businesspeople",
+    "Inc Apple Computer"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL49944806M",
+      "title": "Steve Jobs",
+      "language": [
+       "chi"
+      ],
+      "publisher": [
+       "Zhong xin chu ban she"
+      ],
+      "publish_date": [
+       "2011"
+      ],
+      "isbn": [
+       "9787508630786",
+       "7508630785"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL10871849A"
+   ],
+   "author_name": [
+    "Milkyway Media"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2018,
+   "isbn": [
+    "1976948983",
+    "9781976948985"
+   ],
+   "key": "/works/OL29710459W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Analysis of Walter Isaacson's Steve Jobs by Milkyway Media",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL40869140M",
+      "title": "Analysis of Walter Isaacson's Steve Jobs by Milkyway Media",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2018"
+      ],
+      "isbn": [
+       "9781976948985",
+       "1976948983"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL10867122A"
+   ],
+   "author_name": [
+    "Sapiens Editorial"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2017,
+   "isbn": [
+    "1521070245",
+    "9781521070246"
+   ],
+   "key": "/works/OL29694925W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumen de Steve Jobs",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL40850109M",
+      "title": "Resumen de Steve Jobs",
+      "subtitle": "la Biografia Exclusiva , de Walter Isaacson",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781521070246",
+       "1521070245"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL16624873A"
+   ],
+   "author_name": [
+    "Walter Isaacson"
+   ],
+   "edition_count": 1,
+   "isbn": [
+    "9788499921181",
+    "8499921183"
+   ],
+   "key": "/works/OL46056419W",
+   "publisher": [
+    "LogoRemakeFour"
+   ],
+   "title": "Steve Jobs on Spanish",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL62633228M",
+      "title": "Steve Jobs on Spanish",
+      "publisher": [
+       "LogoRemakeFour"
+      ],
+      "publish_date": [
+       "LogoRemakeFour"
+      ],
+      "isbn": [
+       "9788499921181",
+       "8499921183"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7529743A"
+   ],
+   "author_name": [
+    "Mari Yamazaki"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2016,
+   "isbn": [
+    "4063930041",
+    "9784063930047"
+   ],
+   "key": "/works/OL20044905W",
+   "language": [
+    "jpn"
+   ],
+   "title": "Sutību Jobuzu",
+   "subject": [
+    "Friends and associates",
+    "Computer engineers",
+    "Apple II (Computer)",
+    "Entrepreneurship",
+    "Inventors",
+    "Biography",
+    "Comic books, strips"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27224934M",
+      "title": "Sutību Jobuzu",
+      "language": [
+       "jpn"
+      ],
+      "publish_date": [
+       "2016"
+      ],
+      "isbn": [
+       "9784063930047",
+       "4063930041"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7529743A"
+   ],
+   "author_name": [
+    "Mari Yamazaki"
+   ],
+   "cover_edition_key": "OL27174451M",
+   "cover_i": 12782064,
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "4063770974",
+    "9784063770971"
+   ],
+   "key": "/works/OL19994342W",
+   "language": [
+    "jpn"
+   ],
+   "title": "スティーブ・ジョブズ(3)",
+   "subject": [
+    "Friends and associates",
+    "Computer engineers",
+    "Entrepreneurship",
+    "Inventors",
+    "Biography",
+    "Comic books, strips"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27174451M",
+      "title": "スティーブ・ジョブズ(3)",
+      "cover_i": 12782064,
+      "language": [
+       "jpn"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9784063770971",
+       "4063770974"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7529743A"
+   ],
+   "author_name": [
+    "Mari Yamazaki"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "4063768759",
+    "9784063768756"
+   ],
+   "key": "/works/OL19994340W",
+   "language": [
+    "jpn"
+   ],
+   "title": "Steve Jobs",
+   "subject": [
+    "Friends and associates",
+    "Computer engineers",
+    "Entrepreneurship",
+    "Inventors",
+    "Biography",
+    "Comic books, strips"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27174449M",
+      "title": "Steve Jobs",
+      "language": [
+       "jpn"
+      ],
+      "publish_date": [
+       "2013"
+      ],
+      "isbn": [
+       "9784063768756",
+       "4063768759"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7529743A"
+   ],
+   "author_name": [
+    "Mari Yamazaki"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "4063769631",
+    "9784063769630"
+   ],
+   "key": "/works/OL19994341W",
+   "language": [
+    "jpn"
+   ],
+   "publisher": [
+    "Kōdan-sha"
+   ],
+   "title": "Steve Jobs",
+   "subject": [
+    "Friends and associates",
+    "Computer engineers",
+    "Apple II (Computer)",
+    "Entrepreneurship",
+    "Inventors",
+    "Biography",
+    "Comic books, strips"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27174450M",
+      "title": "Steve Jobs",
+      "language": [
+       "jpn"
+      ],
+      "publisher": [
+       "Kōdan-sha"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9784063769630",
+       "4063769631"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

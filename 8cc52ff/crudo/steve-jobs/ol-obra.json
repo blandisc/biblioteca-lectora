@@ -1,0 +1,141 @@
+{
+ "description": "Based on more than forty interviews with Jobs conducted over two years -- as well as interviews with more than a hundred family members, friends, adversaries, competitors, and colleagues -- Walter Isaacson has written a riveting story of the roller-coaster life and searingly intense personality of a creative entrepreneur whose passion for perfection and ferocious drive revolutionized six industries: personal computers, animated movies, music, phones, tablet computing, and digital publishing. At a time when America is seeking ways to sustain its innovative edge, and when societies around the world are trying to build digital-age economies, Jobs stands as the ultimate icon of inventiveness and applied imagination. He knew that the best way to create value in the twenty-first century was to connect creativity with technology. He built a company where leaps of the imagination were combined with remarkable feats of engineering. Although Jobs cooperated with this book, he asked for no control over what was written nor even the right to read it before it was published. He put nothing off-limits. He encouraged the people he knew to speak honestly. And Jobs speaks candidly, sometimes brutally so, about the people he worked with and competed against. His friends, foes, and colleagues provide an unvarnished view of the passions, perfectionism, obsessions, artistry, devilry, and compulsion for control that shaped his approach to business and the innovative products that resulted. Driven by demons, Jobs could drive those around him to fury and despair. But his personality and products were interrelated, just as Apple's hardware and software tended to be, as if part of an integrated system. His tale is instructive and cautionary, filled with lessons about innovation, character, leadership, and values. - Publisher.",
+ "title": "Steve Jobs",
+ "covers": [
+  12374726,
+  6901315,
+  6941225,
+  7266624,
+  7316569,
+  7890315,
+  8363682,
+  8367165,
+  8398063,
+  8432385,
+  8489778,
+  8502740,
+  8578965,
+  10675985,
+  8771526,
+  8791022,
+  8843800,
+  9033156,
+  9344786,
+  11074337,
+  12178173,
+  8423876,
+  13304736,
+  13612291,
+  14521186
+ ],
+ "subject_places": [
+  "United States",
+  "Estados Unidos",
+  "San Francisco"
+ ],
+ "subjects": [
+  "TECHNOLOGY & ENGINEERING / General",
+  "History",
+  "Inc Apple Computer",
+  "BIOGRAPHY & AUTOBIOGRAPHY / Business",
+  "Computer engineers",
+  "Businesspeople",
+  "Biography",
+  "BUSINESS & ECONOMICS / General",
+  "New York Times bestseller",
+  "nyt:hardcover_business_books=2012-02-25",
+  "Chief executive officers",
+  "TECHNOLOGY & ENGINEERING",
+  "Life Change Events",
+  "Biographies",
+  "Businessmen",
+  "Autoformation",
+  "Business",
+  "Développement d'aptitudes",
+  "General",
+  "BIOGRAPHY & AUTOBIOGRAPHY",
+  "Relations humaines",
+  "Computer industry",
+  "BUSINESS & ECONOMICS",
+  "Reading Level-Grade 11",
+  "Reading Level-Grade 12",
+  "Apple computer, inc.",
+  "Jobs, steve, 1955-2011",
+  "Businesspeople, biography",
+  "Large type books",
+  "Negociantes",
+  "Ingenieros",
+  "Biografía",
+  "Ingenieros en computación",
+  "Empresarios",
+  "Industria de computadoras",
+  "Historia",
+  "nyt:combined-print-and-e-book-nonfiction=2011-11-13",
+  "New York Times reviewed",
+  "nyt:paperback-nonfiction=2013-09-29",
+  "Success in business",
+  "Leadership",
+  "Liderazgo",
+  "Apple Computers",
+  "University of Berkeley",
+  "Celebrities",
+  "Informaticiens",
+  "Apple Computer",
+  "Histoire",
+  "Chefs de direction",
+  "Vietnamese language materials",
+  "Gens d'affaires",
+  "Qi ye jia",
+  "Zhuan ji",
+  "Événements stressants de la vie",
+  "BUSINESS & ECONOMICS/Leadership/",
+  "BIOGRAPHY & AUTOBIOGRAPHY/Business/",
+  "COMPUTERS/History/",
+  "Science & Technology",
+  "Mechanical",
+  "Apple Computer Inc",
+  "Popular Works"
+ ],
+ "subject_people": [
+  "Steve Jobs (1955-2011)",
+  "Steve Jobs",
+  "Bill Gates"
+ ],
+ "key": "/works/OL16085155W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL832299A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "links": [
+  {
+   "title": "New York Times review",
+   "url": "http://www.nytimes.com/2011/10/22/books/steve-jobs-by-walter-isaacson-review.html",
+   "type": {
+    "key": "/type/link"
+   }
+  }
+ ],
+ "subject_times": [
+  "1960-2010"
+ ],
+ "subtitle": "Lecciones de liderazgo",
+ "latest_revision": 117,
+ "revision": 117,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2011-08-29T17:27:26.396496"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2026-07-23T05:08:17.232864"
+ }
+}

@@ -1,0 +1,43 @@
+{
+ "type": {
+  "key": "/type/work"
+ },
+ "title": "Anna Karenina",
+ "authors": [
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL26783A"
+   }
+  },
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL13006104A"
+   }
+  },
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL3995539A"
+   }
+  }
+ ],
+ "key": "/works/OL36073991W",
+ "latest_revision": 2,
+ "revision": 2,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2023-07-17T11:19:06.428158"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2025-08-14T19:39:10.961037"
+ }
+}

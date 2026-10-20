@@ -1,0 +1,58 @@
+{
+ "numFound": 1,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 1,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL7044246A"
+   ],
+   "author_name": [
+    "刘慈欣"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "8413146925",
+    "9788413146928"
+   ],
+   "key": "/works/OL37743883W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Ediciones B Mexico"
+   ],
+   "title": "Estuche Trilogía de Los Tres Cuerpos : el Problema de Los Tres Cuerpos; el Bosque Oscuro; el Fin de la Muerte) / Three-Body Problem Boxed Set",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL50920777M",
+      "title": "Estuche Trilogía de Los Tres Cuerpos : el Problema de Los Tres Cuerpos; el Bosque Oscuro; el Fin de la Muerte) / Three-Body Problem Boxed Set",
+      "subtitle": "the Dark",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Ediciones B Mexico"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9788413146928",
+       "8413146925"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

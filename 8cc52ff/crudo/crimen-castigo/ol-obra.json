@@ -1,0 +1,38 @@
+{
+ "type": {
+  "key": "/type/work"
+ },
+ "title": "Crimen y castigo",
+ "authors": [
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL22242A"
+   }
+  },
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL2764435A"
+   }
+  }
+ ],
+ "covers": [
+  12328823
+ ],
+ "key": "/works/OL26382038W",
+ "latest_revision": 2,
+ "revision": 2,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2021-11-05T18:52:40.078502"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2023-05-26T14:14:38.466123"
+ }
+}

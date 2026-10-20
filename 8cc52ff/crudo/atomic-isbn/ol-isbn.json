@@ -1,0 +1,80 @@
+{
+ "works": [
+  {
+   "key": "/works/OL17930368W"
+  }
+ ],
+ "title": "Atomic Habits",
+ "publishers": [
+  "Avery, an Imprint of Penguin Random House LLC"
+ ],
+ "publish_date": "2018",
+ "key": "/books/OL32336498M",
+ "type": {
+  "key": "/type/edition"
+ },
+ "identifiers": {
+  "learnawesome": [
+   "bc60faf0-a9b8-45f8-8ddb-d9179e6d3dd4"
+  ],
+  "amazon": [
+   "B09YTXNR2H"
+  ],
+  "wikidata": [
+   "Q98178602"
+  ],
+  "goodreads": [
+   "62221762"
+  ]
+ },
+ "classifications": {},
+ "languages": [
+  {
+   "key": "/languages/eng"
+  }
+ ],
+ "covers": [
+  12886417,
+  -1
+ ],
+ "physical_dimensions": "9 x 6 x  inches",
+ "publish_places": [
+  "New York"
+ ],
+ "subtitle": "Tiny Changes, Remarkable Results : An Easy & Proven Way to Build Good Habits & Break Bad Ones",
+ "description": {
+  "type": "/type/text",
+  "value": "Learn how to make time for new habits (even when life gets crazy); overcome a lack of motivation and willpower; design your environment to make success easier; get back on track when you fall off course; ...and much more. Atomic Habits will reshape the way you think about progress and success, and give you the tools and strategies you need to transform your habits--whether you are a team looking to win a championship, an organization hoping to redefine an industry, or simply an individual who wishes to quit smoking, lose weight, reduce stress, or achieve any other goal."
+ },
+ "physical_format": "Hardcover",
+ "number_of_pages": 320,
+ "copyright_date": "2018",
+ "isbn_10": [
+  "0735211299"
+ ],
+ "isbn_13": [
+  "9780735211292"
+ ],
+ "oclc_numbers": [
+  "11165649274"
+ ],
+ "dewey_decimal_class": [
+  "155.24"
+ ],
+ "lc_classifications": [
+  "BF335"
+ ],
+ "source_records": [
+  "idb:9780735211292"
+ ],
+ "latest_revision": 72,
+ "revision": 72,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2021-05-07T07:10:49.427087"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2023-12-19T23:35:08.329132"
+ }
+}

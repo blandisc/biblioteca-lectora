@@ -1,0 +1,450 @@
+{
+ "numFound": 37,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 37,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL26783A",
+    "OL13006104A",
+    "OL3995539A"
+   ],
+   "author_name": [
+    "Лев Толстой",
+    "Lew Nikolajewitsch Tolstoi",
+    "Ulrike Koch"
+   ],
+   "edition_count": 4,
+   "first_publish_year": 2016,
+   "isbn": [
+    "9783734508653",
+    "3734502586",
+    "9783734502576",
+    "3734508657",
+    "3734502578",
+    "9783734502583",
+    "9783734508646",
+    "3734508649"
+   ],
+   "key": "/works/OL36073991W",
+   "language": [
+    "rus"
+   ],
+   "publisher": [
+    "tredition Verlag"
+   ],
+   "title": "Anna Karenina",
+   "ratings_average": 4.0,
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL48733142M",
+      "title": "Anna Karenina",
+      "language": [
+       "rus"
+      ],
+      "publisher": [
+       "tredition Verlag"
+      ],
+      "publish_date": [
+       "2016"
+      ],
+      "isbn": [
+       "9783734502576",
+       "3734502578"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A"
+   ],
+   "author_name": [
+    "Лев Толстой"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2017,
+   "isbn": [
+    "1975665805",
+    "9781975665807"
+   ],
+   "key": "/works/OL40905135W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Anna Karenina by Leo Tolstoy",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55585897M",
+      "title": "Anna Karenina by Leo Tolstoy",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781975665807",
+       "1975665805"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A"
+   ],
+   "author_name": [
+    "Лев Толстой"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2017,
+   "isbn": [
+    "9781975762155",
+    "1975762150"
+   ],
+   "key": "/works/OL40617015W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Anna Karenina",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55219707M",
+      "title": "Anna Karenina",
+      "subtitle": "By Leo Tolstoy - Illustrated",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781975762155",
+       "1975762150"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A"
+   ],
+   "author_name": [
+    "Лев Толстой"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2011,
+   "isbn": [
+    "9781493641598",
+    "9781461195191",
+    "1461195195",
+    "149364159X"
+   ],
+   "key": "/works/OL39956383W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Anna Karenina",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL54422156M",
+      "title": "Anna Karenina",
+      "subtitle": "Abridged",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2011"
+      ],
+      "isbn": [
+       "9781461195191",
+       "1461195195"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A"
+   ],
+   "author_name": [
+    "Лев Толстой"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1878,
+   "key": "/works/OL44371991W",
+   "language": [
+    "eng",
+    "rus"
+   ],
+   "publisher": [
+    "Grosset & Dunlap",
+    "T. Ris"
+   ],
+   "title": "Anna Karenina",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60630395M",
+      "title": "Anna Karenina",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Grosset & Dunlap"
+      ],
+      "publish_date": [
+       "1900"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A",
+    "OL884192A",
+    "OL15274167A"
+   ],
+   "author_name": [
+    "Лев Толстой",
+    "Joseph Buloff",
+    "Joseph Buloff Jewish Theatre Archive"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1885,
+   "key": "/works/OL45166438W",
+   "language": [
+    "yid",
+    "ger"
+   ],
+   "publisher": [
+    "R. Wilhelmi"
+   ],
+   "title": "Anna Karenina",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61588535M",
+      "title": "Anna Karenina",
+      "subtitle": "Idish: Yef. Ṿeber [Joseph Buloff]",
+      "language": [
+       "yid"
+      ],
+      "publish_date": [
+       "19uu"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A"
+   ],
+   "author_name": [
+    "Лев Толстой"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1886,
+   "key": "/works/OL44934426W",
+   "language": [
+    "rus"
+   ],
+   "title": "Anna Karenina",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61317559M",
+      "title": "Anna Karenina",
+      "language": [
+       "rus"
+      ],
+      "publish_date": [
+       "1886"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A"
+   ],
+   "author_name": [
+    "Лев Толстой"
+   ],
+   "cover_edition_key": "OL35620068M",
+   "cover_i": 12327215,
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "8497941640",
+    "9788497941648"
+   ],
+   "key": "/works/OL26380516W",
+   "publisher": [
+    "Edimat Libros"
+   ],
+   "title": "Anna Karenina",
+   "subject": [
+    "Married people, fiction",
+    "Literature and fiction, historical fiction"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35620068M",
+      "title": "Anna Karenina",
+      "cover_i": 12327215,
+      "publisher": [
+       "Edimat Libros"
+      ],
+      "publish_date": [
+       "Apr 01, 2014"
+      ],
+      "isbn": [
+       "9788497941648",
+       "8497941640"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26783A"
+   ],
+   "author_name": [
+    "Лев Толстой"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1952,
+   "key": "/works/OL34668773W",
+   "publisher": [
+    "panstwowy instytut wydawniczy"
+   ],
+   "title": "Anna Karenina",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47001446M",
+      "title": "Anna Karenina",
+      "publisher": [
+       "panstwowy instytut wydawniczy"
+      ],
+      "publish_date": [
+       "1952-01-01"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL13059599A",
+    "OL9656601A",
+    "OL26783A"
+   ],
+   "author_name": [
+    "Eugenio Venceslao Foulques",
+    "Roger Grass",
+    "Лев Толстой"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9798533780414"
+   ],
+   "key": "/works/OL36285594W",
+   "language": [
+    "ita"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Anna Karenina",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL49030088M",
+      "title": "Anna Karenina",
+      "language": [
+       "ita"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798533780414"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

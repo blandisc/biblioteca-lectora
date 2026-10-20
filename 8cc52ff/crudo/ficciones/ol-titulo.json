@@ -1,0 +1,631 @@
+{
+ "numFound": 10,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 10,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_edition_key": "OL22105593M",
+   "cover_i": 10832290,
+   "edition_count": 78,
+   "first_publish_year": 1945,
+   "isbn": [
+    "8806173677",
+    "9780802190734",
+    "0394172442",
+    "9789754706574",
+    "9788432204814",
+    "0714509574",
+    "8525033774",
+    "9788420633121",
+    "9780802130303",
+    "6073104928",
+    "9780307950925",
+    "9788426405739",
+    "9789500428446",
+    "1533366683",
+    "8535911235",
+    "9504001947",
+    "0802130305",
+    "950040205X",
+    "9789504001942",
+    "2070366146",
+    "9780141183848",
+    "1857151666",
+    "8420633127",
+    "9780394172446",
+    "9786073104920",
+    "9780785919995",
+    "0714540838",
+    "9780802147158",
+    "9683906044",
+    "9788420613208",
+    "0141183845",
+    "9782072798153",
+    "0785919996",
+    "2070389049",
+    "9788535911237",
+    "9789683906045",
+    "9788420666563",
+    "9780245528798",
+    "0297166956",
+    "9780714509570",
+    "950042844X",
+    "9780714540832",
+    "0061565377",
+    "9782070366149",
+    "9788499089508",
+    "9781857151664",
+    "849908950X",
+    "9788525033772",
+    "9789500402057",
+    "8432204811",
+    "9782070389049",
+    "9754706573",
+    "9789500426008",
+    "0679422994",
+    "2072798159",
+    "8426405738",
+    "8481302619",
+    "9781853995903",
+    "9788478882885",
+    "0802147151",
+    "9780679422990",
+    "8420666564",
+    "1853995908",
+    "8420613207",
+    "9500426005",
+    "0307950921",
+    "0245528792",
+    "847888288X",
+    "9780061565373",
+    "9788481302615",
+    "9687152214",
+    "9780297166955",
+    "0802190731",
+    "9781533366689",
+    "9788806173678",
+    "9789687152219"
+   ],
+   "key": "/works/OL110971W",
+   "language": [
+    "spa",
+    "fre",
+    "ita",
+    "por",
+    "eng"
+   ],
+   "publisher": [
+    "G. einaudi",
+    "Seix Barral",
+    "Orion Publishing Group, Limited",
+    "J. Calder",
+    "Emecé",
+    "Franklin Library",
+    "Emec e",
+    "Emecé Editores",
+    "Emecé Editores",
+    "Penguin Books Ltd",
+    "LUMEN",
+    "Vintage Español",
+    "Grove Press",
+    "Calder",
+    "Editorial Planeta",
+    "Emecé",
+    "Bristol Classical Press",
+    "Penguin Books",
+    "Debolsillo",
+    "EMECE",
+    "Grove Press / Atlantic Monthly Press",
+    "Globo",
+    "Joaquin Moritz / Emece",
+    "Emece Editores",
+    "Calder & Boyars",
+    "Iletisim Yayincilik",
+    "Grove/Atlantic, Incorporated",
+    "Gallimard",
+    "Distributed by Random House",
+    "Limited Editions Club",
+    "Alianza (Buenos Aires, AR)",
+    "Duckworth Publishers",
+    "Rayo",
+    "Everyman's Library",
+    "Grove Weidenfeld",
+    "Emece",
+    "Bibliotex, S.L. (Biblioteca El mundo)",
+    "French & European Publications Inc",
+    "Harrap",
+    "A.A. Knopf",
+    "GROVE PRESS. NY 1962",
+    "Harrop",
+    "Alianza Editorial",
+    "Einaudi",
+    "Epoca",
+    "Calder Publications",
+    "Weidenfeld & Nicolson",
+    "CreateSpace Independent Publishing Platform",
+    "Companhia das Letras",
+    "Alianza"
+   ],
+   "title": "Ficciones",
+   "subject": [
+    "Anachronisms",
+    "speculative fiction",
+    "subjective idealism",
+    "duodecimals",
+    "aneurysms",
+    "adjectives",
+    "hermeticism",
+    "philanthropy",
+    "cabala",
+    "persecution",
+    "Social life and customs",
+    "Spanish language books",
+    "Readers",
+    "Translations into English",
+    "Spanish language",
+    "Fiction",
+    "Spanish fiction",
+    "Modern fiction",
+    "Literary Criticism",
+    "Fiction - General",
+    "General",
+    "Fiction (fictional works by one author)",
+    "Borges, jorge luis, 1899-1986",
+    "Latin american literature, translations into english",
+    "Romance literature",
+    "CUENTOS ARGENTINOS",
+    "Spanish fiction in Spanish",
+    "Italian language materials",
+    "Argentine Short stories",
+    "Manners and customs",
+    "Nouvelles argentines",
+    "Spanish Short stories",
+    "Argentine Science fiction",
+    "Novela",
+    "Vida social y costumbres",
+    "Short stories"
+   ],
+   "ratings_average": 4.375,
+   "editions": {
+    "numFound": 54,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47800257M",
+      "title": "FICCIONES",
+      "cover_i": 14553265,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "EMECE"
+      ],
+      "publish_date": [
+       "2006"
+      ],
+      "isbn": [
+       "9789500428446",
+       "950042844X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_i": 13854343,
+   "edition_count": 2,
+   "first_publish_year": 1986,
+   "isbn": [
+    "9802760013",
+    "9789802760046",
+    "9789802760015",
+    "9802760048"
+   ],
+   "key": "/works/OL444782W",
+   "language": [
+    "eng",
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Ayacucho"
+   ],
+   "title": "Ficciones ; El aleph ; El informe de Brodie",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL2484462M",
+      "title": "Ficciones ; El aleph ; El informe de Brodie",
+      "cover_i": 14409162,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Ayacucho"
+      ],
+      "publish_date": [
+       "1986"
+      ],
+      "isbn": [
+       "9802760048",
+       "9789802760046"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 3,
+   "first_publish_year": 2015,
+   "isbn": [
+    "1514648369",
+    "1974605655",
+    "9781530644988",
+    "9781514648360",
+    "1530644984",
+    "9781974605651"
+   ],
+   "key": "/works/OL40315721W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Ficciones",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55735919M",
+      "title": "Ficciones",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9781514648360",
+       "1514648369"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_edition_key": "OL61421449M",
+   "cover_i": 15188882,
+   "edition_count": 2,
+   "first_publish_year": 1956,
+   "isbn": [
+    "8423336719",
+    "9788423336715"
+   ],
+   "key": "/works/OL43117848W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Emece Editores"
+   ],
+   "title": "Ficciones",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61421449M",
+      "title": "Ficciones",
+      "cover_i": 15188882,
+      "publish_date": [
+       "2004"
+      ],
+      "isbn": [
+       "9788423336715",
+       "8423336719"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A",
+    "OL1756370A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges",
+    "Anthony Kerrigan"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1956,
+   "key": "/works/OL44223170W",
+   "language": [
+    "eng",
+    "spa"
+   ],
+   "publisher": [
+    "Weidenfeld and Nicolson",
+    "Emecé Editores"
+   ],
+   "title": "Ficciones",
+   "subject": [
+    "Latin American fiction",
+    "Translations into English",
+    "Argentine fiction"
+   ],
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60773622M",
+      "title": "Ficciones",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Emecé Editores"
+      ],
+      "publish_date": [
+       "1956"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1982,
+   "key": "/works/OL45340838W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Alianza Editorial"
+   ],
+   "title": "Ficciones",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61797755M",
+      "title": "Ficciones",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alianza Editorial"
+      ],
+      "publish_date": [
+       "1982"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1944,
+   "key": "/works/OL45316687W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Sur"
+   ],
+   "title": "Ficciones (1935-1944)",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61769427M",
+      "title": "Ficciones (1935-1944)",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Sur"
+      ],
+      "publish_date": [
+       "1944"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_edition_key": "OL35431120M",
+   "cover_i": 12272592,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9789750513411",
+    "975051341X"
+   ],
+   "key": "/works/OL26270519W",
+   "publisher": [
+    "Iletisim"
+   ],
+   "title": "Ficciones - Hayaller ve Hikayeler",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35431120M",
+      "title": "Ficciones - Hayaller ve Hikayeler",
+      "cover_i": 12272592,
+      "publisher": [
+       "Iletisim"
+      ],
+      "publish_date": [
+       "Nov 01, 2013"
+      ],
+      "isbn": [
+       "9789750513411",
+       "975051341X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2006,
+   "isbn": [
+    "9802764264",
+    "9789802764266",
+    "9802764272",
+    "9789802764273"
+   ],
+   "key": "/works/OL38971431W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Ayacucho"
+   ],
+   "title": "Ficciones ; El aleph ; El informe de Brodie",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL53066299M",
+      "title": "Ficciones ; El aleph ; El informe de Brodie",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Ayacucho"
+      ],
+      "publish_date": [
+       "2006"
+      ],
+      "isbn": [
+       "9789802764266",
+       "9789802764273",
+       "9802764264",
+       "9802764272"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A",
+    "OL15108634A",
+    "OL3520183A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges",
+    "Gabriela Aberastury",
+    "Julio Pagano"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1987,
+   "key": "/works/OL42712956W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "EDA"
+   ],
+   "title": "Ficciones",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL58105247M",
+      "title": "Ficciones",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "EDA"
+      ],
+      "publish_date": [
+       "1987"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

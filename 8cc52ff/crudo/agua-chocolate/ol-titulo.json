@@ -1,0 +1,430 @@
+{
+ "numFound": 3,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 3,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL85306A"
+   ],
+   "author_name": [
+    "Laura Esquivel"
+   ],
+   "cover_edition_key": "OL24974997M",
+   "cover_i": 8372632,
+   "edition_count": 83,
+   "first_publish_year": 1989,
+   "isbn": [
+    "9588611830",
+    "0385471483",
+    "0792717856",
+    "9788439706380",
+    "0307291995",
+    "8439719477",
+    "9780745121062",
+    "9785551159216",
+    "9789802931507",
+    "6548242564",
+    "1411476239",
+    "9785551132080",
+    "9781411490079",
+    "9788425327445",
+    "9992195541",
+    "843971730X",
+    "0553472550",
+    "9781411476233",
+    "141149007X",
+    "9788422647676",
+    "0552995878",
+    "9780785721666",
+    "9586392864",
+    "9789706907486",
+    "9783518388914",
+    "9781415936108",
+    "9780552995870",
+    "038542017X",
+    "0745121063",
+    "5551132080",
+    "0553745069",
+    "9781407057415",
+    "5557107614",
+    "9789879397282",
+    "0385365152",
+    "9780739334195",
+    "9789992195543",
+    "9780553745061",
+    "9579999813",
+    "9780792717843",
+    "9780385420174",
+    "8422647672",
+    "1407057413",
+    "9684062966",
+    "3548242561",
+    "0785721665",
+    "8501154423",
+    "842532744X",
+    "9788447307999",
+    "9788439719472",
+    "9788439702467",
+    "9780785731238",
+    "9780736626064",
+    "9788501154422",
+    "1400032776",
+    "842533151X",
+    "9871138490",
+    "8447307999",
+    "9750744632",
+    "9788425331510",
+    "8420494038",
+    "9780385420167",
+    "9788481302646",
+    "9780385721233",
+    "9789994059249",
+    "849759231X",
+    "9788420494036",
+    "9789585433984",
+    "5551159213",
+    "1415936102",
+    "0385471378",
+    "8811661129",
+    "8481302643",
+    "9781400032778",
+    "9780792717850",
+    "9789684061408",
+    "8439702469",
+    "9994059246",
+    "0792717848",
+    "9780780739079",
+    "9789624512045",
+    "9789579999816",
+    "9780385403931",
+    "8439718829",
+    "9789586392860",
+    "9585433982",
+    "0780739078",
+    "9706907483",
+    "8466327959",
+    "9789750744631",
+    "9788497592314",
+    "9587060792",
+    "0385403933",
+    "8483655578",
+    "9783548242569",
+    "9788811661122",
+    "2221069668",
+    "9502802330",
+    "8434589818",
+    "9780385365154",
+    "9789502802336",
+    "9802931500",
+    "9789684062962",
+    "9588884128",
+    "9607213599",
+    "9788434589810",
+    "9788466327954",
+    "0785731237",
+    "9879397282",
+    "9789871138494",
+    "9788439717300",
+    "9780385474016",
+    "9624512043",
+    "3518388916",
+    "9780606205122",
+    "0385474016",
+    "9780385426855",
+    "9780553472554",
+    "8439706383",
+    "0739334190",
+    "9789607213594",
+    "9780385471480",
+    "0736626069",
+    "987725249X",
+    "9780385471374",
+    "9789877252491",
+    "9782221069660",
+    "9788483655573",
+    "1407057391",
+    "9780307291998",
+    "0385426852",
+    "9786548242560",
+    "0606205128",
+    "9788439718826",
+    "9789587060799",
+    "0385721234",
+    "9684061404",
+    "9781407057392",
+    "9785557107617",
+    "0385420161",
+    "9789588884127",
+    "9789588611839"
+   ],
+   "key": "/works/OL953162W",
+   "language": [
+    "spa",
+    "por",
+    "ger",
+    "chi",
+    "ara",
+    "eng"
+   ],
+   "publisher": [
+    "Alfaguara Ediciones, S.A. (Spain)",
+    "Bloomsbury Qatar Foundation Publishing",
+    "Books on Tape",
+    "Doubleday",
+    "Mondadori",
+    "Transworld",
+    "Bantam Books",
+    "Punto de lectura",
+    "Grijalbo mondadori",
+    "Random House Audio",
+    "Salvat",
+    "Random House Mondadori",
+    "Suma de Letras",
+    "Suhrkamp",
+    "Anchor Books",
+    "Chivers North Amer",
+    "Listening Library",
+    "Can Yayınları",
+    "SUMA",
+    "Debolsillo",
+    "Grijalbo Mondadori",
+    "Okeanida",
+    "Fixot",
+    "Trans-World",
+    "PUNTO DE LECTURA",
+    "Planeta Mexico",
+    "Curley Large Print",
+    "Planeta",
+    "RH Audio",
+    "Ullstein-Taschenbuch-Verlag, Zweigniederlassung der Ullstein Buchverlage GmbH",
+    "Perfection Learning Prebound",
+    "Penguin Random House",
+    "Grijalbo Mondadori Sa",
+    "Punto de Lectura",
+    "Narrativa Mondadori",
+    "Black Swan",
+    "Booket",
+    "Grijalbo S.A. de Venezuela",
+    "Ying xiang wen hua shi ye you xian gong si",
+    "RBA",
+    "Tandem Library",
+    "Books On Tape",
+    "Doubelday",
+    "Garzanti Italian",
+    "Doubleday Doubleday",
+    "Turtleback Books Distributed by Demco Media",
+    "Editora Record",
+    "Sterling Publishing Co., Inc.",
+    "Zong jing xiao Wu shi tu shu you xian gong si",
+    "Editorial Planeta Mexicana",
+    "Chivers P.",
+    "Bibliotex, S.L. (Biblioteca El Mundo)",
+    "DoubleDay",
+    "Anchor",
+    "Rebound by Sagebrush",
+    "Casa Editorial El Tiempo",
+    "Perfection Learning",
+    "Grijalbo",
+    "Mondadori (IT)",
+    "Anchor Books / Doubleday",
+    "Círculo de Lectores",
+    "Ullstein Buchverlage GmbH & Co. KG / Ullstein Tas"
+   ],
+   "title": "Como agua para chocolate",
+   "subject": [
+    "virginity",
+    "magical realism",
+    "Self-growth",
+    "violence",
+    "passion",
+    "rebellion",
+    "food",
+    "Mexican cuisine",
+    "love at first sight",
+    "Fiction",
+    "familia",
+    "mexican cookery",
+    "mothers and daughters",
+    "sisters",
+    "Social life and customs",
+    "Cuentos de amor",
+    "Family",
+    "Family life",
+    "Man-woman relationships",
+    "Ficción",
+    "Drama",
+    "Mexican Cooking",
+    "Families",
+    "Love",
+    "Películas cinematográficas",
+    "Novela",
+    "Love stories",
+    "Literature",
+    "Cooking",
+    "Man-woman relationship",
+    "Cocina",
+    "Familias",
+    "Belletristische Darstellung",
+    "Frau",
+    "Kochen",
+    "Alltag",
+    "Manners and customs",
+    "Fiction, general",
+    "Fiction, romance, regional",
+    "Mexico, fiction",
+    "Large type books",
+    "Madre e hija",
+    "Hermanas",
+    "Cocina mexicana",
+    "Teen fiction",
+    "World literature",
+    "Fiction subjects",
+    "Peoples & cultures - fiction",
+    "Fiction, romance, general",
+    "Romance fiction"
+   ],
+   "ratings_average": 4.1153846,
+   "editions": {
+    "numFound": 74,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL24974997M",
+      "title": "Como agua para chocolate",
+      "subtitle": "novela de entregas mensuales con recetas, amores y remedios caseros",
+      "cover_i": 8372632,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Editorial Planeta Mexicana"
+      ],
+      "publish_date": [
+       "1992"
+      ],
+      "isbn": [
+       "9789684062962",
+       "9684062966"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL85306A"
+   ],
+   "author_name": [
+    "Laura Esquivel"
+   ],
+   "cover_edition_key": "OL35627280M",
+   "cover_i": 12334276,
+   "edition_count": 3,
+   "first_publish_year": 2008,
+   "isbn": [
+    "6071100844",
+    "9786071100849",
+    "9788466329088",
+    "8466329080",
+    "6073130287",
+    "9786073130288"
+   ],
+   "key": "/works/OL26387177W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Suma de Letras",
+    "DEBOLSILLO",
+    "Debolsillo",
+    "Penguin Random House"
+   ],
+   "title": "Como agua para chocolate",
+   "subject": [
+    "Families",
+    "Fiction",
+    "Mexican Cooking",
+    "Romance fiction"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37070776M",
+      "title": "Como agua para chocolate",
+      "subtitle": "novela de entregas mensuales con recetas, amores y remedios caseros",
+      "cover_i": 12641199,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Penguin Random House"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9786073130288",
+       "6073130287"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL12553522A"
+   ],
+   "author_name": [
+    "Laura Esquivel"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2025,
+   "isbn": [
+    "9786073195874",
+    "6073195877"
+   ],
+   "key": "/works/OL44583168W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Penguin Random House Grupo Editorial"
+   ],
+   "title": "Mi Negro Pasado (Como Agua para Chocolate 2) / My Dark Past (Like Water for Chocolate 2)",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60894757M",
+      "title": "Mi Negro Pasado (Como Agua para Chocolate 2) / My Dark Past (Like Water for Chocolate 2)",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Penguin Random House Grupo Editorial"
+      ],
+      "publish_date": [
+       "2025"
+      ],
+      "isbn": [
+       "9786073195874",
+       "6073195877"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

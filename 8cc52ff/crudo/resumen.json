@@ -1,0 +1,1912 @@
+[
+ {
+  "id": "quijote",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Don+Quijote+de+la+Mancha&author=Miguel+de+Cervantes&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.95
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Don+Quijote+de+la+Mancha+Miguel+de+Cervantes&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.9
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Don+Quijote+de+la+Mancha%22+inauthor%3A%22Miguel+de+Cervantes%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Don+Quijote+de+la+Mancha%22+inauthor%3A%22Miguel+de+Cervantes%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.17
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Don+Quijote+de+la+Mancha+Miguel+de+Cervantes&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL503666W.json",
+    "estado": 200,
+    "segundos": 0.21
+   }
+  ]
+ },
+ {
+  "id": "fundacion",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Fundaci%C3%B3n&author=Isaac+Asimov&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.59
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Fundaci%C3%B3n+Isaac+Asimov&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.43
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Fundaci%C3%B3n%22+inauthor%3A%22Isaac+Asimov%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Fundaci%C3%B3n%22+inauthor%3A%22Isaac+Asimov%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Fundaci%C3%B3n+Isaac+Asimov&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.1
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL26391140W.json",
+    "estado": 200,
+    "segundos": 0.24
+   }
+  ]
+ },
+ {
+  "id": "cien-anos",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Cien+a%C3%B1os+de+soledad&author=Gabriel+Garc%C3%ADa+M%C3%A1rquez&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.06
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Cien+a%C3%B1os+de+soledad+Gabriel+Garc%C3%ADa+M%C3%A1rquez&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.63
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Cien+a%C3%B1os+de+soledad%22+inauthor%3A%22Gabriel+Garc%C3%ADa+M%C3%A1rquez%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.17
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Cien+a%C3%B1os+de+soledad%22+inauthor%3A%22Gabriel+Garc%C3%ADa+M%C3%A1rquez%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Cien+a%C3%B1os+de+soledad+Gabriel+Garc%C3%ADa+M%C3%A1rquez&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL274505W.json",
+    "estado": 200,
+    "segundos": 0.27
+   }
+  ]
+ },
+ {
+  "id": "cien-anos-sucio",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=CIEN+A%C3%91OS+DE+SOLEDAD&author=Garc%C3%ADa+M%C3%A1rquez%2C+Gabriel&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.71
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=CIEN+A%C3%91OS+DE+SOLEDAD+Garc%C3%ADa+M%C3%A1rquez%2C+Gabriel&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.64
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22CIEN+A%C3%91OS+DE+SOLEDAD%22+inauthor%3A%22Garc%C3%ADa+M%C3%A1rquez%2C+Gabriel%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22CIEN+A%C3%91OS+DE+SOLEDAD%22+inauthor%3A%22Garc%C3%ADa+M%C3%A1rquez%2C+Gabriel%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=CIEN+A%C3%91OS+DE+SOLEDAD+Garc%C3%ADa+M%C3%A1rquez%2C+Gabriel&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL274505W.json",
+    "estado": 200,
+    "segundos": 0.46
+   }
+  ]
+ },
+ {
+  "id": "sombra-viento",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=La+sombra+del+viento&author=Carlos+Ruiz+Zaf%C3%B3n&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.31
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=La+sombra+del+viento+Carlos+Ruiz+Zaf%C3%B3n&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.94
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+sombra+del+viento%22+inauthor%3A%22Carlos+Ruiz+Zaf%C3%B3n%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+sombra+del+viento%22+inauthor%3A%22Carlos+Ruiz+Zaf%C3%B3n%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=La+sombra+del+viento+Carlos+Ruiz+Zaf%C3%B3n&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.15
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL278437W.json",
+    "estado": 200,
+    "segundos": 0.17
+   }
+  ]
+ },
+ {
+  "id": "sapiens",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Sapiens%3A+De+animales+a+dioses&author=Yuval+Noah+Harari&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.42
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Sapiens%3A+De+animales+a+dioses+Yuval+Noah+Harari&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.67
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Sapiens%3A+De+animales+a+dioses%22+inauthor%3A%22Yuval+Noah+Harari%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Sapiens%3A+De+animales+a+dioses%22+inauthor%3A%22Yuval+Noah+Harari%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Sapiens%3A+De+animales+a+dioses+Yuval+Noah+Harari&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL17075811W.json",
+    "estado": 200,
+    "segundos": 0.2
+   }
+  ]
+ },
+ {
+  "id": "nombre-viento",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+nombre+del+viento&author=Patrick+Rothfuss&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.38
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+nombre+del+viento+Patrick+Rothfuss&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.44
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+nombre+del+viento%22+inauthor%3A%22Patrick+Rothfuss%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+nombre+del+viento%22+inauthor%3A%22Patrick+Rothfuss%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+nombre+del+viento+Patrick+Rothfuss&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.14
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL8479867W.json",
+    "estado": 200,
+    "segundos": 0.23
+   }
+  ]
+ },
+ {
+  "id": "harry-potter",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Harry+Potter+y+la+piedra+filosofal&author=J.+K.+Rowling&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.3
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Harry+Potter+y+la+piedra+filosofal+J.+K.+Rowling&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.83
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Harry+Potter+y+la+piedra+filosofal%22+inauthor%3A%22J.+K.+Rowling%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Harry+Potter+y+la+piedra+filosofal%22+inauthor%3A%22J.+K.+Rowling%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.27
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Harry+Potter+y+la+piedra+filosofal+J.+K.+Rowling&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL82563W.json",
+    "estado": 200,
+    "segundos": 0.25
+   }
+  ]
+ },
+ {
+  "id": "name-wind-en",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=The+Name+of+the+Wind&author=Patrick+Rothfuss&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 0.44
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=The+Name+of+the+Wind+Patrick+Rothfuss&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 0.76
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22The+Name+of+the+Wind%22+inauthor%3A%22Patrick+Rothfuss%22&maxResults=10&printType=books&langRestrict=en",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22The+Name+of+the+Wind%22+inauthor%3A%22Patrick+Rothfuss%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=The+Name+of+the+Wind+Patrick+Rothfuss&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL8479867W.json",
+    "estado": 200,
+    "segundos": 0.2
+   }
+  ]
+ },
+ {
+  "id": "dune-en",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Dune&author=Frank+Herbert&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 0.45
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 0.65
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Dune%22+inauthor%3A%22Frank+Herbert%22&maxResults=10&printType=books&langRestrict=en",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Dune%22+inauthor%3A%22Frank+Herbert%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Dune+Frank+Herbert&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL893414W.json",
+    "estado": 200,
+    "segundos": 0.17
+   }
+  ]
+ },
+ {
+  "id": "dune-es",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Dune&author=Frank+Herbert&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.79
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Dune+Frank+Herbert&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.21
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Dune%22+inauthor%3A%22Frank+Herbert%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Dune%22+inauthor%3A%22Frank+Herbert%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.23
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Dune+Frank+Herbert&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL893414W.json",
+    "estado": 200,
+    "segundos": 0.2
+   }
+  ]
+ },
+ {
+  "id": "1984",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=1984&author=George+Orwell&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.37
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=1984+George+Orwell&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.65
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%221984%22+inauthor%3A%22George+Orwell%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%221984%22+inauthor%3A%22George+Orwell%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=1984+George+Orwell&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL11326416W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "principito",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+principito&author=Antoine+de+Saint-Exup%C3%A9ry&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.43
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+principito+Antoine+de+Saint-Exup%C3%A9ry&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.64
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+principito%22+inauthor%3A%22Antoine+de+Saint-Exup%C3%A9ry%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+principito%22+inauthor%3A%22Antoine+de+Saint-Exup%C3%A9ry%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+principito+Antoine+de+Saint-Exup%C3%A9ry&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL34766796W.json",
+    "estado": 200,
+    "segundos": 0.21
+   }
+  ]
+ },
+ {
+  "id": "pedro-paramo",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Pedro+P%C3%A1ramo&author=Juan+Rulfo&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.28
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Pedro+P%C3%A1ramo+Juan+Rulfo&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.99
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Pedro+P%C3%A1ramo%22+inauthor%3A%22Juan+Rulfo%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.13
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Pedro+P%C3%A1ramo%22+inauthor%3A%22Juan+Rulfo%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Pedro+P%C3%A1ramo+Juan+Rulfo&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL1731119W.json",
+    "estado": 200,
+    "segundos": 0.32
+   }
+  ]
+ },
+ {
+  "id": "rayuela-isbn",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Rayuela&author=Julio+Cort%C3%A1zar&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.26
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Rayuela+Julio+Cort%C3%A1zar&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.87
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Rayuela%22+inauthor%3A%22Julio+Cort%C3%A1zar%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Rayuela%22+inauthor%3A%22Julio+Cort%C3%A1zar%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Rayuela+Julio+Cort%C3%A1zar&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-isbn",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=isbn%3A9788437604572&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-isbn",
+    "url": "https://openlibrary.org/isbn/9788437604572.json",
+    "estado": 200,
+    "segundos": 0.43
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL14860424W.json",
+    "estado": 200,
+    "segundos": 0.25
+   }
+  ]
+ },
+ {
+  "id": "ficciones",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Ficciones&author=Jorge+Luis+Borges&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.34
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Ficciones+Jorge+Luis+Borges&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.87
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Ficciones%22+inauthor%3A%22Jorge+Luis+Borges%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.13
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Ficciones%22+inauthor%3A%22Jorge+Luis+Borges%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Ficciones+Jorge+Luis+Borges&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.05
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL110971W.json",
+    "estado": 200,
+    "segundos": 0.33
+   }
+  ]
+ },
+ {
+  "id": "detectives",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Los+detectives+salvajes&author=Roberto+Bola%C3%B1o&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.82
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Los+detectives+salvajes+Roberto+Bola%C3%B1o&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 6.2
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Los+detectives+salvajes%22+inauthor%3A%22Roberto+Bola%C3%B1o%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Los+detectives+salvajes%22+inauthor%3A%22Roberto+Bola%C3%B1o%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Los+detectives+salvajes+Roberto+Bola%C3%B1o&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.13
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL712032W.json",
+    "estado": 200,
+    "segundos": 0.17
+   }
+  ]
+ },
+ {
+  "id": "kahneman-en",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Thinking%2C+Fast+and+Slow&author=Daniel+Kahneman&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 1.1
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Thinking%2C+Fast+and+Slow+Daniel+Kahneman&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 3.25
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Thinking%2C+Fast+and+Slow%22+inauthor%3A%22Daniel+Kahneman%22&maxResults=10&printType=books&langRestrict=en",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Thinking%2C+Fast+and+Slow%22+inauthor%3A%22Daniel+Kahneman%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Thinking%2C+Fast+and+Slow+Daniel+Kahneman&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL15992072W.json",
+    "estado": 200,
+    "segundos": 0.25
+   }
+  ]
+ },
+ {
+  "id": "kahneman-es",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Pensar+r%C3%A1pido%2C+pensar+despacio&author=Daniel+Kahneman&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.42
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Pensar+r%C3%A1pido%2C+pensar+despacio+Daniel+Kahneman&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.13
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Pensar+r%C3%A1pido%2C+pensar+despacio%22+inauthor%3A%22Daniel+Kahneman%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.27
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Pensar+r%C3%A1pido%2C+pensar+despacio%22+inauthor%3A%22Daniel+Kahneman%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Pensar+r%C3%A1pido%2C+pensar+despacio+Daniel+Kahneman&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL15992072W.json",
+    "estado": 200,
+    "segundos": 0.26
+   }
+  ]
+ },
+ {
+  "id": "comunidad",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+se%C3%B1or+de+los+anillos%3A+La+comunidad+del+anillo&author=J.+R.+R.+Tolkien&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.46
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+se%C3%B1or+de+los+anillos%3A+La+comunidad+del+anillo+J.+R.+R.+Tolkien&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.78
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+se%C3%B1or+de+los+anillos%3A+La+comunidad+del+anillo%22+inauthor%3A%22J.+R.+R.+Tolkien%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+se%C3%B1or+de+los+anillos%3A+La+comunidad+del+anillo%22+inauthor%3A%22J.+R.+R.+Tolkien%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+se%C3%B1or+de+los+anillos%3A+La+comunidad+del+anillo+J.+R.+R.+Tolkien&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.14
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL27513W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "habitos",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=H%C3%A1bitos+at%C3%B3micos&author=James+Clear&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 2.04
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=H%C3%A1bitos+at%C3%B3micos+James+Clear&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.38
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22H%C3%A1bitos+at%C3%B3micos%22+inauthor%3A%22James+Clear%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22H%C3%A1bitos+at%C3%B3micos%22+inauthor%3A%22James+Clear%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=H%C3%A1bitos+at%C3%B3micos+James+Clear&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL45156287W.json",
+    "estado": 200,
+    "segundos": 0.17
+   }
+  ]
+ },
+ {
+  "id": "atomic-isbn",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Atomic+Habits&author=James+Clear&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 0.47
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Atomic+Habits+James+Clear&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 1.35
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Atomic+Habits%22+inauthor%3A%22James+Clear%22&maxResults=10&printType=books&langRestrict=en",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Atomic+Habits%22+inauthor%3A%22James+Clear%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Atomic+Habits+James+Clear&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "gb-isbn",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=isbn%3A9780735211292&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-isbn",
+    "url": "https://openlibrary.org/isbn/9780735211292.json",
+    "estado": 200,
+    "segundos": 0.39
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL17930368W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "casa-espiritus",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=La+casa+de+los+esp%C3%ADritus&author=Isabel+Allende&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.87
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=La+casa+de+los+esp%C3%ADritus+Isabel+Allende&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 3.52
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+casa+de+los+esp%C3%ADritus%22+inauthor%3A%22Isabel+Allende%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.13
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+casa+de+los+esp%C3%ADritus%22+inauthor%3A%22Isabel+Allende%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=La+casa+de+los+esp%C3%ADritus+Isabel+Allende&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL1905255W.json",
+    "estado": 200,
+    "segundos": 0.27
+   }
+  ]
+ },
+ {
+  "id": "ceguera",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Ensayo+sobre+la+ceguera&author=Jos%C3%A9+Saramago&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.22
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Ensayo+sobre+la+ceguera+Jos%C3%A9+Saramago&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.33
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Ensayo+sobre+la+ceguera%22+inauthor%3A%22Jos%C3%A9+Saramago%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Ensayo+sobre+la+ceguera%22+inauthor%3A%22Jos%C3%A9+Saramago%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Ensayo+sobre+la+ceguera+Jos%C3%A9+Saramago&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL26382672W.json",
+    "estado": 200,
+    "segundos": 0.51
+   }
+  ]
+ },
+ {
+  "id": "tres-cuerpos",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+problema+de+los+tres+cuerpos&author=Liu+Cixin&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.69
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+problema+de+los+tres+cuerpos+Liu+Cixin&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.6
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+problema+de+los+tres+cuerpos%22+inauthor%3A%22Liu+Cixin%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+problema+de+los+tres+cuerpos%22+inauthor%3A%22Liu+Cixin%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+problema+de+los+tres+cuerpos+Liu+Cixin&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.11
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL37743883W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "fahrenheit",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Fahrenheit+451&author=Ray+Bradbury&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.96
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Fahrenheit+451+Ray+Bradbury&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.65
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Fahrenheit+451%22+inauthor%3A%22Ray+Bradbury%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Fahrenheit+451%22+inauthor%3A%22Ray+Bradbury%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.11
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Fahrenheit+451+Ray+Bradbury&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL103123W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "crimen-castigo",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Crimen+y+castigo&author=Fi%C3%B3dor+Dostoievski&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.36
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Crimen+y+castigo+Fi%C3%B3dor+Dostoievski&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.0
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Crimen+y+castigo%22+inauthor%3A%22Fi%C3%B3dor+Dostoievski%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Crimen+y+castigo%22+inauthor%3A%22Fi%C3%B3dor+Dostoievski%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Crimen+y+castigo+Fi%C3%B3dor+Dostoievski&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL26382038W.json",
+    "estado": 200,
+    "segundos": 0.19
+   }
+  ]
+ },
+ {
+  "id": "karenina",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Anna+Karenina&author=Le%C3%B3n+Tolst%C3%B3i&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.62
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Anna+Karenina+Le%C3%B3n+Tolst%C3%B3i&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.67
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Anna+Karenina%22+inauthor%3A%22Le%C3%B3n+Tolst%C3%B3i%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.1
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Anna+Karenina%22+inauthor%3A%22Le%C3%B3n+Tolst%C3%B3i%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.05
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Anna+Karenina+Le%C3%B3n+Tolst%C3%B3i&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL36073991W.json",
+    "estado": 200,
+    "segundos": 0.17
+   }
+  ]
+ },
+ {
+  "id": "metamorfosis",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=La+metamorfosis&author=Franz+Kafka&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.29
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=La+metamorfosis+Franz+Kafka&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.61
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+metamorfosis%22+inauthor%3A%22Franz+Kafka%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.18
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+metamorfosis%22+inauthor%3A%22Franz+Kafka%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=La+metamorfosis+Franz+Kafka&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL35091705W.json",
+    "estado": 200,
+    "segundos": 0.33
+   }
+  ]
+ },
+ {
+  "id": "orgullo",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Orgullo+y+prejuicio&author=Jane+Austen&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 3.43
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Orgullo+y+prejuicio+Jane+Austen&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.88
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Orgullo+y+prejuicio%22+inauthor%3A%22Jane+Austen%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Orgullo+y+prejuicio%22+inauthor%3A%22Jane+Austen%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Orgullo+y+prejuicio+Jane+Austen&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.13
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL34810920W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "pride-en",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Pride+and+Prejudice&author=Jane+Austen&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 0.58
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Pride+and+Prejudice+Jane+Austen&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=en",
+    "estado": 200,
+    "segundos": 1.21
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Pride+and+Prejudice%22+inauthor%3A%22Jane+Austen%22&maxResults=10&printType=books&langRestrict=en",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Pride+and+Prejudice%22+inauthor%3A%22Jane+Austen%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Pride+and+Prejudice+Jane+Austen&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL66554W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "archivo-sucio",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=cervantes+don-quijote&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i",
+    "estado": 200,
+    "segundos": 0.46
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=cervantes+don-quijote&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i",
+    "estado": 200,
+    "segundos": 0.73
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22cervantes+don-quijote%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=cervantes+don-quijote&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.26
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL5730500W.json",
+    "estado": 200,
+    "segundos": 0.21
+   }
+  ]
+ },
+ {
+  "id": "isbn-falso",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+t%C3%BAnel&author=Ernesto+Sabato&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.89
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+t%C3%BAnel+Ernesto+Sabato&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 3.59
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+t%C3%BAnel%22+inauthor%3A%22Ernesto+Sabato%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.13
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+t%C3%BAnel%22+inauthor%3A%22Ernesto+Sabato%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+t%C3%BAnel+Ernesto+Sabato&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-isbn",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=isbn%3A9780000000002&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-isbn",
+    "url": "https://openlibrary.org/isbn/9780000000002.json",
+    "estado": 200,
+    "segundos": 0.41
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL617847W.json",
+    "estado": 200,
+    "segundos": 0.19
+   }
+  ]
+ },
+ {
+  "id": "juego-tronos",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Juego+de+tronos+%28Canci%C3%B3n+de+hielo+y+fuego+1%29&author=George+R.+R.+Martin&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.73
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Juego+de+tronos+%28Canci%C3%B3n+de+hielo+y+fuego+1%29+George+R.+R.+Martin&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 2.37
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Juego+de+tronos+%28Canci%C3%B3n+de+hielo+y+fuego+1%29%22+inauthor%3A%22George+R.+R.+Martin%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Juego+de+tronos+%28Canci%C3%B3n+de+hielo+y+fuego+1%29%22+inauthor%3A%22George+R.+R.+Martin%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Juego+de+tronos+%28Canci%C3%B3n+de+hielo+y+fuego+1%29+George+R.+R.+Martin&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL257943W.json",
+    "estado": 200,
+    "segundos": 0.23
+   }
+  ]
+ },
+ {
+  "id": "hobbit",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+hobbit&author=J.R.R.+Tolkien&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.33
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+hobbit+J.R.R.+Tolkien&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.94
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+hobbit%22+inauthor%3A%22J.R.R.+Tolkien%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+hobbit%22+inauthor%3A%22J.R.R.+Tolkien%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+hobbit+J.R.R.+Tolkien&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL32501118W.json",
+    "estado": 200,
+    "segundos": 0.23
+   }
+  ]
+ },
+ {
+  "id": "steve-jobs",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Steve+Jobs&author=Walter+Isaacson&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.59
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Steve+Jobs+Walter+Isaacson&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.99
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Steve+Jobs%22+inauthor%3A%22Walter+Isaacson%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Steve+Jobs%22+inauthor%3A%22Walter+Isaacson%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Steve+Jobs+Walter+Isaacson&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL16085155W.json",
+    "estado": 200,
+    "segundos": 0.36
+   }
+  ]
+ },
+ {
+  "id": "inexistente",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Manual+de+un+lector+imaginario&author=Hortensia+Valdivieso+Quiroga&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.7
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Manual+de+un+lector+imaginario+Hortensia+Valdivieso+Quiroga&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.76
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Manual+de+un+lector+imaginario%22+inauthor%3A%22Hortensia+Valdivieso+Quiroga%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.09
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Manual+de+un+lector+imaginario%22+inauthor%3A%22Hortensia+Valdivieso+Quiroga%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.11
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Manual+de+un+lector+imaginario+Hortensia+Valdivieso+Quiroga&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   }
+  ]
+ },
+ {
+  "id": "tregua",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=La+tregua&author=Mario+Benedetti&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.47
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=La+tregua+Mario+Benedetti&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.76
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+tregua%22+inauthor%3A%22Mario+Benedetti%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+tregua%22+inauthor%3A%22Mario+Benedetti%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=La+tregua+Mario+Benedetti&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL741877W.json",
+    "estado": 200,
+    "segundos": 0.19
+   }
+  ]
+ },
+ {
+  "id": "agua-chocolate",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Como+agua+para+chocolate&author=Laura+Esquivel&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.09
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Como+agua+para+chocolate+Laura+Esquivel&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.73
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Como+agua+para+chocolate%22+inauthor%3A%22Laura+Esquivel%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Como+agua+para+chocolate%22+inauthor%3A%22Laura+Esquivel%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Como+agua+para+chocolate+Laura+Esquivel&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL953162W.json",
+    "estado": 200,
+    "segundos": 0.3
+   }
+  ]
+ },
+ {
+  "id": "bestiario",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Bestiario&author=Julio+Cort%C3%A1zar&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.46
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Bestiario+Julio+Cort%C3%A1zar&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.1
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Bestiario%22+inauthor%3A%22Julio+Cort%C3%A1zar%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Bestiario%22+inauthor%3A%22Julio+Cort%C3%A1zar%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Bestiario+Julio+Cort%C3%A1zar&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL8971525W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "miserables",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Los+miserables&author=Victor+Hugo&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.52
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Los+miserables+Victor+Hugo&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 2.33
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Los+miserables%22+inauthor%3A%22Victor+Hugo%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Los+miserables%22+inauthor%3A%22Victor+Hugo%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.2
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Los+miserables+Victor+Hugo&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL40516131W.json",
+    "estado": 200,
+    "segundos": 0.2
+   }
+  ]
+ },
+ {
+  "id": "arte-guerra",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+arte+de+la+guerra&author=Sun+Tzu&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.62
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+arte+de+la+guerra+Sun+Tzu&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.5
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+arte+de+la+guerra%22+inauthor%3A%22Sun+Tzu%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.11
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+arte+de+la+guerra%22+inauthor%3A%22Sun+Tzu%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+arte+de+la+guerra+Sun+Tzu&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL34911959W.json",
+    "estado": 200,
+    "segundos": 0.2
+   }
+  ]
+ },
+ {
+  "id": "aleph",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=El+Aleph&author=Jorge+Luis+Borges&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.31
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=El+Aleph+Jorge+Luis+Borges&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.43
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+Aleph%22+inauthor%3A%22Jorge+Luis+Borges%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.06
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22El+Aleph%22+inauthor%3A%22Jorge+Luis+Borges%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.12
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=El+Aleph+Jorge+Luis+Borges&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL110969W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "homo-deus",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Homo+Deus%3A+Breve+historia+del+ma%C3%B1ana&author=Yuval+Noah+Harari&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.55
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Homo+Deus%3A+Breve+historia+del+ma%C3%B1ana+Yuval+Noah+Harari&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 1.25
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Homo+Deus%3A+Breve+historia+del+ma%C3%B1ana%22+inauthor%3A%22Yuval+Noah+Harari%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Homo+Deus%3A+Breve+historia+del+ma%C3%B1ana%22+inauthor%3A%22Yuval+Noah+Harari%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.13
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Homo+Deus%3A+Breve+historia+del+ma%C3%B1ana+Yuval+Noah+Harari&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL28967209W.json",
+    "estado": 200,
+    "segundos": 0.18
+   }
+  ]
+ },
+ {
+  "id": "solo-titulo",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=Rayuela&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.76
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=Rayuela&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.49
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Rayuela%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22Rayuela%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=Rayuela&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.08
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL14860424W.json",
+    "estado": 200,
+    "segundos": 0.21
+   }
+  ]
+ },
+ {
+  "id": "autor-errado",
+  "peticiones": [
+   {
+    "nombre": "ol-titulo",
+    "url": "https://openlibrary.org/search.json?title=La+ciudad+y+los+perros&author=Gabriel+Garc%C3%ADa+M%C3%A1rquez&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.27
+   },
+   {
+    "nombre": "ol-q",
+    "url": "https://openlibrary.org/search.json?q=La+ciudad+y+los+perros+Gabriel+Garc%C3%ADa+M%C3%A1rquez&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+    "estado": 200,
+    "segundos": 0.5
+   },
+   {
+    "nombre": "gb-titulo-idioma",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+ciudad+y+los+perros%22+inauthor%3A%22Gabriel+Garc%C3%ADa+M%C3%A1rquez%22&maxResults=10&printType=books&langRestrict=es",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-titulo",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+ciudad+y+los+perros%22+inauthor%3A%22Gabriel+Garc%C3%ADa+M%C3%A1rquez%22&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.07
+   },
+   {
+    "nombre": "gb-q",
+    "url": "https://www.googleapis.com/books/v1/volumes?q=La+ciudad+y+los+perros+Gabriel+Garc%C3%ADa+M%C3%A1rquez&maxResults=10&printType=books",
+    "estado": 429,
+    "segundos": 0.11
+   },
+   {
+    "nombre": "ol-obra",
+    "url": "https://openlibrary.org/works/OL33096183W.json",
+    "estado": 200,
+    "segundos": 0.23
+   }
+  ]
+ }
+]

@@ -1,0 +1,452 @@
+{
+ "numFound": 9,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 9,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Bestiario Julio Cortázar",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "cover_edition_key": "OL18666653M",
+   "cover_i": 5721778,
+   "edition_count": 37,
+   "first_publish_year": 1951,
+   "isbn": [
+    "9789875780804",
+    "9781860464270",
+    "9788492589098",
+    "8420416576",
+    "1473572436",
+    "1860464270",
+    "8466331840",
+    "9788420421315",
+    "9783518370438",
+    "9877252945",
+    "9789505111886",
+    "9786073147729",
+    "9788433931900",
+    "9789587048797",
+    "8433931903",
+    "9870406041",
+    "8466302271",
+    "9789870406044",
+    "9681901959",
+    "9781846559242",
+    "9781784875855",
+    "9788420427645",
+    "1846559243",
+    "351837043X",
+    "9871106335",
+    "8420427640",
+    "8466309896",
+    "9781473572430",
+    "9789500701778",
+    "9500701774",
+    "9788466331845",
+    "9789707311268",
+    "9789877252941",
+    "9875780804",
+    "9505111886",
+    "9789681901950",
+    "9789871106332",
+    "9587048792",
+    "9707311266",
+    "6073147724",
+    "1784875856",
+    "9788477352631",
+    "8492589094",
+    "9788420416571",
+    "9788466302272",
+    "9788466309899",
+    "8420421316",
+    "8477352631"
+   ],
+   "key": "/works/OL8971525W",
+   "language": [
+    "spa",
+    "fre",
+    "ger",
+    "heb",
+    "eng"
+   ],
+   "publisher": [
+    "Penguin Random House",
+    "Harvill Press",
+    "Punto de Lectura",
+    "Ediciones B",
+    "Sudamericana",
+    "Editorial Sudamericana",
+    "Debolsillo",
+    "Editiorial Sudamericana",
+    "Bet hotsaʾah Keter",
+    "Harvill Paperback",
+    "PENGUIN RANDOM HOUSE",
+    "Suhrkamp Verlag",
+    "AGUILAR",
+    "Alfaguara",
+    "Anagrama",
+    "Ediciones Alfaguara",
+    "Leer-e",
+    "Suma de Letras"
+   ],
+   "title": "Bestiario",
+   "subject": [
+    "Spanish Short stories",
+    "Fiction, short stories (single author)"
+   ],
+   "ratings_average": 4.2,
+   "editions": {
+    "numFound": 37,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26899023M",
+      "title": "Bestiario",
+      "cover_i": 9604005,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Sudamericana"
+      ],
+      "publish_date": [
+       "1951"
+      ],
+      "isbn": [
+       "9788466331845",
+       "8466331840"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "cover_edition_key": "OL5277374M",
+   "cover_i": 9789900,
+   "edition_count": 1,
+   "first_publish_year": 1970,
+   "key": "/works/OL14860383W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Editorial Sudamericana"
+   ],
+   "title": "Relatos: Bestiario, 1951",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5277374M",
+      "title": "Relatos: Bestiario, 1951.",
+      "subtitle": "Las armas secretas, 1959. Final del juego, 1964. Todos los fuegos el fuego, 1966.",
+      "cover_i": 9789900,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Editorial Sudamericana"
+      ],
+      "publish_date": [
+       "1970"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1982,
+   "key": "/works/OL46060415W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Alfaguara"
+   ],
+   "title": "Bestiario",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL62637938M",
+      "title": "Bestiario",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alfaguara"
+      ],
+      "publish_date": [
+       "1982"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "cover_edition_key": "OL27482113M",
+   "cover_i": 8940095,
+   "edition_count": 1,
+   "first_publish_year": 2007,
+   "isbn": [
+    "987040734X",
+    "9789870407348"
+   ],
+   "key": "/works/OL20282070W",
+   "publisher": [
+    "Alfaguara"
+   ],
+   "title": "Bestiario; Todos los fuegos el fuego",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27482113M",
+      "title": "Bestiario; Todos los fuegos el fuego",
+      "cover_i": 8940095,
+      "publisher": [
+       "Alfaguara"
+      ],
+      "publish_date": [
+       "2007"
+      ],
+      "isbn": [
+       "9789870407348",
+       "987040734X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1970,
+   "key": "/works/OL14860382W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Editorial Sudamericana"
+   ],
+   "title": "Relatos",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL16581632M",
+      "title": "Relatos",
+      "subtitle": "Bestiario, 1951. Las armas secretas, 1959. Final del juego, 1964. Todos los fuegos el fuego, 1966.",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Editorial Sudamericana"
+      ],
+      "publish_date": [
+       "1970"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1964,
+   "key": "/works/OL14860361W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Casa de las Américas"
+   ],
+   "title": "Cuentos",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5961442M",
+      "title": "Cuentos.",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Casa de las Américas"
+      ],
+      "publish_date": [
+       "1964"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1972,
+   "key": "/works/OL12242886W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Editorial Sudamericana"
+   ],
+   "title": "Relatos",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL18306863M",
+      "title": "Relatos",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Editorial Sudamericana"
+      ],
+      "publish_date": [
+       "1972"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL195130A"
+   ],
+   "author_name": [
+    "Noé Jitrik"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1968,
+   "key": "/works/OL22457989W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "C. Pérez"
+   ],
+   "title": "La Vuelta a Cortázar en nueve ensayos",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5718243M",
+      "title": "La Vuelta a Cortázar en nueve ensayos",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "C. Pérez"
+      ],
+      "publish_date": [
+       "1968"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL195130A"
+   ],
+   "author_name": [
+    "Noé Jitrik"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1971,
+   "key": "/works/OL1708975W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Siglo Veintiuno Argentina Editores"
+   ],
+   "subtitle": "ensayos sobre seis escritores argentinos.",
+   "title": "El fuego de la especie",
+   "subject": [
+    "Argentine literature"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5361880M",
+      "title": "El fuego de la especie",
+      "subtitle": "ensayos sobre seis escritores argentinos.",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Siglo Veintiuno Argentina Editores"
+      ],
+      "publish_date": [
+       "1971"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

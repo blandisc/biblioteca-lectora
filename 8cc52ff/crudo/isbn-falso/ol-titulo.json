@@ -1,0 +1,459 @@
+{
+ "numFound": 4,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 4,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL2748652A"
+   ],
+   "author_name": [
+    "Ernesto Sabato"
+   ],
+   "cover_i": 5517733,
+   "edition_count": 120,
+   "first_publish_year": 1948,
+   "isbn": [
+    "9789584242457",
+    "9789511085416",
+    "9532320806",
+    "9781508609568",
+    "9788432216428",
+    "0345373774",
+    "9789507314896",
+    "9508520140",
+    "8432248363",
+    "6180312559",
+    "9781465876867",
+    "9788408461838",
+    "1465876863",
+    "6070784057",
+    "9780345351920",
+    "9788432217531",
+    "9949669421",
+    "0245534075",
+    "9789644482953",
+    "0141964057",
+    "9029079770",
+    "9789878317045",
+    "1511492139",
+    "9789686941210",
+    "9788674460320",
+    "8437600898",
+    "9788432230035",
+    "9788496643635",
+    "9789029079778",
+    "9786180312553",
+    "150860956X",
+    "9939516851",
+    "998476866X",
+    "1402563205",
+    "8496643638",
+    "8674460321",
+    "9507319476",
+    "0061626716",
+    "9789532320800",
+    "9871144261",
+    "9780224025782",
+    "6124632187",
+    "9788432211089",
+    "9788437625386",
+    "3803127726",
+    "9789507319471",
+    "0224025783",
+    "9584242458",
+    "9789504904625",
+    "9780141964058",
+    "9783803126399",
+    "9789875805231",
+    "9789733403760",
+    "9786070784057",
+    "9788432216114",
+    "9782020061384",
+    "9789602630891",
+    "9875805238",
+    "950731489X",
+    "9789949669424",
+    "9686005242",
+    "9780174446811",
+    "9789984768663",
+    "9686941215",
+    "8807884755",
+    "0613814541",
+    "9507310290",
+    "9504904629",
+    "9992745142",
+    "013033846X",
+    "9644482956",
+    "9780143106531",
+    "8408461834",
+    "8432216119",
+    "8432215147",
+    "9780345373779",
+    "9788481301335",
+    "9602630892",
+    "3125355508",
+    "9783125355507",
+    "9780245534072",
+    "8432233889",
+    "9781511492133",
+    "9780613814546",
+    "9789941311796",
+    "9789992745144",
+    "9789755392974",
+    "0345351924",
+    "0174446810",
+    "9780130338464",
+    "994131179X",
+    "9780061626715",
+    "0143106538",
+    "9789586140850",
+    "8432230030",
+    "9789871144266",
+    "9788807884757",
+    "9789939516851",
+    "2020061384",
+    "9789507310294",
+    "9788432233883",
+    "8535900454",
+    "9511085417",
+    "9788535900453",
+    "9788432215148",
+    "9780141194547",
+    "8432216429",
+    "0141194545",
+    "9789686005240",
+    "9781402563201",
+    "9586140857",
+    "8432217530",
+    "9755392971",
+    "8437625386",
+    "9788432248368",
+    "9733403768",
+    "2020239280",
+    "9878317048",
+    "8432203300",
+    "9788432250026",
+    "9782020239288",
+    "9789508520142",
+    "8481301337",
+    "9788432203305",
+    "9786124632181",
+    "9783803127723",
+    "3803126398",
+    "8432250023",
+    "9788437600895",
+    "8432211087"
+   ],
+   "key": "/works/OL617847W",
+   "language": [
+    "alb",
+    "ara",
+    "fin",
+    "fre",
+    "srp",
+    "mac",
+    "lav",
+    "dut",
+    "pol",
+    "gre",
+    "hrv",
+    "nor",
+    "est",
+    "eng",
+    "rum",
+    "spa",
+    "tur",
+    "por",
+    "per",
+    "ger",
+    "swe",
+    "arm",
+    "ita",
+    "baq",
+    "geo"
+   ],
+   "publisher": [
+    "Alberdania",
+    "Smashwords",
+    "Wydawnictwo Literackie",
+    "Klett",
+    "Penguin Books, Limited",
+    "Alfa-Omega",
+    "Penguin Classic",
+    "Austral",
+    "Wagenbach",
+    "Ballantine Books",
+    "Prentice Hall",
+    "Random House",
+    "Rayo",
+    "PLANETA",
+    "Compañía General Fabril",
+    "Lind & Co",
+    "Cátedra",
+    "Thomas Nelson & Sons",
+    "Available Press",
+    "Ballantine",
+    "Emecé Editores",
+    "Recorded Books",
+    "Feltrinelli",
+    "Planeta Mexicana",
+    "Valters un Rapa",
+    "Penguin Books",
+    "Planeta Perú",
+    "SysPrint",
+    "Emecé",
+    "Библиотека Новости",
+    "Jonathan Cape",
+    "الدار الوطنية الجديدة",
+    "ინტელექტი",
+    "Circulo do Livro",
+    "Emecé",
+    "Onufri",
+    "Humanitas Fiction",
+    "Μεταίχμιο",
+    "Univers",
+    "Knopf",
+    "Seuil",
+    "FisicalBook",
+    "Gyldendal Norsk Forlag",
+    "Tandem Library",
+    "Penguin Classics",
+    "Անտարես",
+    "Vintage/Ebury",
+    "Compañía General Fabril",
+    "BOOKET",
+    "Wagenbach Klaus GmbH",
+    "Postimees Kirjastus",
+    "Companhia das Letras",
+    "Macmillan",
+    "Seix Barral",
+    "Editorial Planeta, S. A.",
+    "Unidad Editorial",
+    "Booket",
+    "PIW",
+    "Planeta Colombiana",
+    "Sur",
+    "نیلوفر (Niloofar)",
+    "Cátedra",
+    "Espasa-Calpe Mexicana",
+    "Planeta",
+    "CreateSpace Independent Publishing Platform",
+    "Табернакул",
+    "Ayrıntı Yayınları",
+    "Sudamericana",
+    "Meulenhoff",
+    "Planeta Argentina",
+    "Metaichmio",
+    "Αστάρτη",
+    "Otava",
+    "Harrap"
+   ],
+   "title": "El túnel",
+   "subject": [
+    "Spanish fiction",
+    "Spanish language",
+    "Spanish language books",
+    "Written Spanish",
+    "Modern fiction",
+    "Obsessive-compulsive disorder",
+    "Relationship addiction",
+    "Painters",
+    "Pintores",
+    "Conducta compulsiva",
+    "Fiction (fictional works by one author)",
+    "Fiction, general",
+    "Artists, fiction",
+    "Argentina, fiction",
+    "General",
+    "Non-Classifiable",
+    "Fiction - General",
+    "Literatura hispanoamericana-",
+    "Novela-",
+    "Language workbooks, practice books & exercises",
+    "Spanish: Adult Nonfiction",
+    "Foreign Language Study",
+    "Foreign Language - Dictionaries / Phrase Books",
+    "Spanish",
+    "Foreign Language Study / Spanish",
+    "Artists",
+    "Fiction",
+    "Psychology",
+    "Artists' models",
+    "Crimes against",
+    "Murderers",
+    "Murder",
+    "Insanity (Law)",
+    "Spanish language materials",
+    "Novela",
+    "Criminals, fiction",
+    "Fiction, mystery & detective, general",
+    "Crime, fiction",
+    "Ficition"
+   ],
+   "ratings_average": 4.0789475,
+   "editions": {
+    "numFound": 83,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL40216772M",
+      "title": "El túnel",
+      "cover_i": 15240000,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Seix Barral"
+      ],
+      "publish_date": [
+       "1986"
+      ],
+      "isbn": [
+       "9789686941210",
+       "9686941215"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2748652A"
+   ],
+   "author_name": [
+    "Ernesto Sabato"
+   ],
+   "cover_edition_key": "OL26246367M",
+   "cover_i": 7913225,
+   "edition_count": 1,
+   "first_publish_year": 2009,
+   "isbn": [
+    "8437625386",
+    "9788437625386"
+   ],
+   "key": "/works/OL17640650W",
+   "publisher": [
+    "Ediciones Cátedra",
+    "Cátedra"
+   ],
+   "title": "El túnel. - 1. ed.",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26246367M",
+      "title": "El túnel. - 1. ed.",
+      "cover_i": 7913225,
+      "publisher": [
+       "Cátedra",
+       "Ediciones Cátedra"
+      ],
+      "publish_date": [
+       "2009"
+      ],
+      "isbn": [
+       "9788437625386",
+       "8437625386"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2748652A"
+   ],
+   "author_name": [
+    "Ernesto Sabato"
+   ],
+   "cover_edition_key": "OL43384183M",
+   "cover_i": 13028842,
+   "edition_count": 1,
+   "first_publish_year": 1985,
+   "isbn": [
+    "9788432224195",
+    "8432224197"
+   ],
+   "key": "/works/OL31698831W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Seix Barral"
+   ],
+   "title": "El túnel / Sobre héroes y tumbas",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL43384183M",
+      "title": "El túnel / Sobre héroes y tumbas",
+      "subtitle": "vol 19",
+      "cover_i": 13028842,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Seix Barral"
+      ],
+      "publish_date": [
+       "1985"
+      ],
+      "isbn": [
+       "8432224197",
+       "9788432224195"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL16331763A"
+   ],
+   "author_name": [
+    "Ernesto R. Sábato"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1975,
+   "key": "/works/OL45298372W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Editorial Sudamericana"
+   ],
+   "title": "El túnel",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61748077M",
+      "title": "El túnel",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Editorial Sudamericana"
+      ],
+      "publish_date": [
+       "1975"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

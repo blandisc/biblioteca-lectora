@@ -1,0 +1,108 @@
+{
+ "title": "El túnel",
+ "key": "/works/OL617847W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL2748652A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "subjects": [
+  "Spanish fiction",
+  "Spanish language",
+  "Spanish language books",
+  "Written Spanish",
+  "Modern fiction",
+  "Obsessive-compulsive disorder",
+  "Relationship addiction",
+  "Painters",
+  "Pintores",
+  "Conducta compulsiva",
+  "Fiction (fictional works by one author)",
+  "Fiction, general",
+  "Artists, fiction",
+  "Argentina, fiction",
+  "General",
+  "Non-Classifiable",
+  "Fiction - General",
+  "Literatura hispanoamericana-",
+  "Novela-",
+  "Language workbooks, practice books & exercises",
+  "Spanish: Adult Nonfiction",
+  "Foreign Language Study",
+  "Foreign Language - Dictionaries / Phrase Books",
+  "Spanish",
+  "Foreign Language Study / Spanish",
+  "Artists",
+  "Fiction",
+  "Psychology",
+  "Artists' models",
+  "Crimes against",
+  "Murderers",
+  "Murder",
+  "Insanity (Law)",
+  "Spanish language materials",
+  "Novela",
+  "Criminals, fiction",
+  "Fiction, mystery & detective, general",
+  "Crime, fiction",
+  "Ficition"
+ ],
+ "covers": [
+  5517733,
+  1047148,
+  2270075,
+  8172635,
+  1055728,
+  5517734,
+  7913224,
+  5071233,
+  4078799,
+  10564027,
+  10564026,
+  10751785,
+  12389743,
+  5071232,
+  5312278,
+  963836,
+  7959815,
+  3169279,
+  9079171,
+  12325220,
+  12335664,
+  12973555,
+  13303500,
+  14953103,
+  14855586
+ ],
+ "description": "Juan Pablo Castel is a tormented and insane painter who falls for Maria, a woman he meets at an art exhibition. She is married to a blind man -the subject of Sabato and Saramago's obsession- and has a house in the countryside. She is also the mistress of her own cousin. Castel discovers this and goes mad with jealousy. We have no way to know the truth, because everything in the novel happens inside Castel's mind.",
+ "first_publish_date": "1977",
+ "subject_places": [
+  "Argentina",
+  "Buenos Aires"
+ ],
+ "subject_times": [
+  "S. XX"
+ ],
+ "genres": [
+  "/tags/OL175T",
+  "/tags/OL166T"
+ ],
+ "latest_revision": 13,
+ "revision": 13,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-12-08T06:27:38.155083"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2026-09-07T19:33:53.782287"
+ }
+}

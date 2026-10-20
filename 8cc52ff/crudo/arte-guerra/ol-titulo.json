@@ -1,0 +1,514 @@
+{
+ "numFound": 16,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 16,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL30553A",
+    "OL11900116A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)",
+    "Albert Galvany"
+   ],
+   "cover_edition_key": "OL47269580M",
+   "cover_i": 13723515,
+   "edition_count": 1,
+   "first_publish_year": 2017,
+   "isbn": [
+    "8498797020",
+    "9788498797022"
+   ],
+   "key": "/works/OL34911959W",
+   "publisher": [
+    "Editorial Trotta, S.A."
+   ],
+   "title": "El arte de la guerra",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47269580M",
+      "title": "El arte de la guerra",
+      "cover_i": 13723515,
+      "publisher": [
+       "Editorial Trotta, S.A."
+      ],
+      "publish_date": [
+       "Sep 18, 2017"
+      ],
+      "isbn": [
+       "9788498797022",
+       "8498797020"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL30553A",
+    "OL3159425A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)",
+    "Chih Chung Tsai"
+   ],
+   "cover_edition_key": "OL30525035M",
+   "cover_i": 10460487,
+   "edition_count": 1,
+   "first_publish_year": 2018,
+   "isbn": [
+    "8446047071",
+    "9788446047070"
+   ],
+   "key": "/works/OL22441111W",
+   "publisher": [
+    "Ediciones Akal"
+   ],
+   "title": "El arte de la guerra",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL30525035M",
+      "title": "El arte de la guerra",
+      "cover_i": 10460487,
+      "publisher": [
+       "Ediciones Akal"
+      ],
+      "publish_date": [
+       "Oct 29, 2018"
+      ],
+      "isbn": [
+       "9788446047070",
+       "8446047071"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL30553A",
+    "OL23135A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)",
+    "Niccolò Machiavelli"
+   ],
+   "cover_edition_key": "OL47103911M",
+   "cover_i": 13479019,
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9788418211515",
+    "8418211512"
+   ],
+   "key": "/works/OL34754453W",
+   "publisher": [
+    "Plutón Ediciones"
+   ],
+   "title": "El arte de la guerra según Sun Tzu y Maquiavelo",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47103911M",
+      "title": "El arte de la guerra según Sun Tzu y Maquiavelo",
+      "cover_i": 13479019,
+      "publisher": [
+       "Plutón Ediciones"
+      ],
+      "publish_date": [
+       "Mar 01, 2021"
+      ],
+      "isbn": [
+       "9788418211515",
+       "8418211512"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL30553A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)"
+   ],
+   "cover_edition_key": "OL13266254M",
+   "cover_i": 3327572,
+   "edition_count": 1,
+   "first_publish_year": 2001,
+   "isbn": [
+    "9788441406421",
+    "8441406421"
+   ],
+   "key": "/works/OL13266254M",
+   "publisher": [
+    "Edaf S.A."
+   ],
+   "title": "El arte de la guerra",
+   "subject": [
+    "Management - General",
+    "Motivational",
+    "Ancient, Classical & Medieval",
+    "Literary Collections",
+    "Business / Economics / Finance",
+    "Spanish: Adult Nonfiction"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL13266254M",
+      "title": "El arte de la guerra",
+      "cover_i": 3327572,
+      "publisher": [
+       "Edaf S.A."
+      ],
+      "publish_date": [
+       "2001"
+      ],
+      "isbn": [
+       "9788441406421",
+       "8441406421"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL30553A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)"
+   ],
+   "cover_edition_key": "OL9140413M",
+   "cover_i": 1048043,
+   "edition_count": 1,
+   "first_publish_year": 2001,
+   "isbn": [
+    "9788476406533",
+    "8476406533"
+   ],
+   "key": "/works/OL9140413M",
+   "publisher": [
+    "Edaf S.A."
+   ],
+   "title": "El arte de la guerra",
+   "subject": [
+    "Technology",
+    "Spanish: Adult Nonfiction",
+    "Philosophy",
+    "Leadership",
+    "Military History (General)",
+    "Business / Economics / Finance",
+    "Military Science",
+    "Eastern - General",
+    "Management - General",
+    "Business & Economics",
+    "General",
+    "History",
+    "China",
+    "Military - General",
+    "Military art and science",
+    "Eastern"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9140413M",
+      "title": "El arte de la guerra",
+      "cover_i": 1048043,
+      "publisher": [
+       "Edaf S.A."
+      ],
+      "publish_date": [
+       "2001"
+      ],
+      "isbn": [
+       "9788476406533",
+       "8476406533"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3207095A",
+    "OL30553A"
+   ],
+   "author_name": [
+    "Sun Biu",
+    "孙武 (Sun Tzu)"
+   ],
+   "cover_edition_key": "OL9131466M",
+   "cover_i": 4910416,
+   "edition_count": 1,
+   "first_publish_year": 2001,
+   "isbn": [
+    "9788441401174",
+    "8441401179"
+   ],
+   "key": "/works/OL9131466M",
+   "publisher": [
+    "Edaf S.A."
+   ],
+   "title": "El arte de la guerra 2",
+   "subject": [
+    "Literary Collections",
+    "Management - General",
+    "Business / Economics / Finance",
+    "Spanish: Adult Nonfiction",
+    "Ancient, Classical & Medieval",
+    "Religion - General"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9131466M",
+      "title": "El arte de la guerra 2",
+      "cover_i": 4910416,
+      "publisher": [
+       "Edaf S.A."
+      ],
+      "publish_date": [
+       "2001"
+      ],
+      "isbn": [
+       "9788441401174",
+       "8441401179"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2782320A"
+   ],
+   "author_name": [
+    "Sun Tzu II"
+   ],
+   "cover_edition_key": "OL35623815M",
+   "cover_i": 12330906,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9876832166",
+    "9789876832168"
+   ],
+   "key": "/works/OL26384029W",
+   "publisher": [
+    "LONGSELLER"
+   ],
+   "title": "ARTE DE LA GUERRA, EL - 2 TOMOS",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35623815M",
+      "title": "ARTE DE LA GUERRA, EL - 2 TOMOS",
+      "cover_i": 12330906,
+      "publisher": [
+       "LONGSELLER"
+      ],
+      "publish_date": [
+       "Nov 02, 2013"
+      ],
+      "isbn": [
+       "9789876832168",
+       "9876832166"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL30553A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)"
+   ],
+   "cover_edition_key": "OL9199928M",
+   "cover_i": 9889190,
+   "edition_count": 1,
+   "first_publish_year": 2002,
+   "isbn": [
+    "9789875020696",
+    "9875020699"
+   ],
+   "key": "/works/OL9199928M",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Distal"
+   ],
+   "title": "El Arte de La Guerra Sun Tzu",
+   "subject": [
+    "Motivational",
+    "Business / Economics / Finance"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9199928M",
+      "title": "El Arte de La Guerra Sun Tzu",
+      "cover_i": 9889190,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Distal"
+      ],
+      "publish_date": [
+       "May 2002"
+      ],
+      "isbn": [
+       "9789875020696",
+       "9875020699"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL30553A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)"
+   ],
+   "cover_edition_key": "OL13266478M",
+   "cover_i": 3327595,
+   "edition_count": 1,
+   "first_publish_year": 2001,
+   "isbn": [
+    "8441409846",
+    "9788441409842"
+   ],
+   "key": "/works/OL13266478M",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Edaf S.A."
+   ],
+   "title": "El Arte De La Guerra (Arca de Sabiduria)",
+   "subject": [
+    "General",
+    "Motivational",
+    "Military - Other",
+    "History",
+    "Philosophy",
+    "Spanish: Adult Nonfiction"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL13266478M",
+      "title": "El Arte De La Guerra (Arca de Sabiduria)",
+      "cover_i": 3327595,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Edaf S.A."
+      ],
+      "publish_date": [
+       "October 10, 2001"
+      ],
+      "isbn": [
+       "9788441409842",
+       "8441409846"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL30553A"
+   ],
+   "author_name": [
+    "孙武 (Sun Tzu)"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1996,
+   "isbn": [
+    "9789509495975",
+    "9509495972"
+   ],
+   "key": "/works/OL9139980M",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Distal"
+   ],
+   "title": "El Arte de La Guerra de Sun Tzu",
+   "subject": [
+    "Motivational",
+    "Business / Economics / Finance"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9139980M",
+      "title": "El Arte de La Guerra de Sun Tzu",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Distal"
+      ],
+      "publish_date": [
+       "November 1996"
+      ],
+      "isbn": [
+       "9789509495975",
+       "9509495972"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

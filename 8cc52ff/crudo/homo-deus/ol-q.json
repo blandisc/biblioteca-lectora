@@ -1,0 +1,389 @@
+{
+ "numFound": 5,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 5,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Homo Deus: Breve historia del mañana Yuval Noah Harari",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL3778242A"
+   ],
+   "author_name": [
+    "Yuval Noah Harari"
+   ],
+   "cover_i": 7914168,
+   "edition_count": 39,
+   "first_publish_year": 2015,
+   "isbn": [
+    "0062464310",
+    "9780062464354",
+    "194554094X",
+    "8535928197",
+    "3406704018",
+    "9788934977841",
+    "9789400404977",
+    "9533490624",
+    "0062464345",
+    "1784703931",
+    "1910701882",
+    "9781910701874",
+    "9781547901036",
+    "605502974X",
+    "1473545374",
+    "9780771038686",
+    "9781784703936",
+    "0771038682",
+    "9389143136",
+    "9780062464316",
+    "9780062657305",
+    "8845298752",
+    "1547901039",
+    "5906837922",
+    "9588931622",
+    "9788308064955",
+    "9780062955630",
+    "9783406704017",
+    "9782226479815",
+    "9789533490625",
+    "9786055029630",
+    "9783406727863",
+    "9788466361422",
+    "6055029634",
+    "9780062464347",
+    "2226479813",
+    "9788845292798",
+    "8308064957",
+    "8499928080",
+    "8934977841",
+    "8845292797",
+    "9780771038709",
+    "9788429776515",
+    "0062955632",
+    "0771038704",
+    "9781945540943",
+    "2226393870",
+    "7508672062",
+    "9781473545373",
+    "8499926711",
+    "9785906837929",
+    "9789389143133",
+    "0062464353",
+    "8429776516",
+    "9788499926711",
+    "9789588931623",
+    "9400404972",
+    "9782226393876",
+    "0062657305",
+    "3406727867",
+    "9788499928081",
+    "1910701874",
+    "9788845298752",
+    "9788535928198",
+    "9787508672069",
+    "9786055029746",
+    "9781910701881",
+    "8466361421"
+   ],
+   "key": "/works/OL17641518W",
+   "language": [
+    "chi",
+    "spa",
+    "hrv",
+    "fre",
+    "por",
+    "ita",
+    "eng"
+   ],
+   "publisher": [
+    "HarperCollins Publishers",
+    "Thomas Rap",
+    "김영사",
+    "Vintage",
+    "Signal",
+    "Penguin Random House Grupo Editorial (Debate)",
+    "Harper Perennial",
+    "Companhia das Letras",
+    "Bompiani",
+    "Edicions 62",
+    "Wydawnictwo Literackie",
+    "Kolektif Kitap",
+    "Beck",
+    "ALBIN MICHEL",
+    "Sinbad",
+    "Penguin Random House",
+    "Albin Michel",
+    "CITIC Press Corporation",
+    "Debate",
+    "Manjul Publishing House",
+    "Harper, an imprint of HarperCollins Publishers",
+    "Beck C. H.",
+    "DEBATE",
+    "Harvill Secker",
+    "Debolsillo",
+    "French and European Publications Inc",
+    "HarperAudio",
+    "C.H. Beck."
+   ],
+   "title": "ההיסטוריה של המחר",
+   "subject": [
+    "Civilization, modern, 21st century",
+    "Science and civilization",
+    "Technology and civilization",
+    "Forecasting",
+    "Tecnología y civilización",
+    "Ciencia y civilización",
+    "En el futuro",
+    "Modern Civilization",
+    "The Future",
+    "Civilización moderna",
+    "Human beings",
+    "History",
+    "nyt:combined-print-and-e-book-nonfiction=2017-03-12",
+    "New York Times bestseller",
+    "New York Times reviewed",
+    "Inteligencia artificial",
+    "Biónica",
+    "Science",
+    "Social aspects",
+    "Technology",
+    "Civilisation",
+    "Sciences",
+    "Aspect social",
+    "Technologie",
+    "Futur",
+    "Modern History",
+    "Humanism",
+    "Civilization",
+    "Technological forecasting",
+    "Philosophical anthropology",
+    "Nature",
+    "Effect of human beings on",
+    "Future, The",
+    "Human beings -- History",
+    "History, Modern -- 21st century",
+    "Civilization, Modern -- 21st century",
+    "Civilization, Modern",
+    "History, Modern",
+    "Civilization, modern--21st century",
+    "Human activities--history",
+    "Civilization--history",
+    "Cb428 .h368513 2016",
+    "Cb428",
+    "909.83",
+    "Human Activities"
+   ],
+   "ratings_average": 4.285714,
+   "editions": {
+    "numFound": 39,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL26483361M",
+      "title": "Homo deus : breve historia del mañana ",
+      "cover_i": 12631015,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Debate"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9788499926711",
+       "8499926711"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3778242A"
+   ],
+   "author_name": [
+    "Yuval Noah Harari"
+   ],
+   "cover_edition_key": "OL39827431M",
+   "cover_i": 13552439,
+   "edition_count": 1,
+   "first_publish_year": 2016,
+   "isbn": [
+    "6073149891",
+    "9786073149891"
+   ],
+   "key": "/works/OL28967209W",
+   "publisher": [
+    "Debate"
+   ],
+   "title": "HOMO DEUS. BREVE HISTORIA DEL MAÑANA",
+   "ratings_average": 4.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39827431M",
+      "title": "HOMO DEUS. BREVE HISTORIA DEL MAÑANA",
+      "cover_i": 13552439,
+      "publisher": [
+       "Debate"
+      ],
+      "publish_date": [
+       "Oct 16, 2016"
+      ],
+      "isbn": [
+       "9786073149891",
+       "6073149891"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3778242A",
+    "OL12531684A"
+   ],
+   "author_name": [
+    "Yuval Noah Harari",
+    "Joandomènec Ros i Aragonès"
+   ],
+   "cover_edition_key": "OL47456332M",
+   "cover_i": 14060659,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9788466362689",
+    "8466362681"
+   ],
+   "key": "/works/OL35082080W",
+   "publisher": [
+    "DEBOLSILLO"
+   ],
+   "title": "Homo Deus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47456332M",
+      "title": "Homo Deus",
+      "subtitle": "Breve historia del mañana",
+      "cover_i": 14060659,
+      "publisher": [
+       "DEBOLSILLO"
+      ],
+      "publish_date": [
+       "Oct 20, 2022"
+      ],
+      "isbn": [
+       "9788466362689",
+       "8466362681"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3778242A",
+    "OL12531684A"
+   ],
+   "author_name": [
+    "Yuval Noah Harari",
+    "Joandomènec Ros i Aragonès"
+   ],
+   "cover_edition_key": "OL47456333M",
+   "cover_i": 14060660,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9788466362689",
+    "8466362681"
+   ],
+   "key": "/works/OL35082079W",
+   "publisher": [
+    "DEBOLSILLO"
+   ],
+   "title": "Homo Deus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47456333M",
+      "title": "Homo Deus",
+      "subtitle": "Breve historia del mañana",
+      "cover_i": 14060660,
+      "publisher": [
+       "DEBOLSILLO"
+      ],
+      "publish_date": [
+       "Oct 20, 2022"
+      ],
+      "isbn": [
+       "9788466362689",
+       "8466362681"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL10904448A"
+   ],
+   "author_name": [
+    "Libros Mentores"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2019,
+   "isbn": [
+    "1091714592",
+    "9781091714595"
+   ],
+   "key": "/works/OL29799596W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumen Extendido de Homo Deus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL40982174M",
+      "title": "Resumen Extendido de Homo Deus",
+      "subtitle": "Breve Historia Del Mañana - Basado en el Libro de Yuval Noah Harari",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2019"
+      ],
+      "isbn": [
+       "9781091714595",
+       "1091714592"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

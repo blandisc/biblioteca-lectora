@@ -1,0 +1,601 @@
+{
+ "numFound": 37,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 37,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL4758538A",
+    "OL118077A"
+   ],
+   "author_name": [
+    "Michael Dean",
+    "George Orwell"
+   ],
+   "cover_edition_key": "OL22819394M",
+   "cover_i": 8745958,
+   "edition_count": 4,
+   "first_publish_year": 2003,
+   "isbn": [
+    "0582777313",
+    "9780582777316",
+    "9781405862417",
+    "9781408294222",
+    "1405862416",
+    "1408292467",
+    "9781408292464",
+    "1408294222"
+   ],
+   "key": "/works/OL11326416W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Pearson Education",
+    "Pearson Education ESL",
+    "Pearson Education, Limited"
+   ],
+   "title": "1984 (adaptation)",
+   "subject": [
+    "Totalitarianism",
+    "Fiction",
+    "Totalitarianism -- Fiction",
+    "Dystopias",
+    "Textbooks for foreign speakers",
+    "Lectures et morceaux choisis",
+    "Readers for new literates",
+    "High interest-low vocabulary books",
+    "English language",
+    "British and irish fiction (fictional works by one author)",
+    "London (england), fiction",
+    "Fiction, political",
+    "Fiction, dystopian",
+    "Fiction, science fiction, general",
+    "Readers",
+    "English language, juvenile literature"
+   ],
+   "ratings_average": 4.6666665,
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL22819394M",
+      "title": "1984",
+      "cover_i": 15145130,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Pearson Education"
+      ],
+      "publish_date": [
+       "2003"
+      ],
+      "isbn": [
+       "9780582777316",
+       "0582777313"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL118077A"
+   ],
+   "author_name": [
+    "George Orwell"
+   ],
+   "cover_i": 9267251,
+   "edition_count": 2,
+   "first_publish_year": 1989,
+   "isbn": [
+    "5010020947",
+    "5699016600",
+    "9785699016600",
+    "9785010020941"
+   ],
+   "key": "/works/OL1167984W",
+   "language": [
+    "rus"
+   ],
+   "publisher": [
+    "Progress",
+    "ĖKSMO"
+   ],
+   "title": "'1984' i esse raznykh let roman i khudozhestvennaya publitsistika",
+   "subject": [
+    "Cautionary tales and verse",
+    "censorship",
+    "Ciencia-ficción",
+    "Classic Literature",
+    "CLASSICS",
+    "CONTEMPORARY FICTION",
+    "cult of personality",
+    "Distopías",
+    "Dystopias",
+    "Dystopias in literature",
+    "English fiction",
+    "English Political fiction",
+    "English science fiction",
+    "Fantasy",
+    "Ficción",
+    "Fiction",
+    "FICTION CLASSICS",
+    "futurology",
+    "historical negationism",
+    "History and criticism",
+    "Husbands",
+    "Ingsoc",
+    "Insurance agents",
+    "LANGUAGE & LITERARY STUDIES",
+    "lexicography",
+    "Man-woman relationships",
+    "Manuscripts",
+    "memory holes",
+    "Middle aged men",
+    "nationalism",
+    "Newspeak",
+    "Novela",
+    "Novela inglesa",
+    "Novela política",
+    "Outer Party",
+    "perpetual war",
+    "Political fiction",
+    "Politique",
+    "Polizeistaat",
+    "rebels",
+    "resistance movements",
+    "Romans",
+    "Satirical literature",
+    "Science Fiction",
+    "sting operations",
+    "Suburban life",
+    "surveillance",
+    "telescreens",
+    "thoughtcrime",
+    "Totalitarianism",
+    "Totalitarianism and literature",
+    "Totalitarisme",
+    "Totalitarismo",
+    "Translations into Russian",
+    "Zukunft",
+    "Animals",
+    "Animals in fiction",
+    "Man-woman relationships in fiction",
+    "England in fiction",
+    "Farm life in fiction",
+    "Totalitarianism in fiction",
+    "Farm life"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL23012225M",
+      "title": "1984 / Скотный двор",
+      "subtitle": "roman, skazka, ėsse",
+      "cover_i": 15254966,
+      "language": [
+       "rus"
+      ],
+      "publisher": [
+       "ĖKSMO"
+      ],
+      "publish_date": [
+       "2002"
+      ],
+      "isbn": [
+       "9785699016600",
+       "5699016600"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL118077A"
+   ],
+   "author_name": [
+    "George Orwell"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2000,
+   "isbn": [
+    "9780030565076",
+    "0030565073"
+   ],
+   "key": "/works/OL1168151W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Holt Rinehart and Winston",
+    "Holt, Rinehart and Winston"
+   ],
+   "title": "1984 with Connections",
+   "subject": [
+    "Fiction",
+    "Totalitarianism"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL3584220M",
+      "title": "1984",
+      "subtitle": "with connections",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Holt, Rinehart and Winston"
+      ],
+      "publish_date": [
+       "2002"
+      ],
+      "isbn": [
+       "0030565073",
+       "9780030565076"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL118077A"
+   ],
+   "author_name": [
+    "George Orwell"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "0194268071",
+    "9780194268073"
+   ],
+   "key": "/works/OL37584516W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Oxford University Press"
+   ],
+   "title": "Oxford Bookworms Library : Level 6 :  : 1984 : Level 6",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL50650983M",
+      "title": "Oxford Bookworms Library : Level 6 :  : 1984 : Level 6",
+      "subtitle": "1984",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Oxford University Press"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9780194268073",
+       "0194268071"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL9082175A",
+    "OL16029200A"
+   ],
+   "author_name": [
+    "XAVIER COSTE",
+    "George Orwell"
+   ],
+   "cover_edition_key": "OL31851688M",
+   "cover_i": 10541663,
+   "edition_count": 3,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9782377315116",
+    "2377315119",
+    "8467958820",
+    "9788467958829"
+   ],
+   "key": "/works/OL24143668W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "NORMA EDITORIAL, S.A.",
+    "SARBACANE"
+   ],
+   "title": "1984",
+   "subject": [
+    "Graphic novel",
+    "Dystopia",
+    "Science fiction",
+    "Comic books"
+   ],
+   "ratings_average": 4.0,
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47123394M",
+      "title": "1984",
+      "cover_i": 13509851,
+      "publisher": [
+       "NORMA EDITORIAL, S.A."
+      ],
+      "publish_date": [
+       "Nov 25, 2022"
+      ],
+      "isbn": [
+       "9788467958829",
+       "8467958820"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL118077A"
+   ],
+   "author_name": [
+    "George Orwell"
+   ],
+   "cover_edition_key": "OL46545065M",
+   "cover_i": 13315487,
+   "edition_count": 2,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9788375179767",
+    "9788328707108",
+    "8328707101",
+    "8375179760"
+   ],
+   "key": "/works/OL34324649W",
+   "publisher": [
+    "Greg",
+    "Warszawskie wydawnictwo literackie MUZA"
+   ],
+   "title": "Rok 1984",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL46545065M",
+      "title": "Rok 1984",
+      "cover_i": 13315487,
+      "publisher": [
+       "Greg"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9788375179767",
+       "8375179760"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL10486512A",
+    "OL118077A"
+   ],
+   "author_name": [
+    "Alfredo Carnevale",
+    "George Orwell"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9798823934718",
+    "9798707467325"
+   ],
+   "key": "/works/OL28129113W",
+   "language": [
+    "eng",
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "1984",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL38502948M",
+      "title": "1984",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798707467325"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL9839956A",
+    "OL118077A"
+   ],
+   "author_name": [
+    "Matyás Namai",
+    "George Orwell"
+   ],
+   "cover_edition_key": "OL35159283M",
+   "cover_i": 14756078,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9781786750570",
+    "1786750570"
+   ],
+   "key": "/works/OL26049453W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Palazzo Editions, Limited"
+   ],
+   "title": "George Orwell's 1984",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35159283M",
+      "title": "George Orwell's 1984",
+      "subtitle": "The Graphic Novel",
+      "cover_i": 14756078,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Palazzo Editions, Limited"
+      ],
+      "publish_date": [
+       "2022"
+      ],
+      "isbn": [
+       "9781786750570",
+       "1786750570"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL118077A"
+   ],
+   "author_name": [
+    "George Orwell"
+   ],
+   "cover_edition_key": "OL36633876M",
+   "cover_i": 12527357,
+   "edition_count": 1,
+   "first_publish_year": 2019,
+   "isbn": [
+    "9786074158076",
+    "607415807X"
+   ],
+   "key": "/works/OL27023763W",
+   "publisher": [
+    "Tomo"
+   ],
+   "title": "1984-Rebelion en la Granja",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL36633876M",
+      "title": "1984-Rebelion en la Granja",
+      "cover_i": 12527357,
+      "publisher": [
+       "Tomo"
+      ],
+      "publish_date": [
+       "Feb 18, 2019"
+      ],
+      "isbn": [
+       "9786074158076",
+       "607415807X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL118077A"
+   ],
+   "author_name": [
+    "George Orwell"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2024,
+   "isbn": [
+    "9798895056080"
+   ],
+   "key": "/works/OL42444442W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "ZHIDIAN INTERNATIONAL (USA) LLC"
+   ],
+   "title": "1984-1",
+   "subject": [
+    "Political science",
+    "Literature, history and criticism"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL57594512M",
+      "title": "1984-1",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "ZHIDIAN INTERNATIONAL (USA) LLC"
+      ],
+      "publish_date": [
+       "2024"
+      ],
+      "isbn": [
+       "9798895056080"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

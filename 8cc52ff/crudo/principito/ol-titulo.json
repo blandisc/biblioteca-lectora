@@ -1,0 +1,527 @@
+{
+ "numFound": 118,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 118,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL31901A",
+    "OL9950026A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry",
+    "Marie Mersoye"
+   ],
+   "cover_edition_key": "OL47116985M",
+   "cover_i": 13499066,
+   "edition_count": 6,
+   "first_publish_year": 2018,
+   "isbn": [
+    "9788490746783",
+    "8419087491",
+    "8490746788",
+    "9788419087171",
+    "9788419275271",
+    "8418797452",
+    "8419087173",
+    "8418211636",
+    "9788419087492",
+    "8419275271",
+    "9788418211638",
+    "9788418797453"
+   ],
+   "key": "/works/OL34766796W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Editorial Verbum, S.L.",
+    "Plutón Ediciones",
+    "Publicaciones y Ediciones Salamandra, S.A.",
+    "Salamandra Infantil y Juvenil",
+    "Plutón Kids"
+   ],
+   "title": "El Principito",
+   "ratings_average": 3.857143,
+   "editions": {
+    "numFound": 6,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47134281M",
+      "title": "El Principito",
+      "cover_i": 15108349,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Salamandra Infantil y Juvenil",
+       "Publicaciones y Ediciones Salamandra, S.A."
+      ],
+      "publish_date": [
+       "Oct 13, 2022"
+      ],
+      "isbn": [
+       "9788418797453",
+       "8418797452"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_i": 4978949,
+   "edition_count": 4,
+   "first_publish_year": 1990,
+   "isbn": [
+    "9788478880065",
+    "9589494722",
+    "9789589494721",
+    "9687748044",
+    "8478880062",
+    "8441506213",
+    "9788441506213",
+    "9789687748047"
+   ],
+   "key": "/works/OL10278W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Salamandra",
+    "Editorial Lectorum",
+    "Yoyo Music USA Inc"
+   ],
+   "title": "El Principito",
+   "subject": [
+    "Fantasy",
+    "Juvenile fiction",
+    "Alegorías",
+    "Cuentos de hadas",
+    "Princes",
+    "Readers",
+    "Spanish language",
+    "Fairy tales",
+    "Friendship",
+    "Children's fiction",
+    "Princes, fiction"
+   ],
+   "ratings_average": 4.2222223,
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9175804M",
+      "title": "El Principito",
+      "cover_i": 2295636,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Editorial Lectorum"
+      ],
+      "publish_date": [
+       "July 15, 2006"
+      ],
+      "isbn": [
+       "9789687748047",
+       "9687748044"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_edition_key": "OL37074117M",
+   "cover_i": 12642764,
+   "edition_count": 1,
+   "first_publish_year": 1999,
+   "isbn": [
+    "8478884386",
+    "9788478884384"
+   ],
+   "key": "/works/OL27308483W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Emecé Editores"
+   ],
+   "title": "El principito",
+   "subject": [
+    "Fantasy fiction",
+    "Fantasy",
+    "Fantasía",
+    "Novela fantástica"
+   ],
+   "ratings_average": 4.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37074117M",
+      "title": "El principito",
+      "subtitle": "con dibujos del autor",
+      "cover_i": 12642764,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Emecé Editores"
+      ],
+      "publish_date": [
+       "1999"
+      ],
+      "isbn": [
+       "9788478884384",
+       "8478884386"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_edition_key": "OL31870757M",
+   "cover_i": 10549941,
+   "edition_count": 2,
+   "first_publish_year": 2020,
+   "isbn": [
+    "1638433593",
+    "9781638433590",
+    "8418174196",
+    "9788418174193"
+   ],
+   "key": "/works/OL24150941W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Carpentino, Michela",
+    "Salamandra Infantil y Juvenil",
+    "Salamandra"
+   ],
+   "title": "el principito",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL31870757M",
+      "title": "el principito",
+      "cover_i": 14553903,
+      "publisher": [
+       "Salamandra",
+       "Salamandra Infantil y Juvenil"
+      ],
+      "publish_date": [
+       "2020"
+      ],
+      "isbn": [
+       "9788418174193",
+       "8418174196"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_edition_key": "OL27298970M",
+   "cover_i": 8775023,
+   "edition_count": 1,
+   "first_publish_year": 1980,
+   "isbn": [
+    "8449934389",
+    "9788449934384"
+   ],
+   "key": "/works/OL20119027W",
+   "publisher": [
+    "Enrique Sainz Editores"
+   ],
+   "title": "El Principito",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27298970M",
+      "title": "El Principito",
+      "subtitle": "Edición Bilingüe",
+      "cover_i": 8775023,
+      "publisher": [
+       "Enrique Sainz Editores"
+      ],
+      "publish_date": [
+       "1980"
+      ],
+      "isbn": [
+       "8449934389",
+       "9788449934384"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2002,
+   "isbn": [
+    "9789687884233",
+    "9781937482978",
+    "1937482979",
+    "9687884231"
+   ],
+   "key": "/works/OL35340083W",
+   "publisher": [
+    "Editora Continental",
+    "Impresores"
+   ],
+   "title": "El Principito",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47754579M",
+      "title": "El Principito",
+      "publisher": [
+       "Impresores"
+      ],
+      "publish_date": [
+       "2002-01-01"
+      ],
+      "isbn": [
+       "9789687884233",
+       "9687884231"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_edition_key": "OL35265022M",
+   "cover_i": 12079282,
+   "edition_count": 1,
+   "first_publish_year": 1951,
+   "isbn": [
+    "9786057861559",
+    "6057861558"
+   ],
+   "key": "/works/OL26128030W",
+   "publisher": [
+    "E-Kitap Projesi & Cheapest Books"
+   ],
+   "title": "El Principito",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35265022M",
+      "title": "El Principito",
+      "subtitle": "[Ilustrado]",
+      "cover_i": 12079282,
+      "publisher": [
+       "E-Kitap Projesi & Cheapest Books"
+      ],
+      "publish_date": [
+       "Sep 20, 1951"
+      ],
+      "isbn": [
+       "9786057861559",
+       "6057861558"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_edition_key": "OL33304113M",
+   "cover_i": 11949610,
+   "edition_count": 2,
+   "first_publish_year": 2012,
+   "isbn": [
+    "8467738170",
+    "9788467738179",
+    "9781538436844",
+    "1538436841"
+   ],
+   "key": "/works/OL25046329W",
+   "publisher": [
+    "Audiomol and Blackstone Audio",
+    "SUSAETA",
+    "Audiomol"
+   ],
+   "title": "El Principito",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL33304113M",
+      "title": "El Principito",
+      "cover_i": 11949610,
+      "publisher": [
+       "Audiomol",
+       "Audiomol and Blackstone Audio"
+      ],
+      "publish_date": [
+       "Aug 08, 2017"
+      ],
+      "isbn": [
+       "9781538436844",
+       "1538436841"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_edition_key": "OL47133423M",
+   "cover_i": 13527884,
+   "edition_count": 2,
+   "first_publish_year": 2017,
+   "isbn": [
+    "9781542521833",
+    "9788490745694",
+    "1542521831",
+    "8490745692"
+   ],
+   "key": "/works/OL34782194W",
+   "publisher": [
+    "CreateSpace Independent Publishing Platform",
+    "Editorial Verbum"
+   ],
+   "title": "El principito",
+   "ratings_average": 4.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47133423M",
+      "title": "El principito",
+      "cover_i": 13527884,
+      "publisher": [
+       "Editorial Verbum"
+      ],
+      "publish_date": [
+       "Jun 01, 2017"
+      ],
+      "isbn": [
+       "9788490745694",
+       "8490745692"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL31901A"
+   ],
+   "author_name": [
+    "Antoine de Saint-Exupéry"
+   ],
+   "cover_edition_key": "OL47302156M",
+   "cover_i": 13766778,
+   "edition_count": 1,
+   "first_publish_year": 1975,
+   "isbn": [
+    "8422650053",
+    "9788422650058"
+   ],
+   "key": "/works/OL34942728W",
+   "publisher": [
+    "Fernandez Editores, S.A."
+   ],
+   "title": "El principito",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47302156M",
+      "title": "El principito",
+      "cover_i": 13766778,
+      "publisher": [
+       "Fernandez Editores, S.A."
+      ],
+      "publish_date": [
+       "Mar 22, 1975"
+      ],
+      "isbn": [
+       "9788422650058",
+       "8422650053"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

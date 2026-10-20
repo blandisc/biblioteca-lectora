@@ -1,0 +1,434 @@
+{
+ "numFound": 7,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 7,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL7422948A"
+   ],
+   "author_name": [
+    "James Clear"
+   ],
+   "cover_edition_key": "OL36647151M",
+   "cover_i": 12539702,
+   "edition_count": 42,
+   "first_publish_year": 2016,
+   "isbn": [
+    "9781804220207",
+    "0593189647",
+    "3442178584",
+    "6020667200",
+    "939008525X",
+    "9786052998380",
+    "1804225789",
+    "1804222135",
+    "ISBN 22",
+    "8411192474",
+    "9780593189641",
+    "97820359692",
+    "9781804222133",
+    "9786075694122",
+    "9781473537804",
+    "9584277952",
+    "6020667189",
+    "9786020667188",
+    "9789390085255",
+    "9788411192477",
+    "2035969204",
+    "9786020633176",
+    "9781847941831",
+    "8550807567",
+    "9780735211308",
+    "9781804225783",
+    "9780735211292",
+    "8418928719",
+    "9789584277954",
+    "1847941834",
+    "9786067891744",
+    "9781847941848",
+    "9780593207093",
+    "6077476714",
+    "1473537800",
+    "9788418928710",
+    "0593207092",
+    "6052998385",
+    "6075694129",
+    "1698414684",
+    "9788418118036",
+    "9782035969200",
+    "8418118032",
+    "9781698414683",
+    "6020633179",
+    "0735211302",
+    "9783442178582",
+    "9786077476719",
+    "9786020667201",
+    "6067891743",
+    "1847941842",
+    "9786075696140",
+    "9798545118748",
+    "9798998881152",
+    "6075696148",
+    "1804220205",
+    "9788550807560",
+    "0735211299"
+   ],
+   "key": "/works/OL17930368W",
+   "language": [
+    "ger",
+    "por",
+    "fre",
+    "eng",
+    "tur",
+    "ind",
+    "spa"
+   ],
+   "publisher": [
+    "Penguin Random House",
+    "Independently Published",
+    "Random House, Incorporated",
+    "Penguin Audio",
+    "Penguin Random House USA",
+    "Random House Business Books",
+    "Editorial Planeta, S. A.",
+    "PAIDOS",
+    "Ara Llibres",
+    "Larousse",
+    "Random Hause Business",
+    "James Clear",
+    "Pegasus",
+    "Ediciones Paidós",
+    "Paidós",
+    "Avery, an Imprint of Penguin Random House LLC",
+    "Alta Books",
+    "Manjul Publishing House",
+    "Penguin Random house",
+    "LAROUSSE",
+    "Portfolio ",
+    "James clear",
+    "Lifestyle Publishing",
+    "Planeta Publishing",
+    "Gramedia Pustaka Utama",
+    "Mind Quest Inc",
+    "Editora Alta Life",
+    "Avery",
+    "Goldmann Verlag",
+    "editora alta books",
+    "Random House Business",
+    "Diana",
+    "Penguin random house"
+   ],
+   "title": "Atomic Habits",
+   "subject": [
+    "Habit",
+    "Habit breaking",
+    "Behavior modification",
+    "Self-actualization (psychology)",
+    "Business",
+    "psychology",
+    "Personal Growth",
+    "New York Times bestseller",
+    "BUSINESS & ECONOMICS / Organizational Behavior",
+    "PSYCHOLOGY / Social Psychology",
+    "SELF-HELP / Personal Growth / General."
+   ],
+   "ratings_average": 3.971233,
+   "editions": {
+    "numFound": 28,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27918581M",
+      "title": "Atomic Habits",
+      "subtitle": "An Easy & Proven Way to Build Good Habits & Break Bad Ones",
+      "cover_i": 15217381,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Random House Business"
+      ],
+      "publish_date": [
+       "2018"
+      ],
+      "isbn": [
+       "9781847941831",
+       "1847941834"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7422948A"
+   ],
+   "author_name": [
+    "James Clear"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2025,
+   "isbn": [
+    "1529981239",
+    "9798217180509",
+    "9781529981230"
+   ],
+   "key": "/works/OL44544274W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Penguin Publishing Group",
+    "Cornerstone Press Chicago"
+   ],
+   "title": "Atomic Habits Workbook",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60826666M",
+      "title": "Atomic Habits Workbook",
+      "subtitle": "Official Companion to the #1 Worldwide Bestseller",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Cornerstone Press Chicago"
+      ],
+      "publish_date": [
+       "2025"
+      ],
+      "isbn": [
+       "9781529981230",
+       "1529981239"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7422948A",
+    "OL3119395A",
+    "OL13496324A"
+   ],
+   "author_name": [
+    "James Clear",
+    "Ramit Sethi",
+    "Gary Keller Dr Carol Dweck"
+   ],
+   "cover_edition_key": "OL50511899M",
+   "cover_i": 15105773,
+   "edition_count": 1,
+   "first_publish_year": 2020,
+   "isbn": [
+    "9789124045975",
+    "9124045977"
+   ],
+   "key": "/works/OL37490159W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Random House Business/Yellow Kite/Robinson/John Murray Learning"
+   ],
+   "title": "Atomic Habits, I Will Teach You To Be Rich, Mindset, The One Thing 4 Books Collection Set",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL50511899M",
+      "title": "Atomic Habits, I Will Teach You To Be Rich, Mindset, The One Thing 4 Books Collection Set",
+      "cover_i": 15105773,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Random House Business/Yellow Kite/Robinson/John Murray Learning"
+      ],
+      "publish_date": [
+       "2020"
+      ],
+      "isbn": [
+       "9789124045975",
+       "9124045977"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL16209881A"
+   ],
+   "author_name": [
+    "James Clear."
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2018,
+   "key": "/works/OL44983971W",
+   "publisher": [
+    "Avery Publishing (Penguin Publishing Group).  ￼"
+   ],
+   "title": "Atomic Habit",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61375432M",
+      "title": "Atomic Habit",
+      "publisher": [
+       "Avery Publishing (Penguin Publishing Group).  ￼"
+      ],
+      "publish_date": [
+       "October 16, 2018"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7422948A"
+   ],
+   "author_name": [
+    "James Clear"
+   ],
+   "edition_count": 1,
+   "isbn": [
+    "9798893311419"
+   ],
+   "key": "/works/OL45399794W",
+   "publisher": [
+    "Simon & Schuster NZ"
+   ],
+   "title": "The Atomic Habits Daily Calendar",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61866004M",
+      "title": "The Atomic Habits Daily Calendar",
+      "publisher": [
+       "Simon & Schuster NZ"
+      ],
+      "isbn": [
+       "9798893311419"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7422948A"
+   ],
+   "author_name": [
+    "James Clear"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9798904940829"
+   ],
+   "key": "/works/OL45629926W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "StellarRush Tech Inc"
+   ],
+   "title": "Atomic Habits Book - Build Good Habits & Break Bad Ones, Self Discipline Motivation Book, Productivity & Personal Growth Guide, Time Management, Success Mindset & Self Improvement Book",
+   "subject": [
+    "Reference books"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL62135099M",
+      "title": "Atomic Habits Book - Build Good Habits & Break Bad Ones, Self Discipline Motivation Book, Productivity & Personal Growth Guide, Time Management, Success Mindset & Self Improvement Book",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "StellarRush Tech Inc"
+      ],
+      "publish_date": [
+       "2022"
+      ],
+      "isbn": [
+       "9798904940829"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL10691828A",
+    "OL2828540A"
+   ],
+   "author_name": [
+    "John Clear",
+    "James Winters"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2019,
+   "isbn": [
+    "9781705888919",
+    "1705888917"
+   ],
+   "key": "/works/OL30257012W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Atomic Habits for Self Discipline",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL41594158M",
+      "title": "Atomic Habits for Self Discipline",
+      "subtitle": "How to Change Your Bad Habits in Good Habits , Control Your Attention, Get Self-Esteem Affirmations and Stop Procrastinating",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2019"
+      ],
+      "isbn": [
+       "9781705888919",
+       "1705888917"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

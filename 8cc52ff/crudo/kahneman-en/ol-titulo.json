@@ -1,0 +1,289 @@
+{
+ "numFound": 3,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 3,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL2066695A"
+   ],
+   "author_name": [
+    "Daniel Kahneman"
+   ],
+   "cover_edition_key": "OL38090969M",
+   "cover_i": 13290711,
+   "edition_count": 36,
+   "first_publish_year": 2011,
+   "isbn": [
+    "9781535535830",
+    "7508633555",
+    "9047007662",
+    "9585433567",
+    "9789588613680",
+    "9754345317",
+    "8490322503",
+    "0307989704",
+    "9789047013044",
+    "9780374533557",
+    "958861368X",
+    "9787508633558",
+    "9780307989703",
+    "9782081307827",
+    "9789585433564",
+    "180422037X",
+    "1846146062",
+    "0141918926",
+    "9781846146060",
+    "0739357980",
+    "146416617X",
+    "8466357874",
+    "9788483068618",
+    "9780606275644",
+    "9780141033570",
+    "9789863200611",
+    "9781804220375",
+    "9780374275631",
+    "9788804671954",
+    "9788372786777",
+    "9780385676519",
+    "9783886808861",
+    "0141033576",
+    "8483068613",
+    "9781846140556",
+    "3328100342",
+    "1846140552",
+    "8804671955",
+    "2081307820",
+    "9047013042",
+    "0374275637",
+    "8372786771",
+    "9789754345315",
+    "9780141918921",
+    "0385676530",
+    "9780385676533",
+    "9863200611",
+    "3886808866",
+    "0374533555",
+    "0606275649",
+    "9788490322505",
+    "1535535830",
+    "9789047007661",
+    "8934956151",
+    "9788934956150",
+    "9780739357989",
+    "9783328100348",
+    "9781464166174",
+    "9788466357876",
+    "0385676514"
+   ],
+   "key": "/works/OL15992072W",
+   "language": [
+    "dut",
+    "ger",
+    "fre",
+    "tur",
+    "chi",
+    "eng",
+    "kor",
+    "pol"
+   ],
+   "publisher": [
+    "Farrar, Straus & Giroux",
+    "CreateSpace Independent Publishing Platform",
+    "Penguin",
+    "Uitgeverij Business Contact",
+    "Kimyoungsa/Tsai Fong Books",
+    "W H Freeman & Co",
+    "Media Rodzina",
+    "Debolsillo",
+    "Worth Publishers, Incorporated",
+    "Flammarion",
+    "Random House Audio",
+    "Siedler",
+    "Penguin Books, Limited",
+    "Doubleday Canada",
+    "Farrar Straus Giroux",
+    "Mondadori",
+    "Anchor Canada",
+    "Varlık Yayınları",
+    "Debate",
+    "Macmillan ",
+    "DEBATE",
+    "Bilmem ",
+    "Turtleback",
+    "Business Contact",
+    "Farrar, Straus and Giroux",
+    "Allen Lane",
+    "中信出版社",
+    "Tian xia yuan jian chu ban gu fen you xian gong si",
+    "Penguin Verlag"
+   ],
+   "title": "Thinking, fast and slow",
+   "subject": [
+    "Intuition",
+    "Thought and thinking",
+    "Reasoning",
+    "Decision making",
+    "New York Times bestseller",
+    "Long Now Manual for Civilization",
+    "Thinking",
+    "Kognition",
+    "77.32 intelligence, creativity",
+    "New York Times reviewed",
+    "Reason",
+    "Cognition",
+    "Self-actualization (Psychology)",
+    "Cognitive psychology",
+    "Psychology",
+    "Schlussfolgern",
+    "Entscheidungsfindung",
+    "Priming",
+    "Spiegel-Bestseller",
+    "Verhaltensökonomie",
+    "Zwei Systeme",
+    "2970: Taschenbuch / Sachbücher/Politik, Gesellschaft, Wirtschaft",
+    "Bf441 .k238 2011",
+    "2012 a-186",
+    "Bf 441",
+    "Bf 441 k12 2011",
+    "153.4/2",
+    "Nyt:hardcover_business_books=2012-02-25",
+    "Tankande",
+    "Beslutsfattande",
+    "Besliskunde",
+    "Resonerande",
+    "Psykologiska aspekter",
+    "Emotions and cognition",
+    "Tänkande",
+    "Pensée",
+    "Prise de décision",
+    "Raison",
+    "Émotions et cognition"
+   ],
+   "ratings_average": 4.0833335,
+   "editions": {
+    "numFound": 18,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL36689110M",
+      "title": "Thinking, fast and slow",
+      "cover_i": 15129456,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Doubleday Canada"
+      ],
+      "publish_date": [
+       "2011"
+      ],
+      "isbn": [
+       "9780385676519",
+       "0385676514"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL13235649A",
+    "OL2066695A"
+   ],
+   "author_name": [
+    "30 Minute Expert Summary Staff",
+    "Daniel Kahneman"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2012,
+   "isbn": [
+    "1623150612",
+    "9781623150617"
+   ],
+   "key": "/works/OL36840673W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Callisto Media Inc."
+   ],
+   "title": "Thinking, Fast and Slow... in 30 Minutes",
+   "subject": [
+    "Business",
+    "Psychology"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL49755508M",
+      "title": "Thinking, Fast and Slow... in 30 Minutes",
+      "subtitle": "A 30 Minute Expert Summary",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Callisto Media Inc."
+      ],
+      "publish_date": [
+       "2012"
+      ],
+      "isbn": [
+       "9781623150617",
+       "1623150612"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2066695A"
+   ],
+   "author_name": [
+    "Daniel Kahneman"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2001,
+   "isbn": [
+    "0141033576",
+    "9780141033570"
+   ],
+   "key": "/works/OL44436970W",
+   "publisher": [
+    "Penguin"
+   ],
+   "title": "Thinking, Fast and Slow",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60701008M",
+      "title": "Thinking, Fast and Slow",
+      "publisher": [
+       "Penguin"
+      ],
+      "publish_date": [
+       "2001"
+      ],
+      "isbn": [
+       "9780141033570",
+       "0141033576"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

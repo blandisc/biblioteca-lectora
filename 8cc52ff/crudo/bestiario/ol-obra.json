@@ -1,0 +1,47 @@
+{
+ "title": "Bestiario",
+ "key": "/works/OL8971525W",
+ "authors": [
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL2631008A"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "covers": [
+  5721778,
+  1047721,
+  2270911,
+  7900525,
+  9604005,
+  10449559,
+  10533962,
+  10584956,
+  12333772,
+  13974848,
+  13974849,
+  14623898,
+  914826
+ ],
+ "first_publish_date": "January 1, 1994",
+ "subjects": [
+  "Spanish Short stories",
+  "Fiction, short stories (single author)"
+ ],
+ "latest_revision": 4,
+ "revision": 4,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-12-10T23:37:01.264864"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2025-07-14T20:04:27.916511"
+ }
+}

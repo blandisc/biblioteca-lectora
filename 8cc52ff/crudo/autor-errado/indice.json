@@ -1,0 +1,38 @@
+[
+ {
+  "nombre": "ol-titulo",
+  "url": "https://openlibrary.org/search.json?title=La+ciudad+y+los+perros&author=Gabriel+Garc%C3%ADa+M%C3%A1rquez&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+  "estado": 200,
+  "segundos": 0.27
+ },
+ {
+  "nombre": "ol-q",
+  "url": "https://openlibrary.org/search.json?q=La+ciudad+y+los+perros+Gabriel+Garc%C3%ADa+M%C3%A1rquez&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i&lang=es",
+  "estado": 200,
+  "segundos": 0.5
+ },
+ {
+  "nombre": "gb-titulo-idioma",
+  "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+ciudad+y+los+perros%22+inauthor%3A%22Gabriel+Garc%C3%ADa+M%C3%A1rquez%22&maxResults=10&printType=books&langRestrict=es",
+  "estado": 429,
+  "segundos": 0.07
+ },
+ {
+  "nombre": "gb-titulo",
+  "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22La+ciudad+y+los+perros%22+inauthor%3A%22Gabriel+Garc%C3%ADa+M%C3%A1rquez%22&maxResults=10&printType=books",
+  "estado": 429,
+  "segundos": 0.07
+ },
+ {
+  "nombre": "gb-q",
+  "url": "https://www.googleapis.com/books/v1/volumes?q=La+ciudad+y+los+perros+Gabriel+Garc%C3%ADa+M%C3%A1rquez&maxResults=10&printType=books",
+  "estado": 429,
+  "segundos": 0.11
+ },
+ {
+  "nombre": "ol-obra",
+  "url": "https://openlibrary.org/works/OL33096183W.json",
+  "estado": 200,
+  "segundos": 0.23
+ }
+]

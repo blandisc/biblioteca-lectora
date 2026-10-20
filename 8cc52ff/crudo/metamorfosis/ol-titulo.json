@@ -1,0 +1,515 @@
+{
+ "numFound": 63,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 63,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL33146A"
+   ],
+   "author_name": [
+    "Franz Kafka"
+   ],
+   "cover_edition_key": "OL47467327M",
+   "cover_i": 14073660,
+   "edition_count": 9,
+   "first_publish_year": 2004,
+   "isbn": [
+    "8483745704",
+    "9788497942027",
+    "849764347X",
+    "9789700750064",
+    "8497942027",
+    "9788494466106",
+    "970075006X",
+    "9788483745700",
+    "8499212611",
+    "9788497643474",
+    "8494466100",
+    "9788499212616"
+   ],
+   "key": "/works/OL35091705W",
+   "publisher": [
+    "Editorial Octaedro, S.L.",
+    "Edimat Libros",
+    "Editorial Porrúa",
+    "Apuka Ediciones",
+    "Huerga y Fierro Editores"
+   ],
+   "title": "La Metamorfosis",
+   "editions": {
+    "numFound": 9,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47468068M",
+      "title": "La metamorfosis",
+      "cover_i": 14074485,
+      "publisher": [
+       "Editorial Octaedro, S.L."
+      ],
+      "publish_date": [
+       "May 01, 2012"
+      ],
+      "isbn": [
+       "9788499212616",
+       "8499212611"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A"
+   ],
+   "author_name": [
+    "Franz Kafka"
+   ],
+   "cover_edition_key": "OL47116474M",
+   "cover_i": 13498276,
+   "edition_count": 6,
+   "first_publish_year": 2009,
+   "isbn": [
+    "9789500392679",
+    "9788446030751",
+    "8446030756",
+    "8466236805",
+    "9788468341194",
+    "9500392674",
+    "9788466236805",
+    "8468341193",
+    "8490747148",
+    "9788490747148",
+    "9788494464102",
+    "8494464108"
+   ],
+   "key": "/works/OL34766300W",
+   "publisher": [
+    "Aguilar",
+    "edebé",
+    "Astrorey Books",
+    "Editorial Verbum",
+    "Libsa",
+    "Ediciones Akal"
+   ],
+   "title": "La Metamorfosis",
+   "ratings_average": 3.0,
+   "editions": {
+    "numFound": 6,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47249201M",
+      "title": "La metamorfosis",
+      "cover_i": 13695205,
+      "publisher": [
+       "Astrorey Books"
+      ],
+      "publish_date": [
+       "Nov 01, 2015"
+      ],
+      "isbn": [
+       "9788494464102",
+       "8494464108"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A"
+   ],
+   "author_name": [
+    "Franz Kafka"
+   ],
+   "cover_edition_key": "OL35633052M",
+   "cover_i": 12340004,
+   "edition_count": 2,
+   "first_publish_year": 2009,
+   "isbn": [
+    "7706894201440",
+    "9788496975538",
+    "8496975533"
+   ],
+   "key": "/works/OL26392612W",
+   "publisher": [
+    "EDICIONES BRONTES S.L.",
+    "Editorial Norma"
+   ],
+   "title": "La Metamorfosis",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35633052M",
+      "title": "La Metamorfosis",
+      "cover_i": 12340004,
+      "publisher": [
+       "EDICIONES BRONTES S.L."
+      ],
+      "publish_date": [
+       "Nov 03, 2009"
+      ],
+      "isbn": [
+       "9788496975538",
+       "8496975533"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A",
+    "OL9945484A"
+   ],
+   "author_name": [
+    "Franz Kafka",
+    "Luis Scafati"
+   ],
+   "cover_edition_key": "OL47332897M",
+   "cover_i": 13919678,
+   "edition_count": 7,
+   "first_publish_year": 2004,
+   "isbn": [
+    "9788496509764",
+    "8496509761",
+    "9788467058758",
+    "9788498265743",
+    "8493336157",
+    "9788493336158",
+    "8498265746",
+    "9788412375336",
+    "8467058757",
+    "8412375335"
+   ],
+   "key": "/works/OL34970692W",
+   "publisher": [
+    "Libros del Zorro Rojo",
+    "Ediciones Rubeo",
+    "ECIR",
+    "Austral",
+    "LIBROS DEL ZORRO ROJO"
+   ],
+   "title": "La metamorfosis",
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47410876M",
+      "title": "La metamorfosis",
+      "cover_i": 14009747,
+      "publisher": [
+       "Ediciones Rubeo"
+      ],
+      "publish_date": [
+       "May 04, 2021"
+      ],
+      "isbn": [
+       "9788412375336",
+       "8412375335"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A",
+    "OL7955404A"
+   ],
+   "author_name": [
+    "Franz Kafka",
+    "Jordi Llovet"
+   ],
+   "cover_edition_key": "OL47317910M",
+   "cover_i": 13827717,
+   "edition_count": 6,
+   "first_publish_year": 2007,
+   "isbn": [
+    "8484375943",
+    "8494494236",
+    "8484379736",
+    "9788494494239",
+    "9788415954040",
+    "8415954042",
+    "9788484375944",
+    "9788484379737",
+    "8492672013",
+    "9788492672011"
+   ],
+   "key": "/works/OL34956545W",
+   "publisher": [
+    "Educaula",
+    "LIBROS DEL ZORRO ROJO",
+    "Libros del Zorro Rojo",
+    "Proa"
+   ],
+   "title": "La metamorfosi",
+   "editions": {
+    "numFound": 6,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47365957M",
+      "title": "La metamorfosi",
+      "cover_i": 13959072,
+      "publisher": [
+       "Proa"
+      ],
+      "publish_date": [
+       "May 01, 2009"
+      ],
+      "isbn": [
+       "9788484375944",
+       "8484375943"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A",
+    "OL12704026A",
+    "OL7054465A"
+   ],
+   "author_name": [
+    "Franz Kafka",
+    "Ignasi Pàmies",
+    "Sergi Bellver"
+   ],
+   "cover_edition_key": "OL47503897M",
+   "cover_i": 14116164,
+   "edition_count": 5,
+   "first_publish_year": 2014,
+   "isbn": [
+    "8415711875",
+    "8416112924",
+    "9788415711872",
+    "9788416112920"
+   ],
+   "key": "/works/OL35124383W",
+   "publisher": [
+    "EDITORIAL BASE (CAT)",
+    "Nórdica Libros"
+   ],
+   "title": "La Metamorfosi",
+   "editions": {
+    "numFound": 5,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47624167M",
+      "title": "La Metamorfosi",
+      "cover_i": 14249176,
+      "publisher": [
+       "Nórdica Libros"
+      ],
+      "publish_date": [
+       "Mar 06, 2015"
+      ],
+      "isbn": [
+       "9788416112920",
+       "8416112924"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A"
+   ],
+   "author_name": [
+    "Franz Kafka"
+   ],
+   "cover_edition_key": "OL51746169M",
+   "cover_i": 14635505,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9788415660446",
+    "8415660448"
+   ],
+   "key": "/works/OL38084953W",
+   "publisher": [
+    "GERMANÍA"
+   ],
+   "title": "LA METAMORFOSIS",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL51746169M",
+      "title": "LA METAMORFOSIS",
+      "cover_i": 14635505,
+      "publisher": [
+       "GERMANÍA"
+      ],
+      "publish_date": [
+       "2013"
+      ],
+      "isbn": [
+       "9788415660446",
+       "8415660448"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A"
+   ],
+   "author_name": [
+    "Franz Kafka"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2008,
+   "isbn": [
+    "9706661131",
+    "9789706661135"
+   ],
+   "key": "/works/OL35424934W",
+   "publisher": [
+    "Grupo Editorial Tomo"
+   ],
+   "title": "La metamorfosis. Carta al padre/ The metamorphosis. Letter to father (Spanish Edition)",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47848795M",
+      "title": "La metamorfosis. Carta al padre/ The metamorphosis. Letter to father (Spanish Edition)",
+      "publisher": [
+       "Grupo Editorial Tomo"
+      ],
+      "publish_date": [
+       "2008-01-28"
+      ],
+      "isbn": [
+       "9789706661135",
+       "9706661131"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A",
+    "OL12529330A"
+   ],
+   "author_name": [
+    "Franz Kafka",
+    "Margarita E. De la Sota"
+   ],
+   "cover_edition_key": "OL47085267M",
+   "cover_i": 13450089,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "8491118144",
+    "9788491118145"
+   ],
+   "key": "/works/OL34736631W",
+   "publisher": [
+    "EDICIONES OBELISCO S.L."
+   ],
+   "title": "La metamorfosis",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47085267M",
+      "title": "La metamorfosis",
+      "cover_i": 13450089,
+      "publisher": [
+       "EDICIONES OBELISCO S.L."
+      ],
+      "publish_date": [
+       "Jan 31, 2022"
+      ],
+      "isbn": [
+       "9788491118145",
+       "8491118144"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL33146A"
+   ],
+   "author_name": [
+    "Franz Kafka"
+   ],
+   "cover_edition_key": "OL41117234M",
+   "cover_i": 13209436,
+   "edition_count": 2,
+   "first_publish_year": 2018,
+   "isbn": [
+    "1726729885",
+    "9781726729888",
+    "1724165933",
+    "9781724165930"
+   ],
+   "key": "/works/OL29760837W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published",
+    "Ediciones Meridional"
+   ],
+   "title": "La Metamorfosis",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL41117234M",
+      "title": "La Metamorfosis",
+      "cover_i": 13209436,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Ediciones Meridional"
+      ],
+      "publish_date": [
+       "2018"
+      ],
+      "isbn": [
+       "9781726729888",
+       "1726729885"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

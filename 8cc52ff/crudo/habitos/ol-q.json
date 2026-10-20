@@ -1,0 +1,541 @@
+{
+ "numFound": 7,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 7,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Hábitos atómicos James Clear",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL7422948A"
+   ],
+   "author_name": [
+    "James Clear"
+   ],
+   "cover_edition_key": "OL36647151M",
+   "cover_i": 12539702,
+   "edition_count": 42,
+   "first_publish_year": 2016,
+   "isbn": [
+    "9781804220207",
+    "0593189647",
+    "3442178584",
+    "6020667200",
+    "939008525X",
+    "9786052998380",
+    "1804225789",
+    "1804222135",
+    "ISBN 22",
+    "8411192474",
+    "9780593189641",
+    "97820359692",
+    "9781804222133",
+    "9786075694122",
+    "9781473537804",
+    "9584277952",
+    "6020667189",
+    "9786020667188",
+    "9789390085255",
+    "9788411192477",
+    "2035969204",
+    "9786020633176",
+    "9781847941831",
+    "8550807567",
+    "9780735211308",
+    "9781804225783",
+    "9780735211292",
+    "8418928719",
+    "9789584277954",
+    "1847941834",
+    "9786067891744",
+    "9781847941848",
+    "9780593207093",
+    "6077476714",
+    "1473537800",
+    "9788418928710",
+    "0593207092",
+    "6052998385",
+    "6075694129",
+    "1698414684",
+    "9788418118036",
+    "9782035969200",
+    "8418118032",
+    "9781698414683",
+    "6020633179",
+    "0735211302",
+    "9783442178582",
+    "9786077476719",
+    "9786020667201",
+    "6067891743",
+    "1847941842",
+    "9786075696140",
+    "9798545118748",
+    "9798998881152",
+    "6075696148",
+    "1804220205",
+    "9788550807560",
+    "0735211299"
+   ],
+   "key": "/works/OL17930368W",
+   "language": [
+    "ger",
+    "por",
+    "fre",
+    "eng",
+    "tur",
+    "ind",
+    "spa"
+   ],
+   "publisher": [
+    "Penguin Random House",
+    "Independently Published",
+    "Random House, Incorporated",
+    "Penguin Audio",
+    "Penguin Random House USA",
+    "Random House Business Books",
+    "Editorial Planeta, S. A.",
+    "PAIDOS",
+    "Ara Llibres",
+    "Larousse",
+    "Random Hause Business",
+    "James Clear",
+    "Pegasus",
+    "Ediciones Paidós",
+    "Paidós",
+    "Avery, an Imprint of Penguin Random House LLC",
+    "Alta Books",
+    "Manjul Publishing House",
+    "Penguin Random house",
+    "LAROUSSE",
+    "Portfolio ",
+    "James clear",
+    "Lifestyle Publishing",
+    "Planeta Publishing",
+    "Gramedia Pustaka Utama",
+    "Mind Quest Inc",
+    "Editora Alta Life",
+    "Avery",
+    "Goldmann Verlag",
+    "editora alta books",
+    "Random House Business",
+    "Diana",
+    "Penguin random house"
+   ],
+   "title": "Atomic Habits",
+   "subject": [
+    "Habit",
+    "Habit breaking",
+    "Behavior modification",
+    "Self-actualization (psychology)",
+    "Business",
+    "psychology",
+    "Personal Growth",
+    "New York Times bestseller",
+    "BUSINESS & ECONOMICS / Organizational Behavior",
+    "PSYCHOLOGY / Social Psychology",
+    "SELF-HELP / Personal Growth / General."
+   ],
+   "ratings_average": 3.971233,
+   "editions": {
+    "numFound": 42,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL31876422M",
+      "title": "Hábitos atómicos",
+      "cover_i": 10552969,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Paidós"
+      ],
+      "publish_date": [
+       "2020"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL9666985A"
+   ],
+   "author_name": [
+    "Speed Read Publishing"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9798536841259"
+   ],
+   "key": "/works/OL36107728W",
+   "language": [
+    "por"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumo de Hábitos atômicos Por James Clear",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL48786488M",
+      "title": "Resumo de Hábitos atômicos Por James Clear",
+      "subtitle": "Uma Maneira Fácil e Comprovada de Construir Bons Hábitos e Quebrar Os Maus",
+      "language": [
+       "por"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798536841259"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL11392964A"
+   ],
+   "author_name": [
+    "Mathias Wexler"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9798847253307"
+   ],
+   "key": "/works/OL31181577W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumen de Hábitos atómicos : ",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL42835530M",
+      "title": "Resumen de Hábitos atómicos : ",
+      "subtitle": "Una Forma Fácil y Probada de Construir el Bien Hábitos y Romper Los Malos Al Lado de James Clear",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2022"
+      ],
+      "isbn": [
+       "9798847253307"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL9666985A"
+   ],
+   "author_name": [
+    "Speed Read Publishing"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9798536842348"
+   ],
+   "key": "/works/OL36128910W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumen de Hábitos atómicos Por James Clear",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL48818284M",
+      "title": "Resumen de Hábitos atómicos Por James Clear",
+      "subtitle": "Una Manera Fácil y Comprobada de Desarrollar Buenos Hábitos y Deshacerse de Los Malos",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798536842348"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7422948A"
+   ],
+   "author_name": [
+    "James Clear"
+   ],
+   "cover_edition_key": "OL62665771M",
+   "cover_i": 15262775,
+   "edition_count": 1,
+   "first_publish_year": 2025,
+   "isbn": [
+    "8411193012",
+    "9788411193016"
+   ],
+   "key": "/works/OL46085755W",
+   "publisher": [
+    "Diana"
+   ],
+   "title": "Hábitos atómicos en acción",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL62665771M",
+      "title": "Hábitos atómicos en acción",
+      "cover_i": 15262775,
+      "publisher": [
+       "Diana"
+      ],
+      "publish_date": [
+       "2025-12-11"
+      ],
+      "isbn": [
+       "9788411193016",
+       "8411193012"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7422948A"
+   ],
+   "author_name": [
+    "James Clear"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2026,
+   "isbn": [
+    "6075691251",
+    "9786075691251"
+   ],
+   "key": "/works/OL45156287W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Editorial Planeta Mexicana"
+   ],
+   "title": "Hábitos atómicos",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61576655M",
+      "title": "Hábitos atómicos",
+      "subtitle": "un Método Sencillo y Comprobado para Desarrollar Buenos Hábitos y Eliminar Los Malos  / Atomic Habits",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Editorial Planeta Mexicana"
+      ],
+      "publish_date": [
+       "2026"
+      ],
+      "isbn": [
+       "9786075691251",
+       "6075691251"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL11089188A"
+   ],
+   "author_name": [
+    "Libros Maestros"
+   ],
+   "edition_count": 64,
+   "first_publish_year": 2019,
+   "isbn": [
+    "1704109140",
+    "1709621850",
+    "9781704112381",
+    "1704387272",
+    "9781709627088",
+    "9781706751069",
+    "9798645747817",
+    "1706245645",
+    "9781703790870",
+    "1707248583",
+    "1704112389",
+    "9781706246718",
+    "1702585735",
+    "9798592363542",
+    "9781706244684",
+    "9781703787351",
+    "1706248741",
+    "9781704385402",
+    "9781707248582",
+    "1703789032",
+    "9781655603464",
+    "9781706247722",
+    "9781709478499",
+    "1702597229",
+    "1704383684",
+    "1709478497",
+    "9781702585736",
+    "1706247729",
+    "1655603469",
+    "9798618453660",
+    "1706246714",
+    "9781702594776",
+    "9781655598449",
+    "9781707246472",
+    "9798618448406",
+    "1702584747",
+    "1706751060",
+    "9798613150809",
+    "9781707254521",
+    "9781706245643",
+    "9798613152971",
+    "9781703789034",
+    "9781704381589",
+    "9798582486923",
+    "9781703793154",
+    "9798610361727",
+    "9781707250981",
+    "9798610368122",
+    "9798582490258",
+    "9798648040335",
+    "1704385407",
+    "9798616378453",
+    "9798720636647",
+    "1655612298",
+    "9781655610042",
+    "9781704113364",
+    "1707254524",
+    "9798714165856",
+    "9781704387277",
+    "9781709628832",
+    "1707257205",
+    "1704384338",
+    "9798707177989",
+    "1703793153",
+    "1655598449",
+    "9781704109145",
+    "9781702584746",
+    "1709624043",
+    "1704381584",
+    "9781655595455",
+    "9781706734444",
+    "9781709624049",
+    "9781704384337",
+    "1709628839",
+    "9781706248743",
+    "9781709621857",
+    "9781702592741",
+    "9781702597227",
+    "9781655612299",
+    "1702594777",
+    "1707246475",
+    "1706734441",
+    "9781707257201",
+    "9781707252886",
+    "9798648023512",
+    "9781704383682",
+    "1703790871",
+    "1704113369",
+    "9798610383873",
+    "9798613149353",
+    "9798582489436",
+    "170259274X",
+    "9798645751838",
+    "1707252882",
+    "165561004X",
+    "9781706250722",
+    "1655595458",
+    "9798582491217",
+    "9798592052200",
+    "1703787358",
+    "1707250987",
+    "9798714166419",
+    "170625072X",
+    "1709627085",
+    "1706244681"
+   ],
+   "key": "/works/OL30151247W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Resumen Completo",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL41494967M",
+      "title": "Resumen Completo",
+      "subtitle": "Habitos Atomicos  - Basado en el Libro de James Clear",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2019"
+      ],
+      "isbn": [
+       "9781703787351",
+       "1703787358"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

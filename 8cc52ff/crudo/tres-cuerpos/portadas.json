@@ -1,0 +1,26 @@
+[
+ {
+  "url": "https://covers.openlibrary.org/b/id/9157544-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 61768,
+  "segundos": 0.62,
+  "sha1": "19c09e095a75",
+  "ancho": 333,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL17267881W"
+ },
+ {
+  "url": "https://covers.openlibrary.org/b/id/7451691-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 54336,
+  "segundos": 0.33,
+  "sha1": "c0c7d51b1cdc",
+  "ancho": 325,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL17267881W"
+ }
+]

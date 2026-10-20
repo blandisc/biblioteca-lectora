@@ -1,0 +1,26 @@
+[
+ {
+  "url": "https://covers.openlibrary.org/b/id/13723515-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 17687,
+  "segundos": 0.53,
+  "sha1": "8c753fec8708",
+  "ancho": 315,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL34911959W"
+ },
+ {
+  "url": "https://covers.openlibrary.org/b/id/10460487-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 36218,
+  "segundos": 0.6,
+  "sha1": "39163ef16bef",
+  "ancho": 449,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL22441111W"
+ }
+]

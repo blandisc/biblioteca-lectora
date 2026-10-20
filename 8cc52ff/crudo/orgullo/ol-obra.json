@@ -1,0 +1,55 @@
+{
+ "type": {
+  "key": "/type/work"
+ },
+ "title": "Orgullo y prejuicio",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL8594537A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  },
+  {
+   "author": {
+    "key": "/authors/OL21594A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  },
+  {
+   "author": {
+    "key": "/authors/OL8109513A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "covers": [
+  13574150
+ ],
+ "key": "/works/OL34810920W",
+ "links": [
+  {
+   "title": "Orgullo y prejuicio de Jane Austen",
+   "url": "https://love-books-review.com/es/orgullo-y-prejuicio/",
+   "type": {
+    "key": "/type/link"
+   }
+  }
+ ],
+ "latest_revision": 3,
+ "revision": 3,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2023-03-17T20:04:58.966920"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2025-05-09T16:14:48.082208"
+ }
+}

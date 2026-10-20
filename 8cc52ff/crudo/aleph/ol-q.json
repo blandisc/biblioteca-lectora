@@ -1,0 +1,736 @@
+{
+ "numFound": 30,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 30,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "El Aleph Jorge Luis Borges",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_edition_key": "OL49240106M",
+   "cover_i": 14408958,
+   "edition_count": 67,
+   "first_publish_year": 1949,
+   "isbn": [
+    "9780828825559",
+    "9789897220715",
+    "8426406394",
+    "376325840X",
+    "9788807883750",
+    "9789504001935",
+    "9788420613093",
+    "9788422676591",
+    "8495594110",
+    "9788481092400",
+    "0307950948",
+    "950042309X",
+    "9780141183831",
+    "9788478882878",
+    "9500428431",
+    "9789500401128",
+    "846634683X",
+    "8807883759",
+    "9789875666481",
+    "8420613096",
+    "9789500423090",
+    "8481301663",
+    "9681210050",
+    "9500425998",
+    "9783596105823",
+    "9782070296668",
+    "030795093X",
+    "9789500425995",
+    "9788420633114",
+    "9780785949718",
+    "359610582X",
+    "0141183837",
+    "9788466346832",
+    "0785949712",
+    "9504001939",
+    "8481092401",
+    "9789023423300",
+    "9788481301663",
+    "9789681210052",
+    "8420633119",
+    "9780828825023",
+    "0828825025",
+    "9788495594112",
+    "8423336700",
+    "9875666483",
+    "9897220712",
+    "9780307950949",
+    "9772830493",
+    "9788423336708",
+    "9788426406392",
+    "8478882871",
+    "8807803348",
+    "8422676591",
+    "8420663905",
+    "9783763258406",
+    "9789500428439",
+    "8535912029",
+    "9780307950932",
+    "9788420663906",
+    "2070296660",
+    "9788845914201",
+    "9023423305",
+    "8845914208",
+    "9500401126",
+    "0828825556",
+    "9789772830497",
+    "9788807803345",
+    "9788535912029"
+   ],
+   "key": "/works/OL110969W",
+   "language": [
+    "por",
+    "ger",
+    "eng",
+    "fre",
+    "spa",
+    "ita",
+    "ara",
+    "dut"
+   ],
+   "publisher": [
+    "Editorial Losada",
+    "El Colegio de México",
+    "Círculo de Lectores",
+    "Penguin Books Ltd",
+    "Alianza",
+    "Penguin Modern Publisher",
+    "Fischer (Tb.), Frankfurt",
+    "Círculo de Lectores",
+    "Galaxia Gutenberg",
+    "Emecé",
+    "Édiciones Dos Amigos",
+    "Editorial Planeta",
+    "Emecé",
+    "Sol 90",
+    "Emecé Editores",
+    "El Mundo",
+    "Emec e",
+    "Ediciones Destino",
+    "Quetzal Editores",
+    "Emece Editores",
+    "Aldelphi",
+    "LUMEN",
+    "Continental Book Company",
+    "Emecé Edit.",
+    "Companhia das Letras",
+    "Emece",
+    "Gallimard",
+    "Alianza (Buenos Aires, AR)",
+    "Debolsillo",
+    "Büchergilde Gutenberg",
+    "Feltrinelli",
+    "DEBOLSILLO",
+    "Emecé Editores",
+    "Editorial Ercilla",
+    "French & European Pubns",
+    "De Bezige Bij",
+    "Dār Sharqīyāt lil-Nashr wa-al-Tawzīʻ",
+    "Vintage Espanol",
+    "Losada",
+    "Alianza Editorial",
+    "French & European Publications Inc",
+    "FELTRINELLI",
+    "Vintage Español"
+   ],
+   "title": "El Aleph",
+   "subject": [
+    "Cuentos",
+    "Short stories",
+    "Translations into Italian",
+    "Social life and customs",
+    "Fiction",
+    "Continental european fiction (fictional works by one author)",
+    "Study guides",
+    "Examinations",
+    "Argentine Short stories",
+    "Aleph (Borges, Jorge Luis)",
+    "Romance literature",
+    "Vida social y costumbres",
+    "Novela",
+    "Manners and customs",
+    "Spanish fiction"
+   ],
+   "ratings_average": 4.266667,
+   "editions": {
+    "numFound": 67,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37789016M",
+      "title": "El Aleph",
+      "cover_i": 14826417,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Sol 90"
+      ],
+      "publish_date": [
+       "2000"
+      ],
+      "isbn": [
+       "9788495594112",
+       "8495594110"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_i": 13854343,
+   "edition_count": 2,
+   "first_publish_year": 1986,
+   "isbn": [
+    "9802760013",
+    "9789802760046",
+    "9789802760015",
+    "9802760048"
+   ],
+   "key": "/works/OL444782W",
+   "language": [
+    "eng",
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Ayacucho"
+   ],
+   "title": "Ficciones ; El aleph ; El informe de Brodie",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL2484462M",
+      "title": "Ficciones ; El aleph ; El informe de Brodie",
+      "cover_i": 14409162,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Ayacucho"
+      ],
+      "publish_date": [
+       "1986"
+      ],
+      "isbn": [
+       "9802760048",
+       "9789802760046"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_i": 5358028,
+   "edition_count": 11,
+   "first_publish_year": 1953,
+   "isbn": [
+    "847888372X",
+    "8473540034",
+    "9788473540025",
+    "8473540026",
+    "9789500434010",
+    "9789500432573",
+    "9788473540032",
+    "9788478883714",
+    "9788478882892",
+    "9789500431934",
+    "9788473540469",
+    "9788478883721",
+    "9500426471",
+    "8473540468",
+    "8478882898",
+    "9500431939",
+    "8473540476",
+    "9500432579",
+    "9788478883738",
+    "9788473540476",
+    "9500434016",
+    "8478883711",
+    "9789500426473",
+    "8478883738"
+   ],
+   "key": "/works/OL110960W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Emece",
+    "Emecé Editores",
+    "EMECE",
+    "Emecé",
+    "Emece Ediotres",
+    "Emecé",
+    "Emecé Editores"
+   ],
+   "title": "Obras completas",
+   "subject": [
+    "Argentine Authors",
+    "Books and reading",
+    "Criticism and interpretation",
+    "Argentine literature"
+   ],
+   "editions": {
+    "numFound": 11,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5938717M",
+      "title": "Obras completas.",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Emecé Editores"
+      ],
+      "publish_date": [
+       "1966"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_i": 9389725,
+   "edition_count": 11,
+   "first_publish_year": 1971,
+   "isbn": [
+    "9788434582606",
+    "8475301126",
+    "8434580039",
+    "9788434580039",
+    "8434580195",
+    "8437602351",
+    "9788475301129",
+    "8434582600",
+    "9788434580190",
+    "9788437602356"
+   ],
+   "key": "/works/OL110945W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Cátedra",
+    "Salvat",
+    "Catedra",
+    "Cátedra",
+    "Salvat Editores",
+    "Orbis"
+   ],
+   "title": "Narraciones",
+   "subject": [
+    "Spanish language books",
+    "fiction",
+    "cuentos",
+    "relatos",
+    "Spanish fiction"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 11,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL18372028M",
+      "title": "Narraciones",
+      "cover_i": 12723054,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Cátedra"
+      ],
+      "publish_date": [
+       "1986"
+      ],
+      "isbn": [
+       "8437602351",
+       "9788437602356"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_edition_key": "OL35431114M",
+   "cover_i": 12272586,
+   "edition_count": 2,
+   "first_publish_year": 2001,
+   "isbn": [
+    "9789750513404",
+    "975470709X",
+    "9750513401",
+    "9789754707090"
+   ],
+   "key": "/works/OL26270513W",
+   "language": [
+    "tur"
+   ],
+   "publisher": [
+    "Iletisim"
+   ],
+   "title": "Alef",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL60123764M",
+      "title": "Alef",
+      "cover_i": 15122868,
+      "language": [
+       "tur"
+      ],
+      "publisher": [
+       "Iletisim"
+      ],
+      "publish_date": [
+       "2001"
+      ],
+      "isbn": [
+       "975470709X",
+       "9789754707090"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_edition_key": "OL38581492M",
+   "cover_i": 12817089,
+   "edition_count": 6,
+   "first_publish_year": 1997,
+   "isbn": [
+    "8447341615",
+    "9789500409476",
+    "9788447345052",
+    "844734505X",
+    "9789500426459",
+    "8478883711",
+    "9500426455",
+    "9500428733",
+    "950040947X",
+    "9788478883714",
+    "9789500428736",
+    "9788447341610"
+   ],
+   "key": "/works/OL444855W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Emecé",
+    "RBA Coleccionables",
+    "Emece Editores",
+    "RBA"
+   ],
+   "title": "Obras Completas 1. 1923-1949",
+   "subject": [
+    "Argentine literature",
+    "Anachronisms",
+    "speculative fiction",
+    "subjective idealism",
+    "duodecimals",
+    "aneurysms",
+    "adjectives",
+    "hermeticism",
+    "philanthropy",
+    "cabala",
+    "persecution",
+    "Argentine Authors"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 6,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL38581492M",
+      "title": "Obras Completas 1",
+      "subtitle": "1923-1949",
+      "cover_i": 12817089,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Emecé"
+      ],
+      "publish_date": [
+       "2007-04"
+      ],
+      "isbn": [
+       "9789500428736",
+       "9500428733"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1987,
+   "key": "/works/OL23045967W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Luis-Angel Arango"
+   ],
+   "title": "El aleph borgiano",
+   "subject": [
+    "Latin American literature",
+    "Book reviews",
+    "Bibliography",
+    "Criticism and interpretation",
+    "Exhibitions",
+    "Argentine Authors"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL2138226M",
+      "title": "El aleph borgiano",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Luis-Angel Arango"
+      ],
+      "publish_date": [
+       "1987"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2006,
+   "isbn": [
+    "9802764264",
+    "9789802764266",
+    "9802764272",
+    "9789802764273"
+   ],
+   "key": "/works/OL38971431W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Ayacucho"
+   ],
+   "title": "Ficciones ; El aleph ; El informe de Brodie",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL53066299M",
+      "title": "Ficciones ; El aleph ; El informe de Brodie",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Ayacucho"
+      ],
+      "publish_date": [
+       "2006"
+      ],
+      "isbn": [
+       "9789802764266",
+       "9789802764273",
+       "9802764264",
+       "9802764272"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL494783A"
+   ],
+   "author_name": [
+    "Dorita Nouhaud"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1995,
+   "isbn": [
+    "9782910016371",
+    "2910016374"
+   ],
+   "key": "/works/OL3129875W",
+   "language": [
+    "fre"
+   ],
+   "publisher": [
+    "Presses universitaires de Limoges"
+   ],
+   "title": "Examen de la bibliothèque de Jorge Luis Borges",
+   "subject": [
+    "Literature",
+    "Books and reading",
+    "Knowledge",
+    "History and criticism"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL892085M",
+      "title": "Examen de la bibliothèque de Jorge Luis Borges",
+      "subtitle": "Ficciones, El Aleph",
+      "language": [
+       "fre"
+      ],
+      "publisher": [
+       "Presses universitaires de Limoges"
+      ],
+      "publish_date": [
+       "1995"
+      ],
+      "isbn": [
+       "2910016374",
+       "9782910016371"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL962964A"
+   ],
+   "author_name": [
+    "Edna Aizenberg"
+   ],
+   "cover_edition_key": "OL13329784M",
+   "cover_i": 5275298,
+   "edition_count": 3,
+   "first_publish_year": 1997,
+   "isbn": [
+    "3964563595",
+    "9783964563590",
+    "8488906595",
+    "9788488906595",
+    "3893542094",
+    "9783893542093"
+   ],
+   "key": "/works/OL4673255W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Vervuert",
+    "Iberoamericana Vervuert",
+    "Iberoamericana Editorial Vervuert"
+   ],
+   "title": "Borges, el tejedor del Aleph y otros ensayos",
+   "subject": [
+    "Criticism and interpretation",
+    "Knowledge",
+    "Judaism",
+    "Jews in literature",
+    "Borges, jorge luis, 1899-1986",
+    "In literature",
+    "Cabala in literature",
+    "Judaism in literature",
+    "Bible"
+   ],
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL13329784M",
+      "title": "Borges, El Tejedor del Aleph y Otros Ensayos",
+      "cover_i": 5275298,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Iberoamericana Vervuert"
+      ],
+      "publish_date": [
+       "January 1, 1997"
+      ],
+      "isbn": [
+       "9788488906595",
+       "8488906595"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

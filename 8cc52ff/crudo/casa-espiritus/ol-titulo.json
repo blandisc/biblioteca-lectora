@@ -1,0 +1,499 @@
+{
+ "numFound": 4,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 4,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL228079A"
+   ],
+   "author_name": [
+    "Isabel Allende"
+   ],
+   "cover_edition_key": "OL12727388M",
+   "cover_i": 3205226,
+   "edition_count": 116,
+   "first_publish_year": 1982,
+   "isbn": [
+    "9783351014582",
+    "9781857152814",
+    "0394539079",
+    "1512343803",
+    "9788401371783",
+    "6073104561",
+    "9783518393871",
+    "1411475704",
+    "3763231692",
+    "9782724277425",
+    "9780553273915",
+    "9783548600048",
+    "9780606241779",
+    "3548600042",
+    "9781512343809",
+    "0809591782",
+    "1644736829",
+    "8490324328",
+    "8401380111",
+    "8466353488",
+    "9781400043187",
+    "9788447306619",
+    "8466367918",
+    "9783458340416",
+    "9788466360081",
+    "8401341906",
+    "8493496537",
+    "9780553383805",
+    "9788466380812",
+    "9780809591787",
+    "9785901354032",
+    "9788401352898",
+    "9780525433477",
+    "8481302473",
+    "9789028414969",
+    "9785556005464",
+    "9780816139941",
+    "9789871138906",
+    "1857152816",
+    "9780552995887",
+    "8528622568",
+    "8466380817",
+    "0224022318",
+    "3458340416",
+    "555600546X",
+    "1784879703",
+    "9500720388",
+    "9788401029950",
+    "9788401423024",
+    "9783804416635",
+    "3518045873",
+    "9783518045879",
+    "9788493496531",
+    "9028414967",
+    "8401381665",
+    "1501117017",
+    "3351014589",
+    "8401371783",
+    "9789681316143",
+    "9681104714",
+    "1501117033",
+    "3518381768",
+    "8466362088",
+    "9780606228718",
+    "9780552991988",
+    "8483462036",
+    "9788528622560",
+    "9788401381669",
+    "0606241779",
+    "9786070763144",
+    "9789586392297",
+    "9788483462034",
+    "0552995886",
+    "9780552142281",
+    "9783518387542",
+    "0606228713",
+    "0553258656",
+    "8401352894",
+    "0553273914",
+    "9871138903",
+    "9788401428418",
+    "8401422248",
+    "9789755102160",
+    "9788490324325",
+    "8497592190",
+    "9789500710718",
+    "0340532114",
+    "880781000X",
+    "9780394539072",
+    "9789500702911",
+    "9781501117039",
+    "9782253038047",
+    "9755102167",
+    "9782213592145",
+    "3804416632",
+    "3518387545",
+    "8467033819",
+    "9788401380112",
+    "9789500717632",
+    "9500717638",
+    "5901354036",
+    "9780613027656",
+    "0525433473",
+    "8401029953",
+    "9780553258653",
+    "9789681104719",
+    "9781784879709",
+    "9783518381762",
+    "8401382076",
+    "9780099593898",
+    "9788401422683",
+    "9788401382079",
+    "9783763231690",
+    "2213592144",
+    "9788497592192",
+    "9788467033816",
+    "902841861X",
+    "9789028418615",
+    "1442077999",
+    "9788481302479",
+    "0099593890",
+    "2253038040",
+    "0553383809",
+    "9681316142",
+    "3518393871",
+    "9500745097",
+    "5389130138",
+    "9788466362085",
+    "9780552127813",
+    "840142268X",
+    "9781411475700",
+    "9788466353489",
+    "8484503887",
+    "8466360085",
+    "9789990084399",
+    "2724277422",
+    "9780340532119",
+    "9780224022316",
+    "9586392295",
+    "9789500745093",
+    "9785389130135",
+    "9788401341908",
+    "9781501117015",
+    "9783518405543",
+    "0099528568",
+    "2890372006",
+    "9788484503880",
+    "9994791524",
+    "0552127817",
+    "9780099528562",
+    "6070763149",
+    "1400043182",
+    "055214228X",
+    "9500702916",
+    "9789994791521",
+    "9788466367912",
+    "9788807810008",
+    "9786073104562",
+    "0060951303",
+    "9500710714",
+    "9781644736821",
+    "3518405543",
+    "0613027655",
+    "9781442077997",
+    "9990084394",
+    "9788401422249",
+    "8447306615",
+    "8401428416",
+    "9782890372009",
+    "9780060951306",
+    "0816139946",
+    "9789500720380",
+    "8401423023",
+    "0552991988"
+   ],
+   "key": "/works/OL1905255W",
+   "language": [
+    "por",
+    "fre",
+    "eng",
+    "ger",
+    "ita",
+    "vie",
+    "spa",
+    "dut",
+    "rus"
+   ],
+   "publisher": [
+    "Plaza & Janes",
+    "Bantam",
+    "Austral",
+    "Vintage Classic",
+    "Plaza & Janes S.A.",
+    "Fayard",
+    "Rayo",
+    "Paw Prints",
+    "Lectorum Pubns",
+    "Transworld Publishers Limited",
+    "Espasa",
+    "Librairie générale française",
+    "Plaza & Janes Editories Sa",
+    "Hodder & Stoughton Educational Division",
+    "Black Swan",
+    "G.K. Hall",
+    "Suhrkamp",
+    "Feltrinelli",
+    "European Schoolbooks",
+    "Aufbau-Verl.",
+    "Everyman's Library",
+    "Atria Books",
+    "Penguin Random House",
+    "Dial Press",
+    "Diana",
+    "Bantam Books",
+    "Editorial Diana, S.A.",
+    "Bibliotex, S.L. (Biblioteca El Mundo)",
+    "Vintage Books",
+    "J. Cape",
+    "Wildside Press, LLC",
+    "Edivisión Compañía Editorial, S.A.",
+    "Büchergilde",
+    "Zvezda",
+    "Bange",
+    "Corgi",
+    "Harper Perennial",
+    "French & European Pubns",
+    "HarperLibros",
+    "Trans-World",
+    "Can Yayinlari",
+    "Kairry",
+    "Vintage Classics",
+    "Wereldbibliotheek",
+    "A.A. Knopf",
+    "Knopf Doubleday Publishing Group",
+    "Ediciones Norte",
+    "Tandem Library",
+    "Sterling Publishing Co., Inc.",
+    "NXB Văn nghue",
+    "Insel, Frankfurt",
+    "Amsterdam - Wereldbibliotheek",
+    "Grade Saver LLC",
+    "RBA Editores",
+    "List",
+    "Plaza & Janés",
+    "Continental Book Co Inc",
+    "Turtleback Books Distributed by Demco Media",
+    "Suhrkamp Verlag",
+    "Québec /Amérique",
+    "DEBOLSILLO",
+    "CreateSpace Independent Publishing Platform",
+    "Debolsillo",
+    "Editorial Sudamericana",
+    "Sudamericana",
+    "HarperCollins",
+    "Penguin Random House Grupo Editorial",
+    "PLAZA & JANES",
+    "France loisirs",
+    "Continental Book Company",
+    "Bertrand Brasil"
+   ],
+   "title": "La casa de los espíritus",
+   "subject": [
+    "Chilean literature",
+    "Translations into English",
+    "Spanish American literature",
+    "Chilean Authors",
+    "Chilean Women authors",
+    "open_syllabus_project",
+    "NOVELAS CHILENAS",
+    "Modern Literature",
+    "magical realism",
+    "Fiction",
+    "Man-woman relationships",
+    "Italian fiction",
+    "Spanish language books",
+    "Familia",
+    "Family",
+    "Relaciones familiares",
+    "Family relationships",
+    "Autoras chilenos",
+    "Families",
+    "Conflict of generations",
+    "Social life and customs",
+    "Spirits",
+    "Familie",
+    "Man-woman relationships in fiction",
+    "Fiction, family life",
+    "Fiction, political",
+    "Latin america, fiction",
+    "Large type books",
+    "Spanish fiction",
+    "Spanish language",
+    "Chilean fiction",
+    "Domestic fiction",
+    "Spanish language materials",
+    "Novela chilena",
+    "Family life",
+    "Love",
+    "Domestic relations",
+    "FamiliasFiction",
+    "Novela",
+    "Fiction, family life, general",
+    "Chile, fiction",
+    "South america, fiction",
+    "Fiction, general",
+    "Readers",
+    "Geisterhaus (Motion picture)",
+    "FICTION / Historical",
+    "FICTION / Literary",
+    "Relations entre hommes et femmes",
+    "Spanish literature",
+    "In translation",
+    "Literary",
+    "Historical",
+    "Romance literature",
+    "Spanish American fiction"
+   ],
+   "ratings_average": 4.4074073,
+   "editions": {
+    "numFound": 67,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL58656056M",
+      "title": "La casa de los espíritus",
+      "cover_i": 15215112,
+      "language": [
+       "spa"
+      ],
+      "publish_date": [
+       "1985"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL228079A"
+   ],
+   "author_name": [
+    "Isabel Allende"
+   ],
+   "cover_edition_key": "OL35693086M",
+   "cover_i": 12390937,
+   "edition_count": 1,
+   "first_publish_year": 2021,
+   "isbn": [
+    "6558380048",
+    "9786558380047"
+   ],
+   "key": "/works/OL26426064W",
+   "language": [
+    "por"
+   ],
+   "publisher": [
+    "Bertrand"
+   ],
+   "title": "La casa de los espíritus / Hija de la fortuna / La isla bajo el mar",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35693086M",
+      "title": "A casa dos espíritos / Filha da fortuna / A ilha sob o mar",
+      "cover_i": 12390937,
+      "language": [
+       "por"
+      ],
+      "publisher": [
+       "Bertrand"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9786558380047",
+       "6558380048"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL228079A"
+   ],
+   "author_name": [
+    "Isabel Allende"
+   ],
+   "cover_edition_key": "OL47456101M",
+   "cover_i": 14060387,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9788466362139",
+    "8466362134"
+   ],
+   "key": "/works/OL35081912W",
+   "publisher": [
+    "NUEVAS EDICIONES DEBOLSILLO S.L",
+    "DEBOLSILLO"
+   ],
+   "title": "Trilogía La casa de los espíritus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47456101M",
+      "title": "Trilogía La casa de los espíritus",
+      "cover_i": 14060387,
+      "publisher": [
+       "NUEVAS EDICIONES DEBOLSILLO S.L",
+       "DEBOLSILLO"
+      ],
+      "publish_date": [
+       "Apr 07, 2022"
+      ],
+      "isbn": [
+       "9788466362139",
+       "8466362134"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL228079A"
+   ],
+   "author_name": [
+    "Isabel Allende"
+   ],
+   "cover_edition_key": "OL47456100M",
+   "cover_i": 14060386,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9788466362139",
+    "8466362134"
+   ],
+   "key": "/works/OL35081913W",
+   "publisher": [
+    "NUEVAS EDICIONES DEBOLSILLO S.L",
+    "DEBOLSILLO"
+   ],
+   "title": "Trilogía La casa de los espíritus",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47456100M",
+      "title": "Trilogía La casa de los espíritus",
+      "cover_i": 14060386,
+      "publisher": [
+       "NUEVAS EDICIONES DEBOLSILLO S.L",
+       "DEBOLSILLO"
+      ],
+      "publish_date": [
+       "Apr 07, 2022"
+      ],
+      "isbn": [
+       "9788466362139",
+       "8466362134"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

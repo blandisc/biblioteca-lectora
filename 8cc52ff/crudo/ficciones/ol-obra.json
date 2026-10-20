@@ -1,0 +1,119 @@
+{
+ "description": {
+  "type": "/type/text",
+  "value": "A collection of his short stories in which Borges often uses the labyrinth as a literary device to expound his ideas on all aspects of human life and endeavor.\r\n\r\n\r\n----------\r\nContains:\r\n[Tlön, Uqbar, Orbis Tertius](https://openlibrary.org/works/OL444914W)"
+ },
+ "title": "Ficciones",
+ "covers": [
+  10832290,
+  4667891,
+  4667892,
+  968110,
+  4667890,
+  4903072,
+  8769157,
+  9297363,
+  8652178,
+  9377707,
+  967295,
+  107890,
+  -1,
+  8745887,
+  12536834,
+  13480164,
+  13480165
+ ],
+ "subject_places": [
+  "Argentina",
+  "Tlön",
+  "Uqbar",
+  "Orbis Tertius",
+  "Buenos Aires",
+  "Lucerne",
+  "London",
+  "United States"
+ ],
+ "subjects": [
+  "Anachronisms",
+  "speculative fiction",
+  "subjective idealism",
+  "duodecimals",
+  "aneurysms",
+  "adjectives",
+  "hermeticism",
+  "philanthropy",
+  "cabala",
+  "persecution",
+  "Social life and customs",
+  "Spanish language books",
+  "Readers",
+  "Translations into English",
+  "Spanish language",
+  "Fiction",
+  "Spanish fiction",
+  "Modern fiction",
+  "Literary Criticism",
+  "Fiction - General",
+  "General",
+  "Fiction (fictional works by one author)",
+  "Borges, jorge luis, 1899-1986",
+  "Latin american literature, translations into english",
+  "Romance literature",
+  "CUENTOS ARGENTINOS",
+  "Spanish fiction in Spanish",
+  "Italian language materials",
+  "Argentine Short stories",
+  "Manners and customs",
+  "Nouvelles argentines",
+  "Spanish Short stories",
+  "Argentine Science fiction",
+  "Novela",
+  "Vida social y costumbres",
+  "Short stories"
+ ],
+ "subject_people": [
+  "Jorge Luis Borges",
+  "Adolfo Bioy Casares",
+  "Herbert Ashe",
+  "Ezra Buckley",
+  "Jesus Christ",
+  "Faucigny Lucinge"
+ ],
+ "key": "/works/OL110971W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL18928A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "subject_times": [
+  "20th century",
+  "1935-1947",
+  "17th century",
+  "1947",
+  "1940",
+  "1941",
+  "1942",
+  "1944"
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "genres": [
+  "/tags/OL179T"
+ ],
+ "latest_revision": 38,
+ "revision": 38,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-10-17T23:59:58.253545"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2026-08-29T15:14:54.401901"
+ }
+}

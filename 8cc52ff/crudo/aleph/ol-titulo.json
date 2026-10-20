@@ -1,0 +1,341 @@
+{
+ "numFound": 4,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 4,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_edition_key": "OL49240106M",
+   "cover_i": 14408958,
+   "edition_count": 67,
+   "first_publish_year": 1949,
+   "isbn": [
+    "9780828825559",
+    "9789897220715",
+    "8426406394",
+    "376325840X",
+    "9788807883750",
+    "9789504001935",
+    "9788420613093",
+    "9788422676591",
+    "8495594110",
+    "9788481092400",
+    "0307950948",
+    "950042309X",
+    "9780141183831",
+    "9788478882878",
+    "9500428431",
+    "9789500401128",
+    "846634683X",
+    "8807883759",
+    "9789875666481",
+    "8420613096",
+    "9789500423090",
+    "8481301663",
+    "9681210050",
+    "9500425998",
+    "9783596105823",
+    "9782070296668",
+    "030795093X",
+    "9789500425995",
+    "9788420633114",
+    "9780785949718",
+    "359610582X",
+    "0141183837",
+    "9788466346832",
+    "0785949712",
+    "9504001939",
+    "8481092401",
+    "9789023423300",
+    "9788481301663",
+    "9789681210052",
+    "8420633119",
+    "9780828825023",
+    "0828825025",
+    "9788495594112",
+    "8423336700",
+    "9875666483",
+    "9897220712",
+    "9780307950949",
+    "9772830493",
+    "9788423336708",
+    "9788426406392",
+    "8478882871",
+    "8807803348",
+    "8422676591",
+    "8420663905",
+    "9783763258406",
+    "9789500428439",
+    "8535912029",
+    "9780307950932",
+    "9788420663906",
+    "2070296660",
+    "9788845914201",
+    "9023423305",
+    "8845914208",
+    "9500401126",
+    "0828825556",
+    "9789772830497",
+    "9788807803345",
+    "9788535912029"
+   ],
+   "key": "/works/OL110969W",
+   "language": [
+    "por",
+    "ger",
+    "eng",
+    "fre",
+    "spa",
+    "ita",
+    "ara",
+    "dut"
+   ],
+   "publisher": [
+    "Editorial Losada",
+    "El Colegio de México",
+    "Círculo de Lectores",
+    "Penguin Books Ltd",
+    "Alianza",
+    "Penguin Modern Publisher",
+    "Fischer (Tb.), Frankfurt",
+    "Círculo de Lectores",
+    "Galaxia Gutenberg",
+    "Emecé",
+    "Édiciones Dos Amigos",
+    "Editorial Planeta",
+    "Emecé",
+    "Sol 90",
+    "Emecé Editores",
+    "El Mundo",
+    "Emec e",
+    "Ediciones Destino",
+    "Quetzal Editores",
+    "Emece Editores",
+    "Aldelphi",
+    "LUMEN",
+    "Continental Book Company",
+    "Emecé Edit.",
+    "Companhia das Letras",
+    "Emece",
+    "Gallimard",
+    "Alianza (Buenos Aires, AR)",
+    "Debolsillo",
+    "Büchergilde Gutenberg",
+    "Feltrinelli",
+    "DEBOLSILLO",
+    "Emecé Editores",
+    "Editorial Ercilla",
+    "French & European Pubns",
+    "De Bezige Bij",
+    "Dār Sharqīyāt lil-Nashr wa-al-Tawzīʻ",
+    "Vintage Espanol",
+    "Losada",
+    "Alianza Editorial",
+    "French & European Publications Inc",
+    "FELTRINELLI",
+    "Vintage Español"
+   ],
+   "title": "El Aleph",
+   "subject": [
+    "Cuentos",
+    "Short stories",
+    "Translations into Italian",
+    "Social life and customs",
+    "Fiction",
+    "Continental european fiction (fictional works by one author)",
+    "Study guides",
+    "Examinations",
+    "Argentine Short stories",
+    "Aleph (Borges, Jorge Luis)",
+    "Romance literature",
+    "Vida social y costumbres",
+    "Novela",
+    "Manners and customs",
+    "Spanish fiction"
+   ],
+   "ratings_average": 4.266667,
+   "editions": {
+    "numFound": 64,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37789016M",
+      "title": "El Aleph",
+      "cover_i": 14826417,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Sol 90"
+      ],
+      "publish_date": [
+       "2000"
+      ],
+      "isbn": [
+       "9788495594112",
+       "8495594110"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "cover_i": 13854343,
+   "edition_count": 2,
+   "first_publish_year": 1986,
+   "isbn": [
+    "9802760013",
+    "9789802760046",
+    "9789802760015",
+    "9802760048"
+   ],
+   "key": "/works/OL444782W",
+   "language": [
+    "eng",
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Ayacucho"
+   ],
+   "title": "Ficciones ; El aleph ; El informe de Brodie",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL2484462M",
+      "title": "Ficciones ; El aleph ; El informe de Brodie",
+      "cover_i": 14409162,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Ayacucho"
+      ],
+      "publish_date": [
+       "1986"
+      ],
+      "isbn": [
+       "9802760048",
+       "9789802760046"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1987,
+   "key": "/works/OL23045967W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Luis-Angel Arango"
+   ],
+   "title": "El aleph borgiano",
+   "subject": [
+    "Latin American literature",
+    "Book reviews",
+    "Bibliography",
+    "Criticism and interpretation",
+    "Exhibitions",
+    "Argentine Authors"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL2138226M",
+      "title": "El aleph borgiano",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Luis-Angel Arango"
+      ],
+      "publish_date": [
+       "1987"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL18928A"
+   ],
+   "author_name": [
+    "Jorge Luis Borges"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2006,
+   "isbn": [
+    "9802764264",
+    "9789802764266",
+    "9802764272",
+    "9789802764273"
+   ],
+   "key": "/works/OL38971431W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Biblioteca Ayacucho"
+   ],
+   "title": "Ficciones ; El aleph ; El informe de Brodie",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL53066299M",
+      "title": "Ficciones ; El aleph ; El informe de Brodie",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Biblioteca Ayacucho"
+      ],
+      "publish_date": [
+       "2006"
+      ],
+      "isbn": [
+       "9789802764266",
+       "9789802764273",
+       "9802764264",
+       "9802764272"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

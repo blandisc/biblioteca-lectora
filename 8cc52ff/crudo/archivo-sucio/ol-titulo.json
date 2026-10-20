@@ -1,0 +1,411 @@
+{
+ "numFound": 80,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 80,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL1393250A"
+   ],
+   "author_name": [
+    "William T. Tardy"
+   ],
+   "cover_edition_key": "OL5198696M",
+   "cover_i": 8242661,
+   "edition_count": 1,
+   "first_publish_year": 1975,
+   "key": "/works/OL5730500W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "National Textbook Co."
+   ],
+   "title": "Selections from Cervantes' Don Quijote de la Mancha",
+   "subject": [
+    "Readers",
+    "Spanish language"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL5198696M",
+      "title": "Selections from Cervantes' Don Quijote de la Mancha",
+      "cover_i": 8242661,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "National Textbook Co."
+      ],
+      "publish_date": [
+       "1975"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL5137012A"
+   ],
+   "author_name": [
+    "Wolfgang von Wurzbach"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1913,
+   "key": "/works/OL11947580W",
+   "language": [
+    "ger"
+   ],
+   "publisher": [
+    "Heitz"
+   ],
+   "title": "Cervantes Don Quijote",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL16843679M",
+      "title": "Cervantes Don Quijote.",
+      "language": [
+       "ger"
+      ],
+      "publisher": [
+       "Heitz"
+      ],
+      "publish_date": [
+       "1913"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL494912A",
+    "OL5106613A"
+   ],
+   "author_name": [
+    "Christoph Strosetzki",
+    "Mariano Delgado"
+   ],
+   "cover_edition_key": "OL21543530M",
+   "cover_i": 8392949,
+   "edition_count": 2,
+   "first_publish_year": 2005,
+   "isbn": [
+    "9783503079391",
+    "3503079394"
+   ],
+   "key": "/works/OL19017160W",
+   "language": [
+    "ger"
+   ],
+   "publisher": [
+    "Schmidt Erich Verlag",
+    "E. Schmidt",
+    "Erich Schmidt Verlag GmbH & Co"
+   ],
+   "title": "Miguel de Cervantes' Don Quijote",
+   "subject": [
+    "Congresses"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21543530M",
+      "title": "Miguel Cervantes' Don Quijote: explizite und implizite Diskurse im Don Quijote",
+      "cover_i": 8392949,
+      "language": [
+       "ger"
+      ],
+      "publisher": [
+       "Erich Schmidt Verlag GmbH & Co",
+       "Schmidt Erich Verlag"
+      ],
+      "publish_date": [
+       "Jun 30, 2005"
+      ],
+      "isbn": [
+       "3503079394",
+       "9783503079391"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL5277408A"
+   ],
+   "author_name": [
+    "José María Martínez Val"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1948,
+   "key": "/works/OL12155188W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "[Imprenta Porvincial]"
+   ],
+   "title": "Cervantes y Don Quijoté",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL17921062M",
+      "title": "Cervantes y Don Quijoté.",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "[Imprenta Porvincial]"
+      ],
+      "publish_date": [
+       "1948"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL948203A"
+   ],
+   "author_name": [
+    "Helena Percas de Ponseti"
+   ],
+   "cover_edition_key": "OL2034572M",
+   "cover_i": 4058030,
+   "edition_count": 1,
+   "first_publish_year": 1988,
+   "isbn": [
+    "0826206891",
+    "9780826206893"
+   ],
+   "key": "/works/OL4622530W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "University of Missouri Press"
+   ],
+   "title": "Cervantes the writer and painter of Don Quijote",
+   "subject": [
+    "Philosophy"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL2034572M",
+      "title": "Cervantes the writer and painter of Don Quijote",
+      "cover_i": 4058030,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "University of Missouri Press"
+      ],
+      "publish_date": [
+       "1988"
+      ],
+      "isbn": [
+       "0826206891",
+       "9780826206893"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2137885A"
+   ],
+   "author_name": [
+    "Manuel Romero de Castilla"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 1967,
+   "key": "/works/OL7292150W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Romero-Requejo, S.L."
+   ],
+   "title": "Don Quijote vindicador de Cervantes; o, Cervantes humanista",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL13782447M",
+      "title": "'Don Quijote' vindicador de Cervantes o Cervantes humanista.",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Romero-Requejo, S.L."
+      ],
+      "publish_date": [
+       "1967"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2429263A"
+   ],
+   "author_name": [
+    "Wurzbach, Alfred Wolfgang Ritter von Tannenberg"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1913,
+   "key": "/works/OL7762266W",
+   "language": [
+    "ger"
+   ],
+   "publisher": [
+    "Heitz"
+   ],
+   "title": "Cervantes, Don Quijote",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL6658195M",
+      "title": "Cervantes, Don Quijote",
+      "language": [
+       "ger"
+      ],
+      "publisher": [
+       "Heitz"
+      ],
+      "publish_date": [
+       "1913"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "edition_count": 1,
+   "key": "/works/OL31230283W",
+   "title": "DON QUIJOTE CERVANTES",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL42889040M",
+      "title": "DON QUIJOTE CERVANTES"
+     }
+    ]
+   }
+  },
+  {
+   "edition_count": 1,
+   "first_publish_year": 1940,
+   "key": "/works/OL14824795M",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Libreria General"
+   ],
+   "title": "Cervantes y \"Don Quijote\"",
+   "subject": [
+    "Cervantes Saavedra, Miguel de, -- 1547-1616."
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL14824795M",
+      "title": "Cervantes y \"Don Quijote\"",
+      "subtitle": "antología crítica",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Libreria General"
+      ],
+      "publish_date": [
+       "1940"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL149442A",
+    "OL4280778A"
+   ],
+   "author_name": [
+    "José Rojas Garcidueñas",
+    "José Rubén Romero"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1972,
+   "key": "/works/OL22726840W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Secretaría de Educación Pública"
+   ],
+   "title": "Cervantes y Don Quijote",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL3103555M",
+      "title": "Cervantes y Don Quijote",
+      "subtitle": "estudios mexicanos",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Secretaría de Educación Pública"
+      ],
+      "publish_date": [
+       "1972"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

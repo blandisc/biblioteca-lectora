@@ -1,0 +1,129 @@
+{
+ "numFound": 3,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 3,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL26320A"
+   ],
+   "author_name": [
+    "J.R.R. Tolkien"
+   ],
+   "cover_i": 13223383,
+   "edition_count": 0,
+   "key": "/works/OL32501118W",
+   "title": "Estuche Tolkien (el Hobbit + el Señor de Los Anillos)",
+   "editions": {
+    "numFound": 0,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": []
+   }
+  },
+  {
+   "author_key": [
+    "OL26320A"
+   ],
+   "author_name": [
+    "J.R.R. Tolkien"
+   ],
+   "cover_edition_key": "OL35638134M",
+   "cover_i": 12345036,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9505471580",
+    "9789505471584"
+   ],
+   "key": "/works/OL26397401W",
+   "language": [
+    "cat"
+   ],
+   "publisher": [
+    "PLANETA"
+   ],
+   "title": "HOBBIT. LA DESOLACION DE SMAUG, EL",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35638134M",
+      "title": "HOBBIT. LA DESOLACION DE SMAUG, EL",
+      "cover_i": 12345036,
+      "language": [
+       "cat"
+      ],
+      "publisher": [
+       "PLANETA"
+      ],
+      "publish_date": [
+       "Nov 04, 2013"
+      ],
+      "isbn": [
+       "9789505471584",
+       "9505471580"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL26320A"
+   ],
+   "author_name": [
+    "J.R.R. Tolkien"
+   ],
+   "cover_edition_key": "OL47487735M",
+   "cover_i": 14097128,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9788445001257",
+    "8445001256"
+   ],
+   "key": "/works/OL35109712W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Timun Mas Narrativa"
+   ],
+   "title": "El Hobbit. Un viaje inesperado. Crónicas. Criaturas y personajes",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47487735M",
+      "title": "El Hobbit. Un viaje inesperado. Crónicas. Criaturas y personajes",
+      "subtitle": "Crónicas II",
+      "cover_i": 14097128,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Timun Mas Narrativa"
+      ],
+      "publish_date": [
+       "Apr 04, 2013"
+      ],
+      "isbn": [
+       "9788445001257",
+       "8445001256"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

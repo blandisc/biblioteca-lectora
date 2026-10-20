@@ -1,0 +1,229 @@
+{
+ "numFound": 2,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 2,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL60411A"
+   ],
+   "author_name": [
+    "Mario Benedetti"
+   ],
+   "cover_i": 4909999,
+   "edition_count": 59,
+   "first_publish_year": 1960,
+   "isbn": [
+    "9789681912628",
+    "9780679760955",
+    "8466322876",
+    "9789508520302",
+    "3379000728",
+    "9788560281046",
+    "9783379000727",
+    "9788437601489",
+    "8437601487",
+    "1464041784",
+    "9789568992118",
+    "9681904885",
+    "9681912624",
+    "9789876055758",
+    "8420431923",
+    "9683901999",
+    "9789500718233",
+    "9789683901996",
+    "9876055755",
+    "9789507312786",
+    "9789707311169",
+    "9875800953",
+    "9789681904883",
+    "9789507311123",
+    "9568992111",
+    "8420600725",
+    "9780141396859",
+    "950742797X",
+    "9788420638218",
+    "9788420600727",
+    "0679760954",
+    "9508520302",
+    "9507312781",
+    "9507311122",
+    "9789507427978",
+    "2253932965",
+    "9788420422671",
+    "8432063568",
+    "9780141396866",
+    "9788420666884",
+    "9789707100039",
+    "9789875800953",
+    "9788490626726",
+    "0141396865",
+    "8420666882",
+    "9781400000456",
+    "9788432063565",
+    "9707311169",
+    "9500718235",
+    "8490626723",
+    "9788466322874",
+    "8420638218",
+    "9781464041785",
+    "8420422673",
+    "8560281045",
+    "9707100036",
+    "1400000459",
+    "9788420431925",
+    "9782253932963",
+    "0141396857"
+   ],
+   "key": "/works/OL741877W",
+   "language": [
+    "eng",
+    "ger",
+    "fre",
+    "spa"
+   ],
+   "publisher": [
+    "Editorial Alfa S.A.",
+    "Verlag Philipp Reclam jun.",
+    "Aims Intl Books Corp",
+    "Alfaguara ; distributed by Vintage Books a division of Random House",
+    "Ebookspagatagonia",
+    "Belfond",
+    "Editorial Diógenes",
+    "Editorial Planeta",
+    "Aguilar, Altea, Taurus, Alfaguara, S.A. de C.",
+    "Editorial Alfa",
+    "Argentores",
+    "Harper & Row",
+    "Sudamericana",
+    "Editorial Seix Barral",
+    "Diogenes",
+    "Editorial Universitaria",
+    "Planeta",
+    "Harper and Row",
+    "Penguin Books, Limited",
+    "Recorded Books",
+    "Punto de Lectura",
+    "Alfaguara",
+    "Santillana",
+    "Editorial Alfa Argentina",
+    "Cátedra",
+    "Penguin Random House Grupo Editorial",
+    "Espasa Calpe Mexicana, S.A.",
+    "Alianza Editorial",
+    "Nueva Imagen",
+    "Alianza",
+    "Alfa",
+    "LGF",
+    "Cátedra",
+    "Pehuén"
+   ],
+   "title": "La tregua",
+   "subject": [
+    "Language readers",
+    "Fiction",
+    "General",
+    "Fiction, general",
+    "Widowers",
+    "Diaries",
+    "Man-woman relationships",
+    "Viudos",
+    "Diarios íntimos",
+    "Novela",
+    "Relaciones hombre-mujer",
+    "Widows",
+    "Veuves",
+    "Romans, nouvelles",
+    "Journaux intimes",
+    "Novela Uruguaya",
+    "Ventanas",
+    "Spanish language books",
+    "Chilean literature",
+    "Ficción",
+    "Literatura chilena",
+    "South america, fiction",
+    "Fiction, romance, general",
+    "Adultery"
+   ],
+   "ratings_average": 3.8888888,
+   "editions": {
+    "numFound": 51,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9179755M",
+      "title": "La tregua",
+      "cover_i": 15220465,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Punto de Lectura"
+      ],
+      "publish_date": [
+       "2006"
+      ],
+      "isbn": [
+       "9789707311169",
+       "9707311169"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL60411A"
+   ],
+   "author_name": [
+    "Mario Benedetti"
+   ],
+   "cover_edition_key": "OL13190048M",
+   "cover_i": 7377234,
+   "edition_count": 1,
+   "first_publish_year": 1995,
+   "isbn": [
+    "9788420421490",
+    "8420421499"
+   ],
+   "key": "/works/OL36991157W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Vintage Books"
+   ],
+   "title": "La Tregua",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL13190048M",
+      "title": "LA Tregua",
+      "cover_i": 7377234,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Vintage Books"
+      ],
+      "publish_date": [
+       "January 1995"
+      ],
+      "isbn": [
+       "9788420421490",
+       "8420421499"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

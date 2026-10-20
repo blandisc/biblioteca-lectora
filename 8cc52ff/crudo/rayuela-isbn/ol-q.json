@@ -1,0 +1,794 @@
+{
+ "numFound": 64,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 64,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Rayuela Julio Cortázar",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "cover_edition_key": "OL2980196M",
+   "cover_i": 1047466,
+   "edition_count": 129,
+   "first_publish_year": 1963,
+   "isbn": [
+    "8400071123",
+    "8663692722",
+    "9780380003723",
+    "9877252538",
+    "8481303070",
+    "9789750732065",
+    "9789681902001",
+    "0380003724",
+    "9788663692725",
+    "9789505111879",
+    "9788432221590",
+    "9789933701161",
+    "840142531X",
+    "8475514154",
+    "0394752848",
+    "9788437624747",
+    "8420414700",
+    "2070291340",
+    "6094276221",
+    "9781473572447",
+    "9785778400924",
+    "8437604575",
+    "9788400071127",
+    "9788661050626",
+    "9789939761916",
+    "9781463708351",
+    "8435004457",
+    "1548833150",
+    "9785170916122",
+    "9789176450864",
+    "8402067409",
+    "9660344309",
+    "8437624746",
+    "9655402983",
+    "8373161570",
+    "9783518025598",
+    "9789802763672",
+    "9789750810602",
+    "8432221597",
+    "8466319050",
+    "8432221554",
+    "2070216748",
+    "9788489666153",
+    "8447301354",
+    "607112655X",
+    "9500701987",
+    "1463708351",
+    "1473572444",
+    "1535105879",
+    "0828839042",
+    "9788432221552",
+    "9682200466",
+    "9933701169",
+    "9788520002988",
+    "9781784875862",
+    "8477355576",
+    "7536689829",
+    "8420421529",
+    "3518379623",
+    "9529646488",
+    "9750732065",
+    "8073639106",
+    "9788466331906",
+    "9788415614104",
+    "9939761910",
+    "9985036042",
+    "9789529646487",
+    "9789545400513",
+    "8489666156",
+    "1784875864",
+    "9707311185",
+    "9788373161573",
+    "8415614101",
+    "9871106548",
+    "9788328706927",
+    "9788435001458",
+    "9789896230791",
+    "9788459954846",
+    "954540051X",
+    "9608397936",
+    "9789592605336",
+    "9789922605500",
+    "9788448704032",
+    "832870692X",
+    "9505111878",
+    "9789994054497",
+    "9782070291342",
+    "9174990489",
+    "9789029089463",
+    "989623079X",
+    "8420405949",
+    "9788420414706",
+    "9789734671946",
+    "9789500701983",
+    "9789877252538",
+    "9788401425318",
+    "9789660344303",
+    "9789655402988",
+    "9780828839044",
+    "8459954846",
+    "9789875782211",
+    "9734671944",
+    "9788256018406",
+    "999405449X",
+    "9788420437484",
+    "9788535932188",
+    "5170916124",
+    "9788792064165",
+    "9788447301355",
+    "8448704037",
+    "9789608397934",
+    "9780394752846",
+    "8466000518",
+    "9029089466",
+    "8535932186",
+    "6073151497",
+    "8520002986",
+    "9789505571338",
+    "9789642249084",
+    "9750810600",
+    "8466304630",
+    "9786071126559",
+    "9786094276224",
+    "9789174990485",
+    "9788466000512",
+    "9789802763689",
+    "9788466319058",
+    "9788328714021",
+    "9789877382570",
+    "9802763683",
+    "9642249081",
+    "8256018402",
+    "3518025597",
+    "9875782211",
+    "9781535105873",
+    "9788437604572",
+    "9787536689824",
+    "8420602663",
+    "8661050626",
+    "9788466000505",
+    "9176450864",
+    "9789707311183",
+    "846600050X",
+    "9788402067401",
+    "9788073639105",
+    "9788435004459",
+    "9681902009",
+    "9783518379622",
+    "9789985036044",
+    "9788420602660",
+    "9789871106547",
+    "8020408991",
+    "9788466304634",
+    "8435001458",
+    "9802763675",
+    "9782070216741",
+    "9922605503",
+    "5778400926",
+    "9781548833152",
+    "950557133X",
+    "9788020408990",
+    "9788481303070",
+    "8420437484",
+    "8328714027",
+    "8466331905",
+    "9788420405940",
+    "9877382571",
+    "9786073151498",
+    "8792064167",
+    "9592605335",
+    "9788475514154",
+    "9788477355571",
+    "9788420421520",
+    "9789682200465"
+   ],
+   "key": "/works/OL14860424W",
+   "language": [
+    "heb",
+    "ukr",
+    "ara",
+    "fin",
+    "fre",
+    "srp",
+    "dut",
+    "pol",
+    "gre",
+    "nor",
+    "est",
+    "eng",
+    "rum",
+    "spa",
+    "tur",
+    "per",
+    "por",
+    "ger",
+    "lit",
+    "swe",
+    "bul",
+    "rus",
+    "arm",
+    "dan",
+    "ita",
+    "cze",
+    "chi",
+    "geo"
+   ],
+   "publisher": [
+    "Einaudi",
+    "Solum Forlag",
+    "Edhasa",
+    "Suma de Letras",
+    "Círculo de Lectores",
+    "La Repubblica",
+    "Avon",
+    "CSIC",
+    "Yapı Kredi Yayınları",
+    "Ediciones B",
+    "Bibliotex",
+    "Cátedra",
+    "Loki-kirjat",
+    "Casa de las Américas",
+    "Gallimard",
+    "Planeta DeAgostini",
+    "Suhrkamp",
+    "Cavalo de Ferro",
+    "RBA",
+    "Origen/Planeta",
+    "Altaya",
+    "علم",
+    "არეტე",
+    "Kitos knygos",
+    "Punto de Lectura",
+    "Leer-e",
+    "Skjødt Forlag",
+    "Alfaguara",
+    "Opera",
+    "כרמל",
+    "Агата-А",
+    "Can Yayınları",
+    "Sezam Book",
+    "Mladá fronta",
+    "Dokořán",
+    "ASALE",
+    "АСТ",
+    "Altaya Polska",
+    "Alianza",
+    "Vintage",
+    "Անտարես",
+    "Фоліо",
+    "RAE",
+    "منشورات الجمل",
+    "Companhia das Letras",
+    "Biblioteca Ayacucho",
+    "ALLCA XX",
+    "Seix Barral",
+    "Pantheon Books",
+    "De Agostini Polska",
+    "Createspace Independent Publishing Platform",
+    "ممدوح عدوان",
+    "Plaza & Janés",
+    "Fondo de Cultura Económica de Argentina",
+    "Modernista",
+    "Collins",
+    "Аграф",
+    "Худож. Лит-ра",
+    "Polirom",
+    "Bruguera",
+    "Civilização Brasileira",
+    "重庆出版社",
+    "Muza",
+    "Kosmos",
+    "Debolsillo",
+    "Cátedra",
+    "Sudamericana",
+    "Meulenhoff",
+    "GEDI",
+    "CreateSpace Independent Publishing Platform",
+    "Planeta",
+    "French & European Publications",
+    "Harvill Press",
+    "Koolibri"
+   ],
+   "title": "Rayuela",
+   "subject": [
+    "Chronology",
+    "Social life and customs",
+    "Spanish fiction",
+    "Argentine fiction",
+    "Translations into English",
+    "Manners and customs",
+    "Fiction",
+    "Fiction, general",
+    "Fiction (fictional works by one author)",
+    "Fiction, suspense",
+    "Fiction, thrillers, suspense",
+    "Man-woman relationships",
+    "Hospitales psiquiatricos",
+    "Relaciones hombre-mujer",
+    "Employees",
+    "Psychiatric hospitals",
+    "Argentinos",
+    "Literary",
+    "Novela",
+    "Empleados",
+    "Argentines",
+    "Cortazar, julio, 1914-1984",
+    "French literature, history and criticism",
+    "Spanish language books",
+    "Ficción"
+   ],
+   "ratings_average": 4.230769,
+   "editions": {
+    "numFound": 129,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47684105M",
+      "title": "Rayuela",
+      "cover_i": 15103307,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alfaguara"
+      ],
+      "publish_date": [
+       "2000"
+      ],
+      "isbn": [
+       "9789681902001",
+       "9681902009"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL626719A"
+   ],
+   "author_name": [
+    "Rita Gnutzmann"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1989,
+   "isbn": [
+    "842051912X",
+    "9788420519128"
+   ],
+   "key": "/works/OL3653865W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Alhambra"
+   ],
+   "title": "Rayuela, Julio Cortázar",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL1201855M",
+      "title": "Rayuela, Julio Cortázar",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alhambra"
+      ],
+      "publish_date": [
+       "1989"
+      ],
+      "isbn": [
+       "842051912X",
+       "9788420519128"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL6452493A"
+   ],
+   "author_name": [
+    "Luisa Fernanda Espina"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2001,
+   "isbn": [
+    "9583008052",
+    "9789583008054"
+   ],
+   "key": "/works/OL13592326W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Panamericana Editorial"
+   ],
+   "title": "Rayuela, Julio Cortázar",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL22468053M",
+      "title": "Rayuela, Julio Cortázar",
+      "subtitle": "estudio literario",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Panamericana Editorial"
+      ],
+      "publish_date": [
+       "2001"
+      ],
+      "isbn": [
+       "9583008052",
+       "9789583008054"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL6452493A"
+   ],
+   "author_name": [
+    "Luisa Fernanda Espina"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2001,
+   "isbn": [
+    "9789583008054",
+    "9583008052",
+    "9789583007828",
+    "958300782X"
+   ],
+   "key": "/works/OL13592325W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Panamericana Editorial"
+   ],
+   "title": "Estudio literario",
+   "subject": [
+    "Criticism and interpretation",
+    "Crítica e interpretación"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL23010577M",
+      "title": "Estudio literario",
+      "subtitle": "Rayuela, Julio Cortázar",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Panamericana Editorial"
+      ],
+      "publish_date": [
+       "2001"
+      ],
+      "isbn": [
+       "958300782X",
+       "9583008052",
+       "9789583007828",
+       "9789583008054"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL1819183A"
+   ],
+   "author_name": [
+    "Brody, Robert."
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1976,
+   "isbn": [
+    "9780729300148",
+    "0729300145"
+   ],
+   "key": "/works/OL6720423W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Grant and Cutler : Tamesis"
+   ],
+   "title": "Julio Cortazar, Rayuela",
+   "ratings_average": 4.5,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL4597169M",
+      "title": "Julio Cortazar, Rayuela",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Grant and Cutler : Tamesis"
+      ],
+      "publish_date": [
+       "1976"
+      ],
+      "isbn": [
+       "0729300145",
+       "9780729300148"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL1819183A"
+   ],
+   "author_name": [
+    "Brody, Robert."
+   ],
+   "cover_edition_key": "OL21926459M",
+   "cover_i": 8500532,
+   "edition_count": 1,
+   "first_publish_year": 1976,
+   "isbn": [
+    "9780729300148",
+    "0729300145"
+   ],
+   "key": "/works/OL6720424W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Grant & Cutler in association with Tamesis Books"
+   ],
+   "title": "Julio Cortázar, Rayuela",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21926459M",
+      "title": "Julio Cortázar, Rayuela",
+      "cover_i": 8500532,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Grant & Cutler in association with Tamesis Books"
+      ],
+      "publish_date": [
+       "1976"
+      ],
+      "isbn": [
+       "0729300145",
+       "9780729300148"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2631008A"
+   ],
+   "author_name": [
+    "Julio Cortázar"
+   ],
+   "cover_edition_key": "OL39485084M",
+   "cover_i": 12890259,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9870430414",
+    "9789870430414"
+   ],
+   "key": "/works/OL28769461W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Alfaguara"
+   ],
+   "title": "Clases de literatura",
+   "subject": [
+    "Modern Literature",
+    "History and criticism",
+    "Spanish American literature",
+    "Littérature hispano-américaine",
+    "Histoire et critique"
+   ],
+   "ratings_average": 4.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39485084M",
+      "title": "Clases de literatura",
+      "subtitle": "Berkeley, 1980",
+      "cover_i": 12890259,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Alfaguara"
+      ],
+      "publish_date": [
+       "2013"
+      ],
+      "isbn": [
+       "9789870430414",
+       "9870430414"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL6980480A"
+   ],
+   "author_name": [
+    "Robert Brody"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 1971,
+   "key": "/works/OL45407134W",
+   "language": [
+    "eng"
+   ],
+   "title": "Julio Cortázar in his Rayuela",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61875166M",
+      "title": "Julio Cortázar in his Rayuela",
+      "language": [
+       "eng"
+      ],
+      "publish_date": [
+       "1971"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL13122103A"
+   ],
+   "author_name": [
+    "Silke Strack"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2009,
+   "isbn": [
+    "3640384180",
+    "9783640384181"
+   ],
+   "key": "/works/OL36536832W",
+   "language": [
+    "ger"
+   ],
+   "publisher": [
+    "GRIN Verlag GmbH"
+   ],
+   "title": "Postmoderne Merkmale in Julio Cortazars 'Rayuela'",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL49384580M",
+      "title": "Postmoderne Merkmale in Julio Cortazars 'Rayuela'",
+      "language": [
+       "ger"
+      ],
+      "publisher": [
+       "GRIN Verlag GmbH"
+      ],
+      "publish_date": [
+       "2009"
+      ],
+      "isbn": [
+       "9783640384181",
+       "3640384180"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL29809A"
+   ],
+   "author_name": [
+    "Harold Bloom"
+   ],
+   "cover_edition_key": "OL22618695M",
+   "cover_i": 10577183,
+   "edition_count": 1,
+   "first_publish_year": 2004,
+   "isbn": [
+    "0791081346",
+    "9780791081341"
+   ],
+   "key": "/works/OL14942303W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Chelsea House Publishers"
+   ],
+   "title": "Julio Cortázar",
+   "subject": [
+    "Criticism and interpretation",
+    "Cortazar, julio, 1914-1984"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL22618695M",
+      "title": "Julio Cortázar",
+      "cover_i": 10577183,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Chelsea House Publishers"
+      ],
+      "publish_date": [
+       "2004"
+      ],
+      "isbn": [
+       "0791081346",
+       "9780791081341"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

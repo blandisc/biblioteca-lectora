@@ -1,0 +1,30 @@
+{
+ "type": {
+  "key": "/type/work"
+ },
+ "title": "HOMO DEUS. BREVE HISTORIA DEL MAÑANA",
+ "authors": [
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL3778242A"
+   }
+  }
+ ],
+ "key": "/works/OL28967209W",
+ "covers": [
+  13552439
+ ],
+ "latest_revision": 3,
+ "revision": 3,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2022-10-16T13:00:19.973325"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2023-05-18T08:41:44.700543"
+ }
+}

@@ -1,0 +1,141 @@
+{
+ "description": {
+  "type": "/type/text",
+  "value": "Like Water for Chocolate (Spanish: Como agua para chocolate) is a novel by Mexican novelist and screenwriter Laura Esquivel.\r\n\r\nThe novel follows the story of a young girl named Tita, who longs for her lover, Pedro, but can never have him because of her mother's upholding of the family tradition: the youngest daughter cannot marry, but instead must take care of her mother until she dies. Tita is only able to express herself when she cooks.\r\n\r\nEsquivel employs magical realism to combine the supernatural with the ordinary throughout the novel.\r\n\r\nThe novel won the American Booksellers Book of the Year Award for Adult Trade in 1994."
+ },
+ "links": [
+  {
+   "url": "https://www.sparknotes.com/lit/likewater/",
+   "title": "sparknotes.com/lit/likewater/",
+   "type": {
+    "key": "/type/link"
+   }
+  },
+  {
+   "url": "https://en.wikipedia.org/wiki/Like_Water_for_Chocolate_(novel)",
+   "title": "[x]Like Water for Chocolate - Wikipedia",
+   "type": {
+    "key": "/type/link"
+   }
+  }
+ ],
+ "title": "Como agua para chocolate",
+ "covers": [
+  8372632,
+  12361231,
+  10742333,
+  -1
+ ],
+ "subject_places": [
+  "Mexico",
+  "San Antonio",
+  "Texas"
+ ],
+ "subjects": [
+  "virginity",
+  "magical realism",
+  "Self-growth",
+  "violence",
+  "passion",
+  "rebellion",
+  "food",
+  "Mexican cuisine",
+  "love at first sight",
+  "Fiction",
+  "familia",
+  "mexican cookery",
+  "mothers and daughters",
+  "sisters",
+  "Social life and customs",
+  "Cuentos de amor",
+  "Family",
+  "Family life",
+  "Man-woman relationships",
+  "Ficción",
+  "Drama",
+  "Mexican Cooking",
+  "Families",
+  "Love",
+  "Películas cinematográficas",
+  "Novela",
+  "Love stories",
+  "Literature",
+  "Cooking",
+  "Man-woman relationship",
+  "Cocina",
+  "Familias",
+  "Belletristische Darstellung",
+  "Frau",
+  "Kochen",
+  "Alltag",
+  "Manners and customs",
+  "Fiction, general",
+  "Fiction, romance, regional",
+  "Mexico, fiction",
+  "Large type books",
+  "Madre e hija",
+  "Hermanas",
+  "Cocina mexicana",
+  "Teen fiction",
+  "World literature",
+  "Fiction subjects",
+  "Peoples & cultures - fiction",
+  "Fiction, romance, general",
+  "Romance fiction"
+ ],
+ "subject_people": [
+  "Josefita de la Garza",
+  "Pedro Muzquiz",
+  "Elena de la Garza",
+  "Gertrudis de la Garza",
+  "Rosaura de la Garza",
+  "John Brown",
+  "Nacha",
+  "Chencha",
+  "Roberto Muzquiz",
+  "Esperanza Muzquiz",
+  "Alex Brown",
+  "Nicolas",
+  "Juan Alejandrez",
+  "Jesus Martinez"
+ ],
+ "key": "/works/OL953162W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL85306A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "excerpts": [
+  {
+   "comment": "First paragraph",
+   "excerpt": "Take care to chop the onion fine. To keep from crying when you chop it (which is so annoying!), I suggest you place a little bit on your head. The trouble with crying over an onion is that once the chopping gets you started and the tears begin to well up, the next thing you know you just can't stop. I don't know whether that's ever happened to you, but I have to confess it's happened to me, many times. Mama used to say it was because I was expecially sensitive to onions, like my great-aunt Tita.",
+   "pages": "5",
+   "author": {
+    "key": "/people/sklibrarian"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "genres": [
+  "/tags/OL167T",
+  "/tags/OL177T",
+  "/tags/OL174T"
+ ],
+ "latest_revision": 55,
+ "revision": 55,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-12-09T17:31:27.171073"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2026-08-30T14:29:37.313835"
+ }
+}

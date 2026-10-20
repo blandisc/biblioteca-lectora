@@ -1,0 +1,27 @@
+{
+ "type": {
+  "key": "/type/work"
+ },
+ "title": "Estuche Trilogía de Los Tres Cuerpos : el Problema de Los Tres Cuerpos; el Bosque Oscuro; el Fin de la Muerte) / Three-Body Problem Boxed Set",
+ "authors": [
+  {
+   "type": {
+    "key": "/type/author_role"
+   },
+   "author": {
+    "key": "/authors/OL7044246A"
+   }
+  }
+ ],
+ "key": "/works/OL37743883W",
+ "latest_revision": 2,
+ "revision": 2,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2024-02-01T00:11:55.636527"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2024-07-05T13:39:04.437088"
+ }
+}

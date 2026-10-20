@@ -1,0 +1,606 @@
+{
+ "numFound": 6,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 6,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL199285A"
+   ],
+   "author_name": [
+    "Juan Rulfo"
+   ],
+   "cover_edition_key": "OL18434271M",
+   "cover_i": 5419076,
+   "edition_count": 134,
+   "first_publish_year": 1955,
+   "isbn": [
+    "9798663628426",
+    "080216093X",
+    "9780802131195",
+    "9500718049",
+    "9781480256507",
+    "9789188753762",
+    "9781508967347",
+    "9681649508",
+    "9685208514",
+    "9786020363349",
+    "1517162041",
+    "0320066541",
+    "9798657168310",
+    "0802132162",
+    "9780394174464",
+    "9798672931975",
+    "8437502268",
+    "9681605020",
+    "9789685208512",
+    "1511467959",
+    "1508919380",
+    "8416575223",
+    "1983675601",
+    "2070285987",
+    "9780802132161",
+    "9780802143518",
+    "351801434X",
+    "9788408045755",
+    "9789681649500",
+    "9798663970945",
+    "9798662807327",
+    "9798664098570",
+    "1781253161",
+    "9798663626415",
+    "8467025492",
+    "9789583007866",
+    "9781800812871",
+    "9781983675607",
+    "9789681605018",
+    "0390764248",
+    "1480256501",
+    "9788432055201",
+    "8401013755",
+    "9681605012",
+    "9654074303",
+    "1514731460",
+    "9601616519",
+    "9781985003903",
+    "9798643001706",
+    "9789654074308",
+    "918875376X",
+    "1985003902",
+    "1542513936",
+    "9788416575220",
+    "840804575X",
+    "8408001795",
+    "9780525566526",
+    "9788493442606",
+    "9788401013751",
+    "9798672931968",
+    "9798664095791",
+    "9798664075472",
+    "9788483062760",
+    "9780802160935",
+    "9798663968393",
+    "9798663863339",
+    "6020363341",
+    "9798452384724",
+    "8402078613",
+    "8437604184",
+    "9781542513937",
+    "9798485123963",
+    "9789601616513",
+    "9788432021183",
+    "9788433920706",
+    "9780320066542",
+    "9798663866958",
+    "1800812876",
+    "9781511467957",
+    "9783518014349",
+    "9798664331769",
+    "8432022365",
+    "9798664340433",
+    "9788408001799",
+    "9681617169",
+    "8433920707",
+    "1852422742",
+    "9786050905090",
+    "1508967342",
+    "9798539552725",
+    "9798664097313",
+    "0802131190",
+    "8483062763",
+    "9788437502267",
+    "1523822414",
+    "9781508919384",
+    "0802143512",
+    "9798664330274",
+    "9788402078612",
+    "9789500718042",
+    "9789504900283",
+    "9788475060927",
+    "9798663295468",
+    "9781523822416",
+    "9781514731468",
+    "6050905096",
+    "9798655364523",
+    "8437625955",
+    "9798663104197",
+    "9788437604183",
+    "9781514385968",
+    "9798657596861",
+    "9789681605025",
+    "9788467025491",
+    "8493442607",
+    "9685208557",
+    "9781781253168",
+    "8432021180",
+    "1516961609",
+    "9798664326444",
+    "9780802133908",
+    "9504900283",
+    "9789580204923",
+    "9788432022364",
+    "9580204926",
+    "8432055204",
+    "9798664328813",
+    "9781852427269",
+    "1852427264",
+    "0394174461",
+    "9798664333190",
+    "9789681617165",
+    "9798664907117",
+    "9781516961603",
+    "0802133908",
+    "9781852422745",
+    "9781847655455",
+    "9798657384017",
+    "1847655459",
+    "9788437625959",
+    "052556652X",
+    "9782070285983",
+    "9780390764249",
+    "8475060927",
+    "9781517162047",
+    "9789685208550",
+    "9583007862",
+    "1514385961"
+   ],
+   "key": "/works/OL1731119W",
+   "language": [
+    "swe",
+    "fre",
+    "heb",
+    "ger",
+    "eng",
+    "gle",
+    "spa",
+    "gre"
+   ],
+   "publisher": [
+    "Serpent's Tail",
+    "Fondo de Cultura Económica",
+    "Fondo de Cultura Económcia",
+    "Plaza & Janes Editories Sa",
+    "Random House~trade",
+    "Bruguera",
+    "Serpent's Tail Limited",
+    "Fondo de Cultura Económica",
+    "Editorial Planeta",
+    "Advanced Marketing s De Rl De Cv",
+    "RM Verlag, S.L",
+    "Cátedra",
+    "CreateSpace Independent Publishing Platform",
+    "Plaza & Janés",
+    "Gramedia Pustaka Utama",
+    "Editorial América",
+    "Continental Book Company",
+    "Grove/Atlantic, Incorporated",
+    "Panamericana Editorial",
+    "Ediciones Cátedra",
+    "Grove",
+    "fundo de cultura economica",
+    "Gallimard",
+    "Independently Published",
+    "Calder",
+    "French & European Pubns",
+    "Lindelöws bokförlag",
+    "Catedra",
+    "Planeta",
+    "Editorial RM",
+    "Serpents Tail",
+    "Plymbridge Distributors Ltd.",
+    "Tezontle",
+    "Grove Press",
+    "Sine nomine",
+    "Vintage Espanol",
+    "Editorial Anagrama",
+    "Suhrkamp",
+    "Fondo De Cultura Economica USA",
+    "TURNER PUBLICACIONES S.L.",
+    "Appleton-Century-Crofts",
+    "Ediciones Catedra S.A.",
+    "Cátedra",
+    "Fundación Juan Rulfo",
+    "Coiscéim",
+    "Sudamericana",
+    "Grove Weidenfeld",
+    "Karmel",
+    "Dogan Kitap",
+    "Editorial Rm Rio Panuko",
+    "Austral/ Editorial Planeta SA",
+    "Pataki",
+    "fundarte"
+   ],
+   "title": "Pedro Páramo",
+   "subject": [
+    "Ficción",
+    "Fiction",
+    "Readers",
+    "Spanish language",
+    "Translations into Irish",
+    "Jalisco (México)",
+    "Peasants",
+    "Campesinos",
+    "Fiction, family life",
+    "Mexico, fiction",
+    "Despotisme",
+    "Romans, nouvelles",
+    "Fantastique",
+    "Histoires de fantômes",
+    "Fiction, family life, general",
+    "Mexican fiction",
+    "Spanish imprints",
+    "Spanish language, readers",
+    "Fiction, general",
+    "Campesinado",
+    "Novela",
+    "Novela mexicana",
+    "Literatura mexicana",
+    "Spanish language books",
+    "Film and video adaptations"
+   ],
+   "ratings_average": 4.137931,
+   "editions": {
+    "numFound": 134,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL21626163M",
+      "title": "Pedro Páramo",
+      "cover_i": 10626596,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Fondo de Cultura Económica"
+      ],
+      "publish_date": [
+       "1981"
+      ],
+      "isbn": [
+       "8437502268",
+       "9788437502267"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL199285A"
+   ],
+   "author_name": [
+    "Juan Rulfo"
+   ],
+   "cover_edition_key": "OL9112346M",
+   "cover_i": 4901502,
+   "edition_count": 25,
+   "first_publish_year": 1969,
+   "isbn": [
+    "9789684060234",
+    "9788432070181",
+    "8408001795",
+    "9788432204746",
+    "8403870450",
+    "8408041797",
+    "852190603X",
+    "9788408026716",
+    "9788408001799",
+    "9780061565410",
+    "8408066439",
+    "9789504900283",
+    "8408026712",
+    "9788408066439",
+    "9789507312144",
+    "9504900283",
+    "9789507312748",
+    "9789507420665",
+    "8408048287",
+    "9788403870451",
+    "8432070181",
+    "9507312749",
+    "9788432221873",
+    "9788408048282",
+    "9788408041795",
+    "9788432063343",
+    "8432021180",
+    "9788432071331",
+    "9507312145",
+    "9507420665",
+    "9788521906032",
+    "9788432021183",
+    "8432221872",
+    "8432071331",
+    "9875801623",
+    "9684060238",
+    "9789875801622",
+    "8432204749",
+    "8432063347",
+    "0061565415"
+   ],
+   "key": "/works/OL1731097W",
+   "language": [
+    "spa",
+    "por",
+    "eng"
+   ],
+   "publisher": [
+    "Fondo de Cultura Económica",
+    "Paz e Terra",
+    "Editorial Planeta",
+    "Planeta",
+    "Seix Barral",
+    "TEXONTLE",
+    "Editorial Planeta, S.A. (Barcelona)",
+    "Aguilar",
+    "Lectorum Pubns",
+    "Editorial Seix Barral",
+    "Planeta Pub Corp",
+    "Booket",
+    "Rayo"
+   ],
+   "title": "Pedro Páramo / El llano en llamas",
+   "subject": [
+    "Ficção hispano-americana"
+   ],
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 25,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL32132355M",
+      "title": "Pedro Páramo y El llano en llamas",
+      "cover_i": 10795118,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Planeta"
+      ],
+      "publish_date": [
+       "1980"
+      ],
+      "isbn": [
+       "9788432071331",
+       "8432071331"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL199285A"
+   ],
+   "author_name": [
+    "Juan Rulfo"
+   ],
+   "cover_edition_key": "OL61002630M",
+   "cover_i": 15154618,
+   "edition_count": 2,
+   "first_publish_year": 1977,
+   "isbn": [
+    "9402325735",
+    "9789402325737"
+   ],
+   "key": "/works/OL44662792W",
+   "language": [
+    "heb",
+    "dut"
+   ],
+   "publisher": [
+    "Sine nomine",
+    "J.M. Meulenhoff"
+   ],
+   "title": "Pedro Paramo",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61002630M",
+      "title": "Pedro Paramo",
+      "cover_i": 15154618,
+      "language": [
+       "dut"
+      ],
+      "publisher": [
+       "J.M. Meulenhoff"
+      ],
+      "publish_date": [
+       "06-03-2026"
+      ],
+      "isbn": [
+       "9789402325737",
+       "9402325735"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL199285A"
+   ],
+   "author_name": [
+    "Juan Rulfo"
+   ],
+   "cover_edition_key": "OL9331547M",
+   "cover_i": 156903,
+   "edition_count": 1,
+   "first_publish_year": 2002,
+   "isbn": [
+    "0292771215",
+    "9780292771215"
+   ],
+   "key": "/works/OL1731105W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "University of Texas Press"
+   ],
+   "title": "Pedro Páramo (Wittliff Gallery of Southwestern and Mexican Photography Series)",
+   "subject": [
+    "Mexico, fiction"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9331547M",
+      "title": "Pedro Páramo (Wittliff Gallery of Southwestern and Mexican Photography Series)",
+      "cover_i": 156903,
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "University of Texas Press"
+      ],
+      "publish_date": [
+       "November 1, 2002"
+      ],
+      "isbn": [
+       "9780292771215",
+       "0292771215"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL199285A"
+   ],
+   "author_name": [
+    "Juan Rulfo"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9786078295180",
+    "6078295187",
+    "8492480890",
+    "9788492480890"
+   ],
+   "key": "/works/OL32832574W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Fundación Juan Rulfo",
+    "Universidad Nacional Autónoma de México",
+    "Editorial RM"
+   ],
+   "title": "Pedro Páramo en 1954",
+   "subject": [
+    "Criticism and interpretation"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL44661233M",
+      "title": "Pedro Páramo en 1954",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Universidad Nacional Autónoma de México",
+       "Fundación Juan Rulfo",
+       "Editorial RM"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9786078295180",
+       "9788492480890",
+       "6078295187",
+       "8492480890"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3202985A",
+    "OL3017016A"
+   ],
+   "author_name": [
+    "Rulfo",
+    "Juan"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "1937482960",
+    "9781937482961"
+   ],
+   "key": "/works/OL37485668W",
+   "language": [
+    "eng"
+   ],
+   "publisher": [
+    "Editora Continental"
+   ],
+   "title": "Pedro Páramo (spanish Edition)",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL50507399M",
+      "title": "Pedro Páramo (spanish Edition)",
+      "language": [
+       "eng"
+      ],
+      "publisher": [
+       "Editora Continental"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9781937482961",
+       "1937482960"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

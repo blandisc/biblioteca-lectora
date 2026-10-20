@@ -1,0 +1,619 @@
+{
+ "numFound": 8,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 8,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Los detectives salvajes Roberto Bolaño",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL56795A"
+   ],
+   "author_name": [
+    "Roberto Bolaño"
+   ],
+   "cover_edition_key": "OL84382M",
+   "cover_i": 3706128,
+   "edition_count": 50,
+   "first_publish_year": 1998,
+   "isbn": [
+    "9789933352707",
+    "8679581402",
+    "0330509527",
+    "9600349975",
+    "0330445146",
+    "9788679581747",
+    "9750739035",
+    "9532860479",
+    "142993445X",
+    "9789651322495",
+    "9789750739033",
+    "4560090084",
+    "9781429934459",
+    "9780330445146",
+    "8845928721",
+    "8679581747",
+    "9788447360901",
+    "9788702089462",
+    "9651322497",
+    "1784879525",
+    "9788420423937",
+    "0307476111",
+    "8256015977",
+    "8702089467",
+    "9524831198",
+    "9780374191481",
+    "8466337113",
+    "9780307476111",
+    "0330445154",
+    "9784560090084",
+    "9788374957960",
+    "0312427484",
+    "1433292653",
+    "9788433910868",
+    "9781466804852",
+    "1466804858",
+    "8025701689",
+    "2823613137",
+    "9789753426305",
+    "9788433966636",
+    "9781447202851",
+    "9780330445153",
+    "9789589909119",
+    "9781433292651",
+    "3423131829",
+    "9789573270348",
+    "8420423939",
+    "8433966634",
+    "0374191484",
+    "9789600349979",
+    "9788679581402",
+    "9783446201255",
+    "9788466337113",
+    "9789612424350",
+    "9985032292",
+    "9788845928727",
+    "8374957964",
+    "9753426305",
+    "9789688674147",
+    "9789524831192",
+    "9688674141",
+    "8447360903",
+    "9933352709",
+    "9589909116",
+    "9780312427481",
+    "9780330509527",
+    "9789532860474",
+    "9783423131827",
+    "8422676842",
+    "1447202856",
+    "9789731024004",
+    "9788256015979",
+    "9612424357",
+    "3446201254",
+    "9788420476445",
+    "9781784879525",
+    "9782823613131",
+    "8420476447",
+    "8433910868",
+    "9788422676843",
+    "957327034X",
+    "9784560090091",
+    "4560090092",
+    "9789985032299",
+    "973102400X",
+    "9788025701683"
+   ],
+   "key": "/works/OL712032W",
+   "language": [
+    "rum",
+    "srp",
+    "gre",
+    "pol",
+    "tur",
+    "dan",
+    "cze",
+    "ara",
+    "fre",
+    "slv",
+    "eng",
+    "nor",
+    "ger",
+    "spa",
+    "chi",
+    "jpn",
+    "est",
+    "heb",
+    "ita",
+    "hrv",
+    "fin"
+   ],
+   "publisher": [
+    "Gyldendal",
+    "LOM",
+    "Farrar, Straus and Giroux",
+    "Debolsillo",
+    "Círculo de Lectores",
+    "Adelphi",
+    "Vuković & Runjić",
+    "遠流",
+    "Anagrama",
+    "Pan MacMillan",
+    "Leda",
+    "Penguin Random House",
+    "白水社",
+    "Študentska Založba",
+    "Vintage Español",
+    "Éditions de l'Olivier",
+    "Metis",
+    "منشورات الجمل",
+    "Καστανιώτης",
+    "Can Yayınları",
+    "Blackstone Audio",
+    "RBA",
+    "Sammakko",
+    "Alfaguara",
+    "Argo",
+    "Koolibri",
+    "Muza",
+    "Picador",
+    "Solum",
+    "Hanser",
+    "Deutscher Taschenbuch Verlag",
+    "עם עובד"
+   ],
+   "title": "Los detectives salvajes",
+   "subject": [
+    "Fiction, mystery & detective, general",
+    "Mexico city (mexico), fiction",
+    "Authors, fiction",
+    "Fiction",
+    "Fugitives from justice",
+    "Latin American poetry",
+    "Underground literature",
+    "Mexican Poets",
+    "Fiction, psychological",
+    "Missing persons, fiction",
+    "Poets, Mexican",
+    "Suspense fiction",
+    "Romance literature",
+    "Spanish language materials",
+    "Chilean Short stories",
+    "Cuentos chilenos",
+    "Authors",
+    "Chilean fiction",
+    "Roman chilien",
+    "Detectives",
+    "Novela",
+    "Personas desaparecidas",
+    "Novela chilena",
+    "Literatura chilena",
+    "Literatura clandestina",
+    "Missing persons",
+    "Ficción",
+    "Poesía latinoamericana",
+    "Poetas mexicanos",
+    "Mexico, fiction"
+   ],
+   "ratings_average": 4.25,
+   "editions": {
+    "numFound": 50,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL18587552M",
+      "title": "Los detectives salvajes",
+      "cover_i": 15210072,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Anagrama"
+      ],
+      "publish_date": [
+       "2005"
+      ],
+      "isbn": [
+       "9788433966636",
+       "8433966634"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL6838768A"
+   ],
+   "author_name": [
+    "Ursula Hennigfeld"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2015,
+   "isbn": [
+    "8484899179",
+    "9783954878383",
+    "3954878380",
+    "9788484899174",
+    "9783954874507",
+    "3954874504"
+   ],
+   "key": "/works/OL26508955W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Vervueert",
+    "Iberoamericana Editorial Vervuert",
+    "Iberoamericana"
+   ],
+   "title": "Roberto Bolaño",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61225372M",
+      "title": "Roberto Bolaño",
+      "subtitle": "violencia, escritura, vida",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Iberoamericana",
+       "Vervueert"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9788484899174",
+       "9783954874507",
+       "8484899179",
+       "3954874504"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL7077170A"
+   ],
+   "author_name": [
+    "Montserrat Madariaga Caro"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2010,
+   "isbn": [
+    "9789562847636",
+    "9562847632"
+   ],
+   "key": "/works/OL16498149W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "RIL"
+   ],
+   "title": "Bolaño infra 1975-1977",
+   "subject": [
+    "Travel",
+    "Criticism and interpretation"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25196968M",
+      "title": "Bolaño infra 1975-1977",
+      "subtitle": "los anos que inspiraron Los detectives salvajes",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "RIL"
+      ],
+      "publish_date": [
+       "2010"
+      ],
+      "isbn": [
+       "9789562847636",
+       "9562847632"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL9989653A"
+   ],
+   "author_name": [
+    "Fernando Saucedo Lastra"
+   ],
+   "cover_edition_key": "OL39472693M",
+   "cover_i": 12872072,
+   "edition_count": 2,
+   "first_publish_year": 2015,
+   "isbn": [
+    "3964561789",
+    "8484898172",
+    "6078348604",
+    "9786078348602",
+    "9788484898177",
+    "9788484898863",
+    "8484898865",
+    "9783964561787"
+   ],
+   "key": "/works/OL26508950W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Iberoamericana Editorial Vervuert",
+    "Bonilla Artigas Editores",
+    "Iberoamericana Vervuert"
+   ],
+   "title": "México en la Obra de Roberto Bolaño",
+   "subject": [
+    "Criticism and interpretation",
+    "Homes and haunts",
+    "In literature",
+    "Chilean literature",
+    "History and criticism"
+   ],
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL39472693M",
+      "title": "México en la obra de Roberto Bolaño",
+      "subtitle": "memoria y territorio",
+      "cover_i": 12872072,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Bonilla Artigas Editores",
+       "Iberoamericana Vervuert"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9788484898863",
+       "9786078348602",
+       "9788484898177",
+       "8484898865",
+       "6078348604",
+       "8484898172"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL5716790A"
+   ],
+   "author_name": [
+    "Nieves Vázquez Recio"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2016,
+   "isbn": [
+    "9788494550560",
+    "849455056X"
+   ],
+   "key": "/works/OL45432234W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Del Centro Editores"
+   ],
+   "title": "En el revés",
+   "subject": [
+    "Criticism and interpretation",
+    "Influence",
+    "Influence (Literary, artistic, etc.)"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL61905387M",
+      "title": "En el revés",
+      "subtitle": "Julio Cortázar y Roberto Bolaño",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Del Centro Editores"
+      ],
+      "publish_date": [
+       "2016"
+      ],
+      "isbn": [
+       "9788494550560",
+       "849455056X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL851175A"
+   ],
+   "author_name": [
+    "Walter Bruno Berg"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2014,
+   "isbn": [
+    "9783643125330",
+    "364312533X"
+   ],
+   "key": "/works/OL22911532W",
+   "language": [
+    "ger"
+   ],
+   "publisher": [
+    "Lit"
+   ],
+   "title": "Literarische Transkription",
+   "subject": [
+    "Transcription"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL30821594M",
+      "title": "Literarische Transkription",
+      "subtitle": "Theorie und exemplarische Analysen : Edgardo Rivera Martinez, Jorge Luis Borges, Inca Garcilaso de la Vega, Guillermo Cabrera Infante, Severo Sarduy, Roberto Bolano, Alberto Fuguet, Günter Grass",
+      "language": [
+       "ger"
+      ],
+      "publisher": [
+       "Lit"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9783643125330",
+       "364312533X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL294235A"
+   ],
+   "author_name": [
+    "Sergio Marras"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2011,
+   "isbn": [
+    "9562848388",
+    "9789562848381"
+   ],
+   "key": "/works/OL23260629W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "RiL Editores"
+   ],
+   "title": "El héroe improbable",
+   "subject": [
+    "Criticism and interpretation",
+    "Characters"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL31100249M",
+      "title": "El héroe improbable",
+      "subtitle": "cómo Arturo Belano siempre quiso ser Benno von Archimboldi",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "RiL Editores"
+      ],
+      "publish_date": [
+       "2011"
+      ],
+      "isbn": [
+       "9789562848381",
+       "9562848388"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL2950331A",
+    "OL295423A"
+   ],
+   "author_name": [
+    "Selena Millares",
+    "Anthony Stanton"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2020,
+   "isbn": [
+    "9788491921356",
+    "3968690184",
+    "9783968690186",
+    "8491921354"
+   ],
+   "key": "/works/OL32278970W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Iberoamericana",
+    "Vervuert"
+   ],
+   "title": "La vanguardia y su huella",
+   "subject": [
+    "Experimental Literature",
+    "History and criticism",
+    "Spanish literature",
+    "Latin American literature",
+    "Spanish American literature"
+   ],
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL44026600M",
+      "title": "La vanguardia y su huella",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Iberoamericana",
+       "Vervuert"
+      ],
+      "publish_date": [
+       "2020"
+      ],
+      "isbn": [
+       "9788491921356",
+       "9783968690186",
+       "8491921354",
+       "3968690184"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

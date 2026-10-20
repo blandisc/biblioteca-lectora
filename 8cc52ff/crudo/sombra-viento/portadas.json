@@ -1,0 +1,26 @@
+[
+ {
+  "url": "https://covers.openlibrary.org/b/id/10107644-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 40977,
+  "segundos": 0.69,
+  "sha1": "872d349df41b",
+  "ancho": 327,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL278437W"
+ },
+ {
+  "url": "https://covers.openlibrary.org/b/id/15156378-L.jpg?default=false",
+  "estado": 200,
+  "bytes": 38809,
+  "segundos": 0.22,
+  "sha1": "bcef56c6668e",
+  "ancho": 314,
+  "alto": 500,
+  "formato": "JPEG",
+  "fuente": "ol",
+  "obra": "/works/OL278437W"
+ }
+]

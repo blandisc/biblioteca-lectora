@@ -1,0 +1,545 @@
+{
+ "numFound": 9,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 9,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "Ensayo sobre la ceguera José Saramago",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "cover_edition_key": "OL30674740M",
+   "cover_i": 10482411,
+   "edition_count": 40,
+   "first_publish_year": 1995,
+   "isbn": [
+    "9789681908713",
+    "9780547554884",
+    "0786218347",
+    "2020289520",
+    "1721315543",
+    "2020403439",
+    "8973372122",
+    "9788973372126",
+    "9789896604011",
+    "8571644950",
+    "1860466850",
+    "9781860466854",
+    "9788495501073",
+    "9780099573586",
+    "0156007754",
+    "9788466321495",
+    "9781602834446",
+    "9783498063184",
+    "9789505116720",
+    "0547554885",
+    "9789681904548",
+    "9781860462986",
+    "9707311150",
+    "009957358X",
+    "8495501074",
+    "8543801214",
+    "9782020403436",
+    "9870400442",
+    "1860462979",
+    "6052980818",
+    "9789755109282",
+    "1860462987",
+    "8466350977",
+    "9722110217",
+    "9681904540",
+    "9781860462979",
+    "9871106173",
+    "9789707311152",
+    "9783499224676",
+    "8490628726",
+    "9789722110211",
+    "9789870400448",
+    "3499224674",
+    "8466306439",
+    "8420428655",
+    "8463312161",
+    "8466321497",
+    "9788420428659",
+    "160283444X",
+    "9788466350976",
+    "9788571644953",
+    "9896604010",
+    "9681908716",
+    "9788490628720",
+    "9780151002511",
+    "0151002517",
+    "9782020289528",
+    "9789871106172",
+    "9788543801216",
+    "054753759X",
+    "9781721315543",
+    "0156035588",
+    "9788466306430",
+    "9780156035583",
+    "9505116721",
+    "9780156007757",
+    "9780786218349",
+    "3498063189",
+    "9786052980811",
+    "9755109285",
+    "9780547537597"
+   ],
+   "key": "/works/OL27420W",
+   "language": [
+    "spa",
+    "fre",
+    "por",
+    "kor",
+    "ger",
+    "tur",
+    "eng"
+   ],
+   "publisher": [
+    "Haenaem",
+    "Alfaguara Ediciones, S.A. (Spain)",
+    "Vintage Classics",
+    "Rowohlt Taschenbuch Verlag GmbH",
+    "Blackstone on Brilliance Audio",
+    "Kırmızı Kedi",
+    "Ediciones Santillana, S.A.",
+    "Punto de lectura",
+    "Caminho",
+    "Suma de Letras",
+    "Harcourt Brace & Company",
+    "BBC Audiobooks America",
+    "Debolsillo",
+    "Leya",
+    "Harvill Pr",
+    "Seuil",
+    "Can",
+    "BBC Audiobooks",
+    "Aguilar, Altea, Taurus, Alfaguara, S.A. de C.",
+    "Krmz Kedi",
+    "Harvill Press",
+    "Punto de Lectura",
+    "Rowohlt Taschenbuch Verlag",
+    "Harvest Books",
+    "Alfaguara",
+    "Harcourt Brace & Co.",
+    "Thorndike Press",
+    "Rowohlt, Reinbek",
+    "Houghton Mifflin Harcourt Publishing Company",
+    "Houghton Mifflin Harcourt Trade & Reference Publishers",
+    "Companhia das Letras",
+    "Houghton Mifflin Harcourt"
+   ],
+   "title": "Ensaio Sobre a Cegueira",
+   "subject": [
+    "Blind",
+    "Blindness",
+    "Fiction",
+    "Modern Literature",
+    "Allegories",
+    "Psychological fiction",
+    "Psychology",
+    "Epidemics",
+    "Survival",
+    "Blind in literature",
+    "Violence",
+    "Large type books",
+    "Novela",
+    "Portugal",
+    "Dystopian",
+    "Literary Fiction",
+    "Disease Outbreaks"
+   ],
+   "ratings_average": 4.2093024,
+   "editions": {
+    "numFound": 40,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9153039M",
+      "title": "Ensayo sobre la ceguera",
+      "cover_i": 7912901,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Ediciones Santillana, S.A."
+      ],
+      "publish_date": [
+       "January 31, 2001"
+      ],
+      "isbn": [
+       "9788495501073",
+       "8495501074"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "cover_edition_key": "OL35622372M",
+   "cover_i": 12329495,
+   "edition_count": 1,
+   "first_publish_year": 2015,
+   "isbn": [
+    "9786073139113",
+    "607313911X"
+   ],
+   "key": "/works/OL26382672W",
+   "publisher": [
+    "DEBOLSILLO"
+   ],
+   "title": "ENSAYO SOBRE LA CEGUERA",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35622372M",
+      "title": "ENSAYO SOBRE LA CEGUERA",
+      "cover_i": 12329495,
+      "publisher": [
+       "DEBOLSILLO"
+      ],
+      "publish_date": [
+       "Nov 02, 2015"
+      ],
+      "isbn": [
+       "9786073139113",
+       "607313911X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "cover_edition_key": "OL9347027M",
+   "cover_i": 2270923,
+   "edition_count": 1,
+   "first_publish_year": 2007,
+   "isbn": [
+    "8466312307",
+    "9788466312301"
+   ],
+   "key": "/works/OL7922520W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Punto de Lectura"
+   ],
+   "title": "Ensayo Sobre la Ceguera",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL9347027M",
+      "title": "Ensayo Sobre la Ceguera",
+      "cover_i": 2270923,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Punto de Lectura"
+      ],
+      "publish_date": [
+       "March 2007"
+      ],
+      "isbn": [
+       "9788466312301",
+       "8466312307"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "cover_edition_key": "OL25909245M",
+   "cover_i": 7411541,
+   "edition_count": 1,
+   "first_publish_year": 2009,
+   "isbn": [
+    "8420474495",
+    "9788420474496"
+   ],
+   "key": "/works/OL17333339W",
+   "publisher": [
+    "Alfaguara"
+   ],
+   "title": "Ensayo sobre la ceguera",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL25909245M",
+      "title": "Ensayo sobre la ceguera",
+      "cover_i": 7411541,
+      "publisher": [
+       "Alfaguara"
+      ],
+      "publish_date": [
+       "2009"
+      ],
+      "isbn": [
+       "9788420474496",
+       "8420474495"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A",
+    "OL1934781A"
+   ],
+   "author_name": [
+    "José Saramago",
+    "Basilio Losada"
+   ],
+   "cover_edition_key": "OL27270716M",
+   "cover_i": 8756738,
+   "edition_count": 1,
+   "first_publish_year": 1996,
+   "isbn": [
+    "9789507311420",
+    "9507311424"
+   ],
+   "key": "/works/OL20090684W",
+   "publisher": [
+    "Biblioteca breve"
+   ],
+   "title": "Ensayo sobre la ceguera",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL27270716M",
+      "title": "Ensayo sobre la ceguera",
+      "cover_i": 8756738,
+      "publisher": [
+       "Biblioteca breve"
+      ],
+      "publish_date": [
+       "Aug 17, 1996"
+      ],
+      "isbn": [
+       "9789507311420",
+       "9507311424"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "cover_edition_key": "OL37492110M",
+   "cover_i": 14685214,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "8420460672",
+    "9788420460673"
+   ],
+   "key": "/works/OL27492461W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Penguin Random House Grupo Editorial"
+   ],
+   "title": "Ensayo Sobre la Ceguera / Blindness",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL37492110M",
+      "title": "Ensayo Sobre la Ceguera / Blindness",
+      "cover_i": 14685214,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Penguin Random House Grupo Editorial"
+      ],
+      "publish_date": [
+       "2022"
+      ],
+      "isbn": [
+       "9788420460673",
+       "8420460672"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "cover_edition_key": "OL38221077M",
+   "cover_i": 13727723,
+   "edition_count": 1,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9786071106643",
+    "6071106648"
+   ],
+   "key": "/works/OL27963080W",
+   "publisher": [
+    "Alfaguara"
+   ],
+   "title": "Ensayo Sobre La Ceguera",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL38221077M",
+      "title": "Ensayo Sobre La Ceguera",
+      "cover_i": 13727723,
+      "publisher": [
+       "Alfaguara"
+      ],
+      "publish_date": [
+       "Jun 01, 2013"
+      ],
+      "isbn": [
+       "9786071106643",
+       "6071106648"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "cover_edition_key": "OL31857954M",
+   "cover_i": 10544512,
+   "edition_count": 1,
+   "first_publish_year": 2010,
+   "isbn": [
+    "8466308016",
+    "9788466308014"
+   ],
+   "key": "/works/OL24145915W",
+   "publisher": [
+    "Punto de Lectura"
+   ],
+   "title": "ENSAYO SOBRE LA CEGUERA XL",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL31857954M",
+      "title": "ENSAYO SOBRE LA CEGUERA XL",
+      "cover_i": 10544512,
+      "publisher": [
+       "Punto de Lectura"
+      ],
+      "publish_date": [
+       "May 06, 2010"
+      ],
+      "isbn": [
+       "9788466308014",
+       "8466308016"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL3112635A"
+   ],
+   "author_name": [
+    "José Saramago"
+   ],
+   "edition_count": 1,
+   "first_publish_year": 2007,
+   "isbn": [
+    "9875780715",
+    "9789875780712"
+   ],
+   "key": "/works/OL33740272W",
+   "publisher": [
+    "Punto de Lectura"
+   ],
+   "title": "Ensayo Sobre la Ceguera (Spanish Edition)",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL45707937M",
+      "title": "Ensayo Sobre la Ceguera (Spanish Edition)",
+      "publisher": [
+       "Punto de Lectura"
+      ],
+      "publish_date": [
+       "2007-01-01"
+      ],
+      "isbn": [
+       "9789875780712",
+       "9875780715"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,106 @@
+{
+ "title": "Los detectives salvajes",
+ "covers": [
+  3706128,
+  3199400,
+  1047282,
+  223167,
+  11877289,
+  8067641,
+  10118517,
+  10324236,
+  10467989,
+  10669531,
+  6303621,
+  10153136,
+  8239591,
+  10228094,
+  13264862,
+  13340419,
+  13239373,
+  10853273,
+  7993971,
+  14847764,
+  15195731
+ ],
+ "key": "/works/OL712032W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL56795A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "subjects": [
+  "Fiction, mystery & detective, general",
+  "Mexico city (mexico), fiction",
+  "Authors, fiction",
+  "Fiction",
+  "Fugitives from justice",
+  "Latin American poetry",
+  "Underground literature",
+  "Mexican Poets",
+  "Fiction, psychological",
+  "Missing persons, fiction",
+  "Poets, Mexican",
+  "Suspense fiction",
+  "Romance literature",
+  "Spanish language materials",
+  "Chilean Short stories",
+  "Cuentos chilenos",
+  "Authors",
+  "Chilean fiction",
+  "Roman chilien",
+  "Detectives",
+  "Novela",
+  "Personas desaparecidas",
+  "Novela chilena",
+  "Literatura chilena",
+  "Literatura clandestina",
+  "Missing persons",
+  "Ficción",
+  "Poesía latinoamericana",
+  "Poetas mexicanos",
+  "Mexico, fiction"
+ ],
+ "subject_places": [
+  "Mexico",
+  "Mexico City (Mexico)"
+ ],
+ "lc_classifications": [
+  "PQ"
+ ],
+ "first_publish_date": "2007",
+ "description": "Una clave más del universo literario de Roberto Bolaño, uno de los escritores imprescindibles de la literatura contemporánea en español. Este volumen incluye tres nouvelles inéditas -\"Patria\", \"Sepulcros de vaqueros\" y \"Comedia del horror de Francia\"- en las que está presente lo mejor del genio literario del autor chileno: el Mal, la violencia, la historia, la literatura, la ironía, México, Chile, el amor, el suspense, la búsqueda... a lo que se suma alguno de sus personajes más célebres, como el ubicuo detective salvaje Arturo Belano.\r\n\r\nEnglish translation of Spanish summary:  One more key to the literary universe of Roberto Bolaño, one of the essential writers of Spanish contemporary literature. This volume includes three unpublished novellas - \"Patria,\" \"Sepulcros de vaqueros,\" and \"Comedia del horror de Francia\" -- in which the best of the literary genius of the Chilean author is present: evil, violence, history, literature , irony, Mexico, Chile, love, suspense, search ... to which is added some of his most famous characters, such as the ubiquitous wild detective Arturo Belano",
+ "subject_times": [
+  "Mexico"
+ ],
+ "identifiers": {
+  "librarything": [
+   "174272"
+  ],
+  "wikidata": [
+   "Q898056"
+  ]
+ },
+ "genres": [
+  "/tags/OL175T",
+  "/tags/OL180T"
+ ],
+ "latest_revision": 12,
+ "revision": 12,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-12-09T02:06:51.015712"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2026-09-01T14:14:02.897234"
+ }
+}

@@ -1,0 +1,32 @@
+[
+ {
+  "nombre": "ol-titulo",
+  "url": "https://openlibrary.org/search.json?title=cervantes+don-quijote&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i",
+  "estado": 200,
+  "segundos": 0.46
+ },
+ {
+  "nombre": "ol-q",
+  "url": "https://openlibrary.org/search.json?q=cervantes+don-quijote&limit=10&fields=key%2Ctitle%2Csubtitle%2Cauthor_name%2Cauthor_key%2Cfirst_publish_year%2Cedition_count%2Clanguage%2Csubject%2Ccover_i%2Ccover_edition_key%2Cpublisher%2Cisbn%2Cseries_name%2Cseries_position%2Cratings_average%2Ceditions%2Ceditions.key%2Ceditions.title%2Ceditions.subtitle%2Ceditions.language%2Ceditions.isbn%2Ceditions.publisher%2Ceditions.publish_date%2Ceditions.cover_i",
+  "estado": 200,
+  "segundos": 0.73
+ },
+ {
+  "nombre": "gb-titulo",
+  "url": "https://www.googleapis.com/books/v1/volumes?q=intitle%3A%22cervantes+don-quijote%22&maxResults=10&printType=books",
+  "estado": 429,
+  "segundos": 0.06
+ },
+ {
+  "nombre": "gb-q",
+  "url": "https://www.googleapis.com/books/v1/volumes?q=cervantes+don-quijote&maxResults=10&printType=books",
+  "estado": 429,
+  "segundos": 0.26
+ },
+ {
+  "nombre": "ol-obra",
+  "url": "https://openlibrary.org/works/OL5730500W.json",
+  "estado": 200,
+  "segundos": 0.21
+ }
+]

@@ -1,0 +1,536 @@
+{
+ "numFound": 43,
+ "start": 0,
+ "numFoundExact": true,
+ "num_found": 43,
+ "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+ "q": "",
+ "offset": null,
+ "docs": [
+  {
+   "author_key": [
+    "OL8594537A",
+    "OL21594A",
+    "OL8109513A"
+   ],
+   "author_name": [
+    "Lourdes Íñiguez Barrena",
+    "Jane Austen",
+    "Mónica Armiño"
+   ],
+   "cover_edition_key": "OL47163671M",
+   "cover_i": 13574150,
+   "edition_count": 4,
+   "first_publish_year": 2013,
+   "isbn": [
+    "9788415083696",
+    "8467840560",
+    "9788467840568",
+    "8469833340",
+    "9788469833346",
+    "1544630522",
+    "9781544630526",
+    "8415083696"
+   ],
+   "key": "/works/OL34810920W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform",
+    "Albor Libros",
+    "ANAYA INFANTIL Y JUVENIL"
+   ],
+   "title": "Orgullo y prejuicio",
+   "ratings_average": 3.0,
+   "editions": {
+    "numFound": 4,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47286332M",
+      "title": "Orgullo y prejuicio",
+      "cover_i": 13745414,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Albor Libros"
+      ],
+      "publish_date": [
+       "Sep 14, 2017"
+      ],
+      "isbn": [
+       "9788415083696",
+       "8415083696"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL21594A"
+   ],
+   "author_name": [
+    "Jane Austen"
+   ],
+   "cover_edition_key": "OL56461983M",
+   "cover_i": 15240603,
+   "edition_count": 7,
+   "first_publish_year": 2014,
+   "isbn": [
+    "1537210394",
+    "1544262337",
+    "9781519617897",
+    "9781985400696",
+    "1519617895",
+    "1533003297",
+    "9781533003294",
+    "9781537210391",
+    "9781495437786",
+    "1985400693",
+    "9781543043594",
+    "1495437787",
+    "9781544262338",
+    "1543043593"
+   ],
+   "key": "/works/OL41505127W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "ratings_average": 5.0,
+   "editions": {
+    "numFound": 7,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL56461983M",
+      "title": "Orgullo y Prejuicio",
+      "cover_i": 15240603,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2014"
+      ],
+      "isbn": [
+       "9781495437786",
+       "1495437787"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL21594A"
+   ],
+   "author_name": [
+    "Jane Austen"
+   ],
+   "edition_count": 3,
+   "first_publish_year": 2015,
+   "isbn": [
+    "1515304299",
+    "9781973808404",
+    "1508486735",
+    "1973808404",
+    "9781508486732",
+    "9781515304296"
+   ],
+   "key": "/works/OL41267225W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL56100761M",
+      "title": "Orgullo y Prejuicio",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9781508486732",
+       "1508486735"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL21594A"
+   ],
+   "author_name": [
+    "Jane Austen"
+   ],
+   "edition_count": 3,
+   "first_publish_year": 2015,
+   "isbn": [
+    "9781987723243",
+    "9781517147648",
+    "1987723244",
+    "1517147646",
+    "9781548438715",
+    "1548438715"
+   ],
+   "key": "/works/OL40945300W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55747225M",
+      "title": "Orgullo y Prejuicio",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781548438715",
+       "1548438715"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL21594A"
+   ],
+   "author_name": [
+    "Jane Austen"
+   ],
+   "edition_count": 3,
+   "first_publish_year": 2016,
+   "isbn": [
+    "1973810476",
+    "1537081829",
+    "9781973810476",
+    "1535415525",
+    "9781537081823",
+    "9781535415521"
+   ],
+   "key": "/works/OL40430147W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55010205M",
+      "title": "Orgullo y Prejuicio",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2017"
+      ],
+      "isbn": [
+       "9781973810476",
+       "1973810476"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL9657931A",
+    "OL21594A",
+    "OL9808512A"
+   ],
+   "author_name": [
+    "Cristian Valle",
+    "Jane Austen",
+    "José Urríes y Azara"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2021,
+   "isbn": [
+    "9798453670840",
+    "9798718315349"
+   ],
+   "key": "/works/OL25945279W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL35017537M",
+      "title": "Orgullo y Prejuicio",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798718315349"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL21594A"
+   ],
+   "author_name": [
+    "Jane Austen"
+   ],
+   "cover_edition_key": "OL47116919M",
+   "cover_i": 13498988,
+   "edition_count": 1,
+   "first_publish_year": 2022,
+   "isbn": [
+    "9788419087706",
+    "841908770X"
+   ],
+   "key": "/works/OL34766731W",
+   "publisher": [
+    "Plutón Ediciones"
+   ],
+   "title": "Orgullo y Prejuicio - Persuasión",
+   "editions": {
+    "numFound": 1,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL47116919M",
+      "title": "Orgullo y Prejuicio - Persuasión",
+      "cover_i": 13498988,
+      "publisher": [
+       "Plutón Ediciones"
+      ],
+      "publish_date": [
+       "Sep 01, 2022"
+      ],
+      "isbn": [
+       "9788419087706",
+       "841908770X"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL9627855A",
+    "OL9627856A",
+    "OL21594A"
+   ],
+   "author_name": [
+    "Paloma Caral",
+    "Paloma Caraballo",
+    "Jane Austen"
+   ],
+   "edition_count": 3,
+   "first_publish_year": 2020,
+   "isbn": [
+    "9798773900184",
+    "9798670868242",
+    "9798686038561"
+   ],
+   "key": "/works/OL26988011W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "Independently Published"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "editions": {
+    "numFound": 3,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL36584652M",
+      "title": "Orgullo y Prejuicio",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "Independently Published"
+      ],
+      "publish_date": [
+       "2021"
+      ],
+      "isbn": [
+       "9798773900184"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL21594A"
+   ],
+   "author_name": [
+    "Jane Austen"
+   ],
+   "cover_edition_key": "OL55300773M",
+   "cover_i": 15237824,
+   "edition_count": 2,
+   "first_publish_year": 2015,
+   "isbn": [
+    "9781548375553",
+    "1517005183",
+    "9781517005184",
+    "1548375551"
+   ],
+   "key": "/works/OL40644922W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55300773M",
+      "title": "Orgullo y Prejuicio",
+      "cover_i": 15237824,
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9781517005184",
+       "1517005183"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "author_key": [
+    "OL21594A"
+   ],
+   "author_name": [
+    "Jane Austen"
+   ],
+   "edition_count": 2,
+   "first_publish_year": 2015,
+   "isbn": [
+    "9781508486831",
+    "1508486832",
+    "9781508486527",
+    "1508486522"
+   ],
+   "key": "/works/OL40798746W",
+   "language": [
+    "spa"
+   ],
+   "publisher": [
+    "CreateSpace Independent Publishing Platform"
+   ],
+   "title": "Orgullo y Prejuicio",
+   "subject": [
+    "Fiction, general",
+    "Bennet, elizabeth (fictitious character), fiction",
+    "Darcy, fitzwilliam (fictitious character), fiction",
+    "England, fiction"
+   ],
+   "ratings_average": 0.0,
+   "editions": {
+    "numFound": 2,
+    "start": 0,
+    "numFoundExact": true,
+    "docs": [
+     {
+      "key": "/books/OL55480174M",
+      "title": "Orgullo y Prejuicio",
+      "language": [
+       "spa"
+      ],
+      "publisher": [
+       "CreateSpace Independent Publishing Platform"
+      ],
+      "publish_date": [
+       "2015"
+      ],
+      "isbn": [
+       "9781508486831",
+       "1508486832"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,161 @@
+{
+ "title": "La casa de los espíritus",
+ "covers": [
+  3205226,
+  367522,
+  6896976,
+  8595980,
+  7009761,
+  253750,
+  -1,
+  1048721,
+  4901524,
+  8442431,
+  6751667,
+  4147853,
+  1049043,
+  1048425,
+  4901525,
+  41654,
+  8018919,
+  1016937,
+  1016715,
+  8342708,
+  976794,
+  8014766,
+  10141298,
+  10375564,
+  10445485,
+  10471213,
+  10633556,
+  10746412,
+  12317614,
+  3333587,
+  14449269,
+  14449270,
+  13481533,
+  13583266,
+  13922895,
+  14060652,
+  13865934
+ ],
+ "first_publish_date": "January 1, 1994",
+ "key": "/works/OL1905255W",
+ "authors": [
+  {
+   "author": {
+    "key": "/authors/OL228079A"
+   },
+   "type": {
+    "key": "/type/author_role"
+   }
+  }
+ ],
+ "type": {
+  "key": "/type/work"
+ },
+ "description": "Primera novela de Isabel Allende. *La casa de los espíritus* narra la saga de una poderosa familia de terratenientes latinoamericanos. El despótico patriarca Esteban Trueba ha construido, con mano de hierro, un imperio privado que empieza a tambalearse a raíz del paso del tiempo y de un entorno social explosivo. Finalmente, la decadencia personal del patriarca arrastrará a los Trueba a una dolorosa desintegración. Atrapados en unas dramáticas relaciones familiares, los personajes de esta portentosa novela encarnan las tensiones sociales y espirituales de una época que abarca gran parte de este siglo.\r\n\r\n*La casa de los espíritus* ha sido adaptada al cine en una película protagonizada, entre otros, por Jerermy Irons, Meryl Streep y Antonio Banderas.Con ternura e impecable factura literaria, Isabel Allende perfila el destino de sus personajes como parte indisoluble del destino colectivo de un continente, marcado por el mestizaje, las injusticias sociales y la búsqueda de la propia identidad. Este logrado universo narrativo es el resultado de una lúcida conciencia histórica y social, así como de una propuesta estética que constituye una singular expresión de realismo mágico.",
+ "subject_places": [
+  "Chile",
+  "Chili"
+ ],
+ "subject_times": [
+  "20th century"
+ ],
+ "subjects": [
+  "Chilean literature",
+  "Translations into English",
+  "Spanish American literature",
+  "Chilean Authors",
+  "Chilean Women authors",
+  "open_syllabus_project",
+  "NOVELAS CHILENAS",
+  "Modern Literature",
+  "magical realism",
+  "Fiction",
+  "Man-woman relationships",
+  "Italian fiction",
+  "Spanish language books",
+  "Familia",
+  "Family",
+  "Relaciones familiares",
+  "Family relationships",
+  "Autoras chilenos",
+  "Families",
+  "Conflict of generations",
+  "Social life and customs",
+  "Spirits",
+  "Familie",
+  "Man-woman relationships in fiction",
+  "Fiction, family life",
+  "Fiction, political",
+  "Latin america, fiction",
+  "Large type books",
+  "Spanish fiction",
+  "Spanish language",
+  "Chilean fiction",
+  "Domestic fiction",
+  "Spanish language materials",
+  "Novela chilena",
+  "Family life",
+  "Love",
+  "Domestic relations",
+  "FamiliasFiction",
+  "Novela",
+  "Fiction, family life, general",
+  "Chile, fiction",
+  "South america, fiction",
+  "Fiction, general",
+  "Readers",
+  "Geisterhaus (Motion picture)",
+  "FICTION / Historical",
+  "FICTION / Literary",
+  "Relations entre hommes et femmes",
+  "Spanish literature",
+  "In translation",
+  "Literary",
+  "Historical",
+  "Romance literature",
+  "Spanish American fiction"
+ ],
+ "lc_classifications": [
+  "MLCS 90/00422 (P)",
+  "PQ8097.A737 M35 1988"
+ ],
+ "links": [
+  {
+   "title": "Wikipedia",
+   "url": "http://en.wikipedia.org/wiki/The_House_of_the_Spirits",
+   "type": {
+    "key": "/type/link"
+   }
+  },
+  {
+   "title": "La casa de los espíritus (isabelallende.com)",
+   "url": "http://isabelallende.com/es/book/house",
+   "type": {
+    "key": "/type/link"
+   }
+  }
+ ],
+ "first_sentence": {
+  "type": "/type/text",
+  "value": "Barrabas llego a la familia por via maritima, anoto la nina Clara con su delicada caligrafia."
+ },
+ "dewey_number": [
+  "863"
+ ],
+ "genres": [
+  "/tags/OL170T"
+ ],
+ "latest_revision": 16,
+ "revision": 16,
+ "created": {
+  "type": "/type/datetime",
+  "value": "2009-12-09T22:32:55.165173"
+ },
+ "last_modified": {
+  "type": "/type/datetime",
+  "value": "2026-09-01T13:14:18.101436"
+ }
+}
