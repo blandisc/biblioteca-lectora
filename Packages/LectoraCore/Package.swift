@@ -9,6 +9,8 @@ let package = Package(
     ],
     targets: [
         .target(name: "LectoraCore"),
+        // Sondeo con datos reales (lo corre la CI; ver scripts/sondeo).
+        .executableTarget(name: "lectora-sondeo", dependencies: ["LectoraCore"]),
         .testTarget(name: "LectoraCoreTests", dependencies: ["LectoraCore"], resources: [.copy("Fixtures")]),
     ]
 )

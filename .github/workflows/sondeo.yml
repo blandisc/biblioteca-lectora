@@ -20,13 +20,19 @@ concurrency:
 jobs:
   sondeo:
     name: Sondeo con datos reales
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Bajar respuestas reales
+      - name: Búsqueda de la app con datos reales
         run: |
-          pip install --quiet pillow
+          mkdir -p "out/${GITHUB_SHA::7}"
+          swift run -c release --package-path Packages/LectoraCore lectora-sondeo \
+            scripts/sondeo/corpus.json "out/${GITHUB_SHA::7}/informe.md"
+      - name: Bajar respuestas crudas (para pruebas y para afinar)
+        if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[crudo]') }}
+        run: |
+          python3 -m pip install --quiet --break-system-packages pillow || python3 -m pip install --quiet pillow
           python3 scripts/sondeo/descargar.py scripts/sondeo/corpus.json "out/${GITHUB_SHA::7}/crudo"
       - name: Publicar en la rama sondeo
         if: always()
