@@ -40,13 +40,13 @@ final class AnnotationStore {
         state.apply(change)
     }
 
-    static var defaultDirectory: URL {
+    nonisolated static var defaultDirectory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Registro", isDirectory: true)
     }
 
     /// Identificador estable de este dispositivo para su archivo de registro.
-    static var deviceID: String {
+    nonisolated static var deviceID: String {
         let key = "registro.deviceID"
         if let id = UserDefaults.standard.string(forKey: key) { return id }
         let id = UUID().uuidString
@@ -56,7 +56,7 @@ final class AnnotationStore {
 
     /// ID de libro provisional, derivado del nombre del archivo. Con el catálogo
     /// (S3/S4) cada libro tendrá su propio ID en LectoraCore.
-    static func bookID(for file: URL) -> UUID {
+    nonisolated static func bookID(for file: URL) -> UUID {
         let digest = Array(SHA256.hash(data: Data(file.lastPathComponent.utf8)))
         return UUID(uuid: (digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7],
                            digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]))
