@@ -1,0 +1,46 @@
+name: Sondeo de metadatos
+
+# Prueba la búsqueda de metadatos contra Open Library y Google Books reales con
+# un corpus de libros difíciles (scripts/sondeo/corpus.json) y publica las
+# respuestas y el informe en la rama `sondeo` (una carpeta por commit).
+on:
+  push:
+    branches: [app-esqueleto]
+    paths: ['scripts/sondeo/**', 'Packages/LectoraCore/Sources/LectoraCore/Lookup/**',
+            'Packages/LectoraCore/Sources/LectoraCore/Catalog/**', '.github/workflows/sondeo.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sondeo
+  cancel-in-progress: true
+
+jobs:
+  sondeo:
+    name: Sondeo con datos reales
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bajar respuestas reales
+        run: |
+          pip install --quiet pillow
+          python3 scripts/sondeo/descargar.py scripts/sondeo/corpus.json "out/${GITHUB_SHA::7}/crudo"
+      - name: Publicar en la rama sondeo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          sha="${GITHUB_SHA::7}"
+          if git fetch origin sondeo; then
+            git worktree add publish origin/sondeo
+            (cd publish && git switch -c sondeo)
+          else
+            git worktree add --orphan -b sondeo publish
+          fi
+          rm -rf "publish/$sha"
+          cp -R "out/$sha" "publish/$sha"
+          cd publish
+          git add -A
+          git commit -m "Sondeo de $sha"
+          git push origin sondeo
