@@ -35,7 +35,7 @@ public enum MetadataMatcher {
         // Archivo sin autor: «cervantes don-quijote» trae el autor en el título.
         if book.authors.isEmpty, let author = candidate.authors.first {
             let words = Set(TextMatch.tokens(bookTitle)), withAuthor = Set(TextMatch.tokens(candidate.title + " " + author))
-            if words.count >= 2, words.isSubset(of: withAuthor) { title = max(title, 0.75) }
+            if words.count >= 2, words.isSubset(of: withAuthor) { title = max(title, 0.95) }
         }
         let author = TextMatch.sameAuthorScore(book.authors, candidate.authors)
         let bookISBN = book.identifiers["isbn"].flatMap(ISBN.normalized)

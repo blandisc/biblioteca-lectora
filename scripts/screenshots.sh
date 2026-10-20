@@ -45,6 +45,7 @@ mk 6-pedro-paramo.epub --title "Pedro Páramo" --author "Juan Rulfo" --year 1955
 mk 7-ficciones.epub --title "Ficciones" --author "Jorge Luis Borges" --year 1944
 mk 8-pride.epub --title "Pride and Prejudice" --author "Jane Austen" --language en --year 1813
 mk 9-quijote.epub --year 1605
+mk 10-ciudad.epub --title "La ciudad y los perros" --author "Gabriel García Márquez" --year 1963
 xcrun simctl launch "$DEVICE" "$BUNDLE" -screenshot.seed YES >/dev/null
 # Importa y luego busca cada libro en Open Library y Google Books.
 sleep 90

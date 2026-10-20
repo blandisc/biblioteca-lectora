@@ -104,7 +104,7 @@ public enum OpenLibrary {
             subtitle: (edition["subtitle"] as? String) ?? (doc["subtitle"] as? String),
             authors: authors(doc["author_name"] as? [String] ?? [], alternatives: doc["author_alternative_name"] as? [String] ?? []),
             publisher: ((edition["publisher"] as? [String])?.first ?? (doc["publisher"] as? [String]).flatMap { $0.count == 1 ? $0.first : nil })
-                .map(cleanPublisher),
+                .flatMap(cleanPublisher),
             published: published,
             isbn: editionISBNs.first,
             language: language,
@@ -139,9 +139,16 @@ public enum OpenLibrary {
 
     static func isLatin(_ text: String) -> Bool { TextMatch.isLatin(text) }
 
-    /// «[Peralta]» → «Peralta»; «PLAZA & JANES EDITORES» → «Plaza & Janes Editores».
-    static func cleanPublisher(_ name: String) -> String {
-        let trimmed = name.trimmingCharacters(in: CharacterSet(charactersIn: " []()."))
+    /// «[Peralta]» → «Peralta»; «PLAZA & JANES EDITORES» → «Plaza & Janes Editores»;
+    /// «CreateSpace…» o «LibriVox» → sin editorial.
+    static func cleanPublisher(_ name: String) -> String? {
+        var trimmed = name.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasPrefix("["), trimmed.hasSuffix("]") { trimmed = String(trimmed.dropFirst().dropLast()) }
+        trimmed = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: " ,;:"))
+        // Reimpresiones sin editorial de verdad (y audiolibros de LibriVox): mejor sin dato.
+        let folded = TextMatch.fold(trimmed)
+        guard !trimmed.isEmpty, !["createspace", "independently published", "librivox", "lulu", "smashwords",
+                                   "kindle direct", "createspace independent"].contains(where: folded.contains) else { return nil }
         return shouting(trimmed) ? trimmed.lowercased().capitalized : trimmed
     }
 
