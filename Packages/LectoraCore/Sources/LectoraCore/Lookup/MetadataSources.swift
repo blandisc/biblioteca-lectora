@@ -60,10 +60,13 @@ public enum OpenLibrary {
             let codes = (entry["languages"] as? [[String: Any]] ?? []).compactMap { ($0["key"] as? String)?.components(separatedBy: "/").last }
             let languages = codes.compactMap(MetadataCleaner.cleanLanguage)
             let editionTitle = [entry["title"] as? String, entry["subtitle"] as? String].compactMap { $0 }.joined(separator: " ")
-            var score = 0.0
-            if let language { score += languages.isEmpty ? 0.5 : (languages.contains(language) ? 4 : -2) }
-            // El título de la edición en tu idioma delata el idioma aunque no esté anotado.
-            if let title, TextMatch.titleSimilarity(title, editionTitle) >= 0.9 { score += 2 }
+            // El título de la edición delata el idioma aunque no esté anotado:
+            // sin idioma y con otro título («Aşk ve Gurur», «Les Misérables») no sirve.
+            let sameTitle = title.map { TextMatch.titleSimilarity($0, editionTitle) >= 0.9 } ?? false
+            var score = sameTitle ? 2.0 : 0
+            if let language {
+                if languages.contains(language) { score += 4 } else if !languages.isEmpty || !sameTitle { score -= 3 }
+            }
             if TextMatch.words(editionTitle).contains(where: { word in derivative.contains(word) }) { score -= 4 }
             if !((entry["isbn_13"] as? [String]) ?? []).isEmpty { score += 1.5 } else if entry["isbn_10"] != nil { score += 1 }
             if let year = (entry["publish_date"] as? String).flatMap(year).flatMap(Int.init) {
@@ -71,7 +74,8 @@ public enum OpenLibrary {
             }
             return (score, cover)
         }
-        return scored.sorted { $0.score > $1.score }.prefix(4).compactMap { coverURL(id: $0.cover) }
+        // Solo las que convencen; si ninguna, se queda la de la edición que trajo la búsqueda.
+        return scored.filter { $0.score > 0 }.sorted { $0.score > $1.score }.prefix(4).compactMap { coverURL(id: $0.cover) }
     }
 
     /// Portada por número; `default=false` da 404 en vez de una imagen vacía.

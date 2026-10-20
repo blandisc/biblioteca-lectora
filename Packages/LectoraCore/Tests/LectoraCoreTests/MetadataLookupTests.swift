@@ -234,10 +234,13 @@ final class MetadataLookupTests: XCTestCase {
           {"covers":[-1],"languages":[{"key":"/languages/spa"}]}
         ]}
         """#.utf8)
-        let covers = OpenLibrary.editionCovers(from: json, language: "es")
+        let covers = OpenLibrary.editionCovers(from: json, language: "es", title: "Bestiario")
         XCTAssertEqual(covers.first, OpenLibrary.coverURL(id: 3), "Moderna, en español y con ISBN")
-        XCTAssertEqual(covers.count, 3, "Sin la portada -1")
-        XCTAssertEqual(covers.last, OpenLibrary.coverURL(id: 2), "En inglés, al final")
+        XCTAssertEqual(covers, [OpenLibrary.coverURL(id: 3), OpenLibrary.coverURL(id: 1)],
+                       "Ni la de inglés ni la de número -1")
+        let unlabeled = Data(#"{"entries":[{"covers":[7],"title":"Aşk ve Gurur","isbn_13":["9786050000000"]}]}"#.utf8)
+        XCTAssertEqual(OpenLibrary.editionCovers(from: unlabeled, language: "es", title: "Orgullo y prejuicio"), [],
+                       "Sin idioma y con otro título: no")
     }
 
     // MARK: Servicio (con red simulada)
