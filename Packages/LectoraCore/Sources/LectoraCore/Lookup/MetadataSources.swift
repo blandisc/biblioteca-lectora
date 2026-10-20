@@ -134,7 +134,11 @@ public enum OpenLibrary {
             seriesIndex = parsed.index
         }
 
-        let covers = [edition["cover_i"] as? Int, doc["cover_i"] as? Int].compactMap { $0.flatMap(coverURL) }
+        // La portada de la obra suele ser la del original: para una traducción
+        // («Le Petit Prince» para «El principito») mejor la tipográfica de Lectora.
+        let isTranslation = preferred != nil && TextMatch.fold(workTitle) != TextMatch.fold(title)
+        let workCover = isTranslation ? nil : doc["cover_i"] as? Int
+        let covers = [edition["cover_i"] as? Int, workCover].compactMap { $0.flatMap(coverURL) }
         return MetadataCandidate(
             id: "ol:" + key + ((edition["key"] as? String).map { "|" + $0 } ?? ""),
             source: .openLibrary,
