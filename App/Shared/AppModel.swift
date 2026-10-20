@@ -25,7 +25,7 @@ final class AppModel: ObservableObject {
 
     init(library: LibraryStore? = nil) {
         self.library = library ?? .shared
-        observation = library.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+        observation = self.library.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
         if LaunchOptions.listening { listening = currentBook }
     }
 
