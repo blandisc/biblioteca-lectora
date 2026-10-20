@@ -46,7 +46,7 @@ for item in corpus {
     let best = result.candidates.first
     var coverNote = "—"
     if let best, result.decision != .notFound {
-        if let data = await service.cover(for: best, language: book.language) {
+        if let data = await service.cover(for: best, language: book.language, title: book.title) {
             coverNote = "\(data.count / 1024) KB"
             // Las portadas elegidas, para verlas (tercer argumento: carpeta).
             if arguments.count >= 4 {

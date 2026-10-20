@@ -271,7 +271,7 @@ final class LibraryStore: ObservableObject {
         setPending(bookID, false)
         if result.decision == .apply, !askAlways, let best = result.candidates.first {
             var cover: Data?
-            if coverURL(for: book) == nil { cover = await service.cover(for: best, language: book.language) }
+            if coverURL(for: book) == nil { cover = await service.cover(for: best, language: book.language, title: book.title) }
             // Pudo cambiar mientras se buscaba (lo editaste): se completa lo más reciente.
             let current = self.book(id: bookID) ?? book
             try? update(MetadataMatcher.fillMissing(current, from: best), cover: cover)

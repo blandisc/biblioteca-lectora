@@ -49,15 +49,22 @@ public enum OpenLibrary {
     /// (ediciones modernas, con arte de la editorial) y recientes. Las de
     /// ejemplares viejos escaneados en bibliotecas (tela lisa, etiquetas de
     /// código de barras) quedan al final.
-    public static func editionCovers(from data: Data, language: String?) -> [URL] {
+    public static func editionCovers(from data: Data, language: String?, title: String? = nil) -> [URL] {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let entries = root["entries"] as? [[String: Any]] else { return [] }
+        // Novelas gráficas, lecturas graduadas, resúmenes: otra cosa con el mismo nombre.
+        let derivative = ["grafica", "graphic", "comic", "resumen", "summary", "readers", "level", "adaptacion",
+                          "adaptation", "guia", "study", "workbook", "extraits", "abridged"]
         let scored: [(score: Double, cover: Int)] = entries.compactMap { entry in
             guard let cover = (entry["covers"] as? [Int])?.first(where: { $0 > 0 }) else { return nil }
             let codes = (entry["languages"] as? [[String: Any]] ?? []).compactMap { ($0["key"] as? String)?.components(separatedBy: "/").last }
             let languages = codes.compactMap(MetadataCleaner.cleanLanguage)
+            let editionTitle = [entry["title"] as? String, entry["subtitle"] as? String].compactMap { $0 }.joined(separator: " ")
             var score = 0.0
-            if let language { score += languages.isEmpty ? 1 : (languages.contains(language) ? 3 : 0) }
+            if let language { score += languages.isEmpty ? 0.5 : (languages.contains(language) ? 4 : -2) }
+            // El título de la edición en tu idioma delata el idioma aunque no esté anotado.
+            if let title, TextMatch.titleSimilarity(title, editionTitle) >= 0.9 { score += 2 }
+            if TextMatch.words(editionTitle).contains(where: { word in derivative.contains(word) }) { score -= 4 }
             if !((entry["isbn_13"] as? [String]) ?? []).isEmpty { score += 1.5 } else if entry["isbn_10"] != nil { score += 1 }
             if let year = (entry["publish_date"] as? String).flatMap(year).flatMap(Int.init) {
                 score += year >= 2000 ? 1 : (year >= 1980 ? 0.5 : 0)

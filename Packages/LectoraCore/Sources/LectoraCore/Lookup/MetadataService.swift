@@ -106,10 +106,10 @@ public struct MetadataService: Sendable {
 
     /// La primera portada que sirva (que exista y no sea una miniatura). Con
     /// `language`, antes se buscan las de las ediciones modernas en ese idioma.
-    public func cover(for candidate: MetadataCandidate, language: String? = nil) async -> Data? {
+    public func cover(for candidate: MetadataCandidate, language: String? = nil, title: String? = nil) async -> Data? {
         var urls = candidate.covers
         if let key = candidate.workKey, let data = await fetcher.get(OpenLibrary.editionsURL(workKey: key)).data {
-            let better = OpenLibrary.editionCovers(from: data, language: language ?? candidate.language)
+            let better = OpenLibrary.editionCovers(from: data, language: language ?? candidate.language, title: title ?? candidate.title)
             urls = better + urls.filter { !better.contains($0) }
         }
         var fallback: Data?
