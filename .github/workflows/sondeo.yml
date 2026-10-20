@@ -21,6 +21,7 @@ jobs:
   sondeo:
     name: Sondeo con datos reales
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Bajar respuestas reales
@@ -28,6 +29,7 @@ jobs:
           pip install --quiet pillow
           python3 scripts/sondeo/descargar.py scripts/sondeo/corpus.json "out/${GITHUB_SHA::7}/crudo"
       - name: Publicar en la rama sondeo
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
