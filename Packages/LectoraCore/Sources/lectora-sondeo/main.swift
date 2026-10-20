@@ -79,14 +79,17 @@ for item in corpus {
     case .notFound: decision = "no está"
     case .unreachable: decision = "sin red"
     }
-    let cells = [
-        problems.isEmpty ? "✅" : "❌ " + problems.joined(separator: "; "),
-        "`\(item.id)`", decision,
-        best.map { "\($0.title) — \($0.authors.first ?? "?")" } ?? "—",
-        best.map { String(format: "%.2f", $0.confidence) } ?? "—",
-        best?.published ?? "—", best?.publisher ?? "—", best?.language ?? "—",
-        best?.subjects.joined(separator: ", ") ?? "—", coverNote, String(format: "%.1f s", seconds),
-    ]
+    let status: String = problems.isEmpty ? "✅" : "❌ " + problems.joined(separator: "; ")
+    let bestName: String = best.map { "\($0.title) — \($0.authors.first ?? "?")" } ?? "—"
+    let confidence: String = best.map { String(format: "%.2f", $0.confidence) } ?? "—"
+    let genres: String = best?.subjects.joined(separator: ", ") ?? "—"
+    var cells: [String] = [status, "`\(item.id)`", decision, bestName, confidence]
+    cells.append(best?.published ?? "—")
+    cells.append(best?.publisher ?? "—")
+    cells.append(best?.language ?? "—")
+    cells.append(genres)
+    cells.append(coverNote)
+    cells.append(String(format: "%.1f s", seconds))
     rows.append("| " + cells.map { $0.replacingOccurrences(of: "|", with: "/") }.joined(separator: " | ") + " |")
 
     var block = "### \(item.id): \(item.title) — \(item.authors.joined(separator: ", "))\n\n"
