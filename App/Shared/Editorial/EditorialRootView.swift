@@ -1,13 +1,10 @@
 import SwiftUI
 
-/// Estilo Editorial (v5): papel, tipografía y una barra de texto con un punto rojo.
-/// La búsqueda vive dentro de la biblioteca.
+/// Estilo Editorial (v5): papel y tipografía, con la barra de pestañas nativa
+/// de iOS. La búsqueda vive dentro de la biblioteca.
 struct EditorialRootView: View {
-    enum Place: String, CaseIterable, Identifiable {
-        case desk = "Mesa"
-        case library = "Biblioteca"
-        case notebook = "Cuaderno"
-        var id: Self { self }
+    enum Place: String, Hashable {
+        case desk, library, notebook
     }
 
     @State private var section: Place = {
@@ -19,45 +16,25 @@ struct EditorialRootView: View {
     }()
 
     var body: some View {
-        Group {
-            switch section {
-            case .desk: EditorialHomeView()
-            case .library: EditorialLibraryView()
-            case .notebook: EditorialNotebookView()
+        if #available(iOS 18.0, macOS 15.0, *) {
+            TabView(selection: $section) {
+                Tab("Mesa", systemImage: "book", value: Place.desk) { EditorialHomeView() }
+                Tab("Biblioteca", systemImage: "books.vertical", value: Place.library) { EditorialLibraryView() }
+                Tab("Cuaderno", systemImage: "note.text", value: Place.notebook) { EditorialNotebookView() }
+            }
+        } else {
+            TabView(selection: $section) {
+                EditorialHomeView()
+                    .tabItem { Label("Mesa", systemImage: "book") }
+                    .tag(Place.desk)
+                EditorialLibraryView()
+                    .tabItem { Label("Biblioteca", systemImage: "books.vertical") }
+                    .tag(Place.library)
+                EditorialNotebookView()
+                    .tabItem { Label("Cuaderno", systemImage: "note.text") }
+                    .tag(Place.notebook)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            EditorialTabBar(selection: $section)
-        }
-    }
-}
-
-private struct EditorialTabBar: View {
-    @Binding var selection: EditorialRootView.Place
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(EditorialRootView.Place.allCases) { item in
-                let selected = item == selection
-                Button { selection = item } label: {
-                    VStack(spacing: 5) {
-                        Text(item.rawValue)
-                            .font(.footnote.weight(selected ? .semibold : .regular))
-                            .foregroundStyle(selected ? Theme.ink : Theme.secondaryInk)
-                        Circle()
-                            .fill(selected ? Theme.pencil : .clear)
-                            .frame(width: 4, height: 4)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(selected ? .isSelected : [])
-            }
-        }
-        .padding(.horizontal, 28)
-        .padding(.top, 4)
-        .background(Theme.Editorial.paper.ignoresSafeArea(edges: .bottom))
     }
 }
 

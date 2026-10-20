@@ -14,8 +14,8 @@ Cuando se decida, se borra la carpeta del estilo que pierda.
 
 Un solo papel (`Theme.Editorial.paper` `#F8F7F4` / `#161514`) en todas las pantallas,
 sin tarjetas ni vidrio. Encabezados en serif 30 dentro del contenido, botón principal
-rectangular (radio 10), barra inferior de texto con un punto rojo bajo la sección
-actual, búsqueda dentro de la biblioteca. En el lector, capítulo y porcentaje siempre
+rectangular (radio 10), la misma barra de pestañas nativa que el estilo Nativo,
+búsqueda dentro de la biblioteca. En el lector, capítulo y porcentaje siempre
 a la vista en pequeño; al tocar el centro aparece una barra de papel.
 
 ## Nativo (v7) «Nativo con oficio»
