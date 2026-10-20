@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  core:
+    name: Núcleo (swift test)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pruebas de LectoraCore
+        run: swift test --package-path Packages/LectoraCore
+
+  app:
+    name: App (iPhone y Mac)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar XcodeGen
+        run: brew install xcodegen
+      - name: Descargar foliate-js
+        run: ./scripts/fetch-foliate.sh
+      - name: Generar proyecto
+        run: xcodegen generate
+      - name: Compilar para iPhone (simulador)
+        run: >
+          xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS
+          -destination 'generic/platform=iOS Simulator'
+          -configuration Debug build CODE_SIGNING_ALLOWED=NO
+      - name: Compilar para Mac
+        run: >
+          xcodebuild -project Lectora.xcodeproj -scheme Lectora_macOS
+          -destination 'generic/platform=macOS'
+          -configuration Debug build CODE_SIGNING_ALLOWED=NO

@@ -1,0 +1,45 @@
+# Proyecto de Xcode generado con XcodeGen: `xcodegen generate` (ver README).
+name: Lectora
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+packages:
+  LectoraCore:
+    path: Packages/LectoraCore
+
+targets:
+  Lectora:
+    type: application
+    platform: [iOS, macOS]
+    sources:
+      - path: App/Shared
+      - path: App/Resources/Reader
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: LectoraCore
+    info:
+      path: App/Generated/Info-${platform}.plist
+      properties:
+        CFBundleDisplayName: Lectora
+        LSApplicationCategoryType: public.app-category.books
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_NAME: Lectora
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.lectora
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_ENTITLEMENTS: App/Entitlements/Lectora-${platform}.entitlements
+        ENABLE_PREVIEWS: YES
+    scheme: {}

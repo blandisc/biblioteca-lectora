@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Los libros nunca ejecutan scripts: solo se permiten los módulos de la app. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src lectora: blob: data:; script-src lectora:; style-src lectora: blob: data: 'unsafe-inline'; img-src lectora: blob: data:; font-src lectora: blob: data:; connect-src lectora: blob: data:">
+<style>
+  :root { color-scheme: light dark; }
+  html, body { margin: 0; height: 100%; background: transparent; }
+  foliate-view { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<script type="module" src="reader.js"></script>
+</body>
+</html>
