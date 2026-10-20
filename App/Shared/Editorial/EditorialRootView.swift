@@ -407,14 +407,14 @@ struct EditorialLibraryView: View {
                         } else {
                             ShelfCover(book: book)
                         }
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 1) {
                             Text(book.title)
                                 .font(.caption)
                                 .foregroundStyle(Theme.ink)
                                 .lineLimit(2)
                                 .multilineTextAlignment(.leading)
                             if let count = book.seriesCount, count > 1 {
-                                Text("Serie · \(count)")
+                                Text("Serie · \(count) libros")
                                     .font(.caption2)
                                     .foregroundStyle(Theme.secondaryInk)
                             }
