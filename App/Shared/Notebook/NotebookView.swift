@@ -4,7 +4,7 @@ import SwiftUI
 /// Datos de ejemplo hasta que entren LectoraCore y Readwise.
 struct NotebookView: View {
     enum Part: String, CaseIterable, Identifiable {
-        case review = "Repaso"
+        case review = "Recientes"
         case books = "Libros"
         case topics = "Temas"
         var id: Self { self }
@@ -62,7 +62,7 @@ func sampleHighlightCount(_ book: ShelfBook) -> Int { Int(book.progress * 40) + 
 private struct ReviewList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Para hoy · \(sampleHighlights.count) subrayados")
+            Text("Tus últimos \(sampleHighlights.count) subrayados")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
                 .padding(.horizontal, 4)

@@ -60,7 +60,7 @@ de libro y citas.
 |---|---|---|
 | Leyendo | `Home/HomeView.swift` | Título grande, botón de cuenta, tarjeta del libro actual (portada con cinta, «Cap. · min para terminarlo», progreso, «Seguir leyendo» + escuchar), fila «En tu mesa» |
 | Biblioteca | `Library/LibraryView.swift` | Menú ordenar (Recientes, Título, Autor, Avance + «Solo descargados»), «+», resumen, Portadas/Lista, menú contextual |
-| Cuaderno | `Notebook/NotebookView.swift` | Repaso / Libros / Temas |
+| Cuaderno | `Notebook/NotebookView.swift` | Recientes / Libros / Temas |
 | Buscar | `Search/SearchView.swift` | Pestaña de búsqueda aparte (iOS 18+ `Tab(role: .search)`) |
 | Lector | `Reader/ReaderView.swift` | Papel a sangre; al tocar el centro aparecen: cerrar, Aa + marcador, panel inferior con capítulo, %, deslizador e Índice/Buscar/Guiada/Escuchar |
 
