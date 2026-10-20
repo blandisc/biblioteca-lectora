@@ -23,8 +23,8 @@ final class AppModel: ObservableObject {
     @Published var listening: ShelfBook?
     private var observation: AnyCancellable?
 
-    init(library: LibraryStore = .shared) {
-        self.library = library
+    init(library: LibraryStore? = nil) {
+        self.library = library ?? .shared
         observation = library.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
         if LaunchOptions.listening { listening = currentBook }
     }

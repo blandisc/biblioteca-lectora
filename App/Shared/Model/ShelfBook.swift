@@ -1,4 +1,5 @@
 import SwiftUI
+import LectoraCore
 
 /// Libro tal como lo muestra la interfaz: de la biblioteca real (`Book` de
 /// LectoraCore) o de ejemplo (Cuaderno y estilo Nativo).
