@@ -8,7 +8,7 @@ import Foundation
 ///     Autor/Título (12)/metadata.opf
 public enum CalibreLayout {
     /// Calibre limita cada parte del nombre a 100 caracteres fuera de Windows.
-    static let pathLimit = 100
+    public static let pathLimit = 100
 
     public static let coverFileName = "cover.jpg"
     public static let opfFileName = "metadata.opf"

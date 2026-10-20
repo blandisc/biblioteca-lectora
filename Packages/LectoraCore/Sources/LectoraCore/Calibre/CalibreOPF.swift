@@ -97,7 +97,7 @@ public enum CalibreOPF {
             identifiers: identifiers,
             publisher: reader.publisher,
             published: reader.date.flatMap(ourDate),
-            summary: reader.description,
+            summary: reader.summary,
             rating: reader.meta["calibre:rating"].flatMap(Double.init).map { $0 / 2 },
             calibreID: calibreID,
             addedAt: reader.meta["calibre:timestamp"].flatMap(parseTimestamp)
@@ -185,7 +185,7 @@ private final class OPFReader: NSObject, XMLParserDelegate {
     var identifiers: [(String, String)] = []
     var meta: [String: String] = [:]
     var publisher: String?
-    var description: String?
+    var summary: String?
     var date: String?
 
     private var text = ""
@@ -223,7 +223,7 @@ private final class OPFReader: NSObject, XMLParserDelegate {
         case "language": languages.append(value)
         case "identifier": identifiers.append((attributes["scheme"] ?? "", value))
         case "publisher": publisher = publisher ?? value
-        case "description": description = description ?? value
+        case "description": summary = summary ?? value
         case "date": date = date ?? value
         default: break
         }
