@@ -57,7 +57,7 @@ struct ShelfCover: View {
 struct BookDetailView: View {
     let book: ShelfBook
     @EnvironmentObject private var model: AppModel
-    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .native
+    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .editorial
 
     var body: some View {
         ScrollView {

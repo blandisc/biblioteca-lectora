@@ -3,6 +3,8 @@ import SwiftUI
 /// Libro abierto en el lector.
 struct OpenBook: Identifiable {
     let url: URL
+    /// Si se abrió desde la portada de la Mesa: el libro «sale» de esa portada.
+    var fromCover = false
     var id: URL { url }
 }
 
@@ -14,6 +16,8 @@ final class AppModel: ObservableObject {
     @Published var importing = false
     @Published var openBook: OpenBook?
     @Published var importError: String?
+    /// Libro que suena en el mini reproductor. Por ahora solo la interfaz: el audio llega con el modo audiolibro.
+    @Published var listening: ShelfBook? = LaunchOptions.listening ? SampleLibrary.current : nil
 
     var shelf: [ShelfBook] {
         localBooks.map(ShelfBook.init(file:)) + SampleLibrary.books
@@ -37,7 +41,11 @@ final class AppModel: ObservableObject {
     }
 
     func continueReading() {
-        if !open(currentBook) { importing = true }
+        if let file = currentBook.file {
+            openBook = OpenBook(url: file, fromCover: true)
+        } else {
+            importing = true
+        }
     }
 
     func finishImport(_ result: Result<URL, Error>) {

@@ -4,6 +4,7 @@ import SwiftUI
 struct SearchView: View {
     @EnvironmentObject private var model: AppModel
     @State private var query = ""
+    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .editorial
 
     private var results: [ShelfBook] {
         let term = query.trimmingCharacters(in: .whitespaces)
@@ -37,7 +38,7 @@ struct SearchView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Theme.groupedBackground.ignoresSafeArea())
+            .background((style == .editorial ? Theme.Editorial.paper : Theme.groupedBackground).ignoresSafeArea())
             .navigationTitle("Buscar")
             .navigationDestination(for: ShelfBook.self) { BookDetailView(book: $0) }
             .searchable(text: $query, prompt: "Títulos y autores")

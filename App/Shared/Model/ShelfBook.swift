@@ -3,7 +3,8 @@ import SwiftUI
 /// Libro tal como lo muestra la interfaz. Por ahora con datos de ejemplo;
 /// después se alimenta de LectoraCore (biblioteca sincronizada).
 struct ShelfBook: Identifiable, Hashable {
-    let id = UUID()
+    /// Estable para los libros importados (la ruta del archivo); aleatorio en los de ejemplo.
+    var id = UUID().uuidString
     var title: String
     var author: String
     /// 0...1
@@ -15,6 +16,10 @@ struct ShelfBook: Identifiable, Hashable {
     var file: URL? = nil
     /// Línea de estado de la tarjeta de inicio («Cap. VII · 12 min para terminarlo»).
     var note: String? = nil
+    /// Libros de la serie, si este libro la representa en la biblioteca.
+    var seriesCount: Int? = nil
+    /// La última frase que leíste, para «Donde lo dejaste».
+    var lastSentence: String? = nil
 
     var isReading: Bool { progress > 0 && progress < 1 }
     var isFinished: Bool { progress >= 1 }
@@ -34,7 +39,8 @@ enum SampleLibrary {
         title: "Don Quijote de la Mancha", author: "Miguel de Cervantes",
         progress: 0.43, addedDaysAgo: 40, inCloudOnly: false,
         cover: CoverStyle(background: Color(hex: 0xE4C887), foreground: Color(hex: 0x2E2010), illustration: .windmill),
-        note: "Cap. VII · 12 min para terminarlo"
+        note: "Cap. VII · 12 min para terminarlo",
+        lastSentence: "…y proseguía en sus voces y en sus desatinos, dando cuchilladas a todas partes."
     )
 
     static let books: [ShelfBook] = [
@@ -44,7 +50,8 @@ enum SampleLibrary {
         ShelfBook(title: "Meditaciones", author: "Marco Aurelio", progress: 0.12, addedDaysAgo: 12, inCloudOnly: false,
                   cover: CoverStyle(background: Color(hex: 0x2A2927), foreground: Color(hex: 0xEDEAE2))),
         ShelfBook(title: "Fundación", author: "Isaac Asimov", progress: 0, addedDaysAgo: 3, inCloudOnly: true,
-                  cover: CoverStyle(background: Color(hex: 0x3E4A6B), foreground: Color(hex: 0xEEF0F6), illustration: .rings)),
+                  cover: CoverStyle(background: Color(hex: 0x3E4A6B), foreground: Color(hex: 0xEEF0F6), illustration: .rings),
+                  seriesCount: 7),
         ShelfBook(title: "Rayuela", author: "Julio Cortázar", progress: 0.68, addedDaysAgo: 90, inCloudOnly: true,
                   cover: CoverStyle(background: Color(hex: 0xF1EEE7), foreground: Color(hex: 0x1C1B19), bordered: true)),
         ShelfBook(title: "Pedro Páramo", author: "Juan Rulfo", progress: 1, addedDaysAgo: 200, inCloudOnly: false,
@@ -80,6 +87,7 @@ extension ShelfBook {
         ]
         let index = name.unicodeScalars.reduce(0) { ($0 + Int($1.value)) % 997 } % palette.count
         self.init(
+            id: file.path,
             title: name, author: "En este dispositivo",
             progress: 0, addedDaysAgo: 0, inCloudOnly: false,
             cover: CoverStyle(background: Color(hex: palette[index].0), foreground: Color(hex: palette[index].1)),

@@ -8,6 +8,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         var fraction: Double
         var cfi: String?
         var chapter: String?
+        /// Posición en «páginas» de foliate (ubicaciones de ~1,500 caracteres).
+        var page: Int?
+        var pageCount: Int?
     }
 
     @Published private(set) var title: String?
@@ -87,7 +90,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             location = Location(
                 fraction: body["fraction"] as? Double ?? 0,
                 cfi: body["cfi"] as? String,
-                chapter: body["chapter"] as? String
+                chapter: body["chapter"] as? String,
+                page: (body["current"] as? Int).map { $0 + 1 },
+                pageCount: body["total"] as? Int
             )
         case "selection":
             if let cfi = body["cfi"] as? String, let text = body["text"] as? String {

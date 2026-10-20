@@ -39,26 +39,21 @@ shoot() { # nombre, espera, argumentos…
   echo "  $name"
 }
 
-for style in native editorial; do
-  for mode in light dark; do
-    tabs="reading library notebook"
-    [ "$style" = native ] && tabs="$tabs search"
-    for tab in $tabs; do
-      shoot "$style-$mode-$tab" 4 -appearance.style "$style" -appearance.mode "$mode" -screenshot.tab "$tab"
-    done
-  done
-done
-
-# Variante del inicio Nativo sin título ni tarjeta.
+# Estilo elegido: Editorial. Cada pestaña en claro y oscuro, más la biblioteca
+# en lista y la Mesa con el mini reproductor.
 for mode in light dark; do
-  shoot "native-$mode-reading-plain" 4 -appearance.style native -appearance.mode "$mode" -screenshot.tab reading -appearance.plainHome YES
+  for tab in reading library notebook search; do
+    shoot "editorial-$mode-$tab" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab "$tab"
+  done
+  shoot "editorial-$mode-library-list" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab library -library.layout Lista
+  shoot "editorial-$mode-listening" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab reading -screenshot.listening YES
 done
 
 # Lector: se copia un EPUB de muestra a la app y se abre al arrancar.
 DATA=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data)
 mkdir -p "$DATA/Library/Application Support/Spike"
 python3 scripts/make-sample-epub.py "$DATA/Library/Application Support/Spike/Don Quijote.epub"
-for style in native editorial; do
+for style in editorial; do
   for mode in light dark; do
     shoot "$style-$mode-reader" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES
     shoot "$style-$mode-page" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.hideChrome YES

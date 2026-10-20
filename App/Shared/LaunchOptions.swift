@@ -9,4 +9,6 @@ enum LaunchOptions {
     static var opensFirstBook: Bool { UserDefaults.standard.bool(forKey: "screenshot.openFirst") }
     /// Abrir el lector con los controles escondidos.
     static var hidesReaderChrome: Bool { UserDefaults.standard.bool(forKey: "screenshot.hideChrome") }
+    /// Mostrar el mini reproductor como si sonara el libro actual.
+    static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
 }

@@ -56,7 +56,7 @@ enum AppearanceKeys {
 /// Cuenta, conexiones y apariencia. Se abre desde el inicio en los dos estilos.
 struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .native
+    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .editorial
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @AppStorage(AppearanceKeys.plainHome) private var plainHome = false
 

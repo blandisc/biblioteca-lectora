@@ -8,8 +8,9 @@ enum AppTab: String, Hashable {
 /// El lector se abre a pantalla completa en los dos.
 struct RootView: View {
     @StateObject private var model = AppModel()
-    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .native
+    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .editorial
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
+    @Namespace private var opening
 
     var body: some View {
         Group {
@@ -19,6 +20,7 @@ struct RootView: View {
             }
         }
         .environmentObject(model)
+        .environment(\.bookOpeningNamespace, opening)
         .preferredColorScheme(mode.colorScheme)
         .task {
             if LaunchOptions.opensFirstBook, let first = model.localBooks.first {
@@ -39,6 +41,7 @@ struct RootView: View {
         #if os(iOS)
         .fullScreenCover(item: $model.openBook) { book in
             ReaderView(bookFile: book.url)
+                .bookOpeningDestination(in: opening, enabled: book.fromCover)
         }
         #else
         .sheet(item: $model.openBook) { book in

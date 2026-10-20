@@ -1,16 +1,30 @@
-# Diseño — dos estilos en prueba: Nativo (v7) y Editorial (v5)
+# Diseño — estilo elegido: Editorial
 
-La app trae los dos estilos, cada uno en claro y oscuro, para decidir usándolos en el
-iPhone. Se cambian en **Cuenta → Apariencia** (botón de persona en el inicio):
+Elegido el 20 de octubre de 2026 tras comparar Nativo (v7) y Editorial (v5) con capturas
+reales y una maqueta de ajustes. El Editorial queda como estilo por defecto; el Nativo
+sigue en el código como referencia hasta limpiarlo.
 
-- **Estilo:** Nativo / Editorial.
-- **Modo:** Sistema / Claro / Oscuro (también cambia el texto del libro).
+Modo: Sistema / Claro / Oscuro en Cuaderno → cuenta → Apariencia (también cambia el
+texto del libro).
 
-El código de cada estilo está separado (`Home/`, `Library/`, `Notebook/`, `Search/` para
-Nativo; `Editorial/` para Editorial); los tokens, portadas, modelo y lector son comunes.
-Cuando se decida, se borra la carpeta del estilo que pierda.
+## Editorial (elegido)
 
-## Editorial (v5)
+- **Dock:** barra de pestañas nativa (Mesa, Biblioteca, Cuaderno) con la búsqueda aparte.
+  Al escuchar, el mini reproductor vive sobre el dock (iOS 26): portada, título en serif,
+  barritas rojas mientras suena, pausa dentro de un anillo de avance y +30 s.
+- **Mesa:** portada grande (de ahí sale el libro al abrirlo, con zoom), título, «Donde lo
+  dejaste» con la última frase, avance, «Seguir leyendo» y el botón de audiolibro.
+- **Biblioteca:** título con dos iconos (Portadas/Lista alterna, «+»); filtros como texto
+  (Todos, En curso, Sin empezar, Series, Sin descargar); conteo y orden en una línea;
+  series como pila de portadas; índice A–Z en Lista.
+- **Cuaderno:** Recientes / Libros / Temas; la cuenta y los ajustes viven aquí.
+- **Lector:** sin controles, capítulo y porcentaje en pequeño. Al tocar el centro, vidrio:
+  cerrar; buscar, Aa y marcador; el capítulo es el botón del índice; páginas; y dos
+  acciones grandes, Guiada y Escuchar.
+
+Maqueta de referencia: artifact «Editorial ajustado».
+
+## Editorial (v5), versión anterior
 
 Un solo papel (`Theme.Editorial.paper` `#F8F7F4` / `#161514`) en todas las pantallas,
 sin tarjetas ni vidrio. Encabezados en serif 30 dentro del contenido, botón principal
