@@ -14,6 +14,18 @@ public struct Book: Identifiable, Hashable, Sendable {
     /// Ruta del archivo relativa a la carpeta de la biblioteca.
     public var filePath: String?
     public var readingStatus: ReadingStatus
+    public var publisher: String?
+    /// Fecha de publicación en ISO 8601 («2004» o «2004-05-01»).
+    public var published: String?
+    /// Sinopsis; puede traer HTML sencillo, como en Calibre.
+    public var summary: String?
+    /// Valoración de 0 a 5 estrellas (Calibre guarda 0–10).
+    public var rating: Double?
+    /// Número de libro en una biblioteca de Calibre: da nombre a la carpeta `Título (id)`.
+    public var calibreID: Int?
+    /// SHA-256 del archivo, para reconocer duplicados.
+    public var fileHash: String?
+    public var addedAt: Date?
 
     public init(
         id: UUID = UUID(),
@@ -25,7 +37,14 @@ public struct Book: Identifiable, Hashable, Sendable {
         language: String? = nil,
         identifiers: [String: String] = [:],
         filePath: String? = nil,
-        readingStatus: ReadingStatus = .toRead
+        readingStatus: ReadingStatus = .toRead,
+        publisher: String? = nil,
+        published: String? = nil,
+        summary: String? = nil,
+        rating: Double? = nil,
+        calibreID: Int? = nil,
+        fileHash: String? = nil,
+        addedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -37,6 +56,35 @@ public struct Book: Identifiable, Hashable, Sendable {
         self.identifiers = identifiers
         self.filePath = filePath
         self.readingStatus = readingStatus
+        self.publisher = publisher
+        self.published = published
+        self.summary = summary
+        self.rating = rating
+        self.calibreID = calibreID
+        self.fileHash = fileHash
+        self.addedAt = addedAt
+    }
+
+    /// Carpeta del libro relativa a la biblioteca («Autor/Título (12)»).
+    public var folderPath: String? {
+        filePath.map { ($0 as NSString).deletingLastPathComponent }
+    }
+
+    /// Título para ordenar: sin artículo inicial en español o inglés.
+    public var sortTitle: String {
+        let articles = ["el ", "la ", "los ", "las ", "un ", "una ", "the ", "a ", "an "]
+        let lower = title.lowercased()
+        if let article = articles.first(where: { lower.hasPrefix($0) }), title.count > article.count {
+            return String(title.dropFirst(article.count))
+        }
+        return title
+    }
+
+    /// «Apellido, Nombre» del primer autor, como el `author_sort` de Calibre.
+    public static func authorSort(_ name: String) -> String {
+        let parts = name.split(separator: " ")
+        guard parts.count > 1, !name.contains(",") else { return name }
+        return "\(parts.last!), \(parts.dropLast().joined(separator: " "))"
     }
 }
 
@@ -58,6 +106,13 @@ extension Book {
         static let identifiers = "identifiers"
         static let filePath = "file_path"
         static let readingStatus = "reading_status"
+        static let publisher = "publisher"
+        static let published = "published"
+        static let summary = "summary"
+        static let rating = "rating"
+        static let calibreID = "calibre_id"
+        static let fileHash = "file_hash"
+        static let addedAt = "added_at"
     }
 
     /// Construye el libro a partir de sus campos; `nil` si no tiene título.
@@ -79,7 +134,14 @@ extension Book {
             language: fields[Field.language]?.stringValue,
             identifiers: identifiers,
             filePath: fields[Field.filePath]?.stringValue,
-            readingStatus: fields[Field.readingStatus]?.stringValue.flatMap(ReadingStatus.init(rawValue:)) ?? .toRead
+            readingStatus: fields[Field.readingStatus]?.stringValue.flatMap(ReadingStatus.init(rawValue:)) ?? .toRead,
+            publisher: fields[Field.publisher]?.stringValue,
+            published: fields[Field.published]?.stringValue,
+            summary: fields[Field.summary]?.stringValue,
+            rating: fields[Field.rating]?.doubleValue,
+            calibreID: fields[Field.calibreID]?.doubleValue.map { Int($0) },
+            fileHash: fields[Field.fileHash]?.stringValue,
+            addedAt: fields[Field.addedAt]?.doubleValue.map(Date.init(timeIntervalSince1970:))
         )
     }
 
@@ -96,6 +158,13 @@ extension Book {
         fields.append((Field.seriesIndex, seriesIndex.map(JSONValue.number) ?? .null))
         fields.append((Field.language, language.map(JSONValue.string) ?? .null))
         fields.append((Field.filePath, filePath.map(JSONValue.string) ?? .null))
+        fields.append((Field.publisher, publisher.map(JSONValue.string) ?? .null))
+        fields.append((Field.published, published.map(JSONValue.string) ?? .null))
+        fields.append((Field.summary, summary.map(JSONValue.string) ?? .null))
+        fields.append((Field.rating, rating.map(JSONValue.number) ?? .null))
+        fields.append((Field.calibreID, calibreID.map { JSONValue.number(Double($0)) } ?? .null))
+        fields.append((Field.fileHash, fileHash.map(JSONValue.string) ?? .null))
+        fields.append((Field.addedAt, addedAt.map { JSONValue.number($0.timeIntervalSince1970) } ?? .null))
         return fields.map { field, value in
             Change(hlc: clock.tick(), entity: .book, entityID: id, field: field, value: value)
         }
