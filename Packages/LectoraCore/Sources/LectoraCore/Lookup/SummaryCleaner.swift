@@ -4,7 +4,7 @@ import Foundation
 /// (Open Library) y con párrafos separados por una línea en blanco.
 public enum SummaryCleaner {
     public static func clean(_ raw: String) -> String? {
-        var text = raw
+        var text = raw.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
         // HTML: saltos y párrafos a líneas; el resto de etiquetas fuera.
         text = text.replacingOccurrences(of: #"(?i)<br\s*/?>"#, with: "\n", options: .regularExpression)
         text = text.replacingOccurrences(of: #"(?i)</p>\s*<p[^>]*>"#, with: "\n\n", options: .regularExpression)
@@ -23,6 +23,8 @@ public enum SummaryCleaner {
         // Enlaces: «[texto](url)» y «[texto][1]» → «texto».
         text = text.replacingOccurrences(of: #"\[([^\]]+)\]\((?:[^)]+)\)"#, with: "$1", options: .regularExpression)
         text = text.replacingOccurrences(of: #"\[([^\]]+)\]\[\d+\]"#, with: "$1", options: .regularExpression)
+        // Énfasis de Markdown: «***The Name of the Wind***» → «The Name of the Wind».
+        text = text.replacingOccurrences(of: #"\*{1,3}([^*\n]+)\*{1,3}"#, with: "$1", options: .regularExpression)
         // Párrafos: líneas sin espacios sobrantes, como mucho una línea en blanco.
         let paragraphs = text.components(separatedBy: .newlines)
             .map { $0.split(whereSeparator: { $0 == " " || $0 == "\t" }).joined(separator: " ") }

@@ -41,6 +41,8 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var reviews: [UUID: [MetadataCandidate]] = [:]
     /// Libros que se están buscando en internet ahora mismo.
     @Published private(set) var identifying: Set<UUID> = []
+    /// Libros que no se pudieron buscar en internet (sin conexión); se reintentan.
+    @Published private(set) var pendingLookup: Set<UUID> = []
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
 
@@ -51,7 +53,6 @@ final class LibraryStore: ObservableObject {
     private lazy var extractor = MetadataExtractor()
     /// Importaciones en fila: una termina antes de que empiece la siguiente.
     private var lastImport: Task<[Result<ImportOutcome, Error>], Never>?
-    private let lookup = MetadataLookup()
 
     init(root: URL = LibraryStore.defaultRoot) {
         self.root = root
@@ -155,8 +156,8 @@ final class LibraryStore: ObservableObject {
         // Mismo ISBN y mismo formato: es el mismo libro. (Un PDF y un EPUB de la
         // misma edición sí entran; luego se podrán unir como formatos de un libro.)
         let format = source.pathExtension.lowercased()
-        if let isbn = book.identifiers["isbn"], let existing = books.first(where: {
-            $0.identifiers["isbn"] == isbn && ($0.filePath as NSString?)?.pathExtension.lowercased() == format
+        if let isbn = book.identifiers["isbn"].flatMap(ISBN.normalized), let existing = books.first(where: {
+            $0.identifiers["isbn"].flatMap(ISBN.normalized) == isbn && ($0.filePath as NSString?)?.pathExtension.lowercased() == format
         }) {
             return .duplicate(existing)
         }
@@ -245,39 +246,73 @@ final class LibraryStore: ObservableObject {
         return book
     }
 
-    // MARK: Buscar en internet (B2)
+    // MARK: Buscar en internet
 
-    /// Busca el libro en internet. Si el mejor candidato es claramente el mismo
-    /// libro, completa lo que falta (y la portada); si hay dudas, lo deja en
-    /// «Por revisar». Con `askAlways`, siempre deja los candidatos para elegir.
+    /// Búsqueda en Open Library (y en Google Books si diste una clave en Ajustes).
+    private var service: MetadataService {
+        MetadataService(googleKey: UserDefaults.standard.string(forKey: MetadataKeys.googleKey))
+    }
+
+    /// Busca el libro en internet. Si es claramente el mismo libro, completa lo
+    /// que falta (y la portada); si hay dudas, lo deja en «Por revisar». Sin
+    /// internet no lo manda a revisar: queda pendiente y se vuelve a intentar.
+    /// Con `askAlways` (desde la ficha) siempre deja los candidatos para elegir.
     @discardableResult
-    func identify(_ bookID: UUID, askAlways: Bool = false) async -> [MetadataCandidate] {
-        guard let book = book(id: bookID), !identifying.contains(bookID) else { return [] }
+    func identify(_ bookID: UUID, askAlways: Bool = false) async -> MetadataService.Decision? {
+        guard let book = book(id: bookID), !identifying.contains(bookID) else { return nil }
         identifying.insert(bookID)
         defer { identifying.remove(bookID) }
 
-        let candidates = await lookup.candidates(for: book)
-        guard let best = candidates.first else {
-            if !askAlways { setReview(bookID, candidates: []) }
-            return []
+        let result = await service.lookup(book)
+        if result.decision == .unreachable {
+            setPending(bookID, true)
+            return .unreachable
         }
-        if best.confidence >= MetadataMatcher.autoApplyThreshold && !askAlways {
+        setPending(bookID, false)
+        if result.decision == .apply, !askAlways, let best = result.candidates.first {
             var cover: Data?
-            if coverURL(for: book) == nil, let url = best.coverURL { cover = await lookup.download(url) }
-            try? update(MetadataMatcher.fillMissing(book, from: best), cover: cover)
+            if coverURL(for: book) == nil { cover = await service.cover(for: best) }
+            // Pudo cambiar mientras se buscaba (lo editaste): se completa lo más reciente.
+            let current = self.book(id: bookID) ?? book
+            try? update(MetadataMatcher.fillMissing(current, from: best), cover: cover)
             setReview(bookID, candidates: nil)
         } else {
-            setReview(bookID, candidates: candidates)
+            setReview(bookID, candidates: result.candidates)
         }
-        return candidates
+        return result.decision
     }
 
-    /// Elegiste un candidato: sus datos (y su portada) reemplazan a los del libro.
-    func apply(_ candidate: MetadataCandidate, to bookID: UUID) async throws {
+    /// «Buscar con otros datos»: otro título, autor o ISBN. Los candidatos
+    /// reemplazan a los de «Por revisar» de ese libro.
+    @discardableResult
+    func search(title: String, author: String?, isbn: String?, for bookID: UUID) async -> MetadataService.Decision? {
+        guard let book = book(id: bookID), !identifying.contains(bookID) else { return nil }
+        identifying.insert(bookID)
+        defer { identifying.remove(bookID) }
+        let result = await service.search(title: title, author: author, isbn: isbn, for: book)
+        if result.decision != .unreachable { setReview(bookID, candidates: result.candidates) }
+        return result.decision
+    }
+
+    /// Completa un candidato con su sinopsis (para la vista previa).
+    func details(for candidate: MetadataCandidate, bookID: UUID) async -> MetadataCandidate {
+        guard let book = book(id: bookID) else { return candidate }
+        let detailed = await service.withSummary(candidate, for: book)
+        if detailed.summary != candidate.summary, var list = reviews[bookID],
+           let index = list.firstIndex(where: { $0.id == candidate.id }) {
+            list[index] = detailed
+            setReview(bookID, candidates: list)
+        }
+        return detailed
+    }
+
+    /// Elegiste un candidato: sus datos (y, si quieres, su portada) reemplazan a los del libro.
+    func apply(_ candidate: MetadataCandidate, to bookID: UUID, includeCover: Bool = true) async throws {
         guard let book = book(id: bookID) else { throw LibraryError.bookNotFound }
-        var cover: Data?
-        if let url = candidate.coverURL { cover = await lookup.download(url) }
-        try update(MetadataMatcher.replace(book, with: candidate), cover: cover)
+        let detailed = await service.withSummary(candidate, for: book)
+        let cover = includeCover ? await service.cover(for: detailed) : nil
+        let current = self.book(id: bookID) ?? book
+        try update(MetadataMatcher.replace(current, with: detailed), cover: cover)
         setReview(bookID, candidates: nil)
     }
 
@@ -286,22 +321,46 @@ final class LibraryStore: ObservableObject {
         setReview(bookID, candidates: nil)
     }
 
+    /// Vuelve a buscar los libros que se quedaron sin buscar por falta de internet.
+    func retryPendingLookups() async {
+        for id in pendingLookup where book(id: id) != nil {
+            if await identify(id) == .unreachable { break }
+        }
+    }
+
     private var reviewsURL: URL {
         root.appendingPathComponent(".lectora/por-revisar.json")
     }
 
+    private var pendingURL: URL {
+        root.appendingPathComponent(".lectora/por-buscar.json")
+    }
+
     private func setReview(_ bookID: UUID, candidates: [MetadataCandidate]?) {
         reviews[bookID] = candidates
-        if let data = try? JSONEncoder().encode(reviews) {
-            try? FileManager.default.createDirectory(at: reviewsURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try? data.write(to: reviewsURL, options: .atomic)
-        }
+        save(reviews, to: reviewsURL)
+    }
+
+    private func setPending(_ bookID: UUID, _ pending: Bool) {
+        guard pendingLookup.contains(bookID) != pending else { return }
+        if pending { pendingLookup.insert(bookID) } else { pendingLookup.remove(bookID) }
+        save(pendingLookup, to: pendingURL)
+    }
+
+    private func save<T: Encodable>(_ value: T, to url: URL) {
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: url, options: .atomic)
     }
 
     private func loadReviews() {
-        guard let data = try? Data(contentsOf: reviewsURL),
-              let saved = try? JSONDecoder().decode([UUID: [MetadataCandidate]].self, from: data) else { return }
-        reviews = saved.filter { book(id: $0.key) != nil }
+        if let data = try? Data(contentsOf: reviewsURL),
+           let saved = try? JSONDecoder().decode([UUID: [MetadataCandidate]].self, from: data) {
+            reviews = saved.filter { book(id: $0.key) != nil }
+        }
+        if let data = try? Data(contentsOf: pendingURL), let saved = try? JSONDecoder().decode(Set<UUID>.self, from: data) {
+            pendingLookup = saved.filter { book(id: $0) != nil }
+        }
     }
 
     // MARK: Posición de lectura

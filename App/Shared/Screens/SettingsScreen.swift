@@ -27,11 +27,17 @@ enum AppearanceKeys {
     static let mode = "appearance.mode"
 }
 
+enum MetadataKeys {
+    /// Clave propia de Google Books (opcional): sin ella solo se usa Open Library.
+    static let googleKey = "metadata.googleBooksKey"
+}
+
 /// Cuenta, conexiones y apariencia. Se abre desde el Cuaderno.
 struct SettingsScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
+    @AppStorage(MetadataKeys.googleKey) private var googleKey = ""
 
     var body: some View {
         NavigationStack {
@@ -49,6 +55,18 @@ struct SettingsScreen: View {
                     Text("Biblioteca")
                 } footer: {
                     Text("La carpeta tiene la misma forma que una biblioteca de Calibre: puedes abrirla en Calibre y restaurar la base de datos.")
+                }
+                Section {
+                    LabeledContent("Fuente", value: googleKey.isEmpty ? "Open Library" : "Open Library y Google Books")
+                    TextField("Clave de Google Books (opcional)", text: $googleKey)
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        #endif
+                } header: {
+                    Text("Datos de los libros")
+                } footer: {
+                    Text("Portadas, sinopsis y datos se buscan en Open Library. Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.")
                 }
                 Section("Conexiones") {
                     LabeledContent("iCloud Drive", value: "Próximamente")

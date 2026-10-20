@@ -1,20 +1,35 @@
 import Foundation
 
 /// Consultas y lectura de respuestas de las fuentes públicas de metadatos.
-/// Sin red aquí: la app hace las peticiones y este código arma las URL y
-/// entiende las respuestas, para poder probarlo con respuestas guardadas.
+/// Sin red aquí: `MetadataService` hace las peticiones y este código arma las
+/// URL y entiende las respuestas, para poder probarlo con respuestas reales
+/// guardadas (Tests/…/Fixtures, bajadas con scripts/sondeo).
 public enum OpenLibrary {
-    /// `search.json` por ISBN o por título y autor.
-    public static func searchURL(isbn: String?, title: String, author: String?) -> URL {
+    static let fields = [
+        "key", "title", "subtitle", "author_name", "author_alternative_name", "first_publish_year", "edition_count",
+        "language", "subject", "cover_i", "isbn", "series_name", "series_position",
+        "editions", "editions.key", "editions.title", "editions.subtitle", "editions.language", "editions.isbn",
+        "editions.publisher", "editions.publish_date", "editions.cover_i",
+    ].joined(separator: ",")
+
+    /// Búsqueda general (`q`): encuentra la obra también por el título de una
+    /// traducción («Fundación» → «Foundation»), cosa que `title=` no hace.
+    /// Con `lang`, la edición que acompaña a cada obra es la de ese idioma.
+    public static func searchURL(query: String, language: String?, limit: Int = 8) -> URL {
+        url(["q": query], language: language, limit: limit)
+    }
+
+    /// Por ISBN: la obra que contiene esa edición, con esa edición.
+    public static func searchURL(isbn: String) -> URL {
+        url(["isbn": isbn], language: nil, limit: 3)
+    }
+
+    private static func url(_ params: [String: String], language: String?, limit: Int) -> URL {
         var components = URLComponents(string: "https://openlibrary.org/search.json")!
-        var items = [URLQueryItem(name: "limit", value: "5"),
-                     URLQueryItem(name: "fields", value: "key,title,subtitle,author_name,first_publish_year,publish_date,isbn,publisher,language,subject,cover_i,cover_edition_key,series_name,series_position")]
-        if let isbn {
-            items.append(URLQueryItem(name: "isbn", value: isbn))
-        } else {
-            items.append(URLQueryItem(name: "title", value: title))
-            if let author { items.append(URLQueryItem(name: "author", value: author)) }
-        }
+        var items = params.map { URLQueryItem(name: $0.key, value: $0.value) }
+        items.append(URLQueryItem(name: "limit", value: String(limit)))
+        items.append(URLQueryItem(name: "fields", value: fields))
+        if let language, let code = marcLanguage[language] { items.append(URLQueryItem(name: "lang", value: code)) }
         components.queryItems = items
         return components.url!
     }
@@ -24,44 +39,120 @@ public enum OpenLibrary {
         URL(string: "https://openlibrary.org\(key).json")!
     }
 
+    /// Portada por número; `default=false` da 404 en vez de una imagen vacía.
+    public static func coverURL(id: Int) -> URL? {
+        id > 0 ? URL(string: "https://covers.openlibrary.org/b/id/\(id)-L.jpg?default=false") : nil
+    }
+
+    private static let marcLanguage = ["es": "spa", "en": "eng", "fr": "fre", "pt": "por", "it": "ita", "de": "ger", "ca": "cat"]
+
     public static func candidates(from data: Data) -> [MetadataCandidate] {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let docs = root["docs"] as? [[String: Any]] else { return [] }
-        return docs.compactMap { doc in
-            guard let title = doc["title"] as? String else { return nil }
-            let isbns = doc["isbn"] as? [String] ?? []
-            let coverURL = (doc["cover_i"] as? Int).flatMap {
-                URL(string: "https://covers.openlibrary.org/b/id/\($0)-L.jpg")
+        return docs.compactMap(candidate)
+    }
+
+    static func candidate(from doc: [String: Any]) -> MetadataCandidate? {
+        guard let workTitle = doc["title"] as? String, let key = doc["key"] as? String else { return nil }
+        let edition = ((doc["editions"] as? [String: Any])?["docs"] as? [[String: Any]])?.first ?? [:]
+        let editionCount = doc["edition_count"] as? Int ?? 0
+
+        // Título y datos de la edición (en tu idioma); si no hay, los de la obra.
+        let language = ((edition["language"] as? [String])?.first
+            ?? (doc["language"] as? [String]).flatMap { $0.count == 1 ? $0.first : nil }).flatMap(MetadataCleaner.cleanLanguage)
+        let editionTitle = (edition["title"] as? String).map { cleanEditionTitle($0, language: language) }
+        let title = editionTitle.flatMap { $0.isEmpty ? nil : $0 } ?? cleanEditionTitle(workTitle, language: language)
+        let editionISBNs = (edition["isbn"] as? [String] ?? []).compactMap(ISBN.normalized)
+        // Cualquier ISBN de la obra sirve para reconocerla: otra edición del mismo libro.
+        let workISBNs = (doc["isbn"] as? [String] ?? []).compactMap(ISBN.normalized)
+
+        // Año: el de la obra si es una obra con historia; el de la edición si no.
+        let editionYear = (edition["publish_date"] as? [String])?.first.flatMap(year)
+        let workYear = (doc["first_publish_year"] as? Int).map(String.init)
+        let published = editionCount >= 5 ? (workYear ?? editionYear) : (editionYear ?? workYear)
+
+        // Serie: solo si se entiende en el idioma de la edición («Harry Potter»
+        // sí; «A Song of Ice and Fire» para «Juego de tronos», no).
+        var series: String?, seriesIndex: Double?
+        if let name = (doc["series_name"] as? [String])?.first, !name.isEmpty {
+            let isNeutral = Set(TextMatch.tokens(name)).isSubset(of: Set(TextMatch.tokens(title)))
+            if TextMatch.fold(title) == TextMatch.fold(workTitle) || isNeutral {
+                series = name
+                seriesIndex = (doc["series_position"] as? [String])?.first.flatMap { Double($0) }
             }
-            let languages = doc["language"] as? [String] ?? []
-            return MetadataCandidate(
-                id: "ol:" + (doc["key"] as? String ?? title),
-                source: .openLibrary,
-                title: title,
-                subtitle: doc["subtitle"] as? String,
-                authors: doc["author_name"] as? [String] ?? [],
-                publisher: (doc["publisher"] as? [String])?.first,
-                published: (doc["first_publish_year"] as? Int).map(String.init),
-                isbn: isbns.first { $0.count == 13 } ?? isbns.first,
-                language: languages.first,
-                subjects: Array((doc["subject"] as? [String] ?? []).prefix(8)),
-                series: (doc["series_name"] as? [String])?.first,
-                seriesIndex: (doc["series_position"] as? [String])?.first.flatMap(Double.init),
-                coverURL: coverURL
-            )
         }
+        if series == nil, let parsed = SeriesParser.split((edition["title"] as? String) ?? "") {
+            series = parsed.series
+            seriesIndex = parsed.index
+        }
+
+        let covers = [edition["cover_i"] as? Int, doc["cover_i"] as? Int].compactMap { $0.flatMap(coverURL) }
+        return MetadataCandidate(
+            id: "ol:" + key + ((edition["key"] as? String).map { "|" + $0 } ?? ""),
+            source: .openLibrary,
+            title: SeriesParser.split(title)?.title ?? title,
+            subtitle: (edition["subtitle"] as? String) ?? (doc["subtitle"] as? String),
+            authors: authors(doc["author_name"] as? [String] ?? [], alternatives: doc["author_alternative_name"] as? [String] ?? []),
+            publisher: (edition["publisher"] as? [String])?.first ?? (doc["publisher"] as? [String]).flatMap { $0.count == 1 ? $0.first : nil },
+            published: published,
+            isbn: editionISBNs.first,
+            language: language,
+            subjects: GenreMap.genres(from: doc["subject"] as? [String] ?? []),
+            series: series,
+            seriesIndex: seriesIndex,
+            coverURL: covers.first,
+            workKey: key,
+            workTitle: workTitle,
+            editionCount: editionCount,
+            coverAlternatives: Array(covers.dropFirst()),
+            knownISBNs: Set(editionISBNs + workISBNs)
+        )
+    }
+
+    /// Autores en alfabeto latino: «Лев Толстой» → «Leo Tolstoy» si Open
+    /// Library conoce esa forma. El orden se respeta (el primero es el autor;
+    /// suelen seguir traductores e ilustradores).
+    static func authors(_ names: [String], alternatives: [String]) -> [String] {
+        names.map { name in
+            guard !isLatin(name) else { return name }
+            let latin = alternatives.filter { isLatin($0) && $0.contains(" ") }
+            // La forma más repetida suele ser la más común («Leo Tolstoy»).
+            let counts = Dictionary(latin.map { (TextMatch.fold($0), 1) }, uniquingKeysWith: +)
+            return latin.max { (counts[TextMatch.fold($0)] ?? 0) < (counts[TextMatch.fold($1)] ?? 0) } ?? name
+        }
+    }
+
+    static func isLatin(_ text: String) -> Bool { TextMatch.isLatin(text) }
+
+    /// «Don Quijote de la Mancha.» → sin punto; «El Mesías de Dune / Dune
+    /// Messiah» → solo el primero; «FICCIONES» → «Ficciones».
+    static func cleanEditionTitle(_ title: String, language: String? = nil) -> String {
+        var cleaned = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let slash = cleaned.range(of: " / ") ?? cleaned.range(of: "/"), cleaned.distance(from: cleaned.startIndex, to: slash.lowerBound) > 3 {
+            cleaned = String(cleaned[..<slash.lowerBound])
+        }
+        cleaned = cleaned.replacingOccurrences(of: " :", with: ":").trimmingCharacters(in: CharacterSet(charactersIn: " .,;:"))
+        return MetadataCleaner.cleanTitle(cleaned, language: language)
+    }
+
+    static func year(_ date: String) -> String? {
+        guard let range = date.range(of: #"\b(1[5-9]|20)\d{2}\b"#, options: .regularExpression) else { return nil }
+        return String(date[range])
     }
 
     /// La descripción puede venir como texto o como `{ "value": … }`.
     public static func workDescription(from data: Data) -> String? {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        if let text = root["description"] as? String { return text }
-        return (root["description"] as? [String: Any])?["value"] as? String
+        let raw = (root["description"] as? String) ?? ((root["description"] as? [String: Any])?["value"] as? String)
+        return raw.flatMap(SummaryCleaner.clean)
     }
 }
 
+/// Google Books. Sin clave, la cuota diaria compartida suele estar agotada
+/// (lo confirmó el sondeo: «Quota exceeded … Queries per day»), así que solo
+/// se usa con una clave propia (gratis en Google Cloud), desde Ajustes.
 public enum GoogleBooks {
-    public static func searchURL(isbn: String?, title: String, author: String?, language: String?) -> URL {
+    public static func searchURL(isbn: String?, title: String, author: String?, language: String?, apiKey: String) -> URL {
         var components = URLComponents(string: "https://www.googleapis.com/books/v1/volumes")!
         let query: String
         if let isbn {
@@ -69,8 +160,8 @@ public enum GoogleBooks {
         } else {
             query = "intitle:\(title)" + (author.map { " inauthor:\($0)" } ?? "")
         }
-        var items = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "maxResults", value: "5"),
-                     URLQueryItem(name: "printType", value: "books")]
+        var items = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "maxResults", value: "8"),
+                     URLQueryItem(name: "printType", value: "books"), URLQueryItem(name: "key", value: apiKey)]
         if let language { items.append(URLQueryItem(name: "langRestrict", value: language)) }
         components.queryItems = items
         return components.url!
@@ -82,32 +173,38 @@ public enum GoogleBooks {
         return items.compactMap { item in
             guard let info = item["volumeInfo"] as? [String: Any], let title = info["title"] as? String else { return nil }
             let identifiers = info["industryIdentifiers"] as? [[String: Any]] ?? []
-            let isbn13 = identifiers.first { $0["type"] as? String == "ISBN_13" }?["identifier"] as? String
-            let isbn10 = identifiers.first { $0["type"] as? String == "ISBN_10" }?["identifier"] as? String
+            let isbns = identifiers.compactMap { ($0["identifier"] as? String).flatMap(ISBN.normalized) }
             let links = info["imageLinks"] as? [String: Any] ?? [:]
-            let image = (links["extraLarge"] ?? links["large"] ?? links["medium"] ?? links["thumbnail"]) as? String
+            let image = (links["thumbnail"] ?? links["smallThumbnail"]) as? String
+            let id = item["id"] as? String
+            let covers = [id.flatMap(largeCover), image.flatMap(secureThumbnail)].compactMap { $0 }
+            let year = (info["publishedDate"] as? String).flatMap(OpenLibrary.year)
             return MetadataCandidate(
-                id: "gb:" + (item["id"] as? String ?? title),
+                id: "gb:" + (id ?? title),
                 source: .googleBooks,
-                title: title,
+                title: MetadataCleaner.cleanTitle(title, language: (info["language"] as? String).flatMap(MetadataCleaner.cleanLanguage)),
                 subtitle: info["subtitle"] as? String,
                 authors: info["authors"] as? [String] ?? [],
                 publisher: info["publisher"] as? String,
-                published: info["publishedDate"] as? String,
-                summary: info["description"] as? String,
-                isbn: isbn13 ?? isbn10,
-                language: info["language"] as? String,
-                subjects: info["categories"] as? [String] ?? [],
-                coverURL: image.flatMap(largerCover)
+                published: year,
+                summary: (info["description"] as? String).flatMap(SummaryCleaner.clean),
+                isbn: isbns.first { $0.hasPrefix("97") },
+                language: (info["language"] as? String).flatMap(MetadataCleaner.cleanLanguage),
+                subjects: GenreMap.genres(from: info["categories"] as? [String] ?? []),
+                coverURL: image == nil ? nil : covers.first,
+                coverAlternatives: image == nil ? nil : Array(covers.dropFirst()),
+                knownISBNs: Set(isbns)
             )
         }
     }
 
-    /// Las miniaturas de Google vienen en http y chicas: https y sin el doblez.
-    static func largerCover(_ link: String) -> URL? {
-        let secure = link.replacingOccurrences(of: "http://", with: "https://")
-            .replacingOccurrences(of: "&edge=curl", with: "")
-            .replacingOccurrences(of: "zoom=1", with: "zoom=0")
-        return URL(string: secure)
+    /// Portada grande de la editorial (cuando existe).
+    static func largeCover(_ id: String) -> URL? {
+        URL(string: "https://books.google.com/books/publisher/content/images/frontcover/\(id)?fife=w800-h1200&source=gbs_api")
+    }
+
+    /// Miniatura en https y sin el doblez de página.
+    static func secureThumbnail(_ link: String) -> URL? {
+        URL(string: link.replacingOccurrences(of: "http://", with: "https://").replacingOccurrences(of: "&edge=curl", with: ""))
     }
 }

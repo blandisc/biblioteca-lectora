@@ -6,7 +6,7 @@ final class MetadataCleanerTests: XCTestCase {
         XCTAssertEqual(MetadataCleaner.cleanTitle("Rayuela (Spanish Edition)"), "Rayuela")
         XCTAssertEqual(MetadataCleaner.cleanTitle("Dune [epub]"), "Dune")
         XCTAssertEqual(MetadataCleaner.cleanTitle("CIEN AÑOS DE SOLEDAD", language: "es"), "Cien años de soledad")
-        XCTAssertEqual(MetadataCleaner.cleanTitle("PRIDE AND PREJUDICE", language: "en"), "Pride And Prejudice")
+        XCTAssertEqual(MetadataCleaner.cleanTitle("PRIDE AND PREJUDICE", language: "en"), "Pride and Prejudice")
         XCTAssertEqual(MetadataCleaner.cleanTitle("SPQR"), "SPQR")
         XCTAssertEqual(MetadataCleaner.titleFromFileName("pedro_paramo_v2.epub"), "pedro paramo")
     }

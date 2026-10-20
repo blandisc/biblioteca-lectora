@@ -55,7 +55,7 @@ enum TextMatch {
         // Uno contenido en el otro («Rayuela» y «Rayuela (edición conmemorativa)»)
         // vale menos que igual: puede ser otro libro («Guía de Rayuela»).
         let containment = shared / Double(min(left.count, right.count))
-        return max(jaccard, containment * 0.8)
+        return max(jaccard, containment * 0.6)
     }
 
     // MARK: Personas
@@ -70,7 +70,9 @@ enum TextMatch {
     /// transliteración que no se reconoce: «Lev» / «León»); 0.5: no se puede
     /// saber; 0: otra persona.
     static func sameAuthorScore(_ a: [String], _ b: [String]) -> Double {
-        let left = a.map(nameParts).filter { !$0.isEmpty }, right = b.map(nameParts).filter { !$0.isEmpty }
+        // «Лев Толстой» o «刘慈欣» no se pueden comparar con «León Tolstói»: no se sabe.
+        let left = a.filter(isLatin).map(nameParts).filter { !$0.isEmpty }
+        let right = b.filter(isLatin).map(nameParts).filter { !$0.isEmpty }
         guard !left.isEmpty, !right.isEmpty else { return 0.5 }
         var best = 0.0
         for x in left {
@@ -91,6 +93,13 @@ enum TextMatch {
         guard short.count > 1, let first = short.first else { return 1 }
         let firstMatches = long.contains { close(first, $0) || $0.hasPrefix(first) || first.hasPrefix($0) }
         return firstMatches ? 1 : 0.8
+    }
+
+    /// Escrito en alfabeto latino (con acentos y letras como ñ, ç, ø).
+    static func isLatin(_ text: String) -> Bool {
+        let letters = text.unicodeScalars.filter(CharacterSet.letters.contains)
+        guard !letters.isEmpty else { return false }
+        return letters.allSatisfy { $0.value < 0x0250 || (0x1E00...0x1EFF).contains($0.value) }
     }
 
     /// Dos palabras que probablemente son la misma, con alguna letra distinta.

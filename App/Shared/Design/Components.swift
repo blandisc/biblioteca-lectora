@@ -459,25 +459,19 @@ struct LinkRow: View {
     }
 }
 
-/// Un libro encontrado en internet: portada, título, autor, año, fuente y confianza.
+/// Un libro encontrado en internet: portada, título, autor, año y editorial,
+/// y en palabras qué tan probable es que sea el tuyo y por qué.
 struct CandidateRow: View {
     let candidate: MetadataCandidate
 
     private var detail: String {
-        [candidate.authors.joined(separator: ", "), candidate.published.map { String($0.prefix(4)) }, candidate.publisher]
+        [candidate.authors.first, candidate.published.map { String($0.prefix(4)) }, candidate.publisher]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Space.m + Theme.Space.xxs) {
-            AsyncImage(url: candidate.coverURL) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                CoverView(title: candidate.title, author: candidate.authors.first ?? "",
-                          style: .generated(for: candidate.title))
-            }
-            .frame(width: Theme.Size.coverRow, height: Theme.Size.coverRow * 3 / 2)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous))
+            CandidateCover(candidate: candidate, width: Theme.Size.coverRow)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 Text(candidate.title)
                     .font(.rowTitle)
@@ -486,14 +480,77 @@ struct CandidateRow: View {
                 if !detail.isEmpty {
                     Text(detail).font(.footnote).foregroundStyle(Theme.secondaryInk).lineLimit(2)
                 }
-                Text("\(candidate.source.rawValue) · \(Int(candidate.confidence * 100)) % de coincidencia")
+                (Text(candidate.verdict).foregroundStyle(candidate.confidence >= MetadataMatcher.autoApplyThreshold ? Theme.ink : Theme.secondaryInk)
+                    + Text(candidate.reasons.isEmpty ? "" : " · " + candidate.reasons).foregroundStyle(Theme.tertiaryInk))
                     .font(.caption)
-                    .foregroundStyle(candidate.confidence >= MetadataMatcher.autoApplyThreshold ? Theme.ink : Theme.tertiaryInk)
             }
             Spacer(minLength: 0)
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Theme.tertiaryInk)
         }
         .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
         .contentShape(Rectangle())
+        .overlay(alignment: .bottom) { Hairline() }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Portada de un candidato (de internet) con la tipográfica mientras carga o si no hay.
+struct CandidateCover: View {
+    let candidate: MetadataCandidate
+    let width: CGFloat
+
+    var body: some View {
+        AsyncImage(url: candidate.coverURL) { image in
+            image.resizable().scaledToFill()
+        } placeholder: {
+            CoverView(title: candidate.title, author: candidate.authors.first ?? "",
+                      style: .generated(for: candidate.title))
+        }
+        .frame(width: width, height: width * 3 / 2)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous))
+    }
+}
+
+/// Dato propuesto frente al que tienes: el nuevo a la derecha y, si cambia,
+/// el tuyo debajo («Antes: …»). Para la vista previa de un candidato.
+struct CompareRow: View {
+    let label: String
+    let new: String?
+    let old: String?
+
+    private var shown: String {
+        if let new, !new.isEmpty { return new }
+        return old ?? "—"
+    }
+
+    private var changes: Bool {
+        guard let new, !new.isEmpty else { return false }
+        return new.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+            != (old ?? "").folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label).foregroundStyle(Theme.secondaryInk)
+            Spacer(minLength: Theme.Space.l)
+            VStack(alignment: .trailing, spacing: Theme.Space.xxs) {
+                Text(shown)
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(Theme.ink)
+                if changes, let old, !old.isEmpty {
+                    Text("Antes: \(old)")
+                        .font(.caption)
+                        .foregroundStyle(Theme.tertiaryInk)
+                        .multilineTextAlignment(.trailing)
+                } else if changes {
+                    Text("Nuevo").font(.caption).foregroundStyle(Theme.pencil)
+                }
+            }
+        }
+        .font(.subheadline)
+        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
         .overlay(alignment: .bottom) { Hairline() }
     }
 }

@@ -30,6 +30,8 @@ struct RootView: View {
                 if LaunchOptions.opensFirstBook, let first = model.currentBook {
                     model.open(first)
                 }
+                // Los que se importaron sin internet se buscan ahora.
+                await model.library.retryPendingLookups()
             }
             .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,
                           allowsMultipleSelection: true) { result in

@@ -19,6 +19,14 @@ public enum MetadataCleaner {
         }
         var title = cleanTitle(book.title, language: book.language.flatMap(cleanLanguage))
         if title.isEmpty, let fileName { title = titleFromFileName(fileName) }
+        // «Juego de tronos (Canción de hielo y fuego 1)»: la serie va en su campo.
+        if let parsed = SeriesParser.split(title) {
+            title = parsed.title
+            if book.series == nil {
+                book.series = parsed.series
+                book.seriesIndex = parsed.index
+            }
+        }
         book.title = title.isEmpty ? "Sin título" : title
         book.authors = cleanAuthors(book.authors)
         book.language = book.language.flatMap(cleanLanguage)
@@ -50,7 +58,11 @@ public enum MetadataCleaner {
         let letters = cleaned.filter(\.isLetter)
         if letters.count > 5, cleaned == cleaned.uppercased(), cleaned != cleaned.lowercased() {
             if language == "en" {
-                cleaned = cleaned.lowercased().capitalized
+                // «PRIDE AND PREJUDICE» → «Pride and Prejudice»: las palabras cortas, en minúscula.
+                let small: Set<String> = ["a", "an", "the", "and", "of", "in", "on", "at", "to", "for", "or", "but", "by", "with"]
+                cleaned = cleaned.lowercased().split(separator: " ").enumerated().map { index, word in
+                    index > 0 && small.contains(String(word)) ? String(word) : word.prefix(1).uppercased() + word.dropFirst()
+                }.joined(separator: " ")
             } else {
                 let lower = cleaned.lowercased()
                 cleaned = lower.prefix(1).uppercased() + lower.dropFirst()
