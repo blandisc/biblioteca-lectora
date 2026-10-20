@@ -1,6 +1,6 @@
 // Puente entre foliate-js y la app nativa.
 // La app llama a `window.lectora.*` y recibe eventos por `webkit.messageHandlers.lectora`.
-import './foliate/view.js'
+import { makeBook } from './foliate/view.js'
 
 const post = (type, payload = {}) =>
     window.webkit?.messageHandlers?.lectora?.postMessage({ type, ...payload })
@@ -128,7 +128,59 @@ const onShowAnnotation = ({ detail: { value } }) => {
     post('annotation', { cfi: value })
 }
 
+// Datos de un libro para el catálogo (título, autores, serie, ISBN, portada…).
+const text = x => {
+    if (!x) return null
+    if (typeof x === 'string') return x
+    if (x.name) return text(x.name)
+    const values = Object.values(x)
+    return typeof values[0] === 'string' ? values[0] : null
+}
+const blobToDataURL = blob => new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(blob)
+})
+const findISBN = values => {
+    for (const value of values) {
+        const match = String(value).replace(/[-\s]/g, '').match(/(97[89]\d{10}|\d{9}[\dXx])(?!\d)/)
+        if (match && (/isbn/i.test(value) || match[1].length === 13)) return match[1].toUpperCase()
+    }
+    return null
+}
+const extract = async url => {
+    const book = await makeBook(url)
+    const m = book.metadata ?? {}
+    const authors = [].concat(m.author ?? []).map(text).filter(Boolean)
+    let series = m.belongsTo?.series
+    if (Array.isArray(series)) series = series[0]
+    const identifiers = [].concat(m.identifier ?? [], m.altIdentifier ?? [])
+        .map(x => typeof x === 'string' ? x : x?.value ? `${x.scheme}:${x.value}` : null)
+        .filter(Boolean)
+    let cover = null
+    try {
+        const blob = await book.getCover?.()
+        if (blob) cover = await blobToDataURL(blob)
+    } catch {}
+    return {
+        title: text(m.title),
+        authors,
+        language: [].concat(m.language ?? [])[0] ?? null,
+        publisher: text([].concat(m.publisher ?? [])[0]),
+        published: m.published ? String(m.published) : null,
+        description: m.description ?? null,
+        subjects: [].concat(m.subject ?? []).map(text).filter(Boolean),
+        series: text(series?.name) ?? null,
+        seriesIndex: Number.isFinite(parseFloat(series?.position)) ? parseFloat(series.position) : null,
+        isbn: findISBN(identifiers),
+        cover,
+    }
+}
+
 window.lectora = {
+    extract,
+
     async open(url, lastLocation) {
         view?.close?.()
         view?.remove()

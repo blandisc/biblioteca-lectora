@@ -57,9 +57,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
 
     /// Abre un libro (copia local) y, si existe, vuelve a la última posición.
-    func open(bookFile: URL, lastCFI: String? = nil) {
+    func open(bookFile: URL, bookID: UUID? = nil, lastCFI: String? = nil) {
         schemeHandler.bookFile = bookFile
-        bookID = AnnotationStore.bookID(for: bookFile)
+        self.bookID = bookID ?? AnnotationStore.bookID(for: bookFile)
         let cfiArgument = lastCFI.map { "'\($0.replacingOccurrences(of: "'", with: "\\'"))'" } ?? "null"
         let script = "window.lectora.open('\(ReaderSchemeHandler.bookURL(for: bookFile).absoluteString)', \(cfiArgument))"
         if isReady { evaluate(script) } else { pendingOpen = script }

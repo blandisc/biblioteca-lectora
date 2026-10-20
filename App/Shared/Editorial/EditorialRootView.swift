@@ -157,6 +157,7 @@ extension View {
         self
             .background(Theme.Editorial.paper.ignoresSafeArea())
             .navigationDestination(for: ShelfBook.self) { BookDetailView(book: $0) }
+            .navigationDestination(for: SeriesRef.self) { SeriesView(series: $0) }
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
             #endif
@@ -173,7 +174,7 @@ struct EditorialHomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                let book = model.currentBook
+                if let book = model.currentBook {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: model.continueReading) {
                         ShelfCover(book: book).frame(width: 132)
@@ -267,9 +268,77 @@ struct EditorialHomeView: View {
                 .padding(.horizontal, 28)
                 .padding(.top, 24)
                 .padding(.bottom, 32)
+                } else {
+                    EmptyLibraryPrompt()
+                }
             }
             .editorialScreen()
         }
+    }
+}
+
+/// Biblioteca vacía: el primer paso es añadir libros.
+struct EmptyLibraryPrompt: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Tu biblioteca está vacía")
+                .font(.serifTitle(28, weight: .medium))
+            Text("Añade EPUB, PDF, MOBI o cómics. Leo sus datos, les busco portada y los guardo ordenados en una carpeta que Calibre también puede abrir.")
+                .font(.body)
+                .foregroundStyle(Theme.secondaryInk)
+            Button { model.importing = true } label: {
+                Label("Añadir libros", systemImage: "plus")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(Theme.onInk)
+                    .padding(.horizontal, 20)
+                    .frame(minHeight: 46)
+                    .background(Theme.ink, in: RoundedRectangle(cornerRadius: Theme.Editorial.buttonRadius, style: .continuous))
+            }
+            .buttonStyle(PressableStyle())
+            .padding(.top, 8)
+        }
+        .foregroundStyle(Theme.ink)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 28)
+        .padding(.top, 80)
+    }
+}
+
+/// Una serie, abierta desde su pila de portadas.
+struct SeriesRef: Hashable {
+    let name: String
+}
+
+struct SeriesView: View {
+    let series: SeriesRef
+    @EnvironmentObject private var model: AppModel
+
+    private var books: [ShelfBook] {
+        model.shelf.filter { $0.series == series.name }
+            .sorted { ($0.seriesIndex ?? 0) < ($1.seriesIndex ?? 0) }
+    }
+
+    var body: some View {
+        List(books) { book in
+            NavigationLink(value: book) {
+                HStack(spacing: 14) {
+                    ShelfCover(book: book).frame(width: 44)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(book.title).font(.system(size: 17, design: .serif))
+                        Text(book.seriesIndex.map { "Libro \(ShelfBook.number($0))" } ?? book.author)
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryInk)
+                    }
+                }
+            }
+            .listRowBackground(Theme.Editorial.paper)
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Theme.Editorial.paper.ignoresSafeArea())
+        .navigationTitle(series.name)
     }
 }
 
@@ -289,7 +358,7 @@ struct EditorialLibraryView: View {
             case .all: true
             case .reading: book.isReading
             case .unread: book.progress == 0
-            case .series: (book.seriesCount ?? 0) > 1
+            case .series: book.series != nil
             case .cloud: book.inCloudOnly
             }
         }
@@ -303,6 +372,22 @@ struct EditorialLibraryView: View {
 
     private var books: [ShelfBook] {
         LibraryView.sorted(model.shelf.filter(filter.includes), by: sort)
+    }
+
+    /// En portadas, cada serie se ve como una sola pila con su número de libros.
+    private var coverItems: [ShelfBook] {
+        var seen = Set<String>()
+        let counts = Dictionary(grouping: books.compactMap(\.series), by: { $0 }).mapValues(\.count)
+        return books
+            .sorted { ($0.seriesIndex ?? 0) < ($1.seriesIndex ?? 0) }
+            .compactMap { book -> ShelfBook? in
+                guard let series = book.series, let count = counts[series], count > 1 else { return book }
+                guard seen.insert(series).inserted else { return nil }
+                var stack = book
+                stack.seriesCount = count
+                return stack
+            }
+            .sortedLike(books)
     }
 
     var body: some View {
@@ -368,9 +453,16 @@ struct EditorialLibraryView: View {
                         .foregroundStyle(Theme.secondaryInk)
                         .padding(.top, 14)
 
-                        switch layout {
-                        case .covers: grid.padding(.top, 18)
-                        case .list: list.padding(.top, 8)
+                        if model.shelf.isEmpty {
+                            Text("Todavía no hay libros. Toca + para añadir los primeros.")
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.secondaryInk)
+                                .padding(.top, 40)
+                        } else {
+                            switch layout {
+                            case .covers: grid.padding(.top, 18)
+                            case .list: list.padding(.top, 8)
+                            }
                         }
                     }
                     .foregroundStyle(Theme.ink)
@@ -393,35 +485,46 @@ struct EditorialLibraryView: View {
     }
 
     private var summary: String {
+        if let progress = model.library.progress {
+            return "Añadiendo \(min(progress.done + 1, progress.total)) de \(progress.total)…"
+        }
         let all = model.shelf
         return "\(all.count) libros · \(all.filter { !$0.inCloudOnly }.count) en este iPhone"
     }
 
     private var grid: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 24) {
-            ForEach(books) { book in
-                NavigationLink(value: book) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        if let count = book.seriesCount, count > 1 {
-                            SeriesStack(book: book)
-                        } else {
-                            ShelfCover(book: book)
-                        }
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(book.title)
-                                .font(.caption)
-                                .foregroundStyle(Theme.ink)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.leading)
-                            if let count = book.seriesCount, count > 1 {
-                                Text("Serie · \(count) libros")
-                                    .font(.caption2)
-                                    .foregroundStyle(Theme.secondaryInk)
-                            }
-                        }
+            ForEach(coverItems) { book in
+                Group {
+                    if let series = book.series, book.seriesCount != nil {
+                        NavigationLink(value: SeriesRef(name: series)) { gridCell(book) }
+                    } else {
+                        NavigationLink(value: book) { gridCell(book) }
                     }
                 }
                 .buttonStyle(PressableStyle())
+            }
+        }
+    }
+
+    private func gridCell(_ book: ShelfBook) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let count = book.seriesCount, count > 1 {
+                SeriesStack(book: book)
+            } else {
+                ShelfCover(book: book)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(book.seriesCount != nil ? (book.series ?? book.title) : book.title)
+                    .font(.caption)
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                if let count = book.seriesCount, count > 1 {
+                    Text("Serie · \(count) libros")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
             }
         }
     }
@@ -597,5 +700,13 @@ struct EditorialNotebookView: View {
             .editorialScreen()
             .sheet(isPresented: $showsAccount) { AccountView() }
         }
+    }
+}
+
+private extension Array where Element == ShelfBook {
+    /// Conserva el orden elegido (Recientes, Título…) después de agrupar las series.
+    func sortedLike(_ reference: [ShelfBook]) -> [ShelfBook] {
+        let order = Dictionary(uniqueKeysWithValues: reference.enumerated().map { ($1.id, $0) })
+        return sorted { (order[$0.id] ?? 0) < (order[$1.id] ?? 0) }
     }
 }

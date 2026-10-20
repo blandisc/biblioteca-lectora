@@ -6,6 +6,8 @@ import WebKit
 /// controles, y el toque largo selecciona texto para subrayar con lápiz.
 struct ReaderView: View {
     let bookFile: URL
+    /// Libro del catálogo; sus subrayados se guardan con este ID.
+    var bookID: UUID? = nil
     @StateObject private var controller = ReaderController()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
@@ -89,7 +91,7 @@ struct ReaderView: View {
                     withAnimation(.snappy(duration: 0.25)) { showsChrome.toggle() }
                 }
             }
-            controller.open(bookFile: bookFile)
+            controller.open(bookFile: bookFile, bookID: bookID)
         }
         .onChange(of: palette) { _, _ in applyStyle() }
         .onChange(of: font) { _, _ in applyStyle() }

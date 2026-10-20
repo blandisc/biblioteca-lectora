@@ -28,7 +28,8 @@ def xhtml(title, paragraphs):
 {body}
 </body></html>"""
 
-def main(out):
+def main(out, title="Don Quijote de la Mancha", author="Miguel de Cervantes",
+         language="es", series=None, index=None, isbn=None, year=None):
     with zipfile.ZipFile(out, "w") as z:
         z.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
         z.writestr("META-INF/container.xml", """<?xml version="1.0"?>
@@ -36,11 +37,11 @@ def main(out):
 <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
 </container>""", compress_type=zipfile.ZIP_DEFLATED)
         items, spine, nav = [], [], []
-        for i, (title, paragraphs) in enumerate(CHAPTERS, 1):
-            z.writestr(f"OEBPS/c{i}.xhtml", xhtml(title, paragraphs), compress_type=zipfile.ZIP_DEFLATED)
+        for i, (chapter, paragraphs) in enumerate(CHAPTERS, 1):
+            z.writestr(f"OEBPS/c{i}.xhtml", xhtml(chapter, paragraphs), compress_type=zipfile.ZIP_DEFLATED)
             items.append(f'<item id="c{i}" href="c{i}.xhtml" media-type="application/xhtml+xml"/>')
             spine.append(f'<itemref idref="c{i}"/>')
-            nav.append(f'<li><a href="c{i}.xhtml">{title}</a></li>')
+            nav.append(f'<li><a href="c{i}.xhtml">{chapter}</a></li>')
         z.writestr("OEBPS/nav.xhtml", f"""<?xml version="1.0" encoding="utf-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="es">
 <head><title>Índice</title></head>
@@ -48,10 +49,13 @@ def main(out):
         z.writestr("OEBPS/content.opf", f"""<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id">
 <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-<dc:identifier id="id">urn:lectora:muestra-quijote</dc:identifier>
-<dc:title>Don Quijote de la Mancha</dc:title>
-<dc:creator>Miguel de Cervantes</dc:creator>
-<dc:language>es</dc:language>
+<dc:identifier id="id">urn:lectora:{abs(hash(title))}</dc:identifier>
+<dc:title>{title}</dc:title>
+<dc:creator>{author}</dc:creator>
+<dc:language>{language}</dc:language>
+{f'<dc:identifier>urn:isbn:{isbn}</dc:identifier>' if isbn else ''}
+{f'<dc:date>{year}</dc:date>' if year else ''}
+{f'<meta name="calibre:series" content="{series}"/><meta name="calibre:series_index" content="{index or 1}"/>' if series else ''}
 <meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>
 </metadata>
 <manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>{''.join(items)}</manifest>
@@ -59,4 +63,15 @@ def main(out):
 </package>""", compress_type=zipfile.ZIP_DEFLATED)
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("out")
+    parser.add_argument("--title", default="Don Quijote de la Mancha")
+    parser.add_argument("--author", default="Miguel de Cervantes")
+    parser.add_argument("--language", default="es")
+    parser.add_argument("--series")
+    parser.add_argument("--index")
+    parser.add_argument("--isbn")
+    parser.add_argument("--year")
+    args = parser.parse_args()
+    main(args.out, args.title, args.author, args.language, args.series, args.index, args.isbn, args.year)

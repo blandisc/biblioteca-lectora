@@ -28,6 +28,9 @@ targets:
         CFBundleDisplayName: Lectora
         LSApplicationCategoryType: public.app-category.books
         UILaunchScreen: {}
+        # La carpeta «Biblioteca Lectora» se ve en Archivos › En mi iPhone › Lectora.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft

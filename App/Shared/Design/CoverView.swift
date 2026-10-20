@@ -24,11 +24,20 @@ struct CoverView: View {
     let author: String
     let style: CoverStyle
     var showsRibbon = false
+    /// `cover.jpg` del libro; sin imagen, se dibuja la portada tipográfica.
+    var image: URL? = nil
 
     var body: some View {
         GeometryReader { proxy in
             let width = proxy.size.width
             ZStack(alignment: .topLeading) {
+                if let image, let picture = CoverImaging.image(at: image) {
+                    Image(decorative: picture, scale: 1)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: width, height: proxy.size.height)
+                        .clipped()
+                } else {
                 style.background
                 VStack(alignment: style.illustration == .windmill ? .center : .leading, spacing: width * 0.05) {
                     if style.illustration == .windmill {
@@ -55,6 +64,7 @@ struct CoverView: View {
                 .padding(width * 0.09)
                 .padding(.trailing, showsRibbon ? width * 0.1 : 0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: style.illustration == .windmill ? .top : .topLeading)
+                }
 
                 LinearGradient(colors: [.black.opacity(0.28), .clear], startPoint: .leading, endPoint: .trailing)
                     .frame(width: max(3, width * 0.05))

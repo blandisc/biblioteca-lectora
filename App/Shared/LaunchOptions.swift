@@ -11,4 +11,6 @@ enum LaunchOptions {
     static var hidesReaderChrome: Bool { UserDefaults.standard.bool(forKey: "screenshot.hideChrome") }
     /// Mostrar el mini reproductor como si sonara el libro actual.
     static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
+    /// Importar los libros de `Documents/Semilla` al arrancar (biblioteca vacía).
+    static var seed: Bool { UserDefaults.standard.bool(forKey: "screenshot.seed") }
 }

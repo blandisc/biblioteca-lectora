@@ -11,7 +11,7 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 30) {
-                    CurrentBookCard(book: model.currentBook, plain: plain, onContinue: model.continueReading)
+                    CurrentBookCard(book: model.currentBook ?? SampleLibrary.current, plain: plain, onContinue: model.continueReading)
                     if !model.desk.isEmpty {
                         DeskSection(books: model.desk)
                     }

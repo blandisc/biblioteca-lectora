@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Libro tal como lo muestra la interfaz. Por ahora con datos de ejemplo;
-/// después se alimenta de LectoraCore (biblioteca sincronizada).
+/// Libro tal como lo muestra la interfaz: de la biblioteca real (`Book` de
+/// LectoraCore) o de ejemplo (Cuaderno y estilo Nativo).
 struct ShelfBook: Identifiable, Hashable {
     /// Estable para los libros importados (la ruta del archivo); aleatorio en los de ejemplo.
     var id = UUID().uuidString
@@ -20,6 +20,12 @@ struct ShelfBook: Identifiable, Hashable {
     var seriesCount: Int? = nil
     /// La última frase que leíste, para «Donde lo dejaste».
     var lastSentence: String? = nil
+    /// Libro del catálogo, si es real.
+    var bookID: UUID? = nil
+    /// `cover.jpg` del libro, si tiene.
+    var coverImage: URL? = nil
+    var series: String? = nil
+    var seriesIndex: Double? = nil
 
     var isReading: Bool { progress > 0 && progress < 1 }
     var isFinished: Bool { progress >= 1 }
@@ -76,22 +82,45 @@ enum SampleLibrary {
     }
 }
 
-extension ShelfBook {
-    /// Libro importado a este dispositivo. Sin metadatos todavía: el título sale
-    /// del nombre de archivo y la portada de una paleta fija.
-    init(file: URL) {
-        let name = file.deletingPathExtension().lastPathComponent
+extension CoverStyle {
+    /// Portada tipográfica para libros sin imagen: color fijo según el título.
+    static func generated(for title: String) -> CoverStyle {
         let palette: [(UInt32, UInt32)] = [
             (0x2A2927, 0xEDEAE2), (0x3E4A6B, 0xEEF0F6), (0x8C6A4F, 0xF6EEE6),
-            (0x56634F, 0xF1F2EC), (0xE4C887, 0x2E2010),
+            (0x56634F, 0xF1F2EC), (0xE4C887, 0x2E2010), (0x5A2E2A, 0xF3E6D8),
+            (0x2F5D50, 0xF1EBDD), (0xD9D2C3, 0x1C1B19),
         ]
-        let index = name.unicodeScalars.reduce(0) { ($0 + Int($1.value)) % 997 } % palette.count
+        let index = title.unicodeScalars.reduce(0) { ($0 + Int($1.value)) % 997 } % palette.count
+        return CoverStyle(background: Color(hex: palette[index].0), foreground: Color(hex: palette[index].1))
+    }
+}
+
+extension ShelfBook {
+    /// Libro de la biblioteca real.
+    @MainActor
+    init(book: Book, library: LibraryStore, seriesCount: Int? = nil) {
+        let days = book.addedAt.map { Int(Date().timeIntervalSince($0) / 86_400) } ?? 999
         self.init(
-            id: file.path,
-            title: name, author: "En este dispositivo",
-            progress: 0, addedDaysAgo: 0, inCloudOnly: false,
-            cover: CoverStyle(background: Color(hex: palette[index].0), foreground: Color(hex: palette[index].1)),
-            file: file, note: "Listo para leer"
+            id: book.id.uuidString,
+            title: book.title,
+            author: book.authors.isEmpty ? "Autor desconocido" : book.authors.joined(separator: ", "),
+            progress: book.readingStatus == .finished ? 1 : 0,
+            addedDaysAgo: days,
+            inCloudOnly: false,
+            cover: .generated(for: book.title),
+            file: library.fileURL(for: book),
+            note: book.series.map { series in
+                book.seriesIndex.map { "\(series) · \(Self.number($0))" } ?? series
+            } ?? "Listo para leer",
+            seriesCount: seriesCount,
+            bookID: book.id,
+            coverImage: library.coverURL(for: book),
+            series: book.series,
+            seriesIndex: book.seriesIndex
         )
+    }
+
+    static func number(_ value: Double) -> String {
+        value.rounded() == value ? String(Int(value)) : String(value)
     }
 }

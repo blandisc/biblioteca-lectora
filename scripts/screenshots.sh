@@ -30,6 +30,25 @@ xcrun simctl install "$DEVICE" build/screens/Build/Products/Debug-iphonesimulato
 xcrun simctl status_bar "$DEVICE" override --time 9:41 --batteryState discharging --batteryLevel 100 \
   --cellularMode active --cellularBars 4 --wifiBars 3 || true
 
+# Biblioteca de muestra: EPUB generados (textos de dominio público) que la app
+# importa al primer arranque, como si los hubieras añadido tú.
+DATA=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data)
+SEED="$DATA/Documents/Semilla"
+mkdir -p "$SEED"
+mk() { python3 scripts/make-sample-epub.py "$SEED/$1" "${@:2}"; }
+mk 1-fundacion.epub --title "Fundación" --author "Isaac Asimov" --series "Fundación" --index 1 --isbn 9788497599245 --year 1951
+mk 2-fundacion-imperio.epub --title "Fundación e Imperio" --author "Isaac Asimov" --series "Fundación" --index 2 --isbn 9788497593069 --year 1952
+mk 3-segunda-fundacion.epub --title "Segunda Fundación" --author "Isaac Asimov" --series "Fundación" --index 3 --year 1953
+mk 4-rayuela.epub --title "Rayuela" --author "Julio Cortázar" --year 1963
+mk 5-bestiario.epub --title "BESTIARIO (Spanish Edition)" --author "Cortázar, Julio" --year 1951
+mk 6-pedro-paramo.epub --title "Pedro Páramo" --author "Juan Rulfo" --year 1955
+mk 7-ficciones.epub --title "Ficciones" --author "Jorge Luis Borges" --year 1944
+mk 8-pride.epub --title "Pride and Prejudice" --author "Jane Austen" --language en --year 1813
+mk 9-quijote.epub --year 1605
+xcrun simctl launch "$DEVICE" "$BUNDLE" -screenshot.seed YES >/dev/null
+sleep 30
+echo "  biblioteca de muestra importada"
+
 shoot() { # nombre, espera, argumentos…
   local name=$1 wait=$2; shift 2
   xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
@@ -49,10 +68,7 @@ for mode in light dark; do
   shoot "editorial-$mode-listening" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab reading -screenshot.listening YES
 done
 
-# Lector: se copia un EPUB de muestra a la app y se abre al arrancar.
-DATA=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data)
-mkdir -p "$DATA/Library/Application Support/Spike"
-python3 scripts/make-sample-epub.py "$DATA/Library/Application Support/Spike/Don Quijote.epub"
+# Lector: abre el libro más reciente (el Quijote).
 for style in editorial; do
   for mode in light dark; do
     shoot "$style-$mode-reader" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES

@@ -23,29 +23,31 @@ struct RootView: View {
         .environment(\.bookOpeningNamespace, opening)
         .preferredColorScheme(mode.colorScheme)
         .task {
-            if LaunchOptions.opensFirstBook, let first = model.localBooks.first {
-                model.openBook = OpenBook(url: first)
+            await model.seedForScreenshotsIfNeeded()
+            if LaunchOptions.opensFirstBook, let first = model.currentBook {
+                model.open(first)
             }
         }
-        .fileImporter(isPresented: $model.importing, allowedContentTypes: LocalBooks.readableTypes) { result in
+        .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,
+                      allowsMultipleSelection: true) { result in
             model.finishImport(result)
         }
-        .alert("No se pudo importar", isPresented: Binding(
-            get: { model.importError != nil },
-            set: { if !$0 { model.importError = nil } }
+        .alert("Importación", isPresented: Binding(
+            get: { model.importReport != nil },
+            set: { if !$0 { model.importReport = nil } }
         )) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(model.importError ?? "")
+            Text(model.importReport ?? "")
         }
         #if os(iOS)
         .fullScreenCover(item: $model.openBook) { book in
-            ReaderView(bookFile: book.url)
+            ReaderView(bookFile: book.url, bookID: book.bookID)
                 .bookOpeningDestination(in: opening, enabled: book.fromCover)
         }
         #else
         .sheet(item: $model.openBook) { book in
-            ReaderView(bookFile: book.url)
+            ReaderView(bookFile: book.url, bookID: book.bookID)
                 .frame(minWidth: 720, minHeight: 820)
         }
         #endif
