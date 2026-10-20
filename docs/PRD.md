@@ -1,8 +1,8 @@
-# Biblioteca Lectora: PRD v3.1 — el hub
+# Biblioteca Lectora: PRD v3.2 — el hub
 
-> **Estado:** borrador para revisión · **Versión:** 3.1 · **Fecha:** 20 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+> **Estado:** borrador para revisión · **Versión:** 3.2 · **Fecha:** 20 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
 >
-> **Qué cambia en la v3.1:** la **v1 es solo iPhone (incluido el Duo) y iPad**. El Mac llega después (§5). El **iPad toma el rol de estación de administración**.
+> **Qué cambia en la v3.2:** la **v1 es iPhone (incluido el Duo) + Mac nativo**. El iPhone es para leer y el Mac es la estación de administración (§5). El **iPad llega después** y sale barato, porque los diseños amplios del Duo ya lo cubren casi por completo (§5.1).
 >
 > **Qué cambió en la v3.0:** el producto se reorganiza como un **hub**. El núcleo es la app (biblioteca + lector + IA ligera); todo lo demás son **conectores**: nubes de almacenamiento, el bot, Readwise y los proveedores de IA. Las versiones anteriores siguen en el historial de git. Las investigaciones en [`investigacion/`](investigacion/) son el anexo técnico.
 
@@ -35,7 +35,7 @@
 1. **La app no posee tus datos; los organiza.** Libros en tu nube, subrayados en Readwise, IA donde tú elijas.
 2. **Offline-first.** Todo funciona sin conexión sobre una copia local; al volver a tener internet, se sincroniza.
 3. **Cada conector es intercambiable** y se puede apagar. Si Readwise, una nube o un proveedor de IA desaparece, la app sigue funcionando.
-4. **v1 solo en iPhone y iPad.** Ningún dispositivo es "servidor": cada uno hace lo que necesita, cuando lo necesita (§5).
+4. **v1 en iPhone y Mac. El Mac acelera, nunca es requisito** (§5): con el Mac apagado, el iPhone hace todo lo esencial.
 
 ## 3. Decisiones
 
@@ -77,7 +77,7 @@ Biblioteca Lectora/
 
 | Nivel | Qué | Costo | Para qué |
 |---|---|---|---|
-| **Dispositivo** (predeterminado) | Modelo de Apple en el iPhone y el iPad | Gratis, nada sale del dispositivo | Definir, explicar, traducir, etiquetar, flashcards, preguntas de reflexión, pre-lectura |
+| **Dispositivo** (predeterminado) | Modelo de Apple en el iPhone y el Mac | Gratis, nada sale del dispositivo | Definir, explicar, traducir, etiquetar, flashcards, preguntas de reflexión, pre-lectura |
 | **Nube (opcional)** | **Un conector "compatible con OpenAI"**: pegas una URL y una clave | Centavos al mes | Resúmenes de capítulo, "lo que va hasta aquí", digest semanal, "tus ideas clave", preguntas a tu biblioteca |
 
 **Configuración recomendada: DeepSeek V4 Flash vía OpenRouter**, con estas preferencias en cada petición:
@@ -103,8 +103,8 @@ Biblioteca Lectora/
 | PDF | PDFKit nativo, subrayados en una capa propia |
 | Cómics (CBZ, CBR, CB7, CBT) | Lector nativo en Swift con libarchive; `ComicInfo.xml` para manga y dobles páginas |
 
-### 3.5 Una sola app SwiftUI para iPhone y iPad (Mac después)
-Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el **iPad** también es la estación de administración (§5). El código se escribe multiplataforma desde el día uno (sin APIs exclusivas de iOS en el núcleo), así que agregar el Mac nativo después es sobre todo trabajo de interfaz.
+### 3.5 Una sola app SwiftUI para iPhone y Mac (iPad después)
+Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el Mac, para administrar y leer en pantalla grande (§5). Mac nativo, no Catalyst. El núcleo (biblioteca, sync, conectores, IA) es un paquete Swift compartido sin APIs exclusivas de una plataforma.
 
 ## 4. Experiencia: la UI como hub
 - **Inicio:** "Seguir leyendo", llegadas recientes (del buzón o de Reader), subrayados destacados de la semana.
@@ -112,23 +112,27 @@ Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el **iPad** 
 - **Conexiones:** una pantalla con el estado de cada conector: iCloud ✅ sincronizado hace 2 min · Readwise ✅ 3 subrayados pendientes · Buzón de Drive ✅ · IA: dispositivo + OpenRouter. Aquí se conectan y desconectan.
 - **Sin conexión:** todo funciona. Un indicador discreto muestra los cambios pendientes, que se envían solos al reconectar.
 
-## 5. Plataformas en la v1: iPhone e iPad
+## 5. Plataformas en la v1: iPhone + Mac
 
-**Regla:** ningún dispositivo es requisito ni hace de servidor. Cada uno trabaja sobre su copia local y sincroniza por iCloud Drive.
+**iPhone / iPhone Duo:** el lector principal. Edición de libros uno por uno, metadatos automáticos con cola de revisión, y el Duo desplegado como modo de lista + detalle.
 
-| Rol | iPhone / iPhone Duo | iPad |
+**Mac: "la estación de trabajo de tu biblioteca"**
+
+**Regla:** el Mac **acelera y amplía**, nunca es requisito. Si está apagado, el iPhone hace todo lo esencial; solo tarda más en lo pesado.
+
+| Rol | Qué hace en el Mac | Si el Mac está apagado… |
 |---|---|---|
-| **Leer** | ✅ Experiencia principal; Duo con doble página y poses | ✅ Doble página en horizontal, Split View, modo estudio (libro + notas) |
-| **Administrar la biblioteca** | Edición libro por libro, metadatos automáticos | ✅ **Estación de administración:** vista de tabla con columnas (en ancho regular), **selección múltiple y edición masiva**, editor de portadas, duplicados. Con teclado y trackpad se siente como un Calibre de escritorio |
-| **Migrar desde Calibre** | Posible, pero incómodo | ✅ Recomendado. Abres la carpeta de Calibre desde Archivos (Google Drive aparece ahí con su app) y la app lee `metadata.db` en solo lectura. 1,000–2,000 libros se importan por lotes y se pueden reanudar; las tareas largas siguen en segundo plano con `BGContinuedProcessingTask` (iOS 26) |
-| **Trabajo pesado** (OCR, índices, metadatos masivos) | Bajo demanda: solo el libro que abres; lo demás de noche y cargando | Igual, con más memoria y batería. Los resultados se comparten vía `.lectora/derivados/` para no repetirlos |
-| **Respaldo** | — | Exportar la biblioteca a Google Drive u OneDrive desde la app (manual o al abrirla, si hace días que no se respalda) |
+| **1. Administración** | **Vista de tabla tipo Calibre:** columnas configurables, orden, filtros, **edición masiva**, editor de portadas, fusión de duplicados, reglas (p. ej. "normalizar 'García Márquez, Gabriel'"), revisión de importaciones | En el iPhone se edita libro por libro (o con selección múltiple) |
+| **2. Importación masiva** | **Migración de Calibre** (1,000–2,000 libros, metadatos, portadas y anotaciones), carpetas grandes, arrastrar y soltar | El iPhone importa pocos libros a la vez |
+| **3. Trabajo pesado oportunista** | Mientras está encendido, toma trabajos de una cola compartida: **OCR** de PDFs escaneados (Vision), miniaturas, **índice de texto completo y semántico** de toda la biblioteca, descarga masiva de metadatos, resúmenes por lote con IA. Los resultados se guardan en `.lectora/derivados/` y llegan a todos tus dispositivos | El iPhone procesa solo lo que necesitas (el libro que abres), de noche y cargando |
+| **4. Lectura y estudio en pantalla grande** | Varias ventanas, libro + notas lado a lado, atajos de teclado | — |
+| **5. Respaldo** | Exportación programada de la biblioteca (archivos con metadatos incrustados) a otra ubicación: un disco externo, Google Drive u OneDrive. Es la "copia de tu copia" | — |
+| **6. Puentes futuros** | Servidor MCP local para que Claude Desktop o ChatGPT consulten tu biblioteca; ayudante del bot si alguna vez hace falta | — |
 
-**Coordinación sin servidor:** los trabajos pesados se anotan en el registro compartido. Un dispositivo "toma" un trabajo (lo marca con su nombre y hora) y, si no lo termina en un tiempo razonable, otro lo retoma.
+**Cómo se coordinan sin servidor:** los trabajos pesados se anotan en el registro compartido. Un dispositivo "toma" un trabajo (lo marca con su nombre y hora) y, si no lo termina en un tiempo razonable, otro lo retoma. Así el Mac y el iPhone no repiten trabajo.
 
-### 5.1 El Mac, más adelante
-- **Puente gratis mientras tanto:** la app de iPad corre en los Mac con Apple Silicon ("Designed for iPad") vía TestFlight, sin trabajo extra. Sirve para leer y administrar en pantalla grande antes de tener la versión nativa.
-- **Mac nativo (fase posterior):** tabla tipo Calibre completa con columnas configurables y reglas de normalización, importación masiva arrastrando carpetas, trabajo pesado mientras está encendido (OCR, índice semántico de toda la biblioteca, resúmenes por lote), respaldo programado, y un servidor MCP local para que Claude Desktop consulte tu biblioteca.
+### 5.1 El iPad, más adelante
+La pantalla interior del Duo usa el mismo tipo de diseño que el iPad (ancho y alto "regulares"). Las pantallas amplias del Duo (doble página, lista + detalle, modo estudio) **son ya las del iPad**. Agregarlo después implica sobre todo lo exclusivo del iPad: varias ventanas, Stage Manager, Apple Pencil, teclado y trackpad, y pruebas.
 
 ## 6. Catálogo de funcionalidades
 
@@ -137,15 +141,15 @@ Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el **iPad** 
 ### 6.1 Biblioteca (el "Calibre")
 | Función | P |
 |---|---|
-| Migración desde Calibre (iPad, recomendado): metadatos, portadas, series, etiquetas, identificadores, anotaciones; pantalla de revisión | P0 |
-| Importar: Compartir y Archivos, arrastrar en iPad (Split View), **buzones en Google Drive y OneDrive** | P0 / P1 |
+| Migración desde Calibre (Mac): metadatos, portadas, series, etiquetas, identificadores, anotaciones; pantalla de revisión | P0 |
+| Importar: arrastrar (Mac), Compartir y Archivos (iPhone), **buzones en Google Drive y OneDrive** | P0 / P1 |
 | Catálogo: autores, series con número, etiquetas, idioma, ISBN, ASIN, valoración, estado de lectura | P0 |
-| **Tabla de administración en el iPad** con selección múltiple y edición masiva | P0 |
+| **Tabla de administración en el Mac** con edición masiva; selección múltiple en el iPhone | P0 |
 | Metadatos y portadas automáticos (Open Library, Google Books, Hardcover) con fusión y elección manual | P0 |
 | Descarga bajo demanda y liberar espacio por dispositivo | P0 |
 | Búsqueda con sintaxis (`autor:x serie:y`) y estantes inteligentes | P1 |
 | Duplicados, editor de portadas, reglas de normalización | P1 |
-| Exportar la biblioteca y respaldo a Google Drive u OneDrive | P1 |
+| Exportar la biblioteca y respaldo programado (Mac) | P1 |
 | Biblioteca en Google Drive u OneDrive (además de iCloud) | P2 |
 
 ### 6.2 Lector
@@ -189,12 +193,12 @@ Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el **iPad** 
 ### 6.5 Plataforma
 | Función | P |
 |---|---|
-| Sincronización offline-first con registros por dispositivo; conflictos visibles ("vas más adelante en el iPad, ¿saltar?") | P0 |
+| Sincronización offline-first con registros por dispositivo; conflictos visibles ("vas más adelante en el Mac, ¿saltar?") | P0 |
 | Pantalla de Conexiones con el estado de cada conector | P0 |
 | Accesibilidad: VoiceOver, Dynamic Type, Reduce Motion, fuentes para dislexia | P0 |
 | Estadísticas: tiempo, racha, velocidad (incluida la de la lectura guiada) | P1 |
-| iPad: varias ventanas, atajos de teclado, trackpad | P1 |
-| Mac ("Designed for iPad" como puente; nativo después) | P2 / P3 |
+| Mac: varias ventanas, atajos, menús | P1 |
+| iPad | P2 |
 | Widgets, App Intents, Siri | P2 |
 | Web de solo lectura | P3 |
 | **Bot de Telegram** (deja libros en el buzón) | Diferido |
@@ -211,8 +215,8 @@ Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el **iPad** 
 | IA en el dispositivo + DeepSeek vía OpenRouter | ✅ Viable y barato | Verificar precios y proveedores antes de fijarlos |
 | Agnóstico de nube | ⚠️ Viable por etapas | Cada nube es una integración aparte: iCloud primero; Drive y OneDrive como buzón en la v1 y como biblioteca en la v2 |
 | Web | ⚠️ Difícil sin servidor | Al final, de solo lectura |
-| Administración tipo Calibre en iPad | ✅ Viable | SwiftUI `Table` y selección múltiple funcionan en iPad con ancho regular; es menos potente que una tabla de Mac, suficiente para la v1 |
-| Migrar 2,000 libros desde el iPad | ⚠️ Viable | Depende de que la app de Google Drive entregue los archivos por Archivos; por lotes y reanudable |
+| Administración tipo Calibre en el Mac | ✅ Viable | SwiftUI `Table` en macOS: columnas, orden, selección múltiple |
+| Mac como requisito | ❌ No | Solo acelera |
 | Competencia | ⚠️ | Readest ya cubre parte. La diferencia: gestión de biblioteca real, Duo, lectura guiada, Readwise como hub |
 
 ## 8. Fases
@@ -221,17 +225,17 @@ Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el **iPad** 
 - S1 · Lector: foliate-js en SwiftUI con gestos nativos, guiones en español, VoiceOver, libro de 1,000 páginas. *Salida:* se siente como Apple Books en un test a ciegas contigo.
 - S2 · PDF: PDFKit con 500 páginas y 300 subrayados.
 - S3 · **Sync:** registros JSONL en iCloud Drive con 3 dispositivos, sin conexión, con conflictos; 2,000 libros y 10,000 subrayados; prueba de "nunca pierde un subrayado".
-- S4 · Calibre en iPad: abrir tu biblioteca desde Archivos (Google Drive), leer `metadata.db` e importar 100 libros por lotes.
+- S4 · Calibre en el Mac: leer `metadata.db` de una copia de tu biblioteca e importar 100 libros.
 - S5 · Readwise y Reader: las 9 pruebas con tu token, incluido el emparejamiento de Kindle.
 - S6 · IA: modelo de Apple en español + OpenRouter con `zdr` y `data_collection: deny`.
 
-**Fase 1: MVP (8–10 semanas):** P0 de biblioteca, lector, subrayados y plataforma, en **iPhone y iPad**. *Salida:* dejas de usar Calibre, Apple Books y Kindle para tus libros.
+**Fase 1: MVP (8–10 semanas):** P0 de biblioteca, lector, subrayados y plataforma, en **iPhone y Mac**. *Salida:* dejas de usar Calibre, Apple Books y Kindle para tus libros.
 
 **Fase 2: Diferenciadores (6–8 semanas):** lectura guiada, Duo completo, cómics, Reader, IA P1, buzones de Google Drive y OneDrive.
 
 **Fase 3:** IA P2 (conexiones, digest, preguntas a tu biblioteca) y estadísticas.
 
-**Fase 4:** **Mac nativo**, bot de Telegram (vía buzón), Google Drive y OneDrive como biblioteca, web.
+**Fase 4:** **iPad**, bot de Telegram (vía buzón), Google Drive y OneDrive como biblioteca, web.
 
 **Fase 5 (opcional):** versión pública.
 
