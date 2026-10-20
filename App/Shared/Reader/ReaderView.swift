@@ -2,9 +2,8 @@ import SwiftUI
 import WebKit
 
 /// Pantalla de lectura. El WebView solo renderiza; la interfaz es nativa.
-/// - Nativo (v7): controles de vidrio que aparecen al tocar el centro.
-/// - Editorial (v5): capítulo y porcentaje siempre a la vista, en pequeño;
-///   al tocar el centro, una barra de papel sin vidrio.
+/// Tocar a la izquierda o a la derecha pasa de página, al centro muestra los
+/// controles, y el toque largo selecciona texto para subrayar con lápiz.
 struct ReaderView: View {
     let bookFile: URL
     @StateObject private var controller = ReaderController()
@@ -14,6 +13,16 @@ struct ReaderView: View {
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @State private var bookmarked = false
+    @State private var showsAppearance = false
+    @State private var noteText = ""
+    @AppStorage(ReaderKeys.font) private var font: ReaderFont = .newYork
+    @AppStorage(ReaderKeys.scale) private var scale = 1.0
+    @AppStorage(ReaderKeys.theme) private var theme: ReaderTheme = .auto
+    @AppStorage(ReaderKeys.autoNight) private var autoNight = true
+
+    private var palette: ReaderPalette {
+        ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: colorScheme == .dark)
+    }
 
     private var title: String {
         controller.title ?? bookFile.deletingPathExtension().lastPathComponent
@@ -21,18 +30,9 @@ struct ReaderView: View {
 
     var body: some View {
         ZStack {
-            (style == .editorial ? Theme.Editorial.paper : Theme.paper).ignoresSafeArea()
+            palette.background.ignoresSafeArea()
             ReaderWebView(controller: controller)
                 .ignoresSafeArea(edges: .bottom)
-            // Zonas de toque nativas: izquierda = atrás, centro = controles, derecha = adelante.
-            // (Siguiente paso de la prueba S1: arrastre interrumpible que sigue al dedo.)
-            HStack(spacing: 0) {
-                Color.clear.contentShape(Rectangle()).onTapGesture { controller.previous() }
-                Color.clear.contentShape(Rectangle()).onTapGesture {
-                    withAnimation(.snappy(duration: 0.25)) { showsChrome.toggle() }
-                }
-                Color.clear.contentShape(Rectangle()).onTapGesture { controller.next() }
-            }
         }
         .overlay(alignment: .topTrailing) {
             if bookmarked {
@@ -49,17 +49,51 @@ struct ReaderView: View {
         #if os(iOS)
         .statusBarHidden(!showsChrome)
         #endif
-        .preferredColorScheme(mode.colorScheme)
+        .preferredColorScheme(palette.scheme ?? mode.colorScheme)
+        .sheet(isPresented: $showsAppearance) {
+            ReaderAppearanceSheet()
+                .presentationDetents([.height(440)])
+                .presentationDragIndicator(.visible)
+        }
+        .confirmationDialog("Subrayado", isPresented: Binding(
+            get: { controller.tappedHighlight != nil },
+            set: { if !$0 { controller.tappedHighlight = nil } }
+        )) {
+            Button("Borrar subrayado", role: .destructive) {
+                if let cfi = controller.tappedHighlight { controller.removeHighlight(cfi: cfi) }
+            }
+        }
+        .alert("Nota", isPresented: Binding(
+            get: { controller.noteTarget != nil },
+            set: { if !$0 { controller.noteTarget = nil } }
+        )) {
+            TextField("Escribe tu nota", text: $noteText)
+            Button("Guardar") { controller.saveNote(noteText); noteText = "" }
+            Button("Cancelar", role: .cancel) { noteText = "" }
+        } message: {
+            Text(controller.noteTarget.map { "«\($0.quote)»" } ?? "")
+        }
         .alert("No se pudo abrir el libro", isPresented: .constant(controller.errorMessage != nil)) {
             Button("OK", role: .cancel) { dismiss() }
         } message: {
             Text(controller.errorMessage ?? "")
         }
         .onAppear {
-            applyColors()
+            applyStyle()
+            controller.onTap = { x in
+                if x < 0.28 {
+                    controller.previous()
+                } else if x > 0.72 {
+                    controller.next()
+                } else {
+                    withAnimation(.snappy(duration: 0.25)) { showsChrome.toggle() }
+                }
+            }
             controller.open(bookFile: bookFile)
         }
-        .onChange(of: colorScheme) { _, _ in applyColors() }
+        .onChange(of: palette) { _, _ in applyStyle() }
+        .onChange(of: font) { _, _ in applyStyle() }
+        .onChange(of: scale) { _, _ in applyStyle() }
     }
 
     /// Controles de vidrio al tocar el centro (los dos estilos). Sin controles,
@@ -73,7 +107,8 @@ struct ReaderView: View {
             }
             VStack(spacing: 0) {
                 if showsChrome {
-                    TopControls(bookmarked: $bookmarked, onClose: { dismiss() })
+                    TopControls(bookmarked: $bookmarked, onClose: { dismiss() },
+                                onAppearance: { showsAppearance = true })
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 Spacer(minLength: 0)
@@ -86,15 +121,16 @@ struct ReaderView: View {
         }
     }
 
-    private func applyColors() {
-        let colors = Theme.readerCSS(dark: colorScheme == .dark)
-        controller.setColors(text: colors.text, link: colors.link)
+    private func applyStyle() {
+        controller.setColors(text: palette.text, link: palette.link)
+        controller.setFont(family: font.css, scale: scale)
     }
 }
 
 private struct TopControls: View {
     @Binding var bookmarked: Bool
     let onClose: () -> Void
+    let onAppearance: () -> Void
 
     var body: some View {
         HStack {
@@ -113,7 +149,7 @@ private struct TopControls: View {
                         .frame(width: 46, height: 44)
                 }
                 .accessibilityLabel("Buscar en el libro")
-                Button {} label: {
+                Button(action: onAppearance) {
                     Text("Aa")
                         .font(.body.weight(.semibold))
                         .frame(width: 46, height: 44)

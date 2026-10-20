@@ -11,6 +11,8 @@ const defaultStyle = {
     hyphenate: true,
     fontFamily: 'Literata, Charter, Georgia, serif',
     maxInlineSize: 720,
+    // Tamaño de letra relativo (1 = el del libro).
+    fontScale: 1,
     // Colores del tema de la app (claro u oscuro). null = los del libro.
     textColor: null,
     linkColor: null,
@@ -22,10 +24,11 @@ const getColorCSS = ({ textColor, linkColor }) => !textColor ? '' : `
     a, a * { color: ${linkColor ?? textColor} !important; }
 `
 
-const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, ...colors }) => `
-    html { color-scheme: light dark; }
+const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, ...colors }) => `
+    html { color-scheme: light dark; font-size: ${Math.round(fontScale * 100)}% !important; }
     ${getColorCSS(colors)}
-    body { font-family: ${fontFamily}; }
+    body { font-family: ${fontFamily} !important; }
+    body *:not(code):not(pre):not(kbd):not(samp) { font-family: inherit !important; }
     p, li, blockquote, dd {
         line-height: ${lineHeight};
         text-align: ${justify ? 'justify' : 'start'};
@@ -46,6 +49,31 @@ const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, ...colors }) => `
 
 let view = null
 let style = { ...defaultStyle }
+
+// Subrayados: CFI de rango. Se dibujan como un trazo de lápiz bajo el texto.
+const highlights = new Set()
+let lastSelection = null
+let annotationTapped = false
+
+const SVG_NS = 'http://www.w3.org/2000/svg'
+const pencil = (rects, { color = '#B8372A' } = {}) => {
+    const g = document.createElementNS(SVG_NS, 'g')
+    g.setAttribute('fill', 'none')
+    g.setAttribute('stroke', color)
+    g.setAttribute('stroke-width', '1.6')
+    g.setAttribute('stroke-linecap', 'round')
+    for (const { left, right, bottom } of rects) {
+        const w = right - left
+        if (w < 2) continue
+        const y = bottom + 1
+        const path = document.createElementNS(SVG_NS, 'path')
+        // Un trazo apenas irregular, como hecho a mano.
+        path.setAttribute('d', `M${left + 1} ${y + 0.6} C ${left + w * 0.25} ${y - 0.8}, ${left + w * 0.5} ${y + 1}, `
+            + `${left + w * 0.72} ${y - 0.2} S ${right - w * 0.06} ${y + 0.4}, ${right - 1} ${y - 0.5}`)
+        g.append(path)
+    }
+    return g
+}
 
 const applyStyle = () => {
     if (!view?.renderer) return
@@ -70,14 +98,34 @@ const onLoad = ({ detail: { doc, index } }) => {
         const lang = view.book.metadata.language
         doc.documentElement.lang = Array.isArray(lang) ? lang[0] : lang
     }
-    doc.addEventListener('pointerup', () => {
+    doc.addEventListener('selectionchange', () => {
         const selection = doc.getSelection()
         if (!selection || selection.isCollapsed || selection.rangeCount === 0) return
-        const range = selection.getRangeAt(0)
-        const text = selection.toString().trim()
-        if (!text) return
-        post('selection', { cfi: view.getCFI(index, range), text })
+        lastSelection = { doc, index, range: selection.getRangeAt(0).cloneRange() }
     })
+    // Los toques se resuelven aquí y no con vistas nativas encima, para que el
+    // toque largo llegue al texto y se pueda seleccionar.
+    doc.addEventListener('click', event => {
+        if (annotationTapped) { annotationTapped = false; return }
+        if (event.defaultPrevented || event.target.closest?.('a')) return
+        const selection = doc.getSelection()
+        if (selection && !selection.isCollapsed) return
+        const frame = doc.defaultView?.frameElement
+        const offset = frame?.getBoundingClientRect().left ?? 0
+        post('tap', { x: (event.clientX + offset) / window.innerWidth })
+    })
+}
+
+const onDrawAnnotation = ({ detail: { draw } }) =>
+    draw(pencil, { color: style.linkColor ?? '#B8372A' })
+
+const onCreateOverlay = () => {
+    for (const value of highlights) view.addAnnotation({ value })
+}
+
+const onShowAnnotation = ({ detail: { value } }) => {
+    annotationTapped = true
+    post('annotation', { cfi: value })
 }
 
 window.lectora = {
@@ -88,6 +136,9 @@ window.lectora = {
         document.body.append(view)
         view.addEventListener('relocate', onRelocate)
         view.addEventListener('load', onLoad)
+        view.addEventListener('draw-annotation', onDrawAnnotation)
+        view.addEventListener('create-overlay', onCreateOverlay)
+        view.addEventListener('show-annotation', onShowAnnotation)
         try {
             await view.open(url)
             const { book } = view
@@ -111,6 +162,37 @@ window.lectora = {
     setStyle(partial) {
         style = { ...style, ...partial }
         applyStyle()
+        if (partial.linkColor) for (const value of highlights) view?.addAnnotation({ value })
+    },
+    // Devuelve la selección actual ({ cfi, text, prefix, suffix }) y la limpia.
+    takeSelection() {
+        if (!lastSelection || !view) return null
+        const { doc, index, range } = lastSelection
+        lastSelection = null
+        const text = range.toString().trim()
+        if (!text) return null
+        const before = doc.createRange()
+        before.setStart(doc.body, 0)
+        before.setEnd(range.startContainer, range.startOffset)
+        const after = doc.createRange()
+        after.setStart(range.endContainer, range.endOffset)
+        after.setEnd(doc.body, doc.body.childNodes.length)
+        const cfi = view.getCFI(index, range)
+        doc.getSelection()?.removeAllRanges()
+        return { cfi, text, prefix: before.toString().slice(-40), suffix: after.toString().slice(0, 40) }
+    },
+    setHighlights(values) {
+        highlights.clear()
+        for (const value of values) highlights.add(value)
+        for (const value of highlights) view?.addAnnotation({ value })
+    },
+    addHighlight(value) {
+        highlights.add(value)
+        view?.addAnnotation({ value })
+    },
+    removeHighlight(value) {
+        highlights.delete(value)
+        view?.deleteAnnotation({ value })
     },
 }
 
