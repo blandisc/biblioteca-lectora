@@ -47,6 +47,8 @@ public enum MetadataCleaner {
         let junk = [
             #"\((Spanish|English) Edition\)"#, #"\(Edición española\)"#, #"\[(epub|mobi|pdf|azw3?)\]"#,
             #"\((epub|mobi|pdf)\)"#, #"[ _-]v\d+(\.\d+)?$"#, #" - Copy$"#, #" - copia$"#,
+            // «Rayuela - 1. ed.», «El túnel, 2a edición», «Dune (3rd edition)».
+            #"[\s,.\-–(]+\d+\s*(a|ª|º|st|nd|rd|th)?\.?\s*(ed|edición|edicion|edition)\.?\)?$"#,
         ]
         for pattern in junk {
             cleaned = cleaned.replacingOccurrences(of: pattern, with: "", options: [.regularExpression, .caseInsensitive])

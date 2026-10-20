@@ -110,7 +110,15 @@ public enum MetadataMatcher {
         guard result.sameISBN || (result.title >= 0.95 && result.author >= 0.8) else { return false }
         // Otro libro distinto casi igual de probable: mejor preguntar. Otra
         // edición del mismo (mismo título, algún autor en común) no cuenta.
-        let rivals = ranked.dropFirst().filter { $0.confidence >= best.confidence - 0.05 && !sameWork(best, $0) }
+        // Un rival tiene que parecerse por su propio título, no solo por un
+        // subtítulo mal catalogado («Harry Potter» + «y la piedra filosofal»
+        // colgado de «La Orden del Fénix»).
+        let bookTitle = SeriesParser.split(book.title)?.title ?? book.title
+        let rivals = ranked.dropFirst().filter { other in
+            other.confidence >= best.confidence - 0.05 && !sameWork(best, other)
+                && max(TextMatch.titleSimilarity(bookTitle, other.title),
+                       other.workTitle.map { TextMatch.titleSimilarity(bookTitle, $0) } ?? 0) >= 0.9
+        }
         return result.sameISBN || rivals.isEmpty
     }
 
@@ -118,7 +126,12 @@ public enum MetadataMatcher {
     static func sameWork(_ a: MetadataCandidate, _ b: MetadataCandidate) -> Bool {
         let titles = [a.title, a.workTitle].compactMap { $0 }
         let others = [b.title, b.workTitle].compactMap { $0 }
-        let sameTitle = titles.contains { x in others.contains { TextMatch.titleSimilarity(x, $0) >= 0.9 } }
+        let sameTitle = titles.contains { x in
+            others.contains { y in
+                TextMatch.titleSimilarity(x, y) >= 0.9
+                    || TextMatch.fold(TextMatch.mainTitle(x)) == TextMatch.fold(TextMatch.mainTitle(y))
+            }
+        }
         return sameTitle && TextMatch.sameAuthorScore(a.authors, b.authors) >= 0.5
     }
 

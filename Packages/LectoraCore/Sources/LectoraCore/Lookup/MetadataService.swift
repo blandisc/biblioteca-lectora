@@ -67,7 +67,7 @@ public struct MetadataService: Sendable {
         func settled() -> Bool { MetadataMatcher.shouldAutoApply(MetadataMatcher.rank(found, for: book), for: book) }
 
         if let isbn {
-            await ask(OpenLibrary.searchURL(isbn: isbn), parse: OpenLibrary.candidates)
+            await ask(OpenLibrary.searchURL(isbn: isbn)) { OpenLibrary.candidates(from: $0) }
             if let key = googleKey {
                 await ask(GoogleBooks.searchURL(isbn: isbn, title: title, author: nil, language: nil, apiKey: key), parse: GoogleBooks.candidates)
             }
@@ -75,14 +75,14 @@ public struct MetadataService: Sendable {
         let hasTitle = !title.trimmingCharacters(in: .whitespaces).isEmpty
         if hasTitle, !settled() {
             let query = ([title] + (author.map { [$0] } ?? [])).joined(separator: " ")
-            await ask(OpenLibrary.searchURL(query: query, language: book.language), parse: OpenLibrary.candidates)
+            await ask(OpenLibrary.searchURL(query: query, language: book.language)) { OpenLibrary.candidates(from: $0, language: book.language) }
             if let key = googleKey {
                 await ask(GoogleBooks.searchURL(isbn: nil, title: title, author: author, language: book.language, apiKey: key),
                           parse: GoogleBooks.candidates)
             }
         }
         if hasTitle, !settled(), author != nil {
-            await ask(OpenLibrary.searchURL(query: title, language: book.language), parse: OpenLibrary.candidates)
+            await ask(OpenLibrary.searchURL(query: title, language: book.language)) { OpenLibrary.candidates(from: $0, language: book.language) }
         }
 
         var ranked = MetadataMatcher.rank(found, for: book)

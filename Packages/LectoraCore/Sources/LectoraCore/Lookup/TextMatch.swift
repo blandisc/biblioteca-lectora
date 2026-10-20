@@ -29,8 +29,9 @@ enum TextMatch {
     /// entre paréntesis o corchetes.
     static func mainTitle(_ title: String) -> String {
         var main = title.replacingOccurrences(of: #"\s*[\(\[][^\)\]]*[\)\]]"#, with: "", options: .regularExpression)
-        for separator in [":", " - ", " – ", " — "] {
-            if let range = main.range(of: separator), main.distance(from: main.startIndex, to: range.lowerBound) >= 2 {
+        // «. » solo después de una frase («Homo deus. Breve historia…»), no de «Dr.» o «St.».
+        for (separator, minimum) in [(":", 2), (" - ", 2), (" – ", 2), (" — ", 2), (". ", 5)] {
+            if let range = main.range(of: separator), main.distance(from: main.startIndex, to: range.lowerBound) >= minimum {
                 main = String(main[..<range.lowerBound])
             }
         }

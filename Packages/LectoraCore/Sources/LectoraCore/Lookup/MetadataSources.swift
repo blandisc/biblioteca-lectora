@@ -29,7 +29,8 @@ public enum OpenLibrary {
         var items = params.map { URLQueryItem(name: $0.key, value: $0.value) }
         items.append(URLQueryItem(name: "limit", value: String(limit)))
         items.append(URLQueryItem(name: "fields", value: fields))
-        if let language, let code = marcLanguage[language] { items.append(URLQueryItem(name: "lang", value: code)) }
+        // Open Library espera el código de dos letras («es»); con «spa» lo ignora (lo mostró el sondeo).
+        if let language, language.count == 2 { items.append(URLQueryItem(name: "lang", value: language)) }
         components.queryItems = items
         return components.url!
     }
@@ -44,24 +45,33 @@ public enum OpenLibrary {
         id > 0 ? URL(string: "https://covers.openlibrary.org/b/id/\(id)-L.jpg?default=false") : nil
     }
 
-    private static let marcLanguage = ["es": "spa", "en": "eng", "fr": "fre", "pt": "por", "it": "ita", "de": "ger", "ca": "cat"]
-
-    public static func candidates(from data: Data) -> [MetadataCandidate] {
+    /// - Parameter language: idioma del libro. Una edición en otro idioma no
+    ///   presta sus datos (título, editorial, ISBN, portada): se usan los de la obra.
+    public static func candidates(from data: Data, language: String? = nil) -> [MetadataCandidate] {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let docs = root["docs"] as? [[String: Any]] else { return [] }
-        return docs.compactMap(candidate)
+        return docs.compactMap { candidate(from: $0, language: language) }
     }
 
-    static func candidate(from doc: [String: Any]) -> MetadataCandidate? {
+    static func candidate(from doc: [String: Any], language preferred: String? = nil) -> MetadataCandidate? {
         guard let workTitle = doc["title"] as? String, let key = doc["key"] as? String else { return nil }
-        let edition = ((doc["editions"] as? [String: Any])?["docs"] as? [[String: Any]])?.first ?? [:]
+        var edition = ((doc["editions"] as? [String: Any])?["docs"] as? [[String: Any]])?.first ?? [:]
+        if let preferred, let code = (edition["language"] as? [String])?.first,
+           let editionLanguage = MetadataCleaner.cleanLanguage(code), editionLanguage != preferred {
+            edition = [:]
+        }
         let editionCount = doc["edition_count"] as? Int ?? 0
 
         // Título y datos de la edición (en tu idioma); si no hay, los de la obra.
         let language = ((edition["language"] as? [String])?.first
             ?? (doc["language"] as? [String]).flatMap { $0.count == 1 ? $0.first : nil }).flatMap(MetadataCleaner.cleanLanguage)
         let editionTitle = (edition["title"] as? String).map { cleanEditionTitle($0, language: language) }
-        let title = editionTitle.flatMap { $0.isEmpty ? nil : $0 } ?? cleanEditionTitle(workTitle, language: language)
+        let cleanWorkTitle = cleanEditionTitle(workTitle, language: language)
+        // «Hobbit, The (Unwin Books) by Tolkien, J. R. R. (June 1, 1966) Paperback»: mejor el de la obra.
+        let usableEditionTitle = editionTitle.flatMap { title in
+            title.isEmpty || title.count > cleanWorkTitle.count + 30 ? nil : title
+        }
+        let title = usableEditionTitle ?? cleanWorkTitle
         let editionISBNs = (edition["isbn"] as? [String] ?? []).compactMap(ISBN.normalized)
         // Cualquier ISBN de la obra sirve para reconocerla: otra edición del mismo libro.
         let workISBNs = (doc["isbn"] as? [String] ?? []).compactMap(ISBN.normalized)
@@ -93,7 +103,8 @@ public enum OpenLibrary {
             title: SeriesParser.split(title)?.title ?? title,
             subtitle: (edition["subtitle"] as? String) ?? (doc["subtitle"] as? String),
             authors: authors(doc["author_name"] as? [String] ?? [], alternatives: doc["author_alternative_name"] as? [String] ?? []),
-            publisher: (edition["publisher"] as? [String])?.first ?? (doc["publisher"] as? [String]).flatMap { $0.count == 1 ? $0.first : nil },
+            publisher: ((edition["publisher"] as? [String])?.first ?? (doc["publisher"] as? [String]).flatMap { $0.count == 1 ? $0.first : nil })
+                .map(cleanPublisher),
             published: published,
             isbn: editionISBNs.first,
             language: language,
@@ -113,6 +124,10 @@ public enum OpenLibrary {
     /// Library conoce esa forma. El orden se respeta (el primero es el autor;
     /// suelen seguir traductores e ilustradores).
     static func authors(_ names: [String], alternatives: [String]) -> [String] {
+        latinAuthors(names, alternatives: alternatives).map { shouting($0) ? $0.lowercased().capitalized : $0 }
+    }
+
+    private static func latinAuthors(_ names: [String], alternatives: [String]) -> [String] {
         names.map { name in
             guard !isLatin(name) else { return name }
             let latin = alternatives.filter { isLatin($0) && $0.contains(" ") }
@@ -123,6 +138,16 @@ public enum OpenLibrary {
     }
 
     static func isLatin(_ text: String) -> Bool { TextMatch.isLatin(text) }
+
+    /// «[Peralta]» → «Peralta»; «PLAZA & JANES EDITORES» → «Plaza & Janes Editores».
+    static func cleanPublisher(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: CharacterSet(charactersIn: " []()."))
+        return shouting(trimmed) ? trimmed.lowercased().capitalized : trimmed
+    }
+
+    static func shouting(_ text: String) -> Bool {
+        text.filter(\.isLetter).count > 3 && text == text.uppercased() && text != text.lowercased()
+    }
 
     /// «Don Quijote de la Mancha.» → sin punto; «El Mesías de Dune / Dune
     /// Messiah» → solo el primero; «FICCIONES» → «Ficciones».

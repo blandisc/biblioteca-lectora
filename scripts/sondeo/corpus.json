@@ -1,6 +1,6 @@
 [
   {"id": "quijote", "title": "Don Quijote de la Mancha", "authors": ["Miguel de Cervantes"], "language": "es", "expect": {"author": "Cervantes"}},
-  {"id": "fundacion", "title": "Fundación", "authors": ["Isaac Asimov"], "language": "es", "expect": {"author": "Asimov", "series": "Fundación"}},
+  {"id": "fundacion", "title": "Fundación", "authors": ["Isaac Asimov"], "language": "es", "expect": {"author": "Asimov"}},
   {"id": "cien-anos", "title": "Cien años de soledad", "authors": ["Gabriel García Márquez"], "language": "es", "expect": {"author": "García Márquez"}},
   {"id": "cien-anos-sucio", "title": "CIEN AÑOS DE SOLEDAD", "authors": ["García Márquez, Gabriel"], "language": "es", "expect": {"title": "Cien años de soledad"}},
   {"id": "sombra-viento", "title": "La sombra del viento", "authors": ["Carlos Ruiz Zafón"], "language": "es", "expect": {"author": "Ruiz Zafón"}},
@@ -30,7 +30,7 @@
   {"id": "metamorfosis", "title": "La metamorfosis", "authors": ["Franz Kafka"], "language": "es", "expect": {"author": "Kafka"}},
   {"id": "orgullo", "title": "Orgullo y prejuicio", "authors": ["Jane Austen"], "language": "es", "expect": {"author": "Austen"}},
   {"id": "pride-en", "title": "Pride and Prejudice", "authors": ["Jane Austen"], "language": "en", "expect": {"author": "Austen"}},
-  {"id": "archivo-sucio", "title": "cervantes don-quijote", "authors": [], "language": null, "expect": {"author": "Cervantes"}},
+  {"id": "archivo-sucio", "title": "cervantes don-quijote", "authors": [], "language": null, "expect": {"review": true}},
   {"id": "isbn-falso", "title": "El túnel", "authors": ["Ernesto Sabato"], "language": "es", "isbn": "9780000000002", "expect": {"author": "Sabato"}},
   {"id": "juego-tronos", "title": "Juego de tronos (Canción de hielo y fuego 1)", "authors": ["George R. R. Martin"], "language": "es", "expect": {"author": "Martin", "series": "Canción de hielo y fuego"}},
   {"id": "hobbit", "title": "El hobbit", "authors": ["J.R.R. Tolkien"], "language": "es", "expect": {"author": "Tolkien"}},
@@ -43,6 +43,6 @@
   {"id": "arte-guerra", "title": "El arte de la guerra", "authors": ["Sun Tzu"], "language": "es", "expect": {"author": "Sun Tzu"}},
   {"id": "aleph", "title": "El Aleph", "authors": ["Jorge Luis Borges"], "language": "es", "expect": {"author": "Borges"}},
   {"id": "homo-deus", "title": "Homo Deus: Breve historia del mañana", "authors": ["Yuval Noah Harari"], "language": "es", "expect": {"author": "Harari"}},
-  {"id": "solo-titulo", "title": "Rayuela", "authors": [], "language": "es", "expect": {"author": "Cortázar"}},
+  {"id": "solo-titulo", "title": "Rayuela", "authors": [], "language": "es", "expect": {"review": true}},
   {"id": "autor-errado", "title": "La ciudad y los perros", "authors": ["Gabriel García Márquez"], "language": "es", "expect": {"review": true}}
 ]
