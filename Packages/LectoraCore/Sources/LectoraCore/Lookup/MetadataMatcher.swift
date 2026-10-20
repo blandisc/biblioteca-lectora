@@ -108,10 +108,18 @@ public enum MetadataMatcher {
         guard let best = ranked.first, best.confidence >= autoApplyThreshold else { return false }
         let result = match(best, for: book)
         guard result.sameISBN || (result.title >= 0.95 && result.author >= 0.8) else { return false }
-        if let second = ranked.dropFirst().first, second.confidence >= best.confidence - 0.05, !result.sameISBN {
-            return false
-        }
-        return true
+        // Otro libro distinto casi igual de probable: mejor preguntar. Otra
+        // edición del mismo (mismo título, algún autor en común) no cuenta.
+        let rivals = ranked.dropFirst().filter { $0.confidence >= best.confidence - 0.05 && !sameWork(best, $0) }
+        return result.sameISBN || rivals.isEmpty
+    }
+
+    /// Mismo título y algún autor en común: otra edición (o un duplicado) del mismo libro.
+    static func sameWork(_ a: MetadataCandidate, _ b: MetadataCandidate) -> Bool {
+        let titles = [a.title, a.workTitle].compactMap { $0 }
+        let others = [b.title, b.workTitle].compactMap { $0 }
+        let sameTitle = titles.contains { x in others.contains { TextMatch.titleSimilarity(x, $0) >= 0.9 } }
+        return sameTitle && TextMatch.sameAuthorScore(a.authors, b.authors) >= 0.5
     }
 
     /// Misma obra o mismo título y autor (Open Library tiene duplicados).
