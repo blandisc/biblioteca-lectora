@@ -27,7 +27,7 @@ xcrun simctl bootstatus "$DEVICE" -b
 xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS -configuration Debug \
   -destination "id=$DEVICE" -derivedDataPath build/screens build CODE_SIGNING_ALLOWED=NO -quiet
 xcrun simctl install "$DEVICE" build/screens/Build/Products/Debug-iphonesimulator/Lectora.app
-xcrun simctl status_bar "$DEVICE" override --time 9:41 --batteryState charged --batteryLevel 100 \
+xcrun simctl status_bar "$DEVICE" override --time 9:41 --batteryState discharging --batteryLevel 100 \
   --cellularMode active --cellularBars 4 --wifiBars 3 || true
 
 shoot() { # nombre, espera, argumentos…
@@ -56,5 +56,6 @@ python3 scripts/make-sample-epub.py "$DATA/Library/Application Support/Spike/Don
 for style in native editorial; do
   for mode in light dark; do
     shoot "$style-$mode-reader" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES
+    shoot "$style-$mode-page" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.hideChrome YES
   done
 done

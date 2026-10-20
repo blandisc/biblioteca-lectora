@@ -155,7 +155,7 @@ struct EditorialHomeView: View {
                             .padding(.top, 52)
                             .padding(.bottom, 14)
                         LazyVGrid(columns: columns, alignment: .leading, spacing: 20) {
-                            ForEach(model.desk.prefix(6)) { item in
+                            ForEach(model.desk.prefix(3)) { item in
                                 NavigationLink(value: item) {
                                     VStack(alignment: .leading, spacing: 8) {
                                         ShelfCover(book: item)

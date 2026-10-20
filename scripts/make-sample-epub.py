@@ -12,6 +12,13 @@ CHAPTERS = [
     ]),
 ]
 
+# Más capítulos con el mismo texto, para que el libro tenga un largo realista
+# y el porcentaje de avance se vea como en un libro de verdad.
+ORDINALS = ["segundo", "tercero", "cuarto", "quinto", "sexto", "séptimo", "octavo", "noveno", "décimo"]
+CHAPTERS += [(f"Capítulo {o}", CHAPTERS[0][1] * 3) for o in ORDINALS]
+CHAPTERS[0] = (CHAPTERS[0][0], CHAPTERS[0][1] * 3)
+
+
 def xhtml(title, paragraphs):
     body = "\n".join(f"<p>{p}</p>" for p in paragraphs)
     return f"""<?xml version="1.0" encoding="utf-8"?>

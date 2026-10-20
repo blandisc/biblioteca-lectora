@@ -53,6 +53,7 @@ struct CoverView: View {
                 }
                 .foregroundStyle(style.foreground)
                 .padding(width * 0.09)
+                .padding(.trailing, showsRibbon ? width * 0.1 : 0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: style.illustration == .windmill ? .top : .topLeading)
 
                 LinearGradient(colors: [.black.opacity(0.28), .clear], startPoint: .leading, endPoint: .trailing)
@@ -62,7 +63,7 @@ struct CoverView: View {
                     Ribbon()
                         .fill(Theme.pencil)
                         .frame(width: max(5, width * 0.065), height: proxy.size.height + 22)
-                        .offset(x: width * 0.86, y: -3)
+                        .offset(x: width * 0.88, y: -3)
                         .shadow(color: .black.opacity(0.2), radius: 1, y: 1)
                 }
             }

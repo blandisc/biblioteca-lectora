@@ -49,6 +49,18 @@ enum SampleLibrary {
                   cover: CoverStyle(background: Color(hex: 0xF1EEE7), foreground: Color(hex: 0x1C1B19), bordered: true)),
         ShelfBook(title: "Pedro Páramo", author: "Juan Rulfo", progress: 1, addedDaysAgo: 200, inCloudOnly: false,
                   cover: CoverStyle(background: Color(hex: 0x8C6A4F), foreground: Color(hex: 0xF6EEE6))),
+        ShelfBook(title: "Sapiens", author: "Yuval Noah Harari", progress: 0.27, addedDaysAgo: 25, inCloudOnly: false,
+                  cover: CoverStyle(background: Color(hex: 0xD9D2C3), foreground: Color(hex: 0x1C1B19), illustration: .circles)),
+        ShelfBook(title: "Cien años de soledad", author: "Gabriel García Márquez", progress: 0, addedDaysAgo: 30, inCloudOnly: true,
+                  cover: CoverStyle(background: Color(hex: 0x2F5D50), foreground: Color(hex: 0xF1EBDD))),
+        ShelfBook(title: "Dune", author: "Frank Herbert", progress: 0, addedDaysAgo: 15, inCloudOnly: false,
+                  cover: CoverStyle(background: Color(hex: 0xC98B4E), foreground: Color(hex: 0x2B1A0E), illustration: .rings)),
+        ShelfBook(title: "Ficciones", author: "Jorge Luis Borges", progress: 1, addedDaysAgo: 300, inCloudOnly: true,
+                  cover: CoverStyle(background: Color(hex: 0x1F2A44), foreground: Color(hex: 0xE9DFC9), illustration: .rings)),
+        ShelfBook(title: "La sombra del viento", author: "Carlos Ruiz Zafón", progress: 0, addedDaysAgo: 60, inCloudOnly: true,
+                  cover: CoverStyle(background: Color(hex: 0x5A2E2A), foreground: Color(hex: 0xF3E6D8))),
+        ShelfBook(title: "Thinking in Systems", author: "Donella H. Meadows", progress: 0, addedDaysAgo: 120, inCloudOnly: true,
+                  cover: CoverStyle(background: Color(hex: 0xEEF0F2), foreground: Color(hex: 0x1C1B19), illustration: .circles, bordered: true)),
     ]
 
     /// «En tu mesa»: lo que estás leyendo y lo recién llegado, sin el libro actual.

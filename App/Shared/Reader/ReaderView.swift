@@ -12,7 +12,7 @@ struct ReaderView: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .native
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
-    @State private var showsChrome = true
+    @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @State private var bookmarked = false
 
     private var title: String {
