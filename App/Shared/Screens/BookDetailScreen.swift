@@ -6,6 +6,7 @@ struct BookDetailScreen: View {
     let book: ShelfBook
     @EnvironmentObject private var model: AppModel
     @State private var editing = false
+    @State private var searching = false
 
     /// Datos al día: después de editar, la ficha se actualiza sola.
     private var live: ShelfBook { model.shelfBook(id: book.id) ?? book }
@@ -56,9 +57,15 @@ struct BookDetailScreen: View {
         .toolbar {
             if record != nil {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Editar") { editing = true }
+                    Menu("Editar") {
+                        Button { editing = true } label: { Label("Escribir a mano", systemImage: "pencil") }
+                        Button { searching = true } label: { Label("Buscar datos en internet", systemImage: "globe") }
+                    }
                 }
             }
+        }
+        .navigationDestination(isPresented: $searching) {
+            if let id = live.bookID { CandidatesScreen(bookID: id, searchesFirst: true) }
         }
         .sheet(isPresented: $editing) {
             if let record { MetadataEditorView(book: record) }

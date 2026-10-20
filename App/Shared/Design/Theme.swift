@@ -96,6 +96,14 @@ enum Theme {
         static let chromeInset: CGFloat = 16
     }
 
+    // MARK: Énfasis
+
+    enum Emphasis {
+        /// Lo que no se puede tocar mientras otra cosa está en curso.
+        static let dimmed = 0.4
+        static let full = 1.0
+    }
+
     // MARK: Movimiento
 
     enum Motion {

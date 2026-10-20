@@ -14,6 +14,8 @@ extension View {
             .background(Theme.paper.ignoresSafeArea())
             .navigationDestination(for: ShelfBook.self) { BookDetailScreen(book: $0) }
             .navigationDestination(for: SeriesRef.self) { SeriesScreen(series: $0) }
+            .navigationDestination(for: ReviewInboxRef.self) { _ in ReviewScreen() }
+            .navigationDestination(for: CandidatesRef.self) { CandidatesScreen(bookID: $0.bookID, searchesFirst: $0.searchesFirst) }
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
             #endif
@@ -404,5 +406,94 @@ extension String {
         guard let first else { return "" }
         let letter = String(first).uppercased()
         return letter == "Ñ" ? letter : letter.folding(options: .diacriticInsensitive, locale: nil)
+    }
+}
+
+// MARK: - Acciones secundarias y filas de navegación
+
+/// Acción secundaria, a lo ancho, sobre `field`.
+struct SecondaryButton: View {
+    let title: String
+    var systemImage: String? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Group {
+                if let systemImage { Label(title, systemImage: systemImage) } else { Text(title) }
+            }
+            .font(.body.weight(.medium))
+            .foregroundStyle(Theme.ink)
+            .frame(maxWidth: .infinity, minHeight: Theme.Size.control)
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+        }
+        .buttonStyle(PressableStyle())
+    }
+}
+
+/// Fila que lleva a otra pantalla: título, valor y flecha. Con `marked`, un
+/// punto de lápiz avisa que hay algo pendiente.
+struct LinkRow: View {
+    let title: String
+    var value: String? = nil
+    var marked = false
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            if marked {
+                Circle().fill(Theme.pencil).frame(width: Theme.Space.s, height: Theme.Space.s)
+                    .accessibilityHidden(true)
+            }
+            Text(title).foregroundStyle(Theme.ink)
+            Spacer()
+            if let value { Text(value).foregroundStyle(Theme.secondaryInk).monospacedDigit() }
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Theme.tertiaryInk)
+        }
+        .font(.subheadline)
+        .padding(.vertical, Theme.Space.m)
+        .contentShape(Rectangle())
+        .overlay(alignment: .top) { Hairline() }
+        .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Un libro encontrado en internet: portada, título, autor, año, fuente y confianza.
+struct CandidateRow: View {
+    let candidate: MetadataCandidate
+
+    private var detail: String {
+        [candidate.authors.joined(separator: ", "), candidate.published.map { String($0.prefix(4)) }, candidate.publisher]
+            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Theme.Space.m + Theme.Space.xxs) {
+            AsyncImage(url: candidate.coverURL) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                CoverView(title: candidate.title, author: candidate.authors.first ?? "",
+                          style: .generated(for: candidate.title))
+            }
+            .frame(width: Theme.Size.coverRow, height: Theme.Size.coverRow * 3 / 2)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous))
+            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                Text(candidate.title)
+                    .font(.rowTitle)
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(2)
+                if !detail.isEmpty {
+                    Text(detail).font(.footnote).foregroundStyle(Theme.secondaryInk).lineLimit(2)
+                }
+                Text("\(candidate.source.rawValue) · \(Int(candidate.confidence * 100)) % de coincidencia")
+                    .font(.caption)
+                    .foregroundStyle(candidate.confidence >= MetadataMatcher.autoApplyThreshold ? Theme.ink : Theme.tertiaryInk)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) { Hairline() }
     }
 }

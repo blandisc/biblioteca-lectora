@@ -46,7 +46,8 @@ mk 7-ficciones.epub --title "Ficciones" --author "Jorge Luis Borges" --year 1944
 mk 8-pride.epub --title "Pride and Prejudice" --author "Jane Austen" --language en --year 1813
 mk 9-quijote.epub --year 1605
 xcrun simctl launch "$DEVICE" "$BUNDLE" -screenshot.seed YES >/dev/null
-sleep 30
+# Importa y luego busca cada libro en Open Library y Google Books.
+sleep 90
 echo "  biblioteca de muestra importada"
 
 shoot() { # nombre, espera, argumentos…
@@ -65,6 +66,8 @@ for mode in light dark; do
     shoot "editorial-$mode-$tab" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab "$tab"
   done
   shoot "editorial-$mode-library-list" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab library -library.layout Lista -library.sort Título
+  shoot "editorial-$mode-detail" 5 -appearance.mode "$mode" -screenshot.tab library -screenshot.screen detail
+  shoot "editorial-$mode-review" 5 -appearance.mode "$mode" -screenshot.tab library -screenshot.screen review
   shoot "editorial-$mode-listening" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab reading -screenshot.listening YES
 done
 

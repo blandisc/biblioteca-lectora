@@ -7,6 +7,7 @@ struct LibraryScreen: View {
     @AppStorage(LibraryKeys.sort) private var sort: LibrarySort = .recent
     @AppStorage(LibraryKeys.layout) private var layout: LibraryLayout = .covers
     @State private var filter: LibraryFilter = .all
+    @State private var path = NavigationPath()
 
     private var books: [ShelfBook] {
         sort.sorted(model.shelf.filter(filter.includes))
@@ -28,7 +29,7 @@ struct LibraryScreen: View {
 
     var body: some View {
         let books = self.books
-        return NavigationStack {
+        return NavigationStack(path: $path) {
             ScrollViewReader { scroller in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -66,6 +67,14 @@ struct LibraryScreen: View {
                         .foregroundStyle(Theme.secondaryInk)
                         .padding(.top, Theme.Space.m)
 
+                        if !model.library.reviews.isEmpty {
+                            NavigationLink(value: ReviewInboxRef()) {
+                                LinkRow(title: "Por revisar", value: "\(model.library.reviews.count)", marked: true)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, Theme.Space.m)
+                        }
+
                         if model.shelf.isEmpty {
                             EmptyState(title: "Todavía no hay libros",
                                        message: "Toca + para añadir los primeros. También puedes migrar tu biblioteca de Calibre.")
@@ -92,12 +101,26 @@ struct LibraryScreen: View {
                 }
             }
             .screen()
+            .onAppear(perform: openScreenForScreenshots)
+        }
+    }
+
+    /// Capturas automáticas: abre la pantalla pedida al arrancar.
+    private func openScreenForScreenshots() {
+        guard path.isEmpty else { return }
+        switch LaunchOptions.screen {
+        case "review": path.append(ReviewInboxRef())
+        case "detail": if let first = model.shelf.first { path.append(first) }
+        default: break
         }
     }
 
     private var summary: String {
         if let progress = model.library.progress {
             return "Añadiendo \(min(progress.done + 1, progress.total)) de \(progress.total)…"
+        }
+        if !model.library.identifying.isEmpty {
+            return "Buscando datos en internet…"
         }
         let all = model.shelf
         return "\(all.count) libros · \(all.filter { !$0.inCloudOnly }.count) en este iPhone"

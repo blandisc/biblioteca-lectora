@@ -37,6 +37,10 @@ final class LibraryStore: ObservableObject {
     ].compactMap { $0 }
 
     @Published private(set) var books: [Book] = []
+    /// «Por revisar»: libros con datos dudosos y sus candidatos de internet.
+    @Published private(set) var reviews: [UUID: [MetadataCandidate]] = [:]
+    /// Libros que se están buscando en internet ahora mismo.
+    @Published private(set) var identifying: Set<UUID> = []
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
 
@@ -47,6 +51,7 @@ final class LibraryStore: ObservableObject {
     private lazy var extractor = MetadataExtractor()
     /// Importaciones en fila: una termina antes de que empiece la siguiente.
     private var lastImport: Task<[Result<ImportOutcome, Error>], Never>?
+    private let lookup = MetadataLookup()
 
     init(root: URL = LibraryStore.defaultRoot) {
         self.root = root
@@ -54,6 +59,7 @@ final class LibraryStore: ObservableObject {
         log = ChangeLog(directory: root.appendingPathComponent(".lectora/registro", isDirectory: true), deviceID: device)
         clock = HybridLogicalClock(node: device)
         reload()
+        loadReviews()
     }
 
     /// «En mi iPhone › Lectora › Biblioteca Lectora» en la app Archivos.
@@ -99,13 +105,20 @@ final class LibraryStore: ObservableObject {
         progress = (0, urls.count)
         defer { progress = nil }
         var results: [Result<ImportOutcome, Error>] = []
+        var added: [Book] = []
         for (index, url) in urls.enumerated() {
             do {
-                results.append(.success(try await importFile(url)))
+                let outcome = try await importFile(url)
+                if case .added(let book) = outcome { added.append(book) }
+                results.append(.success(outcome))
             } catch {
                 results.append(.failure(error))
             }
             progress = (index + 1, urls.count)
+        }
+        // Después de importar, se buscan en internet sin detener la fila.
+        Task { [added] in
+            for book in added { await self.identify(book.id) }
         }
         return results
     }
@@ -230,6 +243,65 @@ final class LibraryStore: ObservableObject {
         try writeOPF(book, hasCover: coverURL(for: book) != nil)
         try record(book)
         return book
+    }
+
+    // MARK: Buscar en internet (B2)
+
+    /// Busca el libro en internet. Si el mejor candidato es claramente el mismo
+    /// libro, completa lo que falta (y la portada); si hay dudas, lo deja en
+    /// «Por revisar». Con `askAlways`, siempre deja los candidatos para elegir.
+    @discardableResult
+    func identify(_ bookID: UUID, askAlways: Bool = false) async -> [MetadataCandidate] {
+        guard let book = book(id: bookID), !identifying.contains(bookID) else { return [] }
+        identifying.insert(bookID)
+        defer { identifying.remove(bookID) }
+
+        let candidates = await lookup.candidates(for: book)
+        guard let best = candidates.first else {
+            if !askAlways { setReview(bookID, candidates: []) }
+            return []
+        }
+        if best.confidence >= MetadataMatcher.autoApplyThreshold && !askAlways {
+            var cover: Data?
+            if coverURL(for: book) == nil, let url = best.coverURL { cover = await lookup.download(url) }
+            try? update(MetadataMatcher.fillMissing(book, from: best), cover: cover)
+            setReview(bookID, candidates: nil)
+        } else {
+            setReview(bookID, candidates: candidates)
+        }
+        return candidates
+    }
+
+    /// Elegiste un candidato: sus datos (y su portada) reemplazan a los del libro.
+    func apply(_ candidate: MetadataCandidate, to bookID: UUID) async throws {
+        guard let book = book(id: bookID) else { throw LibraryError.bookNotFound }
+        var cover: Data?
+        if let url = candidate.coverURL { cover = await lookup.download(url) }
+        try update(MetadataMatcher.replace(book, with: candidate), cover: cover)
+        setReview(bookID, candidates: nil)
+    }
+
+    /// «Mantener mis datos»: sale de la bandeja sin cambiar nada.
+    func dismissReview(_ bookID: UUID) {
+        setReview(bookID, candidates: nil)
+    }
+
+    private var reviewsURL: URL {
+        root.appendingPathComponent(".lectora/por-revisar.json")
+    }
+
+    private func setReview(_ bookID: UUID, candidates: [MetadataCandidate]?) {
+        reviews[bookID] = candidates
+        if let data = try? JSONEncoder().encode(reviews) {
+            try? FileManager.default.createDirectory(at: reviewsURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try? data.write(to: reviewsURL, options: .atomic)
+        }
+    }
+
+    private func loadReviews() {
+        guard let data = try? Data(contentsOf: reviewsURL),
+              let saved = try? JSONDecoder().decode([UUID: [MetadataCandidate]].self, from: data) else { return }
+        reviews = saved.filter { book(id: $0.key) != nil }
     }
 
     // MARK: Posición de lectura

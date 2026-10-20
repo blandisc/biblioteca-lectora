@@ -38,10 +38,25 @@ struct SearchScreen: View {
             }
             .background(Theme.paper.ignoresSafeArea())
             .navigationDestination(for: ShelfBook.self) { BookDetailScreen(book: $0) }
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
             .searchable(text: $query, prompt: "Títulos, autores y series")
+            .modifier(SearchBarPlacement())
         }
+    }
+}
+
+/// En iOS 26 el campo de búsqueda vive en el dock, así que la barra de
+/// navegación sobra y el título queda a la misma altura que en las demás
+/// pantallas. Antes de iOS 26 el campo va en esa barra y se conserva.
+private struct SearchBarPlacement: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        if #available(iOS 26.0, *) {
+            content.toolbar(.hidden, for: .navigationBar)
+        } else {
+            content.navigationBarTitleDisplayMode(.inline)
+        }
+        #else
+        content
+        #endif
     }
 }
