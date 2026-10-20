@@ -104,24 +104,24 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.theme) private var theme: ReaderTheme = .auto
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
 
-    private let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
+    private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            LazyVGrid(columns: columns, spacing: 10) {
+        VStack(alignment: .leading, spacing: Theme.Space.l + Theme.Space.xxs) {
+            LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                 ForEach(ReaderFont.allCases) { item in
                     Button { font = item } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Aa").font(item.preview(size: 24))
+                        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                            Text("Aa").font(item.preview(size: Theme.Space.xl))
                             Text(item.name).font(.subheadline.weight(.medium))
                             Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(12)
-                        .background(Theme.Editorial.field.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .padding(Theme.Space.m)
+                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
                         .overlay {
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .strokeBorder(item == font ? Theme.ink : .clear, lineWidth: 1.5)
+                            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                                .strokeBorder(item == font ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
                         }
                     }
                     .buttonStyle(.plain)
@@ -129,12 +129,12 @@ struct ReaderAppearanceSheet: View {
                 }
             }
 
-            HStack(spacing: 12) {
-                Button { scale = max(0.8, scale - 0.05) } label: { Text("A").font(.system(size: 14)) }
+            HStack(spacing: Theme.Space.m) {
+                Button { scale = max(0.8, scale - 0.05) } label: { Text("A").font(.footnote) }
                     .accessibilityLabel("Letra más chica")
                 Slider(value: $scale, in: 0.8...1.6, step: 0.05)
                     .accessibilityLabel("Tamaño de letra")
-                Button { scale = min(1.6, scale + 0.05) } label: { Text("A").font(.system(size: 22)) }
+                Button { scale = min(1.6, scale + 0.05) } label: { Text("A").font(.title2) }
                     .accessibilityLabel("Letra más grande")
             }
             .buttonStyle(.plain)
@@ -142,12 +142,12 @@ struct ReaderAppearanceSheet: View {
             HStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
-                        VStack(spacing: 6) {
+                        VStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
                             swatch(for: item)
-                                .frame(width: 44, height: 44)
+                                .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
                                 .overlay {
-                                    Circle().strokeBorder(item == theme ? Theme.ink : Color.black.opacity(0.12),
-                                                          lineWidth: item == theme ? 2 : 0.5)
+                                    Circle().strokeBorder(item == theme ? Theme.ink : Theme.track,
+                                                          lineWidth: item == theme ? Theme.Size.quoteRule : Theme.Size.hairline)
                                 }
                             Text(item.title)
                                 .font(.caption)
@@ -166,7 +166,7 @@ struct ReaderAppearanceSheet: View {
                 .disabled(theme != .auto)
         }
         .foregroundStyle(Theme.ink)
-        .padding(20)
+        .padding(Theme.Space.xl)
     }
 
     @ViewBuilder
@@ -175,12 +175,12 @@ struct ReaderAppearanceSheet: View {
         case .auto:
             Circle().fill(LinearGradient(colors: [Color(hex: 0xF8F7F4), Color(hex: 0x161514)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
-                .overlay { Text("A").font(.system(size: 15, weight: .medium, design: .serif)).foregroundStyle(Color(hex: 0x77746D)) }
+                .overlay { Text("A").font(.rowTitle.weight(.medium)).foregroundStyle(Theme.secondaryInk) }
         default:
             let palette = ReaderPalette.resolve(item, autoNight: false, appIsDark: false)
             Circle().fill(palette.background)
                 .overlay {
-                    Text("Aa").font(.system(size: 15, weight: .medium, design: .serif))
+                    Text("Aa").font(.rowTitle.weight(.medium))
                         .foregroundStyle(Color(hex: UInt32(palette.text.dropFirst(), radix: 16) ?? 0x1C1B19))
                 }
         }

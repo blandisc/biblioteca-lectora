@@ -81,14 +81,23 @@ const applyStyle = () => {
     view.renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
 }
 
+// Primeras palabras de la página, cortadas en una palabra completa.
+const excerptOf = range => {
+    const text = range?.toString().replace(/\s+/g, ' ').trim()
+    if (!text) return null
+    if (text.length <= 160) return text
+    return text.slice(0, 160).replace(/\s+\S*$/, '') + '…'
+}
+
 const onRelocate = ({ detail }) => {
-    const { fraction, cfi, tocItem, location } = detail
+    const { fraction, cfi, tocItem, location, range } = detail
     post('relocate', {
         fraction,
         cfi,
         chapter: tocItem?.label ?? null,
         current: location?.current ?? null,
         total: location?.total ?? null,
+        excerpt: excerptOf(range),
     })
 }
 

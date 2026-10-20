@@ -134,20 +134,35 @@ public enum CalibreOPF {
         }
     }
 
-    /// «2004» → «2004-01-01T00:00:00+00:00»; «2004-05-01» → «2004-05-01T00:00:00+00:00».
+    /// «2004» → «2004-01-01T12:00:00+00:00». Mediodía UTC, como hace Calibre
+    /// con las fechas sin hora: así ninguna zona horaria la corre de día.
     private static func calibreDate(_ published: String) -> String? {
         let parts = published.split(separator: "-").map(String.init)
         guard let year = parts.first, year.count == 4, Int(year) != nil else { return nil }
         let month = parts.count > 1 ? parts[1] : "01"
         let day = parts.count > 2 ? String(parts[2].prefix(2)) : "01"
-        return "\(year)-\(month)-\(day)T00:00:00+00:00"
+        return "\(year)-\(month)-\(day)T12:00:00+00:00"
     }
 
     private static func ourDate(_ date: String) -> String? {
-        let day = String(date.prefix(10))
+        let day = calendarDay(date) ?? String(date.prefix(10))
         guard day.count >= 4 else { return nil }
         if day.hasSuffix("-01-01") { return String(day.prefix(4)) }
         return day
+    }
+
+    /// El día que quiso decir quien escribió la fecha. Calibre guarda la
+    /// medianoche local en UTC («2003-12-31T23:00:00+00:00» es el 1 de enero en
+    /// España): si la hora pasa de mediodía, el día es el siguiente.
+    static func calendarDay(_ iso: String) -> String? {
+        guard let date = parseTimestamp(iso) else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let hour = calendar.component(.hour, from: date)
+        let day = hour > 12 ? calendar.date(byAdding: .day, value: 1, to: date)! : date
+        let parts = calendar.dateComponents([.year, .month, .day], from: day)
+        guard let year = parts.year, let month = parts.month, let dayOfMonth = parts.day else { return nil }
+        return String(format: "%04d-%02d-%02d", year, month, dayOfMonth)
     }
 
     private static func timestamp(_ date: Date) -> String {
@@ -169,7 +184,11 @@ public enum CalibreOPF {
     }
 
     static func escape(_ text: String) -> String {
-        text.replacingOccurrences(of: "&", with: "&amp;")
+        // XML 1.0 no admite caracteres de control (salvo tabulador y saltos de línea).
+        let allowed = String(String.UnicodeScalarView(text.unicodeScalars.filter {
+            $0.value >= 0x20 || $0 == "\t" || $0 == "\n" || $0 == "\r"
+        }))
+        return allowed.replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")

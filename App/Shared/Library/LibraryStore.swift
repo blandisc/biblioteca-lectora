@@ -16,7 +16,13 @@ final class LibraryStore: ObservableObject {
 
     enum LibraryError: LocalizedError {
         case bookNotFound
-        var errorDescription: String? { "No encontré ese libro en la biblioteca." }
+        case folderTaken
+        var errorDescription: String? {
+            switch self {
+            case .bookNotFound: "No encontré ese libro en la biblioteca."
+            case .folderTaken: "Ya hay otro libro con ese título y autor en la carpeta."
+            }
+        }
     }
 
     static let shared = LibraryStore()
@@ -39,6 +45,8 @@ final class LibraryStore: ObservableObject {
     private let clock: HybridLogicalClock
     private var state = LibraryState()
     private lazy var extractor = MetadataExtractor()
+    /// Importaciones en fila: una termina antes de que empiece la siguiente.
+    private var lastImport: Task<[Result<ImportOutcome, Error>], Never>?
 
     init(root: URL = LibraryStore.defaultRoot) {
         self.root = root
@@ -78,6 +86,16 @@ final class LibraryStore: ObservableObject {
 
     @discardableResult
     func importFiles(_ urls: [URL]) async -> [Result<ImportOutcome, Error>] {
+        let previous = lastImport
+        let task = Task { @MainActor in
+            _ = await previous?.value
+            return await self.runImport(urls)
+        }
+        lastImport = task
+        return await task.value
+    }
+
+    private func runImport(_ urls: [URL]) async -> [Result<ImportOutcome, Error>] {
         progress = (0, urls.count)
         defer { progress = nil }
         var results: [Result<ImportOutcome, Error>] = []
@@ -94,16 +112,18 @@ final class LibraryStore: ObservableObject {
 
     /// Lee el archivo, evita duplicados, limpia los datos y lo guarda ordenado.
     func importFile(_ source: URL) async throws -> ImportOutcome {
-        let accessing = source.startAccessingSecurityScopedResource()
-        defer { if accessing { source.stopAccessingSecurityScopedResource() } }
-
-        let staging = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension(source.pathExtension.lowercased())
-        try FileManager.default.copyItem(at: source, to: staging)
+        // Copia y huella fuera del hilo de la interfaz: un PDF de 300 MB no congela la app.
+        let (staging, hash) = try await Task.detached(priority: .userInitiated) {
+            let accessing = source.startAccessingSecurityScopedResource()
+            defer { if accessing { source.stopAccessingSecurityScopedResource() } }
+            let staging = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension(source.pathExtension.lowercased())
+            try FileManager.default.copyItem(at: source, to: staging)
+            return (staging, try LibraryStore.sha256(of: staging))
+        }.value
         defer { try? FileManager.default.removeItem(at: staging) }
 
-        let hash = try Self.sha256(of: staging)
         if let existing = books.first(where: { $0.fileHash == hash }) { return .duplicate(existing) }
 
         let extracted = (try? await extractor.extract(from: staging)) ?? ExtractedMetadata()
@@ -119,28 +139,47 @@ final class LibraryStore: ObservableObject {
             published: extracted.published,
             summary: extracted.summary
         ), fileName: source.lastPathComponent)
-        if let isbn = book.identifiers["isbn"], let existing = books.first(where: { $0.identifiers["isbn"] == isbn }) {
+        // Mismo ISBN y mismo formato: es el mismo libro. (Un PDF y un EPUB de la
+        // misma edición sí entran; luego se podrán unir como formatos de un libro.)
+        let format = source.pathExtension.lowercased()
+        if let isbn = book.identifiers["isbn"], let existing = books.first(where: {
+            $0.identifiers["isbn"] == isbn && ($0.filePath as NSString?)?.pathExtension.lowercased() == format
+        }) {
             return .duplicate(existing)
         }
-        book.calibreID = (books.compactMap(\.calibreID).max() ?? 0) + 1
+
+        // Número de Calibre libre, también en disco (otro dispositivo pudo usarlo).
+        var calibreID = (books.compactMap(\.calibreID).max() ?? 0) + 1
+        while FileManager.default.fileExists(atPath: root.appendingPathComponent(
+            CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)).path) {
+            calibreID += 1
+        }
+        book.calibreID = calibreID
         book.fileHash = hash
         book.addedAt = Date()
 
-        let folder = CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: book.calibreID!)
-        let fileName = CalibreLayout.fileName(title: book.title, authors: book.authors, fileExtension: source.pathExtension)
+        let folder = CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)
+        let fileName = CalibreLayout.fileName(title: book.title, authors: book.authors, fileExtension: format)
         let folderURL = root.appendingPathComponent(folder, isDirectory: true)
-        try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
-        try FileManager.default.copyItem(at: staging, to: folderURL.appendingPathComponent(fileName))
-        book.filePath = "\(folder)/\(fileName)"
+        do {
+            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: staging, to: folderURL.appendingPathComponent(fileName))
+            book.filePath = "\(folder)/\(fileName)"
 
-        var hasCover = false
-        if let cover = extracted.cover.flatMap({ CoverImaging.jpeg(from: $0) }) {
-            try cover.write(to: folderURL.appendingPathComponent(CalibreLayout.coverFileName), options: .atomic)
-            hasCover = true
+            var hasCover = false
+            if let cover = extracted.cover.flatMap({ CoverImaging.jpeg(from: $0) }) {
+                try cover.write(to: folderURL.appendingPathComponent(CalibreLayout.coverFileName), options: .atomic)
+                hasCover = true
+            }
+            try writeOPF(book, hasCover: hasCover)
+            try record(book)
+            return .added(book)
+        } catch {
+            // Nada a medias: si algo falla, la carpeta del libro no se queda.
+            try? FileManager.default.removeItem(at: folderURL)
+            removeIfEmpty(folderURL.deletingLastPathComponent())
+            throw error
         }
-        try writeOPF(book, hasCover: hasCover)
-        try record(book)
-        return .added(book)
     }
 
     // MARK: Editar
@@ -150,7 +189,7 @@ final class LibraryStore: ObservableObject {
     @discardableResult
     func update(_ edited: Book, cover newCover: Data? = nil) throws -> Book {
         guard let original = book(id: edited.id) else { throw LibraryError.bookNotFound }
-        var book = MetadataCleaner.clean(edited)
+        var book = MetadataCleaner.clean(edited, manual: true)
 
         if let oldPath = original.filePath, let calibreID = book.calibreID,
            original.title != book.title || original.authors.first != book.authors.first {
@@ -159,16 +198,26 @@ final class LibraryStore: ObservableObject {
             let newFolder = root.appendingPathComponent(newFolderPath, isDirectory: true)
             let newName = CalibreLayout.fileName(title: book.title, authors: book.authors,
                                                  fileExtension: (oldPath as NSString).pathExtension)
-            if newFolder.standardizedFileURL != oldFolder.standardizedFileURL {
+            let movesFolder = newFolder.standardizedFileURL != oldFolder.standardizedFileURL
+            if movesFolder {
+                guard !FileManager.default.fileExists(atPath: newFolder.path) else { throw LibraryError.folderTaken }
                 try FileManager.default.createDirectory(at: newFolder.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try FileManager.default.moveItem(at: oldFolder, to: newFolder)
-                removeIfEmpty(oldFolder.deletingLastPathComponent())
-                CoverImaging.forget(oldFolder.appendingPathComponent(CalibreLayout.coverFileName))
             }
             let oldFile = newFolder.appendingPathComponent((oldPath as NSString).lastPathComponent)
             let newFile = newFolder.appendingPathComponent(newName)
-            if oldFile.lastPathComponent != newName {
-                try FileManager.default.moveItem(at: oldFile, to: newFile)
+            do {
+                if oldFile.lastPathComponent != newName {
+                    try FileManager.default.moveItem(at: oldFile, to: newFile)
+                }
+            } catch {
+                // Deshacer el cambio de carpeta: el libro sigue donde estaba.
+                if movesFolder { try? FileManager.default.moveItem(at: newFolder, to: oldFolder) }
+                throw error
+            }
+            if movesFolder {
+                removeIfEmpty(oldFolder.deletingLastPathComponent())
+                CoverImaging.forget(oldFolder.appendingPathComponent(CalibreLayout.coverFileName))
             }
             book.filePath = "\(newFolderPath)/\(newName)"
         }
@@ -181,6 +230,40 @@ final class LibraryStore: ObservableObject {
         try writeOPF(book, hasCover: coverURL(for: book) != nil)
         try record(book)
         return book
+    }
+
+    // MARK: Posición de lectura
+
+    struct ReadingPosition {
+        var cfi: String?
+        var fraction: Double
+        /// Las primeras palabras de la página, para «Donde lo dejaste».
+        var excerpt: String?
+        var updatedAt: Date? = nil
+    }
+
+    func position(for bookID: UUID) -> ReadingPosition? {
+        guard let fields = state.fields(of: .progress, id: bookID) else { return nil }
+        return ReadingPosition(
+            cfi: fields["cfi"]?.stringValue,
+            fraction: fields["fraction"]?.doubleValue ?? 0,
+            excerpt: fields["excerpt"]?.stringValue,
+            updatedAt: fields["updated_at"]?.doubleValue.map(Date.init(timeIntervalSince1970:))
+        )
+    }
+
+    /// Guarda dónde vas (en el mismo registro que se sincroniza).
+    func savePosition(_ position: ReadingPosition, for bookID: UUID) {
+        let values: [(String, JSONValue)] = [
+            ("cfi", position.cfi.map(JSONValue.string) ?? .null),
+            ("fraction", .number(position.fraction)),
+            ("excerpt", position.excerpt.map(JSONValue.string) ?? .null),
+            ("updated_at", .number(Date().timeIntervalSince1970)),
+        ]
+        let changes = values.map { Change(hlc: clock.tick(), entity: .progress, entityID: bookID, field: $0.0, value: $0.1) }
+        try? log.append(changes)
+        state.apply(changes)
+        objectWillChange.send()
     }
 
     // MARK: Interno

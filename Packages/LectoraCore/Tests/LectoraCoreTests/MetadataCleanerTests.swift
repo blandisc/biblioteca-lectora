@@ -5,7 +5,9 @@ final class MetadataCleanerTests: XCTestCase {
     func testTitlesLoseStoreJunk() {
         XCTAssertEqual(MetadataCleaner.cleanTitle("Rayuela (Spanish Edition)"), "Rayuela")
         XCTAssertEqual(MetadataCleaner.cleanTitle("Dune [epub]"), "Dune")
-        XCTAssertEqual(MetadataCleaner.cleanTitle("CIEN AÑOS DE SOLEDAD"), "Cien Años De Soledad")
+        XCTAssertEqual(MetadataCleaner.cleanTitle("CIEN AÑOS DE SOLEDAD", language: "es"), "Cien años de soledad")
+        XCTAssertEqual(MetadataCleaner.cleanTitle("PRIDE AND PREJUDICE", language: "en"), "Pride And Prejudice")
+        XCTAssertEqual(MetadataCleaner.cleanTitle("SPQR"), "SPQR")
         XCTAssertEqual(MetadataCleaner.titleFromFileName("pedro_paramo_v2.epub"), "pedro paramo")
     }
 
@@ -13,6 +15,7 @@ final class MetadataCleanerTests: XCTestCase {
         XCTAssertEqual(MetadataCleaner.cleanAuthors(["Cortázar, Julio"]), ["Julio Cortázar"])
         XCTAssertEqual(MetadataCleaner.cleanAuthors(["Isaac Asimov & Robert Silverberg"]), ["Isaac Asimov", "Robert Silverberg"])
         XCTAssertEqual(MetadataCleaner.cleanAuthors(["Unknown", "Borges", "borges"]), ["Borges"])
+        XCTAssertEqual(MetadataCleaner.cleanAuthors(["Martin Luther King, Jr."]), ["Martin Luther King, Jr."])
     }
 
     func testLanguagesAndDates() {
@@ -20,8 +23,18 @@ final class MetadataCleanerTests: XCTestCase {
         XCTAssertEqual(MetadataCleaner.cleanLanguage("en-US"), "en")
         XCTAssertEqual(MetadataCleaner.cleanLanguage("Spanish"), "es")
         XCTAssertEqual(MetadataCleaner.cleanDate("1963-06-28T05:00:00+00:00"), "1963-06-28")
+        // Medianoche de España guardada en UTC por Calibre: es el 1 de enero.
+        XCTAssertEqual(MetadataCleaner.cleanDate("2003-12-31T23:00:00+00:00"), "2004")
         XCTAssertEqual(MetadataCleaner.cleanDate("1952-01-01"), "1952")
         XCTAssertNil(MetadataCleaner.cleanDate("desconocida"))
+    }
+
+    func testManualEditsAreRespected() {
+        let typed = Book(title: "HHhH", tags: (1...10).map { "t\($0)" }, published: "mayo de 2004")
+        let book = MetadataCleaner.clean(typed, manual: true)
+        XCTAssertEqual(book.title, "HHhH")
+        XCTAssertEqual(book.tags.count, 10)
+        XCTAssertEqual(book.published, "mayo de 2004")
     }
 
     func testCleanBookFallsBackToFileName() {

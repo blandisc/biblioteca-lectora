@@ -6,8 +6,11 @@ import LectoraCore
 /// Hoy vive en Application Support; con la sincronización (S3) la carpeta pasa a
 /// iCloud Drive sin cambiar este código.
 @MainActor
-final class AnnotationStore {
+final class AnnotationStore: ObservableObject {
     static let shared = AnnotationStore()
+
+    /// Cambia con cada subrayado guardado o borrado, para refrescar el Cuaderno.
+    @Published private(set) var revision = 0
 
     private let log: ChangeLog
     private let clock: HybridLogicalClock
@@ -27,17 +30,26 @@ final class AnnotationStore {
         state.annotations(for: bookID)
     }
 
+    /// Todos los subrayados, del más reciente al más antiguo.
+    func allAnnotations() -> [Annotation] {
+        state.ids(of: .annotation)
+            .compactMap { id in state.fields(of: .annotation, id: id).flatMap { Annotation(id: id, fields: $0) } }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
+
     /// Guarda un subrayado nuevo o actualiza uno existente (mismo `id`).
     func save(_ annotation: Annotation) throws {
         let changes = annotation.changes(clock: clock)
         try log.append(changes)
         state.apply(changes)
+        revision += 1
     }
 
     func delete(id: UUID) throws {
         let change = Annotation.deletion(id: id, clock: clock)
         try log.append([change])
         state.apply(change)
+        revision += 1
     }
 
     nonisolated static var defaultDirectory: URL {

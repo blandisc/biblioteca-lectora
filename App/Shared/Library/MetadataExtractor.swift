@@ -22,19 +22,43 @@ struct ExtractedMetadata {
 /// (foliate-js, en un WebView invisible) y los de PDF con PDFKit.
 @MainActor
 final class MetadataExtractor: NSObject, WKNavigationDelegate {
+    /// Un libro dañado puede no terminar nunca de abrirse: después de esto se
+    /// importa con los datos del nombre del archivo.
+    nonisolated static let timeout: Duration = .seconds(20)
+
     private let schemeHandler = ReaderSchemeHandler()
-    private var webView: WKWebView?
+    /// La preparación del WebView se comparte: dos llamadas no crean dos WebViews.
+    private var ready: Task<WKWebView, Error>?
     private var loading: CheckedContinuation<Void, Error>?
 
+    /// `LibraryStore` llama de una en una (importaciones en fila).
     func extract(from file: URL) async throws -> ExtractedMetadata {
-        if file.pathExtension.lowercased() == "pdf" { return Self.pdfMetadata(file) }
+        if file.pathExtension.lowercased() == "pdf" {
+            return await Task.detached(priority: .userInitiated) { Self.pdfMetadata(file) }.value
+        }
         let webView = try await readyWebView()
         schemeHandler.bookFile = file
-        let result = try await webView.callAsyncJavaScript(
-            "return await window.lectora.extract(url)",
-            arguments: ["url": ReaderSchemeHandler.bookURL(for: file).absoluteString],
-            contentWorld: .page
-        )
+        let url = ReaderSchemeHandler.bookURL(for: file).absoluteString
+        let result: Any?
+        do {
+            result = try await withThrowingTaskGroup(of: Any?.self) { group in
+                group.addTask { @MainActor in
+                    try await webView.callAsyncJavaScript("return await window.lectora.extract(url)",
+                                                          arguments: ["url": url], contentWorld: .page)
+                }
+                group.addTask {
+                    try await Task.sleep(for: Self.timeout)
+                    throw CancellationError()
+                }
+                let first = try await group.next() ?? nil
+                group.cancelAll()
+                return first
+            }
+        } catch {
+            // Se rehace el WebView: el anterior puede seguir atorado con ese libro.
+            ready = nil
+            throw error
+        }
         guard let values = result as? [String: Any] else { return ExtractedMetadata() }
         var metadata = ExtractedMetadata()
         metadata.title = values["title"] as? String
@@ -54,7 +78,18 @@ final class MetadataExtractor: NSObject, WKNavigationDelegate {
     }
 
     private func readyWebView() async throws -> WKWebView {
-        if let webView { return webView }
+        if let ready { return try await ready.value }
+        let task = Task { @MainActor in try await self.makeWebView() }
+        ready = task
+        do {
+            return try await task.value
+        } catch {
+            ready = nil
+            throw error
+        }
+    }
+
+    private func makeWebView() async throws -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.setURLSchemeHandler(schemeHandler, forURLScheme: ReaderSchemeHandler.scheme)
         let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: configuration)
@@ -74,7 +109,6 @@ final class MetadataExtractor: NSObject, WKNavigationDelegate {
             })
             return true
             """, contentWorld: .page)
-        self.webView = webView
         return webView
     }
 
@@ -93,7 +127,7 @@ final class MetadataExtractor: NSObject, WKNavigationDelegate {
         loading = nil
     }
 
-    static func pdfMetadata(_ file: URL) -> ExtractedMetadata {
+    nonisolated static func pdfMetadata(_ file: URL) -> ExtractedMetadata {
         var metadata = ExtractedMetadata()
         guard let document = PDFDocument(url: file) else { return metadata }
         let attributes = document.documentAttributes ?? [:]

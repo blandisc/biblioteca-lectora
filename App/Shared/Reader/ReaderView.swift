@@ -11,7 +11,6 @@ struct ReaderView: View {
     @StateObject private var controller = ReaderController()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .editorial
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @State private var bookmarked = false
@@ -40,8 +39,8 @@ struct ReaderView: View {
             if bookmarked {
                 Ribbon()
                     .fill(Theme.pencil)
-                    .frame(width: 12, height: 64)
-                    .padding(.trailing, 28)
+                    .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
+                    .padding(.trailing, Theme.Space.gutter)
                     .ignoresSafeArea(edges: .top)
                     .transition(.move(edge: .top))
                     .accessibilityHidden(true)
@@ -54,7 +53,7 @@ struct ReaderView: View {
         .preferredColorScheme(palette.scheme ?? mode.colorScheme)
         .sheet(isPresented: $showsAppearance) {
             ReaderAppearanceSheet()
-                .presentationDetents([.height(440)])
+                .presentationDetents([.height(Theme.Size.appearanceSheet)])
                 .presentationDragIndicator(.visible)
         }
         .confirmationDialog("Subrayado", isPresented: Binding(
@@ -80,18 +79,36 @@ struct ReaderView: View {
         } message: {
             Text(controller.errorMessage ?? "")
         }
+        .alert("Aviso", isPresented: Binding(
+            get: { controller.notice != nil },
+            set: { if !$0 { controller.notice = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(controller.notice ?? "")
+        }
         .onAppear {
             applyStyle()
-            controller.onTap = { x in
-                if x < 0.28 {
-                    controller.previous()
-                } else if x > 0.72 {
-                    controller.next()
+            // Sin capturar la vista: el controlador no debe retenerse a sí mismo.
+            let chrome = $showsChrome
+            controller.onTap = { [weak controller] x in
+                if x < Theme.Reader.edgeZone {
+                    controller?.previous()
+                } else if x > 1 - Theme.Reader.edgeZone {
+                    controller?.next()
                 } else {
-                    withAnimation(.snappy(duration: 0.25)) { showsChrome.toggle() }
+                    withAnimation(Theme.Motion.standard) { chrome.wrappedValue.toggle() }
                 }
             }
-            controller.open(bookFile: bookFile, bookID: bookID)
+            if let bookID {
+                controller.onPositionSettled = { location in
+                    LibraryStore.shared.savePosition(
+                        .init(cfi: location.cfi, fraction: location.fraction, excerpt: location.excerpt),
+                        for: bookID)
+                }
+            }
+            let resume = bookID.flatMap { LibraryStore.shared.position(for: $0)?.cfi }
+            controller.open(bookFile: bookFile, bookID: bookID, lastCFI: resume)
         }
         .onChange(of: palette) { _, _ in applyStyle() }
         .onChange(of: font) { _, _ in applyStyle() }
@@ -103,7 +120,7 @@ struct ReaderView: View {
     @ViewBuilder
     private var chrome: some View {
         ZStack {
-            if style == .editorial && !showsChrome {
+            if !showsChrome {
                 ReadingFolio(title: title, location: controller.location)
                     .transition(.opacity)
             }
@@ -139,7 +156,7 @@ private struct TopControls: View {
             Button(action: onClose) {
                 Image(systemName: "chevron.down")
                     .font(.body.weight(.semibold))
-                    .frame(width: 44, height: 44)
+                    .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
                     .glassCircle()
             }
             .accessibilityLabel("Cerrar libro")
@@ -148,13 +165,13 @@ private struct TopControls: View {
                 Button {} label: {
                     Image(systemName: "magnifyingglass")
                         .font(.body.weight(.semibold))
-                        .frame(width: 46, height: 44)
+                        .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
                 }
                 .accessibilityLabel("Buscar en el libro")
                 Button(action: onAppearance) {
                     Text("Aa")
                         .font(.body.weight(.semibold))
-                        .frame(width: 46, height: 44)
+                        .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
                 }
                 .accessibilityLabel("Apariencia")
                 Button {
@@ -163,17 +180,17 @@ private struct TopControls: View {
                     Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(bookmarked ? Theme.pencil : Theme.ink)
-                        .frame(width: 46, height: 44)
+                        .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
                 }
                 .accessibilityLabel(bookmarked ? "Quitar marcador" : "Añadir marcador")
             }
-            .padding(.horizontal, 4)
-            .glassPanel(cornerRadius: 22)
+            .padding(.horizontal, Theme.Space.xs)
+            .glassPanel(cornerRadius: Theme.Radius.capsule)
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.horizontal, Theme.Reader.chromeInset)
+        .padding(.top, Theme.Space.s)
     }
 }
 
@@ -188,10 +205,10 @@ private struct BottomPanel: View {
     private var fraction: Double { dragValue ?? location?.fraction ?? 0 }
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.s + Theme.Space.xxs) {
             HStack(alignment: .firstTextBaseline) {
                 Button {} label: {
-                    HStack(spacing: 3) {
+                    HStack(spacing: Theme.Space.xxs) {
                         Text(location?.chapter ?? title).lineLimit(1)
                         Image(systemName: "chevron.right").font(.caption.weight(.bold))
                     }
@@ -224,18 +241,18 @@ private struct BottomPanel: View {
                 .font(.caption)
                 .monospacedDigit()
                 .foregroundStyle(Theme.secondaryInk)
-                .padding(.top, -6)
+                .padding(.top, -Theme.Space.s + Theme.Space.xxs)
             }
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Space.s) {
                 Button {} label: {
                     Label("Guiada", systemImage: "text.viewfinder")
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(Theme.ink.opacity(0.07), in: Capsule())
+                        .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget)
+                        .background(Theme.field, in: Capsule())
                 }
                 Button {} label: {
                     Label("Escuchar", systemImage: "headphones")
                         .foregroundStyle(Theme.onInk)
-                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget)
                         .background(Theme.ink, in: Capsule())
                 }
             }
@@ -243,12 +260,12 @@ private struct BottomPanel: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
-        .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 12)
-        .glassPanel(cornerRadius: 28)
-        .padding(.horizontal, 12)
-        .padding(.bottom, 8)
+        .padding(.horizontal, Theme.Space.l)
+        .padding(.top, Theme.Space.m + Theme.Space.xxs)
+        .padding(.bottom, Theme.Space.m)
+        .glassPanel(cornerRadius: Theme.Radius.panel)
+        .padding(.horizontal, Theme.Reader.chromeInset)
+        .padding(.bottom, Theme.Space.s)
     }
 }
 
@@ -261,12 +278,12 @@ private struct ReadingFolio: View {
         VStack {
             Text(location?.chapter ?? title)
                 .lineLimit(1)
-                .padding(.horizontal, 60)
-                .padding(.top, 14)
+                .padding(.horizontal, Theme.Space.xxxl + Theme.Space.m)
+                .padding(.top, Theme.Space.m + Theme.Space.xxs)
             Spacer()
             Text(location?.fraction ?? 0, format: .percent.precision(.fractionLength(0)))
                 .monospacedDigit()
-                .padding(.bottom, 6)
+                .padding(.bottom, Theme.Space.xs + Theme.Space.xxs)
         }
         .font(.caption)
         .foregroundStyle(Theme.tertiaryInk)

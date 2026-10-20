@@ -1,86 +1,84 @@
 import SwiftUI
 
-enum AppTab: String, Hashable {
-    case reading, library, notebook, search
-}
-
-/// Raíz: elige el estilo (Nativo o Editorial) y el modo claro/oscuro.
-/// El lector se abre a pantalla completa en los dos.
+/// Raíz: dock nativo (Mesa, Biblioteca, Cuaderno) con la búsqueda aparte, el
+/// mini reproductor encima y el lector a pantalla completa.
 struct RootView: View {
+    enum Place: String, Hashable {
+        case desk, library, notebook, search
+    }
+
     @StateObject private var model = AppModel()
-    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .editorial
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @Namespace private var opening
+    @State private var place: Place = {
+        switch LaunchOptions.tab {
+        case "library": .library
+        case "notebook": .notebook
+        case "search": .search
+        default: .desk
+        }
+    }()
 
     var body: some View {
-        Group {
-            switch style {
-            case .native: NativeTabsView()
-            case .editorial: EditorialRootView()
+        tabs
+            .modifier(MiniPlayerAccessory(book: model.listening))
+            .environmentObject(model)
+            .environment(\.bookOpeningNamespace, opening)
+            .preferredColorScheme(mode.colorScheme)
+            .task {
+                await model.seedForScreenshotsIfNeeded()
+                if LaunchOptions.opensFirstBook, let first = model.currentBook {
+                    model.open(first)
+                }
             }
-        }
-        .environmentObject(model)
-        .environment(\.bookOpeningNamespace, opening)
-        .preferredColorScheme(mode.colorScheme)
-        .task {
-            await model.seedForScreenshotsIfNeeded()
-            if LaunchOptions.opensFirstBook, let first = model.currentBook {
-                model.open(first)
+            .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,
+                          allowsMultipleSelection: true) { result in
+                model.finishImport(result)
             }
-        }
-        .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,
-                      allowsMultipleSelection: true) { result in
-            model.finishImport(result)
-        }
-        .alert("Importación", isPresented: Binding(
-            get: { model.importReport != nil },
-            set: { if !$0 { model.importReport = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(model.importReport ?? "")
-        }
-        #if os(iOS)
-        .fullScreenCover(item: $model.openBook) { book in
-            ReaderView(bookFile: book.url, bookID: book.bookID)
-                .bookOpeningDestination(in: opening, enabled: book.fromCover)
-        }
-        #else
-        .sheet(item: $model.openBook) { book in
-            ReaderView(bookFile: book.url, bookID: book.bookID)
-                .frame(minWidth: 720, minHeight: 820)
-        }
-        #endif
+            .alert("Importación", isPresented: Binding(
+                get: { model.importReport != nil },
+                set: { if !$0 { model.importReport = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(model.importReport ?? "")
+            }
+            #if os(iOS)
+            .fullScreenCover(item: $model.openBook) { book in
+                ReaderView(bookFile: book.url, bookID: book.bookID)
+                    .bookOpeningDestination(in: opening, enabled: book.fromCover)
+            }
+            #else
+            .sheet(item: $model.openBook) { book in
+                ReaderView(bookFile: book.url, bookID: book.bookID)
+                    .frame(minWidth: 720, minHeight: 820)
+            }
+            #endif
     }
-}
 
-/// Estilo Nativo (v7): barra de pestañas flotante (Leyendo, Biblioteca,
-/// Cuaderno) con la búsqueda aparte, como en iOS 26.
-private struct NativeTabsView: View {
-    @State private var tab: AppTab = AppTab(rawValue: LaunchOptions.tab ?? "") ?? .reading
-
-    var body: some View {
+    @ViewBuilder
+    private var tabs: some View {
         if #available(iOS 18.0, macOS 15.0, *) {
-            TabView(selection: $tab) {
-                Tab("Leyendo", systemImage: "book", value: AppTab.reading) { HomeView() }
-                Tab("Biblioteca", systemImage: "books.vertical", value: AppTab.library) { LibraryView() }
-                Tab("Cuaderno", systemImage: "note.text", value: AppTab.notebook) { NotebookView() }
-                Tab(value: AppTab.search, role: .search) { SearchView() }
+            TabView(selection: $place) {
+                Tab("Mesa", systemImage: "book", value: Place.desk) { MesaScreen() }
+                Tab("Biblioteca", systemImage: "books.vertical", value: Place.library) { LibraryScreen() }
+                Tab("Cuaderno", systemImage: "note.text", value: Place.notebook) { NotebookScreen() }
+                Tab(value: Place.search, role: .search) { SearchScreen() }
             }
         } else {
-            TabView(selection: $tab) {
-                HomeView()
-                    .tabItem { Label("Leyendo", systemImage: "book") }
-                    .tag(AppTab.reading)
-                LibraryView()
+            TabView(selection: $place) {
+                MesaScreen()
+                    .tabItem { Label("Mesa", systemImage: "book") }
+                    .tag(Place.desk)
+                LibraryScreen()
                     .tabItem { Label("Biblioteca", systemImage: "books.vertical") }
-                    .tag(AppTab.library)
-                NotebookView()
+                    .tag(Place.library)
+                NotebookScreen()
                     .tabItem { Label("Cuaderno", systemImage: "note.text") }
-                    .tag(AppTab.notebook)
-                SearchView()
+                    .tag(Place.notebook)
+                SearchScreen()
                     .tabItem { Label("Buscar", systemImage: "magnifyingglass") }
-                    .tag(AppTab.search)
+                    .tag(Place.search)
             }
         }
     }

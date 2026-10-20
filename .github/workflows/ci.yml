@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Pruebas de LectoraCore
         run: swift test --package-path Packages/LectoraCore
+      - name: Sistema de diseño (sin valores sueltos en pantallas)
+        run: ./scripts/lint-design.sh
 
   app:
     name: App (iPhone y Mac)

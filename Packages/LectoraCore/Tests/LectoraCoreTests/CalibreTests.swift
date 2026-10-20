@@ -30,6 +30,7 @@ final class CalibreTests: XCTestCase {
         XCTAssertTrue(opf.contains(#"opf:file-as="Asimov, Isaac""#))
         XCTAssertTrue(opf.contains("Debolsillo &amp; Cía"))
         XCTAssertTrue(opf.contains(#"href="cover.jpg""#))
+        XCTAssertTrue(opf.contains("<dc:date>1952-01-01T12:00:00+00:00</dc:date>"))
 
         let parsed = try XCTUnwrap(CalibreOPF.parse(Data(opf.utf8)))
         XCTAssertEqual(parsed.id, book.id)
@@ -81,6 +82,13 @@ final class CalibreTests: XCTestCase {
         XCTAssertEqual(book.published, "1963-06-28")
         XCTAssertEqual(book.rating, 5)
         XCTAssertNotNil(book.addedAt)
+    }
+
+    func testControlCharactersNeverBreakTheOPF() throws {
+        var book = sampleBook()
+        book.summary = "Uno\u{0C}dos\u{0B}tres"
+        let parsed = try XCTUnwrap(CalibreOPF.parse(Data(CalibreOPF.write(book, hasCover: false).utf8)))
+        XCTAssertEqual(parsed.summary, "Unodostres")
     }
 
     func testLayoutMatchesCalibreFolders() {

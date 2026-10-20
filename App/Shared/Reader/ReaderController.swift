@@ -12,11 +12,14 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         /// Posición en «páginas» de foliate (ubicaciones de ~1,500 caracteres).
         var page: Int?
         var pageCount: Int?
+        var excerpt: String?
     }
 
     @Published private(set) var title: String?
     @Published private(set) var location: Location?
     @Published private(set) var errorMessage: String?
+    /// Avisos que no impiden seguir leyendo (p. ej. un subrayado que no se guardó).
+    @Published var notice: String?
     /// Subrayado que se tocó (CFI), para ofrecer borrarlo.
     @Published var tappedHighlight: String?
     /// Subrayado recién hecho al que se le está escribiendo una nota.
@@ -24,6 +27,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
 
     /// Toque en la página, con la posición horizontal de 0 a 1.
     var onTap: ((Double) -> Void)?
+    /// Nueva posición, ya asentada (un instante después de pasar página).
+    var onPositionSettled: ((Location) -> Void)?
+    private var settleTask: Task<Void, Never>?
 
     let schemeHandler = ReaderSchemeHandler()
     private(set) weak var webView: WKWebView?
@@ -60,7 +66,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     func open(bookFile: URL, bookID: UUID? = nil, lastCFI: String? = nil) {
         schemeHandler.bookFile = bookFile
         self.bookID = bookID ?? AnnotationStore.bookID(for: bookFile)
-        let cfiArgument = lastCFI.map { "'\($0.replacingOccurrences(of: "'", with: "\\'"))'" } ?? "null"
+        let cfiArgument = lastCFI.map(Self.js) ?? "null"
         let script = "window.lectora.open('\(ReaderSchemeHandler.bookURL(for: bookFile).absoluteString)', \(cfiArgument))"
         if isReady { evaluate(script) } else { pendingOpen = script }
     }
@@ -95,6 +101,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                       let cfi = selection["cfi"] as? String,
                       let text = selection["text"] as? String
                 else { return }
+                // El mismo pasaje subrayado dos veces es un solo subrayado.
+                if AnnotationStore.shared.annotations(forBook: bookID).contains(where: { $0.cfi == cfi }) { return }
                 let annotation = Annotation(
                     bookID: bookID, cfi: cfi, quote: text,
                     prefix: selection["prefix"] as? String, suffix: selection["suffix"] as? String,
@@ -105,7 +113,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                     self.evaluate("window.lectora.addHighlight(\(Self.js(cfi)))")
                     if withNote { self.noteTarget = annotation }
                 } catch {
-                    self.errorMessage = "No se pudo guardar el subrayado: \(error.localizedDescription)"
+                    self.notice = "No se pudo guardar el subrayado: \(error.localizedDescription)"
                 }
             }
         }
@@ -121,8 +129,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
 
     func removeHighlight(cfi: String) {
-        if let bookID, let annotation = AnnotationStore.shared.annotations(forBook: bookID).first(where: { $0.cfi == cfi }) {
-            try? AnnotationStore.shared.delete(id: annotation.id)
+        if let bookID {
+            for annotation in AnnotationStore.shared.annotations(forBook: bookID) where annotation.cfi == cfi {
+                try? AnnotationStore.shared.delete(id: annotation.id)
+            }
         }
         evaluate("window.lectora.removeHighlight(\(Self.js(cfi)))")
     }
@@ -173,8 +183,17 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 cfi: body["cfi"] as? String,
                 chapter: body["chapter"] as? String,
                 page: (body["current"] as? Int).map { $0 + 1 },
-                pageCount: body["total"] as? Int
+                pageCount: body["total"] as? Int,
+                excerpt: body["excerpt"] as? String
             )
+            settleTask?.cancel()
+            if let location {
+                settleTask = Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(1.5))
+                    guard !Task.isCancelled else { return }
+                    self?.onPositionSettled?(location)
+                }
+            }
         case "tap":
             if let x = body["x"] as? Double { onTap?(x) }
         case "annotation":

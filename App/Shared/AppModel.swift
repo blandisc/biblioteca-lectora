@@ -15,36 +15,53 @@ struct OpenBook: Identifiable {
 @MainActor
 final class AppModel: ObservableObject {
     let library: LibraryStore
+    let annotations: AnnotationStore
     @Published var importing = false
     @Published var openBook: OpenBook?
     /// Resumen de una importación con duplicados o errores.
     @Published var importReport: String?
     /// Libro que suena en el mini reproductor. Por ahora solo la interfaz: el audio llega con el modo audiolibro.
     @Published var listening: ShelfBook?
-    private var observation: AnyCancellable?
+    private var observations: [AnyCancellable] = []
 
-    init(library: LibraryStore? = nil) {
+    init(library: LibraryStore? = nil, annotations: AnnotationStore? = nil) {
         self.library = library ?? .shared
-        observation = self.library.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
+        self.annotations = annotations ?? .shared
+        observations = [
+            // La estantería se recalcula una vez por cambio de la biblioteca, no en cada vista.
+            self.library.objectWillChange.sink { [weak self] _ in
+                DispatchQueue.main.async { self?.rebuildShelf() }
+            },
+            self.annotations.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() },
+        ]
+        rebuildShelf()
         if LaunchOptions.listening { listening = currentBook }
     }
 
     /// Todos los libros, en el orden del catálogo.
-    var shelf: [ShelfBook] {
-        library.books.map { ShelfBook(book: $0, library: library) }
-    }
-
+    @Published private(set) var shelf: [ShelfBook] = []
+    private var shelfByID: [String: ShelfBook] = [:]
     /// Los más recientes primero (lo último que añadiste).
-    private var recent: [ShelfBook] {
-        library.books
-            .sorted { ($0.addedAt ?? .distantPast) > ($1.addedAt ?? .distantPast) }
-            .map { ShelfBook(book: $0, library: library) }
+    private var recent: [ShelfBook] = []
+
+    private func rebuildShelf() {
+        shelf = library.books.map { ShelfBook(book: $0, library: library) }
+        shelfByID = Dictionary(uniqueKeysWithValues: shelf.map { ($0.id, $0) })
+        recent = LibrarySort.recent.sorted(shelf)
     }
 
-    /// El libro de la Mesa: por ahora, el último que añadiste.
-    var currentBook: ShelfBook? { recent.first }
+    func shelfBook(id: String) -> ShelfBook? { shelfByID[id] }
 
-    var desk: [ShelfBook] { Array(recent.dropFirst().prefix(6)) }
+    /// El libro de la Mesa: el último que abriste o, si aún no lees ninguno, el último que añadiste.
+    var currentBook: ShelfBook? {
+        shelf.filter { $0.lastReadAt != nil }.max { $0.lastReadAt! < $1.lastReadAt! } ?? recent.first
+    }
+
+    /// Lo siguiente en la pila: los más recientes, sin el actual.
+    var desk: [ShelfBook] {
+        let current = currentBook?.id
+        return Array(recent.filter { $0.id != current }.prefix(6))
+    }
 
     func book(for shelfBook: ShelfBook) -> Book? {
         shelfBook.bookID.flatMap(library.book(id:))
@@ -104,6 +121,21 @@ final class AppModel: ObservableObject {
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
         await library.importFiles(files)
         try? FileManager.default.removeItem(at: folder)
+        seedSampleHighlights()
+        rebuildShelf()
         if LaunchOptions.listening { listening = currentBook }
+    }
+
+    /// Subrayados de muestra para que el Cuaderno no salga vacío en las capturas.
+    private func seedSampleHighlights() {
+        let samples: [(String, String, String?)] = [
+            ("Don Quijote de la Mancha", "En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero.", nil),
+            ("Don Quijote de la Mancha", "Frisaba la edad de nuestro hidalgo con los cincuenta años; era de complexión recia, seco de carnes, enjuto de rostro, gran madrugador y amigo de la caza.", "Así presenta Cervantes a su héroe: sin épica."),
+            ("Rayuela", "Una olla de algo más vaca que carnero, salpicón las más noches.", nil),
+        ]
+        for (title, quote, note) in samples {
+            guard let book = library.books.first(where: { $0.title == title }) else { continue }
+            try? annotations.save(Annotation(bookID: book.id, cfi: nil, quote: quote, color: "pencil", note: note))
+        }
     }
 }

@@ -34,10 +34,10 @@ struct MetadataEditorView: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack(alignment: .top, spacing: 16) {
+                    HStack(alignment: .top, spacing: Theme.Space.l) {
                         coverPreview
-                            .frame(width: 84)
-                        VStack(alignment: .leading, spacing: 10) {
+                            .frame(width: Theme.Size.coverEditor)
+                        VStack(alignment: .leading, spacing: Theme.Space.m) {
                             PhotosPicker(selection: $photo, matching: .images) {
                                 Label("Elegir de Fotos", systemImage: "photo")
                             }
@@ -49,7 +49,7 @@ struct MetadataEditorView: View {
                         }
                         .buttonStyle(.borderless)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Theme.Space.xs)
                 } header: {
                     Text("Portada")
                 }
@@ -112,7 +112,7 @@ struct MetadataEditorView: View {
 
                 Section("Sinopsis") {
                     TextEditor(text: optional(\.summary))
-                        .frame(minHeight: 120)
+                        .frame(minHeight: Theme.Size.textEditor)
                 }
             }
             .navigationTitle("Editar datos")
@@ -155,7 +155,7 @@ struct MetadataEditorView: View {
             Image(decorative: image, scale: 1)
                 .resizable()
                 .aspectRatio(2.0 / 3.0, contentMode: .fill)
-                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover))
         } else {
             CoverView(title: draft.title, author: authors, style: .generated(for: draft.title),
                       image: model.library.coverURL(for: book))
