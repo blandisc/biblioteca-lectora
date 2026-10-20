@@ -10,7 +10,13 @@ struct EditorialRootView: View {
         var id: Self { self }
     }
 
-    @State private var section: Place = .desk
+    @State private var section: Place = {
+        switch LaunchOptions.tab {
+        case "library": .library
+        case "notebook": .notebook
+        default: .desk
+        }
+    }()
 
     var body: some View {
         Group {

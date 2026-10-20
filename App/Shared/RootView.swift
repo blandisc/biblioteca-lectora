@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum AppTab: Hashable {
+enum AppTab: String, Hashable {
     case reading, library, notebook, search
 }
 
@@ -20,6 +20,11 @@ struct RootView: View {
         }
         .environmentObject(model)
         .preferredColorScheme(mode.colorScheme)
+        .task {
+            if LaunchOptions.opensFirstBook, let first = model.localBooks.first {
+                model.openBook = OpenBook(url: first)
+            }
+        }
         .fileImporter(isPresented: $model.importing, allowedContentTypes: LocalBooks.readableTypes) { result in
             model.finishImport(result)
         }
@@ -47,7 +52,7 @@ struct RootView: View {
 /// Estilo Nativo (v7): barra de pestañas flotante (Leyendo, Biblioteca,
 /// Cuaderno) con la búsqueda aparte, como en iOS 26.
 private struct NativeTabsView: View {
-    @State private var tab: AppTab = .reading
+    @State private var tab: AppTab = AppTab(rawValue: LaunchOptions.tab ?? "") ?? .reading
 
     var body: some View {
         if #available(iOS 18.0, macOS 15.0, *) {

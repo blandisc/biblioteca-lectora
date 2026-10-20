@@ -1,0 +1,53 @@
+name: Capturas
+
+# Abre la app en el simulador de iPhone y publica las capturas en la rama
+# `capturas` (una carpeta por commit), para revisar el diseño sin un Mac.
+on:
+  push:
+    branches: [app-esqueleto]
+    paths: ['App/**', 'scripts/**', 'project.yml', '.github/workflows/capturas.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capturas
+  cancel-in-progress: true
+
+jobs:
+  capturas:
+    name: Capturas en iPhone
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Usar el Xcode más reciente
+        run: |
+          latest=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$latest"
+          xcodebuild -version
+      - name: Preparar proyecto
+        run: |
+          brew install xcodegen
+          ./scripts/fetch-foliate.sh
+          xcodegen generate
+      - name: Tomar capturas
+        run: ./scripts/screenshots.sh "out/${GITHUB_SHA::7}"
+      - name: Publicar en la rama capturas
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          sha="${GITHUB_SHA::7}"
+          if git fetch origin capturas; then
+            git worktree add publish origin/capturas
+            (cd publish && git switch -c capturas)
+          else
+            git worktree add --orphan -b capturas publish
+          fi
+          rm -rf "publish/$sha" "publish/ultimo"
+          cp -R "out/$sha" "publish/$sha"
+          cp -R "out/$sha" "publish/ultimo"
+          cd publish
+          git add -A
+          git commit -m "Capturas de $sha"
+          git push origin capturas
