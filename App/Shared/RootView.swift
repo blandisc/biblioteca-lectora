@@ -4,40 +4,52 @@ enum AppTab: Hashable {
     case reading, library, notebook, search
 }
 
-/// Raíz: barra de pestañas flotante (Leyendo, Biblioteca, Cuaderno) con la
-/// búsqueda aparte, como en iOS 26. El lector se abre a pantalla completa.
+/// Raíz: elige el estilo (Nativo o Editorial) y el modo claro/oscuro.
+/// El lector se abre a pantalla completa en los dos.
 struct RootView: View {
     @StateObject private var model = AppModel()
+    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .native
+    @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
+
+    var body: some View {
+        Group {
+            switch style {
+            case .native: NativeTabsView()
+            case .editorial: EditorialRootView()
+            }
+        }
+        .environmentObject(model)
+        .preferredColorScheme(mode.colorScheme)
+        .fileImporter(isPresented: $model.importing, allowedContentTypes: LocalBooks.readableTypes) { result in
+            model.finishImport(result)
+        }
+        .alert("No se pudo importar", isPresented: Binding(
+            get: { model.importError != nil },
+            set: { if !$0 { model.importError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.importError ?? "")
+        }
+        #if os(iOS)
+        .fullScreenCover(item: $model.openBook) { book in
+            ReaderView(bookFile: book.url)
+        }
+        #else
+        .sheet(item: $model.openBook) { book in
+            ReaderView(bookFile: book.url)
+                .frame(minWidth: 720, minHeight: 820)
+        }
+        #endif
+    }
+}
+
+/// Estilo Nativo (v7): barra de pestañas flotante (Leyendo, Biblioteca,
+/// Cuaderno) con la búsqueda aparte, como en iOS 26.
+private struct NativeTabsView: View {
     @State private var tab: AppTab = .reading
 
     var body: some View {
-        tabs
-            .environmentObject(model)
-            .fileImporter(isPresented: $model.importing, allowedContentTypes: LocalBooks.readableTypes) { result in
-                model.finishImport(result)
-            }
-            .alert("No se pudo importar", isPresented: Binding(
-                get: { model.importError != nil },
-                set: { if !$0 { model.importError = nil } }
-            )) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(model.importError ?? "")
-            }
-            #if os(iOS)
-            .fullScreenCover(item: $model.openBook) { book in
-                ReaderView(bookFile: book.url)
-            }
-            #else
-            .sheet(item: $model.openBook) { book in
-                ReaderView(bookFile: book.url)
-                    .frame(minWidth: 720, minHeight: 820)
-            }
-            #endif
-    }
-
-    @ViewBuilder
-    private var tabs: some View {
         if #available(iOS 18.0, macOS 15.0, *) {
             TabView(selection: $tab) {
                 Tab("Leyendo", systemImage: "book", value: AppTab.reading) { HomeView() }

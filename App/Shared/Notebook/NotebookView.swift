@@ -38,14 +38,14 @@ struct NotebookView: View {
     }
 }
 
-private struct SampleHighlight: Identifiable {
+struct SampleHighlight: Identifiable {
     let id = UUID()
     let text: String
     let book: String
     let note: String?
 }
 
-private let sampleHighlights = [
+let sampleHighlights = [
     SampleHighlight(text: "La libertad, Sancho, es uno de los más preciosos dones que a los hombres dieron los cielos.",
                     book: "Don Quijote de la Mancha", note: nil),
     SampleHighlight(text: "Nada de lo que acontece es contrario a la naturaleza de quien lo padece.",
@@ -53,6 +53,11 @@ private let sampleHighlights = [
     SampleHighlight(text: "Nothing in life is as important as you think it is, while you are thinking about it.",
                     book: "Pensar rápido, pensar despacio", note: nil),
 ]
+
+let sampleTopics = [("Libertad", 14), ("Atención", 9), ("Estoicismo", 22), ("Memoria", 6), ("Decisiones", 11)]
+
+/// Número de subrayados de ejemplo por libro.
+func sampleHighlightCount(_ book: ShelfBook) -> Int { Int(book.progress * 40) + 3 }
 
 private struct ReviewList: View {
     var body: some View {
@@ -99,7 +104,7 @@ private struct BooksList: View {
                         Text(book.author).font(.subheadline).foregroundStyle(Theme.secondaryInk)
                     }
                     Spacer(minLength: 0)
-                    Text("\(Int(book.progress * 40) + 3)")
+                    Text("\(sampleHighlightCount(book))")
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
                         .foregroundStyle(Theme.pencil)
@@ -114,8 +119,6 @@ private struct BooksList: View {
 }
 
 private struct TopicsList: View {
-    private let topics = [("Libertad", 14), ("Atención", 9), ("Estoicismo", 22), ("Memoria", 6), ("Decisiones", 11)]
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Agrupados en tu dispositivo a partir de tus subrayados.")
@@ -123,7 +126,7 @@ private struct TopicsList: View {
                 .foregroundStyle(Theme.secondaryInk)
                 .padding(.horizontal, 4)
             VStack(spacing: 0) {
-                ForEach(Array(topics.enumerated()), id: \.offset) { index, topic in
+                ForEach(Array(sampleTopics.enumerated()), id: \.offset) { index, topic in
                     if index > 0 { Divider().padding(.leading, 16) }
                     HStack {
                         Text(topic.0).font(.body)

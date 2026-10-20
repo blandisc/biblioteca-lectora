@@ -1,24 +1,47 @@
 import SwiftUI
 
-/// Tokens de la versión elegida (v7, «Nativo con oficio»).
-/// Ver docs/diseno.md.
+/// Tokens de color. Cada uno tiene versión clara y oscura. Ver docs/diseno.md.
 enum Theme {
-    /// Fondo agrupado cálido (en lugar del gris frío del sistema).
-    static let groupedBackground = Color(hex: 0xF2F1EE)
-    /// Papel de la página de lectura.
-    static let paper = Color(hex: 0xFBFAF7)
-    /// Superficie de tarjetas y listas.
-    static let surface = Color.white
-    /// Tinta: texto principal y botones principales.
-    static let ink = Color(hex: 0x1C1B19)
+    // MARK: Compartidos por los dos estilos
+
+    /// Tinta: texto principal, botón principal y barras de progreso.
+    static let ink = Color(light: 0x1C1B19, dark: 0xECE9E2)
+    /// Texto sobre un fondo de tinta (botón principal).
+    static let onInk = Color(light: 0xFFFFFF, dark: 0x141413)
     /// Texto secundario.
-    static let secondaryInk = Color(hex: 0x77746D)
-    /// Pista de las barras de progreso.
-    static let track = Color(hex: 0xE6E3DC)
+    static let secondaryInk = Color(light: 0x77746D, dark: 0x9C988F)
+    /// Texto terciario (folios, etiquetas pequeñas).
+    static let tertiaryInk = Color(light: 0x9A968D, dark: 0x6F6C65)
+    /// Pista de las barras de progreso y separadores.
+    static let track = Color(light: 0xE6E3DC, dark: 0x34322E)
     /// Lápiz rojo: reservado para tus marcas (subrayados, notas, cinta).
-    static let pencil = Color(hex: 0xB8372A)
+    static let pencil = Color(light: 0xB8372A, dark: 0xE0675A)
+
+    // MARK: Nativo (v7)
+
+    /// Fondo agrupado cálido (en lugar del gris frío del sistema).
+    static let groupedBackground = Color(light: 0xF2F1EE, dark: 0x121211)
+    /// Superficie de tarjetas y listas.
+    static let surface = Color(light: 0xFFFFFF, dark: 0x1E1D1B)
+    /// Papel de la página de lectura.
+    static let paper = Color(light: 0xFBFAF7, dark: 0x171615)
 
     static let cardRadius: CGFloat = 22
+
+    // MARK: Editorial (v5)
+
+    enum Editorial {
+        /// Un solo papel para todo: biblioteca, inicio y lector.
+        static let paper = Color(light: 0xF8F7F4, dark: 0x161514)
+        /// Campos (búsqueda, notas).
+        static let field = Color(light: 0xEFEDE8, dark: 0x242320)
+        static let buttonRadius: CGFloat = 10
+    }
+
+    /// Colores del texto del libro para el WebView (CSS).
+    static func readerCSS(dark: Bool) -> (text: String, link: String) {
+        dark ? ("#DAD6CE", "#E0675A") : ("#1C1B19", "#B8372A")
+    }
 }
 
 extension Color {
@@ -28,6 +51,20 @@ extension Color {
             green: Double((hex >> 8) & 0xFF) / 255,
             blue: Double(hex & 0xFF) / 255
         )
+    }
+
+    /// Color que cambia solo con el modo claro u oscuro.
+    init(light: UInt32, dark: UInt32) {
+        #if os(iOS)
+        self.init(uiColor: UIColor { traits in
+            UIColor(Color(hex: traits.userInterfaceStyle == .dark ? dark : light))
+        })
+        #else
+        self.init(nsColor: NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            return NSColor(Color(hex: isDark ? dark : light))
+        })
+        #endif
     }
 }
 

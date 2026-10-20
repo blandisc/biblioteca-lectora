@@ -57,6 +57,7 @@ struct ShelfCover: View {
 struct BookDetailView: View {
     let book: ShelfBook
     @EnvironmentObject private var model: AppModel
+    @AppStorage(AppearanceKeys.style) private var style: DesignStyle = .native
 
     var body: some View {
         ScrollView {
@@ -87,8 +88,9 @@ struct BookDetailView: View {
                     Text(book.file != nil ? (book.isReading ? "Seguir leyendo" : "Leer") : "Aún no está en este dispositivo")
                         .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 48)
-                        .foregroundStyle(book.file != nil ? Color.white : Theme.secondaryInk)
-                        .background(book.file != nil ? Theme.ink : Theme.track, in: Capsule())
+                        .foregroundStyle(book.file != nil ? Theme.onInk : Theme.secondaryInk)
+                        .background(book.file != nil ? Theme.ink : Theme.track,
+                                    in: RoundedRectangle(cornerRadius: style == .editorial ? Theme.Editorial.buttonRadius : 24, style: .continuous))
                 }
                 .buttonStyle(PressableStyle())
                 .disabled(book.file == nil)
@@ -98,6 +100,6 @@ struct BookDetailView: View {
             .padding(.bottom, 32)
             .frame(maxWidth: .infinity)
         }
-        .background(Theme.groupedBackground.ignoresSafeArea())
+        .background((style == .editorial ? Theme.Editorial.paper : Theme.groupedBackground).ignoresSafeArea())
     }
 }

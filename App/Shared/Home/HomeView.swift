@@ -77,7 +77,7 @@ private struct CurrentBookCard: View {
                 Button(action: onContinue) {
                     Label("Seguir leyendo", systemImage: "book.fill")
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onInk)
                         .frame(maxWidth: .infinity, minHeight: 48)
                         .background(Theme.ink, in: Capsule())
                 }
@@ -128,36 +128,6 @@ private struct DeskSection: View {
                 }
                 .padding(.horizontal, 4)
                 .padding(.vertical, 8)
-            }
-        }
-    }
-}
-
-/// Cuenta y conexiones: dónde vive la biblioteca y con qué se sincroniza.
-private struct AccountView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Biblioteca") {
-                    LabeledContent("iCloud Drive", value: "Próximamente")
-                    LabeledContent("Google Drive", value: "Próximamente")
-                    LabeledContent("OneDrive", value: "Próximamente")
-                }
-                Section("Subrayados") {
-                    LabeledContent("Readwise", value: "Próximamente")
-                }
-                Section("Inteligencia") {
-                    LabeledContent("En el dispositivo", value: "Apple")
-                    LabeledContent("Conector externo", value: "Sin configurar")
-                }
-            }
-            .navigationTitle("Cuenta")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") { dismiss() }
-                }
             }
         }
     }

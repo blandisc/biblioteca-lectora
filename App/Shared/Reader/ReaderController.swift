@@ -19,6 +19,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     private(set) weak var webView: WKWebView?
     private var isReady = false
     private var pendingOpen: String?
+    private var colorScript: String?
 
     func makeWebView() -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -31,6 +32,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         webView.backgroundColor = .clear
         webView.scrollView.isScrollEnabled = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
+        #else
+        webView.setValue(false, forKey: "drawsBackground")
         #endif
         #if DEBUG
         if #available(iOS 16.4, macOS 13.3, *) { webView.isInspectable = true }
@@ -53,6 +56,13 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     func goTo(fraction: Double) { evaluate("window.lectora.goToFraction(\(fraction))") }
     func setScrolled(_ scrolled: Bool) { evaluate("window.lectora.setFlow('\(scrolled ? "scrolled" : "paginated")')") }
 
+    /// Colores del texto según el tema (hex CSS, p. ej. "#1C1B19").
+    func setColors(text: String, link: String) {
+        let script = "window.lectora.setStyle({ textColor: '\(text)', linkColor: '\(link)' })"
+        colorScript = script
+        if isReady { evaluate(script) }
+    }
+
     private func evaluate(_ script: String) {
         webView?.evaluateJavaScript(script, completionHandler: nil)
     }
@@ -66,6 +76,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         switch type {
         case "ready":
             isReady = true
+            if let colorScript { evaluate(colorScript) }
             if let pendingOpen {
                 evaluate(pendingOpen)
                 self.pendingOpen = nil

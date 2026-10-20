@@ -23,12 +23,15 @@ struct LibraryView: View {
     @AppStorage("library.onlyDownloaded") private var onlyDownloaded = false
 
     private var books: [ShelfBook] {
-        let visible = model.shelf.filter { !onlyDownloaded || !$0.inCloudOnly }
+        Self.sorted(model.shelf.filter { !onlyDownloaded || !$0.inCloudOnly }, by: sort)
+    }
+
+    static func sorted(_ books: [ShelfBook], by sort: Sort) -> [ShelfBook] {
         switch sort {
-        case .recent: return visible.sorted { $0.addedDaysAgo < $1.addedDaysAgo }
-        case .title: return visible.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-        case .author: return visible.sorted { $0.author.localizedStandardCompare($1.author) == .orderedAscending }
-        case .progress: return visible.sorted { $0.progress > $1.progress }
+        case .recent: books.sorted { $0.addedDaysAgo < $1.addedDaysAgo }
+        case .title: books.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        case .author: books.sorted { $0.author.localizedStandardCompare($1.author) == .orderedAscending }
+        case .progress: books.sorted { $0.progress > $1.progress }
         }
     }
 

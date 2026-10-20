@@ -11,10 +11,20 @@ const defaultStyle = {
     hyphenate: true,
     fontFamily: 'Literata, Charter, Georgia, serif',
     maxInlineSize: 720,
+    // Colores del tema de la app (claro u oscuro). null = los del libro.
+    textColor: null,
+    linkColor: null,
 }
 
-const getCSS = ({ lineHeight, justify, hyphenate, fontFamily }) => `
+const getColorCSS = ({ textColor, linkColor }) => !textColor ? '' : `
+    html, body { color: ${textColor} !important; background: transparent !important; }
+    body *:not(a) { color: inherit !important; background-color: transparent !important; }
+    a, a * { color: ${linkColor ?? textColor} !important; }
+`
+
+const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, ...colors }) => `
     html { color-scheme: light dark; }
+    ${getColorCSS(colors)}
     body { font-family: ${fontFamily}; }
     p, li, blockquote, dd {
         line-height: ${lineHeight};
