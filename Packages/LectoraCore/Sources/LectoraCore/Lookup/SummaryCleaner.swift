@@ -31,6 +31,8 @@ public enum SummaryCleaner {
         text = paragraphs.joined(separator: "\n")
             .replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        // Rayas o viñetas sueltas al principio («-- Sacado de su cómodo agujero…»).
+        text = text.replacingOccurrences(of: #"^[\s\-–—•*]+"#, with: "", options: .regularExpression)
         // Muy cortas o que solo dicen de dónde vienen no sirven.
         guard text.count >= 40 else { return nil }
         return text

@@ -143,6 +143,8 @@ enum TextMatch {
             "de": ["der", "die", "das", "und", "ist", "nicht", "mit", "sich", "auf", "ein", "eine", "dem", "den"],
             "nl": ["het", "een", "van", "en", "zijn", "niet", "met", "voor", "dat", "op", "aan", "over", "tot"],
             "it": ["il", "di", "che", "e", "la", "per", "un", "una", "non", "sono", "della", "nel", "gli"],
+            // Catalán: se parece al español; lo delatan «i», «amb», «els», «és».
+            "ca": ["i", "amb", "els", "per", "es", "dels", "seva", "perque", "als", "aquest", "aquesta", "pero", "historia"],
         ]
         let scores = common.mapValues { set in sample.filter(set.contains).count }
         guard let best = scores.max(by: { $0.value < $1.value }), best.value >= 4 else { return nil }

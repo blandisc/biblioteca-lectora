@@ -305,6 +305,8 @@ final class MetadataLookupTests: XCTestCase {
         XCTAssertFalse(SummaryCleaner.isBroken(good))
         XCTAssertEqual(MetadataMatcher.bestSummary([dutch, broken, short, good], for: book), good)
         XCTAssertNil(MetadataMatcher.bestSummary([dutch, broken, short], for: book))
+        let catalan = "De l'autor de Sàpiens, la història apassionant del present i del futur de la humanitat, amb els reptes que ens esperen."
+        XCTAssertNil(MetadataMatcher.bestSummary([catalan], for: book), "El catalán no pasa por español")
     }
 
     // MARK: Servicio (con red simulada)
