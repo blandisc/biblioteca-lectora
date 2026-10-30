@@ -18,7 +18,7 @@ import urllib.request
 
 from PIL import Image
 
-AGENTE = "Lectora/0.2 (https://github.com/blandisc/biblioteca-lectora)"
+AGENTE = "Gabinete/0.3 (https://github.com/blandisc/biblioteca-lectora)"
 OL_CAMPOS = ",".join([
     "key", "title", "subtitle", "author_name", "author_key", "first_publish_year", "edition_count",
     "language", "subject", "cover_i", "cover_edition_key", "publisher", "isbn", "series_name",

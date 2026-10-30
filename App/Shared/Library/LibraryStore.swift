@@ -52,8 +52,11 @@ final class LibraryStore: ObservableObject {
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
 
-    let root: URL
-    private let log: ChangeLog
+    /// Carpeta de la biblioteca (`Gabinete/Biblioteca`): cambia si eliges otra.
+    @Published private(set) var root: URL
+    /// Moviendo la biblioteca a otra carpeta.
+    @Published private(set) var moving = false
+    private var log: ChangeLog
     private let clock: HybridLogicalClock
     private var state = LibraryState()
     private lazy var extractor = MetadataExtractor()
@@ -62,6 +65,8 @@ final class LibraryStore: ObservableObject {
 
     init(root: URL = LibraryStore.defaultRoot) {
         self.root = root
+        try? FileManager.default.createDirectory(at: root.deletingLastPathComponent()
+            .appendingPathComponent(CabinetLocation.notesFolder), withIntermediateDirectories: true)
         let device = AnnotationStore.deviceID
         log = ChangeLog(directory: root.appendingPathComponent(".lectora/registro", isDirectory: true), deviceID: device)
         clock = HybridLogicalClock(node: device)
@@ -69,10 +74,134 @@ final class LibraryStore: ObservableObject {
         loadReviews()
     }
 
-    /// «En mi iPhone › Lectora › Biblioteca Lectora» en la app Archivos.
-    nonisolated static var defaultRoot: URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Biblioteca Lectora", isDirectory: true)
+    /// La biblioteca del Gabinete en uso: la carpeta que elegiste (p. ej. en
+    /// iCloud Drive) o «En mi iPhone › Gabinete › Biblioteca» en Archivos.
+    static var defaultRoot: URL {
+        CabinetLocation.migrateLegacyFolder()
+        return CabinetLocation.library(in: CabinetLocation.current())
+    }
+
+    /// Carpeta del Gabinete (la biblioteca y las notas viven dentro).
+    var cabinet: URL { root.deletingLastPathComponent() }
+    var isLocal: Bool { CabinetLocation.isLocal(cabinet) }
+
+    // MARK: Dónde vive el Gabinete (B3)
+
+    enum LocationError: LocalizedError {
+        case alreadyHasLibrary
+        case incomplete(copied: Int, expected: Int)
+        var errorDescription: String? {
+            switch self {
+            case .alreadyHasLibrary:
+                "Esa carpeta ya tiene una biblioteca de Gabinete. Ábrela en vez de mover la tuya encima."
+            case .incomplete(let copied, let expected):
+                "Solo se copiaron \(copied) de \(expected) elementos. Tu biblioteca sigue donde estaba."
+            }
+        }
+    }
+
+    /// Lleva la biblioteca (y las notas) a otra carpeta y la usa desde ahí. Se
+    /// copia todo, se comprueba y solo entonces se borra la copia local.
+    func move(toCabinet destination: URL) async throws {
+        CabinetLocation.startAccessing(destination)
+        guard !CabinetLocation.hasLibrary(in: destination) else { throw LocationError.alreadyHasLibrary }
+        _ = await lastImport?.value
+        moving = true
+        defer { moving = false }
+        let source = cabinet
+        let wasLocal = isLocal
+        let (copiedCount, expectedCount) = try await Task.detached(priority: .userInitiated) { () -> (Int, Int) in
+            let manager = FileManager.default
+            try manager.createDirectory(at: destination, withIntermediateDirectories: true)
+            var expected = 0, copied = 0
+            for folder in [CabinetLocation.libraryFolder, CabinetLocation.notesFolder] {
+                let from = source.appendingPathComponent(folder), to = destination.appendingPathComponent(folder)
+                guard manager.fileExists(atPath: from.path) else { continue }
+                expected += LibraryStore.countItems(in: from)
+                try LibraryStore.coordinatedCopy(from: from, to: to)
+                copied += LibraryStore.countItems(in: to)
+            }
+            return (copied, expected)
+        }.value
+        guard copiedCount >= expectedCount else { throw LocationError.incomplete(copied: copiedCount, expected: expectedCount) }
+        try CabinetLocation.remember(destination)
+        open(cabinet: destination)
+        if wasLocal {
+            for folder in [CabinetLocation.libraryFolder, CabinetLocation.notesFolder] {
+                try? FileManager.default.removeItem(at: source.appendingPathComponent(folder))
+            }
+        }
+    }
+
+    /// Usa la biblioteca que ya está en esa carpeta (p. ej. la que creó tu Mac).
+    func use(cabinet destination: URL) throws {
+        CabinetLocation.startAccessing(destination)
+        try CabinetLocation.remember(destination)
+        open(cabinet: destination)
+    }
+
+    /// Vuelve a la carpeta del dispositivo (no copia nada).
+    func useLocalCabinet() {
+        CabinetLocation.forget()
+        open(cabinet: CabinetLocation.local)
+    }
+
+    private func open(cabinet: URL) {
+        root = CabinetLocation.library(in: cabinet)
+        try? FileManager.default.createDirectory(at: CabinetLocation.notes(in: cabinet), withIntermediateDirectories: true)
+        log = ChangeLog(directory: root.appendingPathComponent(".lectora/registro", isDirectory: true), deviceID: AnnotationStore.deviceID)
+        reviews = [:]
+        pendingLookup = []
+        filled = [:]
+        rules = MetadataRules()
+        reload()
+        loadReviews()
+        refreshFromCloud()
+    }
+
+    /// Trae lo que cambió en otros dispositivos: pide a iCloud los registros,
+    /// portadas y metadatos que falten y vuelve a leer el catálogo.
+    func refreshFromCloud() {
+        let folder = root
+        Task.detached(priority: .utility) { [weak self] in
+            CloudFiles.requestSmallFiles(in: folder)
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await self?.reload(ifStillAt: folder)
+        }
+    }
+
+    private func reload(ifStillAt folder: URL) {
+        guard root == folder else { return }
+        reload()
+    }
+
+    /// El archivo del libro, bajado de iCloud si hacía falta.
+    func downloadedFile(for book: Book) async -> URL? {
+        guard let url = fileURL(for: book) else { return nil }
+        return await CloudFiles.ensureDownloaded(url) ? url : nil
+    }
+
+    nonisolated static func countItems(in folder: URL) -> Int {
+        let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil)
+        var count = 0
+        while walker?.nextObject() != nil { count += 1 }
+        return count
+    }
+
+    /// Copia con NSFileCoordinator: iCloud sabe que se está escribiendo.
+    nonisolated static func coordinatedCopy(from source: URL, to destination: URL) throws {
+        var coordinationError: NSError?
+        var copyError: Error?
+        NSFileCoordinator().coordinate(readingItemAt: source, options: [], writingItemAt: destination,
+                                       options: .forReplacing, error: &coordinationError) { from, to in
+            do {
+                if FileManager.default.fileExists(atPath: to.path) { try FileManager.default.removeItem(at: to) }
+                try FileManager.default.copyItem(at: from, to: to)
+            } catch {
+                copyError = error
+            }
+        }
+        if let error = coordinationError ?? copyError { throw error }
     }
 
     func reload() {
@@ -212,8 +341,9 @@ final class LibraryStore: ObservableObject {
         guard let original = book(id: edited.id) else { throw LibraryError.bookNotFound }
         var book = MetadataCleaner.clean(edited, manual: true)
 
+        // Si el título o el autor cambiaron, o la carpeta no tiene la forma de Calibre, se recoloca.
         if let oldPath = original.filePath, let calibreID = book.calibreID,
-           original.title != book.title || original.authors.first != book.authors.first {
+           oldPath != expectedPath(for: book, calibreID: calibreID, fileExtension: (oldPath as NSString).pathExtension) {
             let oldFolder = root.appendingPathComponent((oldPath as NSString).deletingLastPathComponent, isDirectory: true)
             let newFolderPath = CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)
             let newFolder = root.appendingPathComponent(newFolderPath, isDirectory: true)
@@ -251,6 +381,52 @@ final class LibraryStore: ObservableObject {
         try writeOPF(book, hasCover: coverURL(for: book) != nil)
         try record(book)
         return book
+    }
+
+    // MARK: Ordenar (B3)
+
+    struct TidyReport {
+        var relocated = 0
+        var checked = 0
+        /// Libros del catálogo cuyo archivo ya no está.
+        var missing: [String] = []
+        /// Carpetas con libros que no están en el catálogo (p. ej. copiadas a mano).
+        var strays: [String] = []
+    }
+
+    /// Ordena la carpeta como lo haría Calibre: cada libro en `Autor/Título (id)`
+    /// con su archivo, portada y metadata.opf al día. Avisa de lo que falta y
+    /// de lo que sobra, sin borrar nada.
+    func tidy() -> TidyReport {
+        var report = TidyReport()
+        let manager = FileManager.default
+        for book in books {
+            guard let path = book.filePath, let calibreID = book.calibreID else { continue }
+            report.checked += 1
+            let file = root.appendingPathComponent(path)
+            let placeholder = file.deletingLastPathComponent().appendingPathComponent(".\(file.lastPathComponent).icloud")
+            guard manager.fileExists(atPath: file.path) || manager.fileExists(atPath: placeholder.path) else {
+                report.missing.append(book.title)
+                continue
+            }
+            let relocates = path != expectedPath(for: book, calibreID: calibreID, fileExtension: file.pathExtension)
+            if (try? update(book)) != nil, relocates { report.relocated += 1 }
+        }
+        let known = Set(books.compactMap(\.folderPath))
+        let authors = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
+        for author in authors where !author.lastPathComponent.hasPrefix(".") && author.hasDirectoryPath {
+            let titles = (try? manager.contentsOfDirectory(at: author, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
+            for title in titles where title.hasDirectoryPath {
+                let relative = "\(author.lastPathComponent)/\(title.lastPathComponent)"
+                if !known.contains(relative) { report.strays.append(relative) }
+            }
+        }
+        return report
+    }
+
+    private func expectedPath(for book: Book, calibreID: Int, fileExtension: String) -> String {
+        CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID) + "/"
+            + CalibreLayout.fileName(title: book.title, authors: book.authors, fileExtension: fileExtension)
     }
 
     // MARK: Buscar en internet

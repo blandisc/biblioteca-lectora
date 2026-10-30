@@ -26,7 +26,7 @@ xcrun simctl bootstatus "$DEVICE" -b
 
 xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS -configuration Debug \
   -destination "id=$DEVICE" -derivedDataPath build/screens build CODE_SIGNING_ALLOWED=NO -quiet
-xcrun simctl install "$DEVICE" build/screens/Build/Products/Debug-iphonesimulator/Lectora.app
+xcrun simctl install "$DEVICE" build/screens/Build/Products/Debug-iphonesimulator/Gabinete.app
 xcrun simctl status_bar "$DEVICE" override --time 9:41 --batteryState discharging --batteryLevel 100 \
   --cellularMode active --cellularBars 4 --wifiBars 3 || true
 

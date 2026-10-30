@@ -25,7 +25,7 @@ public protocol MetadataFetching: Sendable {
 /// peticiones al mismo servidor y reintenta si el servidor pide calma (429)
 /// o falla un momento (5xx).
 public struct HTTPFetcher: MetadataFetching {
-    public static let userAgent = "Lectora/0.2 (https://github.com/blandisc/biblioteca-lectora)"
+    public static let userAgent = "Gabinete/0.3 (https://github.com/blandisc/biblioteca-lectora)"
     private let session: URLSession
     private let retries: Int
 

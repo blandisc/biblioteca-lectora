@@ -17,7 +17,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
 
     @Published private(set) var title: String?
     @Published private(set) var location: Location?
-    @Published private(set) var errorMessage: String?
+    @Published var errorMessage: String?
     /// Avisos que no impiden seguir leyendo (p. ej. un subrayado que no se guardó).
     @Published var notice: String?
     /// Subrayado que se tocó (CFI), para ofrecer borrarlo.

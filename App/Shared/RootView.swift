@@ -8,6 +8,7 @@ struct RootView: View {
     }
 
     @StateObject private var model = AppModel()
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @Namespace private var opening
     @State private var place: Place = {
@@ -32,6 +33,10 @@ struct RootView: View {
                 }
                 // Los que se importaron sin internet se buscan ahora.
                 await model.library.retryPendingLookups()
+            }
+            // Al volver a la app: lo que cambió en tus otros dispositivos (iCloud).
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { model.library.refreshFromCloud() }
             }
             .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,
                           allowsMultipleSelection: true) { result in

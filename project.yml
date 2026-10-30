@@ -25,10 +25,10 @@ targets:
     info:
       path: App/Generated/Info-${platform}.plist
       properties:
-        CFBundleDisplayName: Lectora
+        CFBundleDisplayName: Gabinete
         LSApplicationCategoryType: public.app-category.books
         UILaunchScreen: {}
-        # La carpeta «Biblioteca Lectora» se ve en Archivos › En mi iPhone › Lectora.
+        # La carpeta «Gabinete» se ve en Archivos › En mi iPhone › Gabinete.
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
         UISupportedInterfaceOrientations:
@@ -37,7 +37,7 @@ targets:
           - UIInterfaceOrientationLandscapeRight
     settings:
       base:
-        PRODUCT_NAME: Lectora
+        PRODUCT_NAME: Gabinete
         PRODUCT_BUNDLE_IDENTIFIER: com.example.lectora
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"

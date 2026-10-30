@@ -1,18 +1,18 @@
-# Biblioteca Lectora: PRD v3.3 — el hub
+# Gabinete: PRD v4.0 — leer y pensar
 
-> **Estado:** borrador para revisión · **Versión:** 3.3 · **Fecha:** 20 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+> **Estado:** borrador para revisión · **Versión:** 4.0 · **Fecha:** 30 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
 >
-> **Qué cambia en la v3.3:** entra el **modo audiolibro con voz de IA** (§6.5): una IA lee el capítulo como director de escena y una voz neuronal lo narra. Sale el repaso diario de Readwise, porque no se usa.
+> **Qué cambia en la v4.0:** la app se llama **Gabinete** (antes «Biblioteca Lectora» / «Lectora»): un gabinete guarda libros y también notas. Pasa a ser **dual, de lectura y de notas** (§2.1): notas libres en **Markdown dentro de la misma carpeta**, que enlazan libros y subrayados, al estilo Obsidian. La carpeta del Gabinete tiene dos partes: `Biblioteca/` (con forma de Calibre) y `Notas/`. Entran tres conectores de lectura: **Readwise**, **Kindle** y **Hardcover** (§3.6).
 >
-> **Qué cambia en la v3.2:** la **v1 es iPhone (incluido el Duo) + Mac nativo**. El iPhone es para leer y el Mac es la estación de administración (§5). El **iPad llega después** y sale barato, porque los diseños amplios del Duo ya lo cubren casi por completo (§5.1).
->
-> **Qué cambió en la v3.0:** el producto se reorganiza como un **hub**. El núcleo es la app (biblioteca + lector + IA ligera); todo lo demás son **conectores**: nubes de almacenamiento, el bot, Readwise y los proveedores de IA. Las versiones anteriores siguen en el historial de git. Las investigaciones en [`investigacion/`](investigacion/) son el anexo técnico.
+> **v3.3:** modo audiolibro con voz de IA (§6.5); sale el repaso diario de Readwise. **v3.2:** v1 en iPhone (incluido el Duo) + Mac nativo. **v3.0:** el producto como **hub** de conectores. Las versiones anteriores están en el historial de git; las investigaciones en [`investigacion/`](investigacion/) son el anexo técnico.
 
 ---
 
 ## 1. El producto en una frase
 
-**Un Calibre moderno con el mejor lector del mercado:** organizas tu biblioteca y sus metadatos, tus libros viven seguros en tu nube y se descargan cuando los necesitas, tus subrayados se juntan en Readwise, y una IA sencilla te ayuda a entender y recordar lo que lees. Funciona **sin conexión** y se sincroniza al volver a tener internet. **No hay servidor.**
+**Un gabinete para leer y pensar: un Calibre moderno con el mejor lector del mercado y tus notas al lado.** Tus libros y tus notas viven juntos en una carpeta tuya, y las notas enlazan los libros y los subrayados que las inspiraron.
+
+**El Calibre moderno:** organizas tu biblioteca y sus metadatos, tus libros viven seguros en tu nube y se descargan cuando los necesitas, tus subrayados se juntan en Readwise, y una IA sencilla te ayuda a entender y recordar lo que lees. Funciona **sin conexión** y se sincroniza al volver a tener internet. **No hay servidor.**
 
 ## 2. Modelo de hub
 
@@ -38,6 +38,13 @@
 2. **Offline-first.** Todo funciona sin conexión sobre una copia local; al volver a tener internet, se sincroniza.
 3. **Cada conector es intercambiable** y se puede apagar. Si Readwise, una nube o un proveedor de IA desaparece, la app sigue funcionando.
 4. **v1 en iPhone y Mac. El Mac acelera, nunca es requisito** (§5): con el Mac apagado, el iPhone hace todo lo esencial.
+
+### 2.1 Notas (lo nuevo de Gabinete)
+
+- **Notas libres** (ideas, resúmenes, proyectos, lecturas por tema) que **enlazan libros y subrayados**. El Cuaderno de subrayados sigue existiendo; una nota puede citar un subrayado y queda enlazada al pasaje.
+- **Markdown en la carpeta:** `Gabinete/Notas/*.md`, archivos normales que abres con Obsidian u otro editor. Si borras Gabinete, tus notas siguen ahí (el mismo principio que con Calibre).
+- **Enlaces en texto plano** para que funcionen fuera de la app: `[[Título del libro]]` al estilo Obsidian y un enlace al pasaje (`gabinete://…`) para volver al subrayado exacto.
+- **Por diseñar** (bloque N): editor, enlaces y retroenlaces, cómo se crea una nota desde un subrayado, búsqueda conjunta de libros y notas, y qué hace la IA con tus notas.
 
 ## 3. Decisiones
 
@@ -107,6 +114,14 @@ Biblioteca Lectora/
 
 ### 3.5 Una sola app SwiftUI para iPhone y Mac (iPad después)
 Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el Mac, para administrar y leer en pantalla grande (§5). Mac nativo, no Catalyst. El núcleo (biblioteca, sync, conectores, IA) es un paquete Swift compartido sin APIs exclusivas de una plataforma.
+
+### 3.6 Conectores de lectura: Readwise, Kindle y Hardcover
+
+| Conector | Qué hace | Cómo |
+|---|---|---|
+| **Readwise** | Hub de subrayados: los de Gabinete van allá; de allá vienen los de Kindle y Reader | API oficial con clave (§3.2) |
+| **Kindle** | Subrayados de tus libros Kindle, anclados en tus EPUB; mandar un libro de Gabinete a tu Kindle | Amazon no tiene API pública: los subrayados llegan **vía Readwise** (que ya se conecta a Kindle) o del archivo `My Clippings.txt` de un Kindle por USB. Enviar libros: «Send to Kindle» por correo (EPUB). El progreso de lectura (Whispersync) no se puede sincronizar |
+| **Hardcover** | Registro de lectura: «Leyendo» al abrir, avance mientras lees, «Leído» con fecha y calificación al terminar; importar tu historial | API oficial (GraphQL, en beta) con clave personal o inicio de sesión (OAuth). Sustituye a Goodreads, cuya API cerró en 2020; Hardcover importa el CSV de Goodreads |
 
 ## 4. Experiencia: la UI como hub
 - **Inicio:** "Seguir leyendo", llegadas recientes (del buzón o de Reader), subrayados destacados de la semana.

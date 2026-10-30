@@ -78,7 +78,8 @@ extension ShelfBook {
             author: book.authors.isEmpty ? "Autor desconocido" : book.authors.joined(separator: ", "),
             progress: progress,
             addedDaysAgo: days,
-            inCloudOnly: false,
+            // En iCloud Drive con «Optimizar almacenamiento», el libro puede no estar bajado.
+            inCloudOnly: library.fileURL(for: book).map { !CloudFiles.isDownloaded($0) } ?? false,
             cover: .generated(for: book.title),
             file: library.fileURL(for: book),
             note: book.series.map { series in

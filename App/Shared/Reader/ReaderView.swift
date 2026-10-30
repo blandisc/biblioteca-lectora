@@ -108,7 +108,15 @@ struct ReaderView: View {
                 }
             }
             let resume = bookID.flatMap { LibraryStore.shared.position(for: $0)?.cfi }
-            controller.open(bookFile: bookFile, bookID: bookID, lastCFI: resume)
+            // En iCloud Drive el libro puede no estar en el dispositivo: primero se baja.
+            let file = bookFile
+            Task { @MainActor in
+                guard await CloudFiles.ensureDownloaded(file) else {
+                    controller.errorMessage = "No pude bajar el libro de iCloud. Revisa tu conexión e inténtalo de nuevo."
+                    return
+                }
+                controller.open(bookFile: file, bookID: bookID, lastCFI: resume)
+            }
         }
         .onChange(of: palette) { _, _ in applyStyle() }
         .onChange(of: font) { _, _ in applyStyle() }
