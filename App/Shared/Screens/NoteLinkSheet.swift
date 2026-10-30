@@ -29,7 +29,7 @@ struct NoteLinkSheet: View {
                                 .font(.rowTitle)
                             Button("Crear") { save(to: nil) }
                                 .fontWeight(.semibold)
-                                .foregroundStyle(Theme.brand)
+                                .foregroundStyle(Theme.accent)
                         }
                         .padding(.vertical, Theme.Space.s)
                         .overlay(alignment: .bottom) { Hairline() }

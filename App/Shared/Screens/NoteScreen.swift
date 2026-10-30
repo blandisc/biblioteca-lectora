@@ -51,7 +51,7 @@ struct NoteScreen: View {
                     if editing {
                         Button("Listo") { finishEditing() }
                             .fontWeight(.semibold)
-                            .foregroundStyle(Theme.brand)
+                            .foregroundStyle(Theme.accent)
                     } else {
                         Menu("Editar") {
                             Button { startEditing() } label: { Label("Escribir", systemImage: "pencil") }

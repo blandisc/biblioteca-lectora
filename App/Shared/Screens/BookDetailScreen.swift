@@ -96,7 +96,7 @@ extension BookDetailScreen {
                 SectionLabel(text: "Notas")
                 Spacer()
                 NavigationLink(value: NoteRef.new(draft: "# \n\n[[\(live.title)]] ")) {
-                    Text("Nota nueva").fontWeight(.medium).foregroundStyle(Theme.brand)
+                    Text("Nota nueva").fontWeight(.medium).foregroundStyle(Theme.accent)
                 }
                 .buttonStyle(.plain)
             }

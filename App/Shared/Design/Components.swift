@@ -139,7 +139,7 @@ struct AccentIconButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(Theme.brand)
+                .foregroundStyle(Theme.accent)
                 .frame(width: Theme.Size.accentButton, height: Theme.Size.accentButton)
                 .contentShape(Rectangle())
         }
