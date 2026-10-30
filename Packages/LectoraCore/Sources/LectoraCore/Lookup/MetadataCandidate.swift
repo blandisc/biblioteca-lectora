@@ -51,6 +51,8 @@ public struct MetadataCandidate: Identifiable, Hashable, Codable, Sendable {
 
     /// Todos los ISBN conocidos de la edición (para reconocer el tuyo); no se guarda.
     public var knownISBNs: Set<String> = []
+    /// Sinopsis de otras fuentes del mismo libro, para elegir la mejor; no se guarda.
+    public var otherSummaries: [String] = []
 
     private enum CodingKeys: String, CodingKey {
         case id, source, title, subtitle, authors, publisher, published, summary, isbn, language, subjects

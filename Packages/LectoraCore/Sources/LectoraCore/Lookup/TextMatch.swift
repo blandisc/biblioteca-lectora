@@ -140,6 +140,9 @@ enum TextMatch {
             "en": ["the", "and", "of", "to", "is", "in", "that", "his", "her", "with", "for", "this", "was", "as", "by", "on"],
             "pt": ["o", "os", "as", "que", "de", "e", "em", "um", "uma", "com", "para", "seu", "nao", "do", "da"],
             "fr": ["le", "les", "des", "et", "est", "une", "dans", "qui", "pour", "pas", "sur", "du", "il"],
+            "de": ["der", "die", "das", "und", "ist", "nicht", "mit", "sich", "auf", "ein", "eine", "dem", "den"],
+            "nl": ["het", "een", "van", "en", "zijn", "niet", "met", "voor", "dat", "op", "aan", "over", "tot"],
+            "it": ["il", "di", "che", "e", "la", "per", "un", "una", "non", "sono", "della", "nel", "gli"],
         ]
         let scores = common.mapValues { set in sample.filter(set.contains).count }
         guard let best = scores.max(by: { $0.value < $1.value }), best.value >= 4 else { return nil }

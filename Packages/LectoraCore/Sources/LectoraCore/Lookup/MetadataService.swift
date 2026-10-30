@@ -118,11 +118,16 @@ public struct MetadataService: Sendable {
     /// Sinopsis en el idioma del libro: si la que trae el candidato (p. ej. de
     /// Google) no lo es, se prueba con la de la obra en Open Library.
     public func withSummary(_ candidate: MetadataCandidate, for book: Book) async -> MetadataCandidate {
-        if let summary = candidate.summary, MetadataMatcher.summaryFits(summary, book: book) { return candidate }
-        guard let key = candidate.workKey, let data = await fetcher.get(OpenLibrary.workURL(key: key)).data,
-              let description = OpenLibrary.workDescription(from: data) else { return candidate }
+        var pool = [candidate.summary].compactMap { $0 } + candidate.otherSummaries
+        if MetadataMatcher.bestSummary(pool, for: book) == nil, let key = candidate.workKey,
+           let data = await fetcher.get(OpenLibrary.workURL(key: key)).data,
+           let description = OpenLibrary.workDescription(from: data) {
+            pool.append(description)
+        }
         var result = candidate
-        if result.summary == nil || MetadataMatcher.summaryFits(description, book: book) { result.summary = description }
+        // La mejor en tu idioma; si no hay, la primera (la vista previa la muestra, pero no se aplica sola).
+        result.summary = MetadataMatcher.bestSummary(pool, for: book) ?? pool.first
+        result.otherSummaries = pool.filter { $0 != result.summary }
         return result
     }
 

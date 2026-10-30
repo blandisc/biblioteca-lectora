@@ -169,7 +169,11 @@ public enum OpenLibrary {
     /// Library conoce esa forma. El orden se respeta (el primero es el autor;
     /// suelen seguir traductores e ilustradores).
     static func authors(_ names: [String], alternatives: [String]) -> [String] {
-        latinAuthors(names, alternatives: alternatives).map { shouting($0) ? $0.lowercased().capitalized : $0 }
+        latinAuthors(names, alternatives: alternatives).map { name in
+            // «Cixin Liu; Liu Cixin» → la primera forma; «sun tzu» o «LEON TOLSTOI» → «Sun Tzu», «Leon Tolstoi».
+            let first = name.components(separatedBy: ";")[0].trimmingCharacters(in: .whitespaces)
+            return shouting(first) || first == first.lowercased() ? first.lowercased().capitalized : first
+        }
     }
 
     private static func latinAuthors(_ names: [String], alternatives: [String]) -> [String] {

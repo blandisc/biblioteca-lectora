@@ -123,7 +123,8 @@ for item in corpus {
         block += "\(String(format: "%.2f", candidate.confidence)) · \((candidate.notes ?? []).map(\.rawValue).joined(separator: ", ")) · "
         block += "ed. \(candidate.editionCount ?? 0) · \(candidate.series ?? "") \(candidate.seriesIndex.map { String($0) } ?? "")\n"
     }
-    if let summary = best?.summary {
+    // La sinopsis que quedaría en el libro (solo en su idioma).
+    if let summary = best.map({ MetadataMatcher.fillMissing(book, from: $0) })?.summary {
         block += "\n> " + String(summary.prefix(280)).replacingOccurrences(of: "\n", with: " ") + "\n"
     }
     details.append(block)

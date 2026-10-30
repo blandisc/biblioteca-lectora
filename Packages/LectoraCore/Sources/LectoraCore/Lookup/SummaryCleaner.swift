@@ -36,6 +36,16 @@ public enum SummaryCleaner {
         return text
     }
 
+    /// Texto roto por una mala conversión: «edici n cr tica se re ne» (las
+    /// letras con acento se perdieron) o caracteres de reemplazo.
+    public static func isBroken(_ text: String) -> Bool {
+        if text.contains("\u{FFFD}") { return true }
+        let pattern = #"[a-záéíóúñ] [bcdfghjklmnñpqrstvwxz]\b"#
+        let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+        let hits = regex?.numberOfMatches(in: text, range: NSRange(text.startIndex..., in: text)) ?? 0
+        return hits >= 2
+    }
+
     /// Idioma de la sinopsis («es», «en»…) si se puede saber.
     public static func language(of summary: String) -> String? {
         TextMatch.language(of: summary)

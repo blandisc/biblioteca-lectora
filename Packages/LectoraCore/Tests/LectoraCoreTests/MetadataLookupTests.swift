@@ -295,6 +295,18 @@ final class MetadataLookupTests: XCTestCase {
         XCTAssertTrue(CalibreOPF.write(filled, hasCover: false).contains(#"opf:scheme="OPENLIBRARY">OL14860424W"#))
     }
 
+    func testBestSummaryIsInYourLanguageAndWhole() {
+        let book = Book(title: "La casa de los espíritus", language: "es")
+        let dutch = "Roman over een Chileense politicus en zijn gezin tot de militaire coup een einde maakt aan de democratie in het land."
+        let broken = "En esta edici n cr tica se re ne una serie de investigadores con miras plurales, pero unidos por una l cida adhesi n."
+        let short = "Estamos especializados en publicar textos en español."
+        let good = "La saga de una poderosa familia de terratenientes latinoamericanos, contada a lo largo de cuatro generaciones con humor y magia."
+        XCTAssertTrue(SummaryCleaner.isBroken(broken))
+        XCTAssertFalse(SummaryCleaner.isBroken(good))
+        XCTAssertEqual(MetadataMatcher.bestSummary([dutch, broken, short, good], for: book), good)
+        XCTAssertNil(MetadataMatcher.bestSummary([dutch, broken, short], for: book))
+    }
+
     // MARK: Servicio (con red simulada)
 
     private struct FakeFetcher: MetadataFetching {

@@ -156,7 +156,12 @@ public enum MetadataMatcher {
     /// (p. ej. la portada de un duplicado o la sinopsis de Google).
     public static func merge(_ best: MetadataCandidate, with other: MetadataCandidate) -> MetadataCandidate {
         var result = best
-        if result.summary == nil { result.summary = other.summary }
+        // Todas las sinopsis se guardan para elegir luego la mejor en tu idioma.
+        let summaries = ([other.summary].compactMap { $0 } + other.otherSummaries)
+        if result.summary == nil { result.summary = summaries.first }
+        for summary in summaries where summary != result.summary && !result.otherSummaries.contains(summary) {
+            result.otherSummaries.append(summary)
+        }
         if result.publisher == nil { result.publisher = other.publisher }
         if result.published == nil { result.published = other.published }
         if result.isbn == nil { result.isbn = other.isbn }
@@ -246,8 +251,16 @@ public enum MetadataMatcher {
     /// Una sinopsis en otro idioma no se pone sola en tu libro (luego la podrá
     /// traducir la IA); si no se sabe el idioma de alguno de los dos, sí.
     static func summaryFits(_ summary: String, book: Book) -> Bool {
-        guard let language = book.language, let detected = TextMatch.language(of: summary) else { return true }
-        return language == detected
+        guard !SummaryCleaner.isBroken(summary) else { return false }
+        guard let language = book.language else { return true }
+        // Hay que reconocer el idioma: «no sé» no basta (así se colaban en holandés).
+        return TextMatch.language(of: summary) == language
+    }
+
+    /// La mejor sinopsis para el libro: en su idioma, sana y la más completa
+    /// (como Calibre, que se queda con la más larga).
+    public static func bestSummary(_ summaries: [String], for book: Book) -> String? {
+        summaries.filter { summaryFits($0, book: book) && $0.count >= 80 }.max { $0.count < $1.count }
     }
 
     // MARK: Compatibilidad
