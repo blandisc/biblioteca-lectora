@@ -6,6 +6,8 @@ import SwiftUI
 struct OpenBook: Identifiable {
     let url: URL
     var bookID: UUID?
+    /// Pasaje donde abrir (un subrayado enlazado desde una nota) en vez de donde lo dejaste.
+    var startCFI: String?
     /// Si se abrió desde la portada de la Mesa: el libro «sale» de esa portada.
     var fromCover = false
     var id: URL { url }
@@ -16,6 +18,7 @@ struct OpenBook: Identifiable {
 final class AppModel: ObservableObject {
     let library: LibraryStore
     let annotations: AnnotationStore
+    let notes: NotesStore
     @Published var importing = false
     @Published var openBook: OpenBook?
     /// Resumen de una importación con duplicados o errores.
@@ -24,15 +27,21 @@ final class AppModel: ObservableObject {
     @Published var listening: ShelfBook?
     private var observations: [AnyCancellable] = []
 
-    init(library: LibraryStore? = nil, annotations: AnnotationStore? = nil) {
+    init(library: LibraryStore? = nil, annotations: AnnotationStore? = nil, notes: NotesStore? = nil) {
         self.library = library ?? .shared
         self.annotations = annotations ?? .shared
+        self.notes = notes ?? .shared
         observations = [
             // La estantería se recalcula una vez por cambio de la biblioteca, no en cada vista.
             self.library.objectWillChange.sink { [weak self] _ in
                 DispatchQueue.main.async { self?.rebuildShelf() }
             },
             self.annotations.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() },
+            self.notes.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() },
+            // Otro Gabinete (Ajustes › Gabinete): sus notas van con él.
+            self.library.$root.dropFirst().sink { [weak self] root in
+                self?.notes.use(cabinet: root.deletingLastPathComponent())
+            },
         ]
         rebuildShelf()
         if LaunchOptions.listening { listening = currentBook }
@@ -51,6 +60,11 @@ final class AppModel: ObservableObject {
     }
 
     func shelfBook(id: String) -> ShelfBook? { shelfByID[id] }
+
+    /// El libro de un enlace `[[Título]]`, sin distinguir mayúsculas ni acentos.
+    func shelfBook(titled title: String) -> ShelfBook? {
+        shelf.first { $0.title.compare(title, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }
+    }
 
     /// El libro de la Mesa: el último que abriste o, si aún no lees ninguno, el último que añadiste.
     var currentBook: ShelfBook? {
@@ -73,6 +87,15 @@ final class AppModel: ObservableObject {
         guard let file = book.file else { return false }
         openBook = OpenBook(url: file, bookID: book.bookID, fromCover: fromCover)
         return true
+    }
+
+    /// «Ir al pasaje» de una nota: abre el libro en ese subrayado.
+    func openPassage(annotationID: UUID) {
+        guard let annotation = annotations.allAnnotations().first(where: { $0.id == annotationID }),
+              let book = shelfBook(id: annotation.bookID.uuidString),
+              let file = book.file
+        else { return }
+        openBook = OpenBook(url: file, bookID: book.bookID, startCFI: annotation.cfi)
     }
 
     func continueReading() {
@@ -122,8 +145,24 @@ final class AppModel: ObservableObject {
         await library.importFiles(files)
         try? FileManager.default.removeItem(at: folder)
         seedSampleHighlights()
+        seedSampleNotes()
         rebuildShelf()
         if LaunchOptions.listening { listening = currentBook }
+    }
+
+    /// Notas de muestra (en Gabinete/Notas) para las capturas del Cuaderno.
+    private func seedSampleNotes() {
+        let quote = annotations.allAnnotations().first { $0.note != nil }
+        let cervantes = quote.map {
+            "\n\n" + NoteMarkdown.quote($0.quote, bookTitle: "Don Quijote de la Mancha", annotationID: $0.id)
+        } ?? ""
+        let samples = [
+            "# Ideas sueltas\n\nEl cuento como máquina: Cortázar y Borges lo piensan igual, pero lo cierran distinto. Releer [[Ficciones]] con eso en mente.",
+            "# Lecturas de noviembre\n\nTerminar [[Bestiario]] antes de empezar [[Rayuela]]. Releer «Casa tomada».",
+            "# Cervantes y la ironía\n\nAsí presenta Cervantes a su héroe: sin épica. La distancia entre lo que Alonso Quijano cree y lo que ve el lector es todo el libro." + cervantes,
+            "# El silencio en Rulfo\n\nComala no se describe: se oye. Los murmullos hacen el trabajo que en otra novela haría el narrador. En [[Pedro Páramo]] nadie explica nada.",
+        ]
+        for text in samples { try? notes.save(text: text, fileName: nil) }
     }
 
     /// Subrayados de muestra para que el Cuaderno no salga vacío en las capturas.

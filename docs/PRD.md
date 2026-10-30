@@ -44,7 +44,8 @@
 - **Notas libres** (ideas, resúmenes, proyectos, lecturas por tema) que **enlazan libros y subrayados**. El Cuaderno de subrayados sigue existiendo; una nota puede citar un subrayado y queda enlazada al pasaje.
 - **Markdown en la carpeta:** `Gabinete/Notas/*.md`, archivos normales que abres con Obsidian u otro editor. Si borras Gabinete, tus notas siguen ahí (el mismo principio que con Calibre).
 - **Enlaces en texto plano** para que funcionen fuera de la app: `[[Título del libro]]` al estilo Obsidian y un enlace al pasaje (`gabinete://…`) para volver al subrayado exacto.
-- **Por diseñar** (bloque N): editor, enlaces y retroenlaces, cómo se crea una nota desde un subrayado, búsqueda conjunta de libros y notas, y qué hace la IA con tus notas.
+- **Primera versión (bloque N1, hecha):** las notas viven en el Cuaderno (Notas | Subrayados). Lista con título, primeras líneas, fecha y libros enlazados; «+» para una nota nueva. Editor de Markdown simple que guarda en `Notas/Título.md` (cambiar el título renombra el archivo); al escribir `[[` sugiere libros de tu biblioteca. Desde el lector (o con toque largo en el Cuaderno), «Llevar a una nota» añade la cita con su libro y el enlace al pasaje (`gabinete://subrayado/<id>`). La ficha del libro muestra las notas que lo enlazan (retroenlaces) y sus subrayados.
+- **Por diseñar** (bloque N2): formato al escribir (negritas, listas), búsqueda conjunta de libros y notas, etiquetas, enlaces entre notas y qué hace la IA con tus notas.
 
 ## 3. Decisiones
 

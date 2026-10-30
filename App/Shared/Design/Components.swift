@@ -17,6 +17,7 @@ extension View {
             .navigationDestination(for: ReviewInboxRef.self) { _ in ReviewScreen() }
             .navigationDestination(for: CandidatesRef.self) { CandidatesScreen(bookID: $0.bookID, searchesFirst: $0.searchesFirst) }
             .navigationDestination(for: FilledRef.self) { FilledScreen(bookID: $0.bookID) }
+            .navigationDestination(for: NoteRef.self) { NoteScreen(ref: $0) }
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
             #endif
@@ -687,5 +688,111 @@ struct CoverChoiceCell: View {
     private var label: String {
         if case .current = option { return "La actual" }
         return "Internet"
+    }
+}
+
+// MARK: - Notas
+
+/// Fila de nota en el Cuaderno y en la ficha: título en serif, las primeras
+/// líneas y, abajo, la fecha y los libros que enlaza (en verde).
+struct NoteRow: View {
+    let note: Note
+    /// Detalle en lugar de los libros enlazados («1 cita»).
+    var detail: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+            Text(note.title)
+                .font(.rowTitle)
+                .foregroundStyle(Theme.ink)
+                .lineLimit(1)
+            if !note.preview.isEmpty {
+                Text(note.preview)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .lineLimit(2)
+            }
+            meta
+                .font(.footnote)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, Theme.Space.m)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) { Hairline() }
+    }
+
+    private var meta: Text {
+        let date = Text(NoteRow.day(note.modifiedAt)).foregroundStyle(Theme.tertiaryInk)
+        if let detail {
+            return date + Text(" · \(detail)").foregroundStyle(Theme.tertiaryInk)
+        }
+        let links = note.bookLinks
+        guard !links.isEmpty else { return date }
+        return date + Text(" · ").foregroundStyle(Theme.tertiaryInk)
+            + Text(links.joined(separator: " · ")).foregroundStyle(Theme.accent)
+    }
+
+    /// «Hoy», «Ayer» o «3 nov».
+    static func day(_ date: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) { return "Hoy" }
+        if calendar.isDateInYesterday(date) { return "Ayer" }
+        return date.formatted(.dateTime.day().month(.abbreviated))
+    }
+}
+
+/// Una nota leída: el título grande, párrafos en serif y citas con la raya
+/// verde. Los `[[Libro]]` y «ir al pasaje» son enlaces (los abre `openURL`).
+struct NoteBody: View {
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
+            ForEach(Array(NoteMarkdown.blocks(text).enumerated()), id: \.offset) { index, block in
+                switch block {
+                case .heading(let title):
+                    Text(title)
+                        .font(index == 0 ? Font.bookTitle : Font.rowTitle.weight(.semibold))
+                        .padding(.bottom, index == 0 ? Theme.Space.xs : 0)
+                case .paragraph(let paragraph):
+                    Text(Self.inline(paragraph))
+                        .font(.prose)
+                        .lineSpacing(Theme.Space.xs)
+                case .quote(let quote):
+                    quoteView(quote)
+                }
+            }
+        }
+        .foregroundStyle(Theme.ink)
+        .tint(Theme.accent)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .textSelection(.enabled)
+    }
+
+    /// La cita y, si la última línea empieza con «—», su fuente en pequeño.
+    private func quoteView(_ quote: String) -> some View {
+        var lines = quote.components(separatedBy: "\n")
+        let source = lines.last?.hasPrefix("—") == true ? lines.removeLast() : nil
+        return VStack(alignment: .leading, spacing: Theme.Space.xs) {
+            Text(Self.inline(lines.joined(separator: "\n")))
+                .font(.quote)
+                .lineSpacing(Theme.Space.xs)
+            if let source {
+                Text(Self.inline(String(source.dropFirst()).trimmingCharacters(in: .whitespaces)))
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+            }
+        }
+        .padding(.leading, Theme.Space.m + Theme.Space.xxs)
+        .overlay(alignment: .leading) {
+            Rectangle().fill(Theme.accent).frame(width: Theme.Size.quoteRule)
+        }
+    }
+
+    static func inline(_ markdown: String) -> AttributedString {
+        let resolved = NoteMarkdown.resolvingLinks(markdown)
+        return (try? AttributedString(markdown: resolved, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+            ?? AttributedString(markdown)
     }
 }

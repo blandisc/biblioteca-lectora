@@ -52,6 +52,10 @@ struct BookDetailScreen: View {
                     BookFacts(book: record)
                         .padding(.top, Theme.Space.s)
                 }
+
+                notesSection
+                    .padding(.top, Theme.Space.m)
+                highlightsSection
             }
             .screenContent()
         }
@@ -83,6 +87,67 @@ struct BookDetailScreen: View {
 }
 
 /// Portadas de internet para un libro, en cuadrícula: eliges una y listo.
+extension BookDetailScreen {
+    /// Notas que enlazan este libro con `[[Título]]`, y «Nota nueva» ya enlazada.
+    private var notesSection: some View {
+        let notes = model.notes.notes(linking: live.title)
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                SectionLabel(text: "Notas")
+                Spacer()
+                NavigationLink(value: NoteRef.new(draft: "# \n\n[[\(live.title)]] ")) {
+                    Text("Nota nueva").fontWeight(.medium).foregroundStyle(Theme.brand)
+                }
+                .buttonStyle(.plain)
+            }
+            .font(.subheadline)
+            if notes.isEmpty {
+                Text("Ninguna nota enlaza este libro todavía.")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .padding(.top, Theme.Space.s)
+            } else {
+                ForEach(notes) { note in
+                    NavigationLink(value: NoteRef(fileName: note.fileName)) {
+                        NoteRow(note: note, detail: Self.quoteCount(note, title: live.title))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Los subrayados del libro, los primeros tres.
+    @ViewBuilder
+    private var highlightsSection: some View {
+        let highlights = live.bookID.map { model.annotations.annotations(forBook: $0) } ?? []
+        if !highlights.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.Space.m) {
+                HStack(alignment: .firstTextBaseline) {
+                    SectionLabel(text: "Subrayados")
+                    Spacer()
+                    Text("\(highlights.count)")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                ForEach(highlights.prefix(3)) { highlight in
+                    QuoteBlock(text: highlight.quote, note: highlight.note)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// «1 cita» o «3 citas» de este libro en la nota; si no tiene, nada.
+    private static func quoteCount(_ note: Note, title: String) -> String? {
+        let marker = "[[\(title)]] · [ir al pasaje]"
+        let count = note.text.components(separatedBy: marker).count - 1
+        guard count > 0 else { return nil }
+        return count == 1 ? "1 cita" : "\(count) citas"
+    }
+}
+
 struct CoverPickerSheet: View {
     let bookID: UUID
     @EnvironmentObject private var model: AppModel

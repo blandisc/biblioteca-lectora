@@ -11,7 +11,8 @@ enum LaunchOptions {
     static var hidesReaderChrome: Bool { UserDefaults.standard.bool(forKey: "screenshot.hideChrome") }
     /// Mostrar el mini reproductor como si sonara el libro actual.
     static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
-    /// Pantalla empujada en la Biblioteca: `review` («Por revisar») o `detail` (ficha del primer libro).
+    /// Pantalla empujada: en la Biblioteca, `review` («Por revisar») o `detail` (ficha
+    /// del primer libro); en el Cuaderno, `note` (la primera nota) o `highlights`.
     static var screen: String? { UserDefaults.standard.string(forKey: "screenshot.screen") }
     /// Importar los libros de `Documents/Semilla` al arrancar (biblioteca vacía).
     static var seed: Bool { UserDefaults.standard.bool(forKey: "screenshot.seed") }

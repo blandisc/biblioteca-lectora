@@ -36,7 +36,10 @@ struct RootView: View {
             }
             // Al volver a la app: lo que cambió en tus otros dispositivos (iCloud).
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active { model.library.refreshFromCloud() }
+                if phase == .active {
+                    model.library.refreshFromCloud()
+                    model.notes.refreshFromCloud()
+                }
             }
             .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,
                           allowsMultipleSelection: true) { result in
@@ -52,12 +55,12 @@ struct RootView: View {
             }
             #if os(iOS)
             .fullScreenCover(item: $model.openBook) { book in
-                ReaderView(bookFile: book.url, bookID: book.bookID)
+                ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
                     .bookOpeningDestination(in: opening, enabled: book.fromCover)
             }
             #else
             .sheet(item: $model.openBook) { book in
-                ReaderView(bookFile: book.url, bookID: book.bookID)
+                ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
                     .frame(minWidth: 720, minHeight: 820)
             }
             #endif

@@ -8,6 +8,8 @@ struct ReaderView: View {
     let bookFile: URL
     /// Libro del catálogo; sus subrayados se guardan con este ID.
     var bookID: UUID? = nil
+    /// Abrir en este pasaje (desde «ir al pasaje» de una nota) y no donde lo dejaste.
+    var startCFI: String? = nil
     @StateObject private var controller = ReaderController()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
@@ -23,6 +25,11 @@ struct ReaderView: View {
 
     private var palette: ReaderPalette {
         ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: colorScheme == .dark)
+    }
+
+    /// Título del catálogo (el de `[[ ]]` en las notas); si no, el del archivo.
+    private var catalogTitle: String {
+        bookID.flatMap { LibraryStore.shared.book(id: $0)?.title } ?? title
     }
 
     private var title: String {
@@ -60,8 +67,16 @@ struct ReaderView: View {
             get: { controller.tappedHighlight != nil },
             set: { if !$0 { controller.tappedHighlight = nil } }
         )) {
+            Button("Llevar a una nota") {
+                if let cfi = controller.tappedHighlight { controller.sendToNote(cfi: cfi) }
+            }
             Button("Borrar subrayado", role: .destructive) {
                 if let cfi = controller.tappedHighlight { controller.removeHighlight(cfi: cfi) }
+            }
+        }
+        .sheet(item: $controller.noteLinkTarget) { annotation in
+            NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
+                controller.notice = "Se guardó en «\(saved.title)»."
             }
         }
         .alert("Nota", isPresented: Binding(
@@ -107,7 +122,7 @@ struct ReaderView: View {
                         for: bookID)
                 }
             }
-            let resume = bookID.flatMap { LibraryStore.shared.position(for: $0)?.cfi }
+            let resume = startCFI ?? bookID.flatMap { LibraryStore.shared.position(for: $0)?.cfi }
             // En iCloud Drive el libro puede no estar en el dispositivo: primero se baja.
             let file = bookFile
             Task { @MainActor in

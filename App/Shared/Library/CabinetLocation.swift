@@ -139,8 +139,8 @@ enum CloudFiles {
     }
 
     /// Pide bajar (sin esperar) los archivos pequeños que la app necesita a
-    /// mano: registros del catálogo, portadas y metadata.opf. Los libros se
-    /// bajan al abrirlos.
+    /// mano: registros del catálogo, portadas, metadata.opf y notas. Los libros
+    /// se bajan al abrirlos.
     static func requestSmallFiles(in folder: URL) {
         let manager = FileManager.default
         guard let walker = manager.enumerator(at: folder, includingPropertiesForKeys: [.isUbiquitousItemKey],
@@ -152,6 +152,7 @@ enum CloudFiles {
                 name = String(name.dropFirst().dropLast(".icloud".count))
             }
             let small = name.hasSuffix(".jsonl") || name.hasSuffix(".json") || name == "cover.jpg" || name == "metadata.opf"
+                || name.hasSuffix(".md")
             guard small else { continue }
             let real = url.deletingLastPathComponent().appendingPathComponent(name)
             if !isDownloaded(real) { try? manager.startDownloadingUbiquitousItem(at: real) }

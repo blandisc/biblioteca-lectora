@@ -24,6 +24,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     @Published var tappedHighlight: String?
     /// Subrayado recién hecho al que se le está escribiendo una nota.
     @Published var noteTarget: Annotation?
+    /// Subrayado que se lleva a una nota del Cuaderno.
+    @Published var noteLinkTarget: Annotation?
 
     /// Toque en la página, con la posición horizontal de 0 a 1.
     var onTap: ((Double) -> Void)?
@@ -92,8 +94,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
 
     // MARK: Subrayados
 
-    /// Subraya la selección actual con lápiz y la guarda. Con `withNote`, abre la nota.
-    func highlightSelection(withNote: Bool = false) {
+    /// Subraya la selección actual con lápiz y la guarda. Con `withNote`, abre la
+    /// nota del subrayado; con `toNote`, la hoja para llevarlo a una nota del Cuaderno.
+    func highlightSelection(withNote: Bool = false, toNote: Bool = false) {
         webView?.evaluateJavaScript("window.lectora.takeSelection()") { [weak self] result, _ in
             MainActor.assumeIsolated {
                 guard let self, let bookID = self.bookID,
@@ -102,7 +105,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                       let text = selection["text"] as? String
                 else { return }
                 // El mismo pasaje subrayado dos veces es un solo subrayado.
-                if AnnotationStore.shared.annotations(forBook: bookID).contains(where: { $0.cfi == cfi }) { return }
+                if let existing = AnnotationStore.shared.annotations(forBook: bookID).first(where: { $0.cfi == cfi }) {
+                    if toNote { self.noteLinkTarget = existing }
+                    return
+                }
                 let annotation = Annotation(
                     bookID: bookID, cfi: cfi, quote: text,
                     prefix: selection["prefix"] as? String, suffix: selection["suffix"] as? String,
@@ -112,6 +118,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                     try AnnotationStore.shared.save(annotation)
                     self.evaluate("window.lectora.addHighlight(\(Self.js(cfi)))")
                     if withNote { self.noteTarget = annotation }
+                    if toNote { self.noteLinkTarget = annotation }
                 } catch {
                     self.notice = "No se pudo guardar el subrayado: \(error.localizedDescription)"
                 }
@@ -126,6 +133,12 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         guard !trimmed.isEmpty else { return }
         annotation.note = trimmed
         try? AnnotationStore.shared.save(annotation)
+    }
+
+    /// «Llevar a una nota» desde un subrayado que ya existe.
+    func sendToNote(cfi: String) {
+        guard let bookID else { return }
+        noteLinkTarget = AnnotationStore.shared.annotations(forBook: bookID).first { $0.cfi == cfi }
     }
 
     func removeHighlight(cfi: String) {
@@ -220,7 +233,10 @@ final class LectoraWebView: WKWebView {
         let note = UIAction(title: "Nota", image: UIImage(systemName: "square.and.pencil")) { [weak self] _ in
             MainActor.assumeIsolated { self?.controller?.highlightSelection(withNote: true) }
         }
-        builder.insertChild(UIMenu(options: .displayInline, children: [underline, note]), atStartOfMenu: .root)
+        let toNote = UIAction(title: "A una nota", image: UIImage(systemName: "note.text.badge.plus")) { [weak self] _ in
+            MainActor.assumeIsolated { self?.controller?.highlightSelection(toNote: true) }
+        }
+        builder.insertChild(UIMenu(options: .displayInline, children: [underline, note, toNote]), atStartOfMenu: .root)
     }
     #else
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
@@ -229,12 +245,16 @@ final class LectoraWebView: WKWebView {
         underline.target = self
         let note = NSMenuItem(title: "Subrayar con nota", action: #selector(underlineWithNote), keyEquivalent: "")
         note.target = self
+        let toNote = NSMenuItem(title: "Llevar a una nota", action: #selector(underlineToNote), keyEquivalent: "")
+        toNote.target = self
         menu.insertItem(.separator(), at: 0)
+        menu.insertItem(toNote, at: 0)
         menu.insertItem(note, at: 0)
         menu.insertItem(underline, at: 0)
     }
 
     @objc private func underlineSelection() { controller?.highlightSelection() }
     @objc private func underlineWithNote() { controller?.highlightSelection(withNote: true) }
+    @objc private func underlineToNote() { controller?.highlightSelection(toNote: true) }
     #endif
 }

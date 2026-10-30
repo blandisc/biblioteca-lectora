@@ -38,6 +38,7 @@ struct SearchScreen: View {
             }
             .background(Theme.paper.ignoresSafeArea())
             .navigationDestination(for: ShelfBook.self) { BookDetailScreen(book: $0) }
+            .navigationDestination(for: NoteRef.self) { NoteScreen(ref: $0) }
             .searchable(text: $query, prompt: "Títulos, autores y series")
             .modifier(SearchBarPlacement())
         }
