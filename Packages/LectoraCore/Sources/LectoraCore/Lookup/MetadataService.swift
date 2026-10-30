@@ -6,7 +6,9 @@ import Foundation
 /// 1. ISBN válido → la obra que contiene esa edición.
 /// 2. Título y autor, pidiendo la edición en el idioma del libro.
 /// 3. Solo el título (por si el autor del archivo está mal).
-/// Con clave de Google Books, también se pregunta ahí. Al final, la sinopsis
+/// Google Books se consulta una vez por libro: con clave, la API; sin clave,
+/// el feed antiguo que usa Calibre. Si el libro ya tiene `openlibrary:` (se
+/// eligió antes), se va directo a esa obra. Al final, la sinopsis
 /// de la obra del mejor candidato.
 public struct MetadataService: Sendable {
     public enum Decision: Equatable, Sendable {
@@ -66,24 +68,42 @@ public struct MetadataService: Sendable {
         }
         func settled() -> Bool { MetadataMatcher.shouldAutoApply(MetadataMatcher.rank(found, for: book), for: book) }
 
-        if let isbn {
-            await ask(OpenLibrary.searchURL(isbn: isbn)) { OpenLibrary.candidates(from: $0) }
+        // Google: con clave, la API; sin clave, el feed antiguo (como Calibre). Una vez por libro.
+        var askedGoogle = false
+        func askGoogle(isbn: String?) async {
+            askedGoogle = true
             if let key = googleKey {
-                await ask(GoogleBooks.searchURL(isbn: isbn, title: title, author: nil, language: nil, apiKey: key), parse: GoogleBooks.candidates)
+                await ask(GoogleBooks.searchURL(isbn: isbn, title: title, author: author, language: isbn == nil ? book.language : nil,
+                                                apiKey: key), parse: GoogleBooks.candidates)
+            } else {
+                await ask(GoogleFeed.searchURL(isbn: isbn, title: title, author: author), parse: GoogleFeed.candidates)
             }
         }
+
+        // 0. Ya se eligió antes (openlibrary: en el catálogo): esa obra, directo.
+        if let work = book.identifiers["openlibrary"], work.hasPrefix("OL"), work.hasSuffix("W") {
+            await ask(OpenLibrary.searchURL(query: "key:/works/\(work)", language: book.language)) {
+                OpenLibrary.candidates(from: $0, language: book.language)
+            }
+        }
+        // 1. ISBN.
+        if let isbn, !settled() {
+            await ask(OpenLibrary.searchURL(isbn: isbn)) { OpenLibrary.candidates(from: $0) }
+            await askGoogle(isbn: isbn)
+        }
+        // 2. Título y autor.
         let hasTitle = !title.trimmingCharacters(in: .whitespaces).isEmpty
         if hasTitle, !settled() {
             let query = ([title] + (author.map { [$0] } ?? [])).joined(separator: " ")
             await ask(OpenLibrary.searchURL(query: query, language: book.language)) { OpenLibrary.candidates(from: $0, language: book.language) }
-            if let key = googleKey {
-                await ask(GoogleBooks.searchURL(isbn: nil, title: title, author: author, language: book.language, apiKey: key),
-                          parse: GoogleBooks.candidates)
-            }
+            if !askedGoogle { await askGoogle(isbn: nil) }
         }
+        // 3. Solo el título, por si el autor del archivo está mal.
         if hasTitle, !settled(), author != nil {
             await ask(OpenLibrary.searchURL(query: title, language: book.language)) { OpenLibrary.candidates(from: $0, language: book.language) }
         }
+        // Google completa lo que Open Library no tiene (sinopsis en tu idioma, portadas).
+        if hasTitle, !askedGoogle { await askGoogle(isbn: nil) }
 
         var ranked = MetadataMatcher.rank(found, for: book)
         if ranked.isEmpty {
@@ -95,23 +115,40 @@ public struct MetadataService: Sendable {
         return Result(candidates: ranked, decision: decision)
     }
 
-    /// Sinopsis de la obra (Open Library la guarda aparte de la búsqueda).
+    /// Sinopsis en el idioma del libro: si la que trae el candidato (p. ej. de
+    /// Google) no lo es, se prueba con la de la obra en Open Library.
     public func withSummary(_ candidate: MetadataCandidate, for book: Book) async -> MetadataCandidate {
-        guard candidate.summary == nil, let key = candidate.workKey,
-              let data = await fetcher.get(OpenLibrary.workURL(key: key)).data else { return candidate }
+        if let summary = candidate.summary, MetadataMatcher.summaryFits(summary, book: book) { return candidate }
+        guard let key = candidate.workKey, let data = await fetcher.get(OpenLibrary.workURL(key: key)).data,
+              let description = OpenLibrary.workDescription(from: data) else { return candidate }
         var result = candidate
-        result.summary = OpenLibrary.workDescription(from: data)
+        if result.summary == nil || MetadataMatcher.summaryFits(description, book: book) { result.summary = description }
         return result
+    }
+
+    /// Portadas posibles para elegir: las de las ediciones (en tu idioma y
+    /// modernas primero) y las del candidato.
+    public func coverOptions(for candidate: MetadataCandidate, language: String? = nil, title: String? = nil,
+                             limit: Int = 4) async -> [URL] {
+        var urls: [URL] = []
+        if let key = candidate.workKey, let data = await fetcher.get(OpenLibrary.editionsURL(workKey: key)).data {
+            urls = OpenLibrary.editionCovers(from: data, language: language ?? candidate.language,
+                                             title: title ?? candidate.title, limit: limit)
+        }
+        for url in candidate.covers where !urls.contains(url) { urls.append(url) }
+        return urls
+    }
+
+    /// Descarga una portada y la devuelve solo si sirve.
+    public func coverData(at url: URL) async -> Data? {
+        guard let data = await fetcher.get(url).data, CoverCheck.evaluate(data) != .unusable else { return nil }
+        return data
     }
 
     /// La primera portada que sirva (que exista y no sea una miniatura). Con
     /// `language`, antes se buscan las de las ediciones modernas en ese idioma.
     public func cover(for candidate: MetadataCandidate, language: String? = nil, title: String? = nil) async -> Data? {
-        var urls = candidate.covers
-        if let key = candidate.workKey, let data = await fetcher.get(OpenLibrary.editionsURL(workKey: key)).data {
-            let better = OpenLibrary.editionCovers(from: data, language: language ?? candidate.language, title: title ?? candidate.title)
-            urls = better + urls.filter { !better.contains($0) }
-        }
+        let urls = await coverOptions(for: candidate, language: language, title: title)
         var fallback: Data?
         for url in urls.prefix(6) {
             guard let data = await fetcher.get(url).data else { continue }

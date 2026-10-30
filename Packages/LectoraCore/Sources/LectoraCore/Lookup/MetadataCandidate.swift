@@ -13,7 +13,7 @@ public struct MetadataCandidate: Identifiable, Hashable, Codable, Sendable {
 
     /// Por qué se parece (o no) a tu libro; se muestra al elegir.
     public enum Note: String, Codable, Sendable {
-        case sameISBN, sameTitle, similarTitle, otherTitle
+        case sameISBN, sameRecord, sameTitle, similarTitle, otherTitle
         case sameAuthor, otherAuthor, unknownAuthor
         case otherLanguage, notTheBook, conflictingISBN
     }
@@ -82,6 +82,19 @@ public struct MetadataCandidate: Identifiable, Hashable, Codable, Sendable {
         self.editionCount = editionCount
         self.coverAlternatives = coverAlternatives
         self.knownISBNs = knownISBNs
+    }
+
+    /// Identificadores para el catálogo y el `metadata.opf` (como los guarda
+    /// Calibre): `openlibrary` («OL46125W») o `google` (id del volumen).
+    public var identifiers: [String: String] {
+        switch source {
+        case .openLibrary:
+            guard let key = workKey?.components(separatedBy: "/").last, !key.isEmpty else { return [:] }
+            return ["openlibrary": key]
+        case .googleBooks:
+            guard id.hasPrefix("gb:") else { return [:] }
+            return ["google": String(id.dropFirst(3))]
+        }
     }
 
     /// Portadas a probar, en orden.

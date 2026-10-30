@@ -243,6 +243,58 @@ final class MetadataLookupTests: XCTestCase {
                        "Sin idioma y con otro título: no")
     }
 
+    func testGoogleFeedLikeCalibre() throws {
+        let xml = Data(#"""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms">
+          <id>http://www.google.com/books/feeds/volumes</id>
+          <entry>
+            <id>http://www.google.com/books/feeds/volumes/AbC123</id>
+            <title type="text">Cien años de soledad</title>
+            <link rel="http://schemas.google.com/books/2008/thumbnail" type="image/x-unknown"
+                  href="http://books.google.com/books/content?id=AbC123&amp;printsec=frontcover&amp;img=1&amp;zoom=5&amp;edge=curl&amp;source=gbs_api"/>
+            <dc:creator>Gabriel García Márquez</dc:creator>
+            <dc:date>2007-03-01</dc:date>
+            <dc:description>Una de las obras más importantes de la literatura en lengua española, con la historia de la familia Buendía.</dc:description>
+            <dc:identifier>AbC123</dc:identifier>
+            <dc:identifier>ISBN:8420471836</dc:identifier>
+            <dc:identifier>ISBN:9788420471839</dc:identifier>
+            <dc:language>es</dc:language>
+            <dc:publisher>Alfaguara</dc:publisher>
+            <dc:subject>Fiction / Magical Realism</dc:subject>
+            <dc:title>Cien años de soledad</dc:title>
+            <dc:title>Edición conmemorativa</dc:title>
+          </entry>
+        </feed>
+        """#.utf8)
+        let candidate = try XCTUnwrap(GoogleFeed.candidates(from: xml).first)
+        XCTAssertEqual(candidate.identifiers, ["google": "AbC123"])
+        XCTAssertEqual(candidate.title, "Cien años de soledad")
+        XCTAssertEqual(candidate.subtitle, "Edición conmemorativa")
+        XCTAssertEqual(candidate.authors, ["Gabriel García Márquez"])
+        XCTAssertEqual(candidate.isbn, "9788420471839")
+        XCTAssertEqual(candidate.published, "2007")
+        XCTAssertEqual(candidate.language, "es")
+        XCTAssertEqual(candidate.publisher, "Alfaguara")
+        XCTAssertTrue(candidate.summary?.hasPrefix("Una de las obras") ?? false)
+        XCTAssertTrue(candidate.coverURL?.absoluteString.contains("frontcover/AbC123") ?? false)
+        XCTAssertTrue(candidate.coverAlternatives?.first?.absoluteString.contains("zoom=1") ?? false)
+        XCTAssertTrue(GoogleFeed.searchURL(isbn: nil, title: "Cien años de soledad", author: "Gabriel García Márquez")
+            .absoluteString.contains("intitle:cien"))
+    }
+
+    func testIdentifiersAreStoredAndRecognized() throws {
+        let book = Book(title: "Rayuela", language: "es")
+        let list = try ranked("ol-solo-titulo", for: book)
+        let filled = MetadataMatcher.fillMissing(book, from: try XCTUnwrap(list.first))
+        XCTAssertEqual(filled.identifiers["openlibrary"], "OL14860424W", "Como lo guarda Calibre en el OPF")
+        // La próxima vez es el mismo registro: se aplica solo aunque no tenga autor.
+        let again = try ranked("ol-solo-titulo", for: filled)
+        XCTAssertTrue(again.first?.notes?.contains(.sameRecord) ?? false)
+        XCTAssertTrue(MetadataMatcher.shouldAutoApply(again, for: filled))
+        XCTAssertTrue(CalibreOPF.write(filled, hasCover: false).contains(#"opf:scheme="OPENLIBRARY">OL14860424W"#))
+    }
+
     // MARK: Servicio (con red simulada)
 
     private struct FakeFetcher: MetadataFetching {
@@ -265,7 +317,7 @@ final class MetadataLookupTests: XCTestCase {
 
     func testServiceWithoutInternetIsNotNotFound() async {
         let book = Book(title: "Rayuela", authors: ["Julio Cortázar"])
-        let offline = await MetadataService(fetcher: FakeFetcher(responses: ["openlibrary": .failed])).lookup(book)
+        let offline = await MetadataService(fetcher: FakeFetcher(responses: ["openlibrary": .failed, "google": .failed])).lookup(book)
         XCTAssertEqual(offline.decision, .unreachable)
         let empty = Data(#"{"numFound":0,"docs":[]}"#.utf8)
         let missing = await MetadataService(fetcher: FakeFetcher(responses: ["openlibrary": .ok(empty)])).lookup(book)

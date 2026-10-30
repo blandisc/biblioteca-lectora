@@ -39,14 +39,22 @@ public enum MetadataMatcher {
         }
         let author = TextMatch.sameAuthorScore(book.authors, candidate.authors)
         let bookISBN = book.identifiers["isbn"].flatMap(ISBN.normalized)
-        let sameISBN = bookISBN.map { candidate.knownISBNs.contains($0) || candidate.isbn == $0 } ?? false
+        let isbnMatches = bookISBN.map { candidate.knownISBNs.contains($0) || candidate.isbn == $0 } ?? false
+        // El mismo registro que ya elegiste antes (openlibrary:/google: en el catálogo).
+        let sameRecord = candidate.identifiers.contains { book.identifiers[$0.key] == $0.value }
+        let sameISBN = isbnMatches || sameRecord
 
         var notes: [MetadataCandidate.Note] = []
         var score = 0.65 * title + 0.35 * author
 
         if sameISBN {
             // Un ISBN mal copiado (o reciclado) apunta a otro libro: solo cuenta si el título cuadra.
-            if title >= 0.5 { score = 0.98; notes.append(.sameISBN) } else { notes.append(.conflictingISBN) }
+            if title >= 0.5 || sameRecord {
+                score = 0.98
+                notes.append(sameRecord ? .sameRecord : .sameISBN)
+            } else {
+                notes.append(.conflictingISBN)
+            }
         }
         let candidateWords = Set(TextMatch.words(candidate.title + " " + (candidate.workTitle ?? "")))
         let bookWords = Set(TextMatch.words(bookTitle))
@@ -190,6 +198,9 @@ public enum MetadataMatcher {
             book.series = series
             book.seriesIndex = candidate.seriesIndex
         }
+        for (scheme, value) in candidate.identifiers where book.identifiers[scheme] == nil {
+            book.identifiers[scheme] = value
+        }
         return MetadataCleaner.clean(book)
     }
 
@@ -214,6 +225,8 @@ public enum MetadataMatcher {
         if let summary = candidate.summary, summaryFits(summary, book: book) { book.summary = summary }
         if book.tags.isEmpty { book.tags = candidate.subjects }
         if let isbn = candidate.isbn { book.identifiers["isbn"] = isbn }
+        // Otro registro de la misma fuente reemplaza al anterior.
+        for (scheme, value) in candidate.identifiers { book.identifiers[scheme] = value }
         if let series = candidate.series {
             book.series = series
             book.seriesIndex = candidate.seriesIndex

@@ -44,5 +44,6 @@
   {"id": "aleph", "title": "El Aleph", "authors": ["Jorge Luis Borges"], "language": "es", "expect": {"author": "Borges"}},
   {"id": "homo-deus", "title": "Homo Deus: Breve historia del mañana", "authors": ["Yuval Noah Harari"], "language": "es", "expect": {"author": "Harari"}},
   {"id": "solo-titulo", "title": "Rayuela", "authors": [], "language": "es", "expect": {"review": true}},
-  {"id": "autor-errado", "title": "La ciudad y los perros", "authors": ["Gabriel García Márquez"], "language": "es", "expect": {"review": true}}
+  {"id": "autor-errado", "title": "La ciudad y los perros", "authors": ["Gabriel García Márquez"], "language": "es", "expect": {"review": true}},
+  {"id": "id-openlibrary", "title": "Rayuela", "authors": [], "language": "es", "openlibrary": "OL14860424W", "expect": {"author": "Cortázar"}}
 ]

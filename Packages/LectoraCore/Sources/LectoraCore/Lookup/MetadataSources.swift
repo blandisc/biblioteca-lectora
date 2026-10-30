@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationXML)
+import FoundationXML
+#endif
 
 /// Consultas y lectura de respuestas de las fuentes públicas de metadatos.
 /// Sin red aquí: `MetadataService` hace las peticiones y este código arma las
@@ -49,7 +52,7 @@ public enum OpenLibrary {
     /// (ediciones modernas, con arte de la editorial) y recientes. Las de
     /// ejemplares viejos escaneados en bibliotecas (tela lisa, etiquetas de
     /// código de barras) quedan al final.
-    public static func editionCovers(from data: Data, language: String?, title: String? = nil) -> [URL] {
+    public static func editionCovers(from data: Data, language: String?, title: String? = nil, limit: Int = 4) -> [URL] {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let entries = root["entries"] as? [[String: Any]] else { return [] }
         // Novelas gráficas, lecturas graduadas, resúmenes: otra cosa con el mismo nombre.
@@ -75,7 +78,7 @@ public enum OpenLibrary {
             return (score, cover)
         }
         // Solo las que convencen; si ninguna, se queda la de la edición que trajo la búsqueda.
-        return scored.filter { $0.score > 0 }.sorted { $0.score > $1.score }.prefix(4).compactMap { coverURL(id: $0.cover) }
+        return scored.filter { $0.score > 0 }.sorted { $0.score > $1.score }.prefix(limit).compactMap { coverURL(id: $0.cover) }
     }
 
     /// Portada por número; `default=false` da 404 en vez de una imagen vacía.
@@ -280,5 +283,103 @@ public enum GoogleBooks {
     /// Miniatura en https y sin el doblez de página.
     static func secureThumbnail(_ link: String) -> URL? {
         URL(string: link.replacingOccurrences(of: "http://", with: "https://").replacingOccurrences(of: "&edge=curl", with: ""))
+    }
+}
+
+/// El feed antiguo de Google Books (GData/Atom), el mismo que usa Calibre. No
+/// pide clave ni gasta la cuota de la API moderna. Sirve sobre todo para lo
+/// que Open Library no tiene: sinopsis en español y portadas de editoriales.
+public enum GoogleFeed {
+    public static func searchURL(isbn: String?, title: String, author: String?) -> URL {
+        var components = URLComponents(string: "https://books.google.com/books/feeds/volumes")!
+        let query: String
+        if let isbn {
+            query = "isbn:\(isbn)"
+        } else {
+            // Como Calibre: palabras del título con intitle: y del autor con inauthor:.
+            let titleWords = TextMatch.words(TextMatch.mainTitle(title)).filter { $0.count > 1 }.map { "intitle:\($0)" }
+            let authorWords = (author.map { TextMatch.nameParts($0) } ?? []).map { "inauthor:\($0)" }
+            query = (titleWords + authorWords).joined(separator: " ")
+        }
+        components.queryItems = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "max-results", value: "10"),
+                                 URLQueryItem(name: "start-index", value: "1"), URLQueryItem(name: "min-viewability", value: "none")]
+        return components.url!
+    }
+
+    public static func candidates(from data: Data) -> [MetadataCandidate] {
+        let reader = FeedReader()
+        let parser = XMLParser(data: data)
+        parser.delegate = reader
+        parser.shouldProcessNamespaces = true
+        guard parser.parse() else { return [] }
+        return reader.entries.compactMap(candidate)
+    }
+
+    static func candidate(from entry: [String: [String]]) -> MetadataCandidate? {
+        guard let id = entry["id"]?.first?.components(separatedBy: "/").last, !id.isEmpty,
+              let rawTitle = entry["dc:title"]?.first ?? entry["title"]?.first else { return nil }
+        let identifiers = entry["dc:identifier"] ?? []
+        let isbns = identifiers.compactMap { value -> String? in
+            guard value.uppercased().hasPrefix("ISBN:") else { return nil }
+            return ISBN.normalized(String(value.dropFirst(5)))
+        }
+        let language = entry["dc:language"]?.first.flatMap(MetadataCleaner.cleanLanguage)
+        // La miniatura del feed es diminuta (zoom=5): se pide la grande de la editorial y una mediana.
+        // Sin miniatura, Google no tiene portada (la «grande» sería una imagen vacía).
+        var covers: [URL] = []
+        if let thumbnail = entry["thumbnail"]?.first {
+            covers = [GoogleBooks.largeCover(id),
+                      GoogleBooks.secureThumbnail(thumbnail.replacingOccurrences(of: "zoom=5", with: "zoom=1"))].compactMap { $0 }
+        }
+        let titles = entry["dc:title"] ?? []
+        return MetadataCandidate(
+            id: "gb:" + id,
+            source: .googleBooks,
+            title: MetadataCleaner.cleanTitle(rawTitle, language: language),
+            subtitle: titles.count > 1 ? titles[1] : nil,
+            authors: entry["dc:creator"] ?? [],
+            publisher: entry["dc:publisher"]?.first.flatMap(OpenLibrary.cleanPublisher),
+            published: entry["dc:date"]?.first.flatMap(OpenLibrary.year),
+            summary: entry["dc:description"]?.first.flatMap(SummaryCleaner.clean),
+            isbn: isbns.first { $0.hasPrefix("97") },
+            language: language,
+            subjects: GenreMap.genres(from: (entry["dc:subject"] ?? []).flatMap { $0.components(separatedBy: " / ") }),
+            coverURL: covers.first,
+            coverAlternatives: Array(covers.dropFirst()),
+            knownISBNs: Set(isbns)
+        )
+    }
+
+    /// Lee las entradas del feed: cada una, sus elementos (`dc:title`,
+    /// `dc:creator`…) con todos sus valores, y la miniatura.
+    final class FeedReader: NSObject, XMLParserDelegate {
+        var entries: [[String: [String]]] = []
+        private var current: [String: [String]]?
+        private var text = ""
+
+        func parser(_ parser: XMLParser, didStartElement name: String, namespaceURI: String?,
+                    qualifiedName: String?, attributes: [String: String] = [:]) {
+            if name == "entry" { current = [:] }
+            text = ""
+            if name == "link", attributes["rel"]?.hasSuffix("/thumbnail") == true, let href = attributes["href"] {
+                current?["thumbnail", default: []].append(href)
+            }
+        }
+
+        func parser(_ parser: XMLParser, foundCharacters string: String) {
+            text += string
+        }
+
+        func parser(_ parser: XMLParser, didEndElement name: String, namespaceURI: String?, qualifiedName: String?) {
+            if name == "entry" {
+                if let current { entries.append(current) }
+                current = nil
+                return
+            }
+            let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard current != nil, !value.isEmpty else { return }
+            let isDublinCore = namespaceURI?.contains("purl.org/dc") == true
+            current?[isDublinCore ? "dc:" + name : name, default: []].append(value)
+        }
     }
 }

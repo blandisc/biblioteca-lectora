@@ -20,6 +20,7 @@ struct Case: Decodable {
     var authors: [String]
     var language: String?
     var isbn: String?
+    var openlibrary: String?
     var expect: Expect
 }
 
@@ -29,7 +30,17 @@ guard arguments.count >= 3 else {
     exit(2)
 }
 let corpus = try JSONDecoder().decode([Case].self, from: Data(contentsOf: URL(fileURLWithPath: arguments[1])))
-let service = MetadataService(fetcher: HTTPFetcher())
+let fetcher = HTTPFetcher()
+let service = MetadataService(fetcher: fetcher)
+
+// ¿Responde el feed antiguo de Google (el de Calibre) sin clave?
+let feedProbe: String
+switch await fetcher.get(GoogleFeed.searchURL(isbn: nil, title: "Rayuela", author: "Julio Cortázar")) {
+case .ok(let data): feedProbe = "responde (\(GoogleFeed.candidates(from: data).count) resultados para «Rayuela»)"
+case .notFound: feedProbe = "404"
+case .failed: feedProbe = "no responde (error o cuota)"
+}
+var googleHits = 0
 var rows: [String] = []
 var details: [String] = []
 var passed = 0
@@ -40,10 +51,14 @@ func fold(_ text: String) -> String {
 
 for item in corpus {
     let started = Date()
+    var identifiers: [String: String] = [:]
+    identifiers["isbn"] = item.isbn
+    identifiers["openlibrary"] = item.openlibrary
     let book = MetadataCleaner.clean(Book(title: item.title, authors: item.authors, language: item.language,
-                                          identifiers: item.isbn.map { ["isbn": $0] } ?? [:]))
+                                          identifiers: identifiers))
     let result = await service.lookup(book)
     let best = result.candidates.first
+    if result.candidates.contains(where: { $0.source == .googleBooks }) { googleHits += 1 }
     var coverNote = "—"
     if let best, result.decision != .notFound {
         if let data = await service.cover(for: best, language: book.language, title: book.title) {
@@ -119,7 +134,7 @@ for item in corpus {
 let header = """
 # Sondeo de metadatos
 
-\(passed) de \(corpus.count) casos como se esperaba. Fuente: Open Library.
+\(passed) de \(corpus.count) casos como se esperaba. Fuentes: Open Library y el feed de Google sin clave, que \(feedProbe); \(googleHits) casos con candidatos de Google.
 
 | | Caso | Decisión | Mejor candidato | Conf. | Año | Editorial | Idioma | Géneros | Portada | Tiempo |
 |---|---|---|---|---|---|---|---|---|---|---|
