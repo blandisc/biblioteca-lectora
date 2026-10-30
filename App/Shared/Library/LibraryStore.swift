@@ -76,7 +76,7 @@ final class LibraryStore: ObservableObject {
 
     /// La biblioteca del Gabinete en uso: la carpeta que elegiste (p. ej. en
     /// iCloud Drive) o «En mi iPhone › Gabinete › Biblioteca» en Archivos.
-    static var defaultRoot: URL {
+    nonisolated static var defaultRoot: URL {
         CabinetLocation.migrateLegacyFolder()
         return CabinetLocation.library(in: CabinetLocation.current())
     }
