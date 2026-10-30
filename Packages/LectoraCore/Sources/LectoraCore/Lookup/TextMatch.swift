@@ -143,9 +143,11 @@ enum TextMatch {
             "de": ["der", "die", "das", "und", "ist", "nicht", "mit", "sich", "auf", "ein", "eine", "dem", "den"],
             "nl": ["het", "een", "van", "en", "zijn", "niet", "met", "voor", "dat", "op", "aan", "over", "tot"],
             "it": ["il", "di", "che", "e", "la", "per", "un", "una", "non", "sono", "della", "nel", "gli"],
-            // Catalán: se parece al español; lo delatan «i», «amb», «els», «és».
-            "ca": ["i", "amb", "els", "per", "es", "dels", "seva", "perque", "als", "aquest", "aquesta", "pero", "historia"],
         ]
+        // El catalán comparte casi todas las palabras frecuentes con el español;
+        // lo delatan las suyas («i», «amb», «els») y los apóstrofos («l'autor»).
+        let catalan: Set<String> = ["i", "amb", "els", "dels", "seva", "perque", "aquest", "aquesta", "l", "d", "s", "n"]
+        if sample.filter(catalan.contains).count >= 3 { return "ca" }
         let scores = common.mapValues { set in sample.filter(set.contains).count }
         guard let best = scores.max(by: { $0.value < $1.value }), best.value >= 4 else { return nil }
         return best.key
