@@ -3,6 +3,10 @@ import SwiftUI
 
 struct ReviewInboxRef: Hashable {}
 
+struct FilledRef: Hashable {
+    let bookID: UUID
+}
+
 struct CandidatesRef: Hashable {
     let bookID: UUID
     /// Buscar de nuevo al abrir (desde la ficha: «Buscar en internet»).
@@ -30,9 +34,9 @@ struct ReviewScreen: View {
                 if !model.library.pendingLookup.isEmpty {
                     waiting.padding(.top, Theme.Space.l)
                 }
-                if pending.isEmpty {
+                if pending.isEmpty && filled.isEmpty {
                     EmptyState(title: "Todo en orden", message: "No hay libros pendientes de revisar.")
-                } else {
+                } else if !pending.isEmpty {
                     LazyVStack(spacing: 0) {
                         ForEach(pending) { book in
                             if let id = book.bookID {
@@ -47,6 +51,7 @@ struct ReviewScreen: View {
                     }
                     .padding(.top, Theme.Space.l)
                 }
+                if !filled.isEmpty { filledSection }
             }
             .screenContent()
         }
@@ -54,6 +59,44 @@ struct ReviewScreen: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+
+    private var filled: [ShelfBook] {
+        model.library.filled
+            .sorted { $0.value.date > $1.value.date }
+            .compactMap { model.shelfBook(id: $0.key.uuidString) }
+    }
+
+    /// Lo que se completó solo: para revisarlo de un vistazo y deshacer lo que no quieras.
+    private var filledSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Se completaron solos").font(.rowTitle)
+                Spacer()
+                Button("Todo bien") { model.library.forgetAllFilled() }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Theme.pencil)
+                    .buttonStyle(.plain)
+            }
+            Text("Datos que tomé de internet porque estaba seguro. Revísalos y deshaz lo que no quieras.")
+                .font(.subheadline)
+                .foregroundStyle(Theme.secondaryInk)
+                .padding(.top, Theme.Space.xs)
+            LazyVStack(spacing: 0) {
+                ForEach(filled) { book in
+                    if let id = book.bookID, let record = model.library.filled[id] {
+                        NavigationLink(value: FilledRef(bookID: id)) {
+                            BookRow(book: book, detail: record.changes.map(\.field.label).joined(separator: ", ")) {
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.tertiaryInk)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.top, Theme.Space.s)
+        }
+        .padding(.top, Theme.Space.xxl)
     }
 
     /// Libros que no se pudieron buscar por falta de conexión.
@@ -193,12 +236,13 @@ struct CandidatePreview: View {
     let onApplied: () -> Void
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
-    @State private var includeCover = true
+    @State private var coverOptions: [CoverChoiceRow.Option] = []
+    @State private var coverChoice: CoverChoiceRow.Option?
+    @State private var loadingCovers = true
     @State private var applying = false
     @State private var errorMessage: String?
 
     private var book: Book? { model.library.book(id: bookID) }
-    private var hasCover: Bool { book.flatMap { model.library.coverURL(for: $0) } != nil }
 
     var body: some View {
         NavigationStack {
@@ -218,11 +262,19 @@ struct CandidatePreview: View {
                         }
                     }
 
-                    if candidate.coverURL != nil {
-                        Toggle(hasCover ? "Cambiar mi portada por esta" : "Usar esta portada", isOn: $includeCover)
+                    Text("Portada")
+                        .font(.caption)
+                        .foregroundStyle(Theme.secondaryInk)
+                        .padding(.top, Theme.Space.xl)
+                    if loadingCovers {
+                        ProgressView().padding(.vertical, Theme.Space.m)
+                    } else if coverOptions.isEmpty {
+                        Text("No encontré portadas en internet.")
                             .font(.subheadline)
-                            .tint(Theme.ink)
-                            .padding(.top, Theme.Space.l)
+                            .foregroundStyle(Theme.secondaryInk)
+                            .padding(.top, Theme.Space.xs)
+                    } else {
+                        CoverChoiceRow(options: coverOptions, selection: $coverChoice)
                     }
 
                     Text("Lo que cambia")
@@ -268,8 +320,16 @@ struct CandidatePreview: View {
             }
         }
         .task {
-            includeCover = !hasCover || candidate.confidence >= MetadataMatcher.autoApplyThreshold
             candidate = await model.library.details(for: candidate, bookID: bookID)
+        }
+        .task {
+            let urls = await model.library.coverOptions(for: candidate, bookID: bookID)
+            let current = book.flatMap { model.library.coverURL(for: $0) }
+            coverOptions = (current.map { [.current($0)] } ?? []) + urls.map { .remote($0) }
+            // Sin portada, la primera de internet; con portada, la tuya (salvo que sea muy probable).
+            let keepsMine = current != nil && candidate.confidence < MetadataMatcher.autoApplyThreshold
+            coverChoice = keepsMine ? coverOptions.first : (urls.first.map { .remote($0) } ?? coverOptions.first)
+            loadingCovers = false
         }
         .alert("No se pudo aplicar", isPresented: Binding(
             get: { errorMessage != nil },
@@ -290,7 +350,12 @@ struct CandidatePreview: View {
         applying = true
         Task {
             do {
-                try await model.library.apply(candidate, to: bookID, includeCover: includeCover && candidate.coverURL != nil)
+                let pick: LibraryStore.CoverPick
+                switch coverChoice {
+                case .remote(let url): pick = .url(url)
+                case .current, nil: pick = .keep
+                }
+                try await model.library.apply(candidate, to: bookID, cover: pick)
                 dismiss()
                 onApplied()
             } catch {
@@ -350,6 +415,75 @@ struct OtherSearchSheet: View {
                     .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty && isbn.isEmpty)
                 }
             }
+        }
+    }
+}
+
+/// Lo que se completó solo en un libro: dato por dato, con «Deshacer».
+struct FilledScreen: View {
+    let bookID: UUID
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var errorMessage: String?
+
+    private var book: ShelfBook? { model.shelfBook(id: bookID.uuidString) }
+    private var changes: [FilledChange] { model.library.filled[bookID]?.changes ?? [] }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                ScreenHeading(title: "Datos nuevos")
+                if let book {
+                    BookRow(book: book, detail: book.author).padding(.top, Theme.Space.l)
+                }
+                if changes.isEmpty {
+                    EmptyState(title: "Nada que revisar", message: "Ya no quedan datos nuevos en este libro.")
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(changes, id: \.field) { change in
+                            CompareRow(label: change.field.label, new: change.field.display(change.new),
+                                       old: change.field.display(change.old)) { undo(change.field) }
+                        }
+                    }
+                    .padding(.top, Theme.Space.l)
+                    VStack(spacing: Theme.Space.m) {
+                        PrimaryButton(title: "Está bien", fillsWidth: true) {
+                            model.library.forgetFilled(bookID)
+                            dismiss()
+                        }
+                        SecondaryButton(title: "Deshacer todo", systemImage: "arrow.uturn.backward") {
+                            do {
+                                try model.library.undoAllFilled(for: bookID)
+                                dismiss()
+                            } catch {
+                                errorMessage = error.localizedDescription
+                            }
+                        }
+                    }
+                    .padding(.top, Theme.Space.xl)
+                }
+            }
+            .screenContent()
+        }
+        .background(Theme.paper.ignoresSafeArea())
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .alert("No se pudo deshacer", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private func undo(_ field: FilledField) {
+        do {
+            try model.library.undoFilled(field, for: bookID)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

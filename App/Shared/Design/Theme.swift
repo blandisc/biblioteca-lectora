@@ -80,6 +80,8 @@ enum Theme {
         static let hairline: CGFloat = 0.5
         static let progress: CGFloat = 2
         static let quoteRule: CGFloat = 2
+        /// Borde de la opción elegida (portada en la cuadrícula).
+        static let selection: CGFloat = 2
         /// Cinta del marcador en el lector.
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa».

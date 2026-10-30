@@ -16,6 +16,7 @@ extension View {
             .navigationDestination(for: SeriesRef.self) { SeriesScreen(series: $0) }
             .navigationDestination(for: ReviewInboxRef.self) { _ in ReviewScreen() }
             .navigationDestination(for: CandidatesRef.self) { CandidatesScreen(bookID: $0.bookID, searchesFirst: $0.searchesFirst) }
+            .navigationDestination(for: FilledRef.self) { FilledScreen(bookID: $0.bookID) }
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
             #endif
@@ -524,6 +525,8 @@ struct CompareRow: View {
     let label: String
     let new: String?
     let old: String?
+    /// Con acción, un botón «Deshacer» bajo el valor (revisión de lo completado).
+    var undo: (() -> Void)? = nil
 
     private var shown: String {
         if let new, !new.isEmpty { return new }
@@ -552,10 +555,91 @@ struct CompareRow: View {
                 } else if changes {
                     Text("Nuevo").font(.caption).foregroundStyle(Theme.pencil)
                 }
+                if let undo {
+                    Button("Deshacer", action: undo)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Theme.pencil)
+                        .buttonStyle(.plain)
+                        .frame(minHeight: Theme.Size.tapTarget)
+                }
             }
         }
         .font(.subheadline)
         .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
         .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Portadas para elegir, en una fila que se desliza: la actual (si hay) y las
+/// de internet. La elegida lleva un borde de tinta.
+struct CoverChoiceRow: View {
+    enum Option: Hashable {
+        case current(URL)
+        case remote(URL)
+    }
+
+    let options: [Option]
+    @Binding var selection: Option?
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(alignment: .top, spacing: Theme.Space.m) {
+                ForEach(options, id: \.self) { option in
+                    CoverChoiceCell(option: option, selection: $selection)
+                }
+            }
+            .padding(.vertical, Theme.Space.xs)
+        }
+    }
+}
+
+/// Una portada para elegir (en `CoverChoiceRow` o en una `CoverGrid`).
+struct CoverChoiceCell: View {
+    let option: CoverChoiceRow.Option
+    @Binding var selection: CoverChoiceRow.Option?
+    var width: CGFloat = Theme.Size.coverEditor
+
+    private var selected: Bool { selection == option }
+
+    var body: some View {
+        Button { selection = option } label: {
+            VStack(spacing: Theme.Space.xs) {
+                image
+                    .frame(width: width, height: width * 3 / 2)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous)
+                            .stroke(selected ? Theme.ink : .clear, lineWidth: Theme.Size.selection)
+                    }
+                Text(label)
+                    .font(.caption2)
+                    .foregroundStyle(selected ? Theme.ink : Theme.tertiaryInk)
+            }
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    @ViewBuilder private var image: some View {
+        switch option {
+        case .current(let url):
+            if let picture = CoverImaging.image(at: url) {
+                Image(decorative: picture, scale: 1).resizable().scaledToFill()
+            } else {
+                Theme.field
+            }
+        case .remote(let url):
+            AsyncImage(url: url) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                Theme.field.overlay { ProgressView() }
+            }
+        }
+    }
+
+    private var label: String {
+        if case .current = option { return "La actual" }
+        return "Internet"
     }
 }

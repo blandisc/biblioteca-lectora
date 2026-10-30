@@ -63,6 +63,12 @@ struct SettingsScreen: View {
                         #if os(iOS)
                         .textInputAutocapitalization(.never)
                         #endif
+                    NavigationLink {
+                        RulesScreen()
+                    } label: {
+                        LabeledContent("Reglas de autores y etiquetas",
+                                       value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
+                    }
                 } header: {
                     Text("Datos de los libros")
                 } footer: {

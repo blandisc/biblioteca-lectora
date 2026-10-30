@@ -67,9 +67,10 @@ struct LibraryScreen: View {
                         .foregroundStyle(Theme.secondaryInk)
                         .padding(.top, Theme.Space.m)
 
-                        if !model.library.reviews.isEmpty {
+                        if !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
                             NavigationLink(value: ReviewInboxRef()) {
-                                LinkRow(title: "Por revisar", value: "\(model.library.reviews.count)", marked: true)
+                                LinkRow(title: "Por revisar", value: "\(model.library.reviews.count + model.library.filled.count)",
+                                        marked: !model.library.reviews.isEmpty)
                             }
                             .buttonStyle(.plain)
                             .padding(.top, Theme.Space.m)

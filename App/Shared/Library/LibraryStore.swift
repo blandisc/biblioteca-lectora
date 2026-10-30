@@ -17,10 +17,12 @@ final class LibraryStore: ObservableObject {
     enum LibraryError: LocalizedError {
         case bookNotFound
         case folderTaken
+        case coverUnavailable
         var errorDescription: String? {
             switch self {
             case .bookNotFound: "No encontré ese libro en la biblioteca."
             case .folderTaken: "Ya hay otro libro con ese título y autor en la carpeta."
+            case .coverUnavailable: "No pude bajar esa portada. Prueba con otra."
             }
         }
     }
@@ -43,6 +45,10 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var identifying: Set<UUID> = []
     /// Libros que no se pudieron buscar en internet (sin conexión); se reintentan.
     @Published private(set) var pendingLookup: Set<UUID> = []
+    /// Lo que se completó solo desde internet, para revisarlo y deshacerlo.
+    @Published private(set) var filled: [UUID: FilledRecord] = [:]
+    /// Reglas de autores y etiquetas (en la carpeta: viajan con la biblioteca).
+    @Published private(set) var rules = MetadataRules()
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
 
@@ -153,6 +159,7 @@ final class LibraryStore: ObservableObject {
             published: extracted.published,
             summary: extracted.summary
         ), fileName: source.lastPathComponent)
+        book = rules.apply(to: book)
         // Mismo ISBN y mismo formato: es el mismo libro. (Un PDF y un EPUB de la
         // misma edición sí entran; luego se podrán unir como formatos de un libro.)
         let format = source.pathExtension.lowercased()
@@ -274,7 +281,10 @@ final class LibraryStore: ObservableObject {
             if coverURL(for: book) == nil { cover = await service.cover(for: best, language: book.language, title: book.title) }
             // Pudo cambiar mientras se buscaba (lo editaste): se completa lo más reciente.
             let current = self.book(id: bookID) ?? book
-            try? update(MetadataMatcher.fillMissing(current, from: best), cover: cover)
+            let completed = rules.apply(to: MetadataMatcher.fillMissing(current, from: best))
+            if (try? update(completed, cover: cover)) != nil {
+                recordFilled(before: current, after: completed, addedCover: cover != nil)
+            }
             setReview(bookID, candidates: nil)
         } else {
             setReview(bookID, candidates: result.candidates)
@@ -306,14 +316,131 @@ final class LibraryStore: ObservableObject {
         return detailed
     }
 
-    /// Elegiste un candidato: sus datos (y, si quieres, su portada) reemplazan a los del libro.
-    func apply(_ candidate: MetadataCandidate, to bookID: UUID, includeCover: Bool = true) async throws {
+    /// Qué portada usar al aplicar un candidato.
+    enum CoverPick: Hashable {
+        /// La que tiene el libro.
+        case keep
+        /// La mejor que encuentre Lectora.
+        case automatic
+        /// La que elegiste en la cuadrícula.
+        case url(URL)
+    }
+
+    /// Elegiste un candidato: sus datos (y la portada que elijas) reemplazan a los del libro.
+    func apply(_ candidate: MetadataCandidate, to bookID: UUID, cover pick: CoverPick = .automatic) async throws {
         guard let book = book(id: bookID) else { throw LibraryError.bookNotFound }
         let detailed = await service.withSummary(candidate, for: book)
-        let cover = includeCover ? await service.cover(for: detailed, language: book.language) : nil
+        let cover: Data?
+        switch pick {
+        case .keep: cover = nil
+        case .automatic: cover = await service.cover(for: detailed, language: book.language)
+        case .url(let url): cover = await service.coverData(at: url)
+        }
         let current = self.book(id: bookID) ?? book
-        try update(MetadataMatcher.replace(current, with: detailed), cover: cover)
+        try update(rules.apply(to: MetadataMatcher.replace(current, with: detailed)), cover: cover)
         setReview(bookID, candidates: nil)
+        forgetFilled(bookID)
+    }
+
+    // MARK: Portadas para elegir
+
+    /// Portadas de internet para un candidato (las de sus ediciones primero).
+    func coverOptions(for candidate: MetadataCandidate, bookID: UUID) async -> [URL] {
+        let book = book(id: bookID)
+        return await service.coverOptions(for: candidate, language: book?.language, title: candidate.title, limit: 8)
+    }
+
+    /// Portadas de internet para un libro: las de su obra si ya se conoce
+    /// (openlibrary: en el catálogo), si no, las de lo que encuentre la búsqueda.
+    func coverOptions(for bookID: UUID) async -> [URL] {
+        guard let book = book(id: bookID) else { return [] }
+        var candidates: [MetadataCandidate] = []
+        if let work = book.identifiers["openlibrary"] {
+            candidates = [MetadataCandidate(id: "ol:/works/\(work)", source: .openLibrary, title: book.title,
+                                            workKey: "/works/\(work)")]
+        } else {
+            candidates = Array(await service.lookup(book).candidates.prefix(3))
+        }
+        var urls: [URL] = []
+        for candidate in candidates {
+            let options = await service.coverOptions(for: candidate, language: book.language, title: book.title, limit: 8)
+            for url in options where !urls.contains(url) { urls.append(url) }
+        }
+        return Array(urls.prefix(12))
+    }
+
+    /// Cambia la portada por la elegida en la cuadrícula.
+    func setCover(_ url: URL, for bookID: UUID) async throws {
+        guard let data = await service.coverData(at: url) else { throw LibraryError.coverUnavailable }
+        guard let book = book(id: bookID) else { throw LibraryError.bookNotFound }
+        try update(book, cover: data)
+    }
+
+    // MARK: Reglas
+
+    func saveRules(_ new: MetadataRules) {
+        rules = new
+        save(new, to: rulesURL)
+    }
+
+    /// Aplica las reglas a toda la biblioteca. Devuelve cuántos libros cambiaron.
+    @discardableResult
+    func applyRulesToLibrary() -> Int {
+        var changed = 0
+        for book in books {
+            let mapped = rules.apply(to: book)
+            if mapped != book, (try? update(mapped)) != nil { changed += 1 }
+        }
+        return changed
+    }
+
+    // MARK: Lo que se completó solo
+
+    private func recordFilled(before: Book, after: Book, addedCover: Bool) {
+        var changes = FilledField.allCases.compactMap { field -> FilledChange? in
+            guard field != .cover else { return nil }
+            let old = field.value(in: before), new = field.value(in: after)
+            return old == new ? nil : FilledChange(field: field, old: old, new: new)
+        }
+        if addedCover { changes.append(FilledChange(field: .cover, old: nil, new: "Nueva")) }
+        guard !changes.isEmpty else { return }
+        filled[before.id] = FilledRecord(date: Date(), changes: changes)
+        save(filled, to: filledURL)
+    }
+
+    /// Deshace un dato que se completó solo. Si lo cambiaste después, se respeta lo tuyo.
+    func undoFilled(_ field: FilledField, for bookID: UUID) throws {
+        guard var record = filled[bookID], let change = record.changes.first(where: { $0.field == field }),
+              var book = book(id: bookID) else { return }
+        if field == .cover {
+            if let url = coverURL(for: book) {
+                try FileManager.default.removeItem(at: url)
+                CoverImaging.forget(url)
+            }
+            try update(book)
+        } else if field.value(in: book) == change.new {
+            field.restore(change.old, in: &book)
+            try update(book)
+        }
+        record.changes.removeAll { $0.field == field }
+        filled[bookID] = record.changes.isEmpty ? nil : record
+        save(filled, to: filledURL)
+    }
+
+    func undoAllFilled(for bookID: UUID) throws {
+        for change in filled[bookID]?.changes ?? [] { try undoFilled(change.field, for: bookID) }
+    }
+
+    /// «Está bien»: se queda así y sale de la lista.
+    func forgetFilled(_ bookID: UUID) {
+        guard filled[bookID] != nil else { return }
+        filled[bookID] = nil
+        save(filled, to: filledURL)
+    }
+
+    func forgetAllFilled() {
+        filled = [:]
+        save(filled, to: filledURL)
     }
 
     /// «Mantener mis datos»: sale de la bandeja sin cambiar nada.
@@ -330,6 +457,14 @@ final class LibraryStore: ObservableObject {
 
     private var reviewsURL: URL {
         root.appendingPathComponent(".lectora/por-revisar.json")
+    }
+
+    private var filledURL: URL {
+        root.appendingPathComponent(".lectora/completados.json")
+    }
+
+    private var rulesURL: URL {
+        root.appendingPathComponent(".lectora/reglas.json")
     }
 
     private var pendingURL: URL {
@@ -360,6 +495,13 @@ final class LibraryStore: ObservableObject {
         }
         if let data = try? Data(contentsOf: pendingURL), let saved = try? JSONDecoder().decode(Set<UUID>.self, from: data) {
             pendingLookup = saved.filter { book(id: $0) != nil }
+        }
+        if let data = try? Data(contentsOf: filledURL),
+           let saved = try? JSONDecoder().decode([UUID: FilledRecord].self, from: data) {
+            filled = saved.filter { book(id: $0.key) != nil }
+        }
+        if let data = try? Data(contentsOf: rulesURL), let saved = try? JSONDecoder().decode(MetadataRules.self, from: data) {
+            rules = saved
         }
     }
 

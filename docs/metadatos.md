@@ -9,9 +9,14 @@ Cómo Lectora completa y corrige los datos de un libro (código en
   (`q`) con `lang=<código de dos letras>`. Así, a cada obra la acompaña la
   edición en el idioma del libro: «Fundación» encuentra la obra «Foundation» y
   trae la edición de Plaza & Janés.
-- **Google Books**: solo con una clave propia (Ajustes › Datos de los libros).
-  Sin clave, la cuota diaria compartida está agotada casi siempre (lo confirmó
-  el sondeo).
+- **Google Books**: una vez por libro. Con clave propia (Ajustes › Datos de
+  los libros), la API. Sin clave, el feed antiguo GData que usa Calibre: la API
+  moderna sin clave tiene la cuota diaria compartida agotada casi siempre (lo
+  confirmó el sondeo). Aporta lo que Open Library no tiene: sinopsis en tu
+  idioma y portadas de editoriales.
+- **Registro de origen**: al aplicar datos se guarda `openlibrary:OL…W` (o
+  `google:…`) en el catálogo y en el `metadata.opf`, igual que Calibre guarda
+  sus identificadores. La próxima búsqueda va directo a esa obra.
 
 ## Orden de búsqueda
 
@@ -44,6 +49,27 @@ Si eliges un candidato en Por revisar, sus datos reemplazan a los tuyos. Antes
 de aplicarlo ves la vista previa campo por campo y decides si usar también su
 portada. Tu forma de escribir el título y el autor se conserva si es el mismo
 texto (tu versión con acentos no se cambia por una sin acentos).
+
+## Revisar lo que se completó solo
+
+Como «Revisar metadatos descargados» de Calibre: cada dato que se completó
+solo queda anotado en `.lectora/completados.json`. En Por revisar › «Se
+completaron solos» ves dato por dato lo nuevo frente a lo de antes, con
+«Deshacer» por dato, «Deshacer todo» por libro y «Todo bien». Si cambiaste un
+dato después, deshacer respeta lo tuyo.
+
+## Portadas para elegir
+
+En la vista previa de un candidato y en la ficha (Editar › Elegir portada de
+internet) se muestran las portadas de las ediciones de la obra: primero las de
+tu idioma y modernas. Eliges una o te quedas con la tuya.
+
+## Reglas de autores y etiquetas
+
+Ajustes › Reglas: «Gabo» → «Gabriel García Márquez», «Fiction» → «Ficción»,
+o quitar una etiqueta. Se guardan en `.lectora/reglas.json` (viajan con la
+biblioteca). Se aplican a lo que llega de archivos e internet, no a lo que
+escribes a mano. También se pueden aplicar a toda la biblioteca.
 
 ## Limpieza
 

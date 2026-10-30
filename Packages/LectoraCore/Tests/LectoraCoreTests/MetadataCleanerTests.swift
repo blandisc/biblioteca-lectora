@@ -42,4 +42,19 @@ final class MetadataCleanerTests: XCTestCase {
         XCTAssertEqual(book.title, "la tregua")
         XCTAssertEqual(book.identifiers["isbn"], "9788437604572")
     }
+
+    func testRulesMapAuthorsAndTags() {
+        let rules = MetadataRules(
+            authors: [.init(from: "gabo", to: "Gabriel García Márquez")],
+            tags: [.init(from: "Fiction", to: "Ficción"), .init(from: "Libro electrónico", to: "")]
+        )
+        let book = Book(title: "x", authors: ["Gabo", "Gabriel García Márquez"],
+                        tags: ["fiction", "Ficción", "libro electronico", "Cuento"])
+        let mapped = rules.apply(to: book)
+        XCTAssertEqual(mapped.authors, ["Gabriel García Márquez"], "Sin repetir")
+        XCTAssertEqual(mapped.tags, ["Ficción", "Cuento"], "Vacío quita la etiqueta")
+        XCTAssertEqual(MetadataRules().apply(to: book), book)
+        let empty = MetadataRules(authors: [.init(from: "Gabo", to: "")])
+        XCTAssertEqual(empty.apply(to: book).authors, book.authors, "Un autor no se borra")
+    }
 }

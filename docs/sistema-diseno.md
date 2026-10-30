@@ -49,7 +49,7 @@ Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPale
 ### Tamaño (`Theme.Size`)
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
-coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2`
+coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2`
 
 ### Tipografía (`Font`)
 
@@ -87,6 +87,10 @@ Regla de oro: **New York para lo que es del libro, SF para la interfaz.**
 | `EmptyState` | Título, explicación y acción opcional | Toda lista vacía |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
+| `SecondaryButton`, `LinkRow` | Acción secundaria a lo ancho; fila que lleva a otra pantalla | «Por revisar» |
+| `CandidateRow`, `CandidateCover` | Libro encontrado en internet: probabilidad y razones en palabras | Elegir los datos |
+| `CompareRow` | Dato nuevo frente al tuyo («Antes: …»), con «Deshacer» opcional | Vista previa, lo completado |
+| `CoverChoiceRow`, `CoverChoiceCell` | Portadas para elegir (fila o cuadrícula); la elegida con borde `selection` | Vista previa, ficha › Elegir portada |
 
 ## Recetas
 

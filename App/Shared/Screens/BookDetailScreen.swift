@@ -7,6 +7,7 @@ struct BookDetailScreen: View {
     @EnvironmentObject private var model: AppModel
     @State private var editing = false
     @State private var searching = false
+    @State private var choosingCover = false
 
     /// Datos al día: después de editar, la ficha se actualiza sola.
     private var live: ShelfBook { model.shelfBook(id: book.id) ?? book }
@@ -60,6 +61,7 @@ struct BookDetailScreen: View {
                     Menu("Editar") {
                         Button { editing = true } label: { Label("Escribir a mano", systemImage: "pencil") }
                         Button { searching = true } label: { Label("Buscar datos en internet", systemImage: "globe") }
+                        Button { choosingCover = true } label: { Label("Elegir portada de internet", systemImage: "photo.on.rectangle") }
                     }
                 }
             }
@@ -69,6 +71,102 @@ struct BookDetailScreen: View {
         }
         .sheet(isPresented: $editing) {
             if let record { MetadataEditorView(book: record) }
+        }
+        .sheet(isPresented: $choosingCover) {
+            if let id = live.bookID { CoverPickerSheet(bookID: id) }
+        }
+    }
+}
+
+/// Portadas de internet para un libro, en cuadrícula: eliges una y listo.
+struct CoverPickerSheet: View {
+    let bookID: UUID
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var options: [URL] = []
+    @State private var choice: CoverChoiceRow.Option?
+    @State private var loading = true
+    @State private var saving = false
+    @State private var errorMessage: String?
+
+    private var current: URL? { model.library.book(id: bookID).flatMap { model.library.coverURL(for: $0) } }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if loading {
+                        HStack(spacing: Theme.Space.m) {
+                            ProgressView()
+                            Text("Buscando portadas…").font(.subheadline).foregroundStyle(Theme.secondaryInk)
+                        }
+                        .padding(.vertical, Theme.Space.xl)
+                    } else if options.isEmpty {
+                        EmptyState(title: "Sin portadas", message: "No encontré portadas de este libro en internet.")
+                    } else {
+                        Text("Primero las de ediciones en el idioma del libro.")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.secondaryInk)
+                        CoverGrid {
+                            ForEach(allOptions, id: \.self) { option in
+                                CoverChoiceCell(option: option, selection: $choice)
+                            }
+                        }
+                        .padding(.top, Theme.Space.l)
+                    }
+                }
+                .screenContent()
+            }
+            .background(Theme.paper.ignoresSafeArea())
+            .navigationTitle("Portada")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancelar") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(saving ? "Guardando…" : "Usar") { save() }
+                        .disabled(saving || !choosesRemote)
+                }
+            }
+        }
+        .task {
+            options = await model.library.coverOptions(for: bookID)
+            choice = current.map { .current($0) } ?? options.first.map { .remote($0) }
+            loading = false
+        }
+        .alert("No se pudo cambiar", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private var allOptions: [CoverChoiceRow.Option] {
+        (current.map { [.current($0)] } ?? []) + options.map { .remote($0) }
+    }
+
+    private var choosesRemote: Bool {
+        if case .remote = choice { return true }
+        return false
+    }
+
+    private func save() {
+        guard case .remote(let url) = choice else { return }
+        saving = true
+        Task {
+            do {
+                try await model.library.setCover(url, for: bookID)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            saving = false
         }
     }
 }
