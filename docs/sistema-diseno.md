@@ -21,14 +21,16 @@ un **componente**; toda pantalla sigue una **receta**.
 
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
-| `paper` | `#F8F7F4` | `#161514` | Fondo de todas las pantallas |
-| `field` | `#EFEDE8` | `#242320` | Campos, filtro activo, botón secundario |
-| `ink` | `#1C1B19` | `#ECE9E2` | Texto, botón principal, progreso |
-| `onInk` | `#FFFFFF` | `#141413` | Texto sobre tinta |
-| `secondaryInk` | `#77746D` | `#9C988F` | Texto secundario |
-| `tertiaryInk` | `#9A968D` | `#6F6C65` | Folios y etiquetas pequeñas |
-| `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
-| `pencil` | `#B8372A` | `#E0675A` | **Solo tus marcas**: subrayado, nota, cinta, audio sonando, índice A–Z |
+| `paper` | `#F8F7F4` | `#17221C` | Fondo de todas las pantallas (en oscuro, verde fichero profundo) |
+| `field` | `#EFEDE8` | `#24332B` | Campos, filtro activo, botón secundario |
+| `ink` | `#1C1B19` | `#ECE9E2` | Texto |
+| `onInk` | `#FFFFFF` | `#17221C` | Texto sobre tinta |
+| `brand` | `#24332B` | `#C9A66B` | Marca: botón principal, avance, pestaña elegida, el «+» de la Biblioteca (verde fichero; latón en oscuro) |
+| `onBrand` | `#FFFFFF` | `#17221C` | Texto sobre la marca |
+| `secondaryInk` | `#77746D` | `#9DA89F` | Texto secundario |
+| `tertiaryInk` | `#9A968D` | `#6F7D73` | Folios y etiquetas pequeñas |
+| `track` | `#E6E3DC` | `#2C3B32` | Pistas y separadores |
+| `accent` | `#3D6B55` | `#8FBFA4` | Verde hoja, **solo tus marcas y avisos**: subrayado, nota, cinta, audio sonando, pendientes, índice A–Z (antes `pencil`, rojo) |
 
 Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPalette`.
 
@@ -49,7 +51,16 @@ Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPale
 ### Tamaño (`Theme.Size`)
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
-coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2`
+coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44`
+
+### Identidad
+
+Neoclásico mínimo: del mundo grecorromano solo las mayúsculas romanas, el
+interpunto «·» y el aire. El gabinete (el portaetiquetas de latón de un cajón)
+vive en el ícono; en la app solo queda su color. Verde con mesura: la acción
+principal y **un** acento redondo por pantalla como mucho (`AccentIconButton`).
+Ícono en `App/Resources/Assets.xcassets/AppIcon.appiconset`: verde fichero
+(claro), tinta (oscuro) y tintado; los PNG se generan desde el diseño del lienzo.
 
 ### Tipografía (`Font`)
 
@@ -60,9 +71,13 @@ coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · se
 | `.rowTitle` | New York 17 | Títulos en filas, citas |
 | `.quote` | New York 17 itálica | «Donde lo dejaste» |
 | `.prose` | New York 16 | Sinopsis |
+| `.brandMark` | Cinzel 16, espaciado `Tracking.brandMark` | «GABINETE» en la Mesa |
+| `.sectionLabel` | Cinzel 12 medium, mayúsculas, `Tracking.sectionLabel` | Rótulos de sección |
 | Sistema | SF (`.body`, `.subheadline`, `.footnote`, `.caption`) | Toda la interfaz |
 
-Regla de oro: **New York para lo que es del libro, SF para la interfaz.**
+Regla de oro: **New York para lo que es del libro, SF para la interfaz, Cinzel
+solo para la marca y los rótulos** (nunca para títulos de pantalla ni texto
+largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 
 ### Movimiento (`Theme.Motion`)
 
@@ -87,6 +102,9 @@ Regla de oro: **New York para lo que es del libro, SF para la interfaz.**
 | `EmptyState` | Título, explicación y acción opcional | Toda lista vacía |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
+| `BrandMark` | «GABINETE» en Cinzel, centrado | Arriba de la Mesa |
+| `SectionLabel` | Rótulo en mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`) | «EN LA MESA», «SE COMPLETARON SOLOS», «Nº 7» en la ficha |
+| `AccentIconButton` | Botón redondo en `brand`: el único acento verde de una pantalla | «+» de la Biblioteca |
 | `SecondaryButton`, `LinkRow` | Acción secundaria a lo ancho; fila que lleva a otra pantalla | «Por revisar» |
 | `CandidateRow`, `CandidateCover` | Libro encontrado en internet: probabilidad y razones en palabras | Elegir los datos |
 | `CompareRow` | Dato nuevo frente al tuyo («Antes: …»), con «Deshacer» opcional | Vista previa, lo completado |

@@ -71,11 +71,11 @@ struct ReviewScreen: View {
     private var filledSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Se completaron solos").font(.rowTitle)
+                SectionLabel(text: "Se completaron solos")
                 Spacer()
                 Button("Todo bien") { model.library.forgetAllFilled() }
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Theme.pencil)
+                    .foregroundStyle(Theme.accent)
                     .buttonStyle(.plain)
             }
             Text("Datos que tomé de internet porque estaba seguro. Revísalos y deshaz lo que no quieras.")

@@ -20,6 +20,10 @@ struct BookDetailScreen: View {
                     .frame(width: Theme.Size.coverDetail)
                     .padding(.top, Theme.Space.m)
                 VStack(spacing: Theme.Space.xs) {
+                    // Número de ficha, como el id de Calibre que da nombre a la carpeta.
+                    if let number = record?.calibreID {
+                        SectionLabel(text: "Nº \(number)")
+                    }
                     Text(live.title)
                         .font(.bookTitle)
                         .multilineTextAlignment(.center)

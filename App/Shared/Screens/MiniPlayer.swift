@@ -45,7 +45,7 @@ struct MiniPlayer: View {
                 ZStack {
                     Circle().stroke(Theme.track, lineWidth: Theme.Size.quoteRule)
                     Circle().trim(from: 0, to: chapterProgress)
-                        .stroke(Theme.pencil, style: StrokeStyle(lineWidth: Theme.Size.quoteRule, lineCap: .round))
+                        .stroke(Theme.accent, style: StrokeStyle(lineWidth: Theme.Size.quoteRule, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                     Image(systemName: playing ? "pause.fill" : "play.fill")
                         .font(.subheadline.weight(.semibold))
@@ -71,7 +71,7 @@ private struct EqualizerBars: View {
         HStack(alignment: .bottom, spacing: Theme.Space.xxs) {
             ForEach([0.5, 1.0, 0.7], id: \.self) { height in
                 Capsule()
-                    .fill(Theme.pencil)
+                    .fill(Theme.accent)
                     .frame(width: Theme.Space.xxs, height: Theme.Space.m * height)
                     .phaseAnimator([1.0, 0.4]) { bar, phase in
                         bar.scaleEffect(y: phase, anchor: .bottom)

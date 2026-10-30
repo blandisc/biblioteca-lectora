@@ -74,7 +74,7 @@ struct NotebookScreen: View {
                 ForEach(groups) { group in
                     NavigationLink(value: group.book) {
                         BookRow(book: group.book, detail: group.book.author) {
-                            Text("\(group.count)").monospacedDigit().foregroundStyle(Theme.pencil)
+                            Text("\(group.count)").monospacedDigit().foregroundStyle(Theme.accent)
                         }
                     }
                     .buttonStyle(.plain)

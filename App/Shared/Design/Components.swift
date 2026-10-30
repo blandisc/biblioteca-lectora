@@ -63,6 +63,33 @@ extension ScreenHeading where Trailing == EmptyView {
     }
 }
 
+// MARK: - Marca
+
+/// «GABINETE» en mayúsculas romanas, centrado arriba de la Mesa.
+struct BrandMark: View {
+    var body: some View {
+        Text("GABINETE")
+            .font(.brandMark)
+            .tracking(Theme.Tracking.brandMark)
+            .foregroundStyle(Theme.ink)
+            .frame(maxWidth: .infinity)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Rótulo de sección en mayúsculas romanas pequeñas («EN LA MESA»).
+struct SectionLabel: View {
+    let text: String
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(.sectionLabel)
+            .tracking(Theme.Tracking.sectionLabel)
+            .foregroundStyle(Theme.secondaryInk)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
 // MARK: - Botones
 
 /// Respuesta al toque: se hunde un poco, sin cambiar de color.
@@ -92,12 +119,31 @@ struct PrimaryButton: View {
                 }
             }
             .font(.body.weight(.medium))
-            .foregroundStyle(Theme.onInk)
+            .foregroundStyle(Theme.onBrand)
             .padding(.horizontal, Theme.Space.l + Theme.Space.xs)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Theme.Size.control)
-            .background(Theme.ink, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .background(Theme.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         }
         .buttonStyle(PressableStyle())
+    }
+}
+
+/// Acento verde, redondo y escaso: el «+» de la Biblioteca. Uno por pantalla como mucho.
+struct AccentIconButton: View {
+    let systemImage: String
+    let label: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Theme.onBrand)
+                .frame(width: Theme.Size.accentButton, height: Theme.Size.accentButton)
+                .background(Theme.brand, in: Circle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(label)
     }
 }
 
@@ -286,7 +332,7 @@ struct ThinProgress: View {
             .overlay(alignment: .leading) {
                 GeometryReader { proxy in
                     Capsule()
-                        .fill(Theme.ink)
+                        .fill(Theme.brand)
                         .frame(width: proxy.size.width * min(max(value, 0), 1))
                 }
             }
@@ -319,13 +365,13 @@ struct QuoteBlock: View {
             if let note {
                 Label(note, systemImage: "pencil")
                     .font(.subheadline)
-                    .foregroundStyle(Theme.pencil)
+                    .foregroundStyle(Theme.accent)
             }
         }
         .foregroundStyle(Theme.ink)
         .padding(.leading, Theme.Space.m + Theme.Space.xxs)
         .overlay(alignment: .leading) {
-            Rectangle().fill(Theme.pencil).frame(width: Theme.Size.quoteRule)
+            Rectangle().fill(Theme.accent).frame(width: Theme.Size.quoteRule)
         }
     }
 }
@@ -390,7 +436,7 @@ struct LetterIndex: View {
             ForEach(letters, id: \.self) { letter in
                 Button(letter) { onSelect(letter) }
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Theme.pencil)
+                    .foregroundStyle(Theme.accent)
                     .frame(width: Theme.Space.l + Theme.Space.xxs)
             }
         }
@@ -442,7 +488,7 @@ struct LinkRow: View {
     var body: some View {
         HStack(spacing: Theme.Space.s) {
             if marked {
-                Circle().fill(Theme.pencil).frame(width: Theme.Space.s, height: Theme.Space.s)
+                Circle().fill(Theme.accent).frame(width: Theme.Space.s, height: Theme.Space.s)
                     .accessibilityHidden(true)
             }
             Text(title).foregroundStyle(Theme.ink)
@@ -553,12 +599,12 @@ struct CompareRow: View {
                         .foregroundStyle(Theme.tertiaryInk)
                         .multilineTextAlignment(.trailing)
                 } else if changes {
-                    Text("Nuevo").font(.caption).foregroundStyle(Theme.pencil)
+                    Text("Nuevo").font(.caption).foregroundStyle(Theme.accent)
                 }
                 if let undo {
                     Button("Deshacer", action: undo)
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(Theme.pencil)
+                        .foregroundStyle(Theme.accent)
                         .buttonStyle(.plain)
                         .frame(minHeight: Theme.Size.tapTarget)
                 }

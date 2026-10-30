@@ -38,7 +38,7 @@ struct ReaderView: View {
         .overlay(alignment: .topTrailing) {
             if bookmarked {
                 Ribbon()
-                    .fill(Theme.pencil)
+                    .fill(Theme.accent)
                     .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
                     .padding(.trailing, Theme.Space.gutter)
                     .ignoresSafeArea(edges: .top)
@@ -187,7 +187,7 @@ private struct TopControls: View {
                 } label: {
                     Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(bookmarked ? Theme.pencil : Theme.ink)
+                        .foregroundStyle(bookmarked ? Theme.accent : Theme.ink)
                         .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
                 }
                 .accessibilityLabel(bookmarked ? "Quitar marcador" : "Añadir marcador")

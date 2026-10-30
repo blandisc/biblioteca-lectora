@@ -102,7 +102,7 @@ struct MetadataEditorView: View {
                                 draft.rating = draft.rating == Double(star) ? nil : Double(star)
                             } label: {
                                 Image(systemName: Double(star) <= (draft.rating ?? 0) ? "star.fill" : "star")
-                                    .foregroundStyle(Theme.pencil)
+                                    .foregroundStyle(Theme.accent)
                             }
                             .buttonStyle(.borderless)
                             .accessibilityLabel("\(star) estrellas")

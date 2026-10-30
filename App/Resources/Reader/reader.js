@@ -56,7 +56,7 @@ let lastSelection = null
 let annotationTapped = false
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
-const pencil = (rects, { color = '#B8372A' } = {}) => {
+const pencil = (rects, { color = '#3D6B55' } = {}) => {
     const g = document.createElementNS(SVG_NS, 'g')
     g.setAttribute('fill', 'none')
     g.setAttribute('stroke', color)
@@ -126,7 +126,7 @@ const onLoad = ({ detail: { doc, index } }) => {
 }
 
 const onDrawAnnotation = ({ detail: { draw } }) =>
-    draw(pencil, { color: style.linkColor ?? '#B8372A' })
+    draw(pencil, { color: style.linkColor ?? '#3D6B55' })
 
 const onCreateOverlay = () => {
     for (const value of highlights) view.addAnnotation({ value })

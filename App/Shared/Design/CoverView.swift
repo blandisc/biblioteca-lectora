@@ -71,7 +71,7 @@ struct CoverView: View {
 
                 if showsRibbon {
                     Ribbon()
-                        .fill(Theme.pencil)
+                        .fill(Theme.accent)
                         .frame(width: max(5, width * 0.065), height: proxy.size.height + 22)
                         .offset(x: width * 0.88, y: -3)
                         .shadow(color: .black.opacity(0.2), radius: 1, y: 1)

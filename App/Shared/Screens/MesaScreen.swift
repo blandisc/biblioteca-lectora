@@ -8,16 +8,20 @@ struct MesaScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                Group {
-                    if let book = model.currentBook {
-                        current(book)
-                    } else {
-                        EmptyState(
-                            title: "Tu biblioteca está vacía",
-                            message: "Añade EPUB, PDF, MOBI o cómics. Leo sus datos, les busco portada y los guardo ordenados en una carpeta que Calibre también puede abrir.",
-                            actionTitle: "Añadir libros",
-                            action: { model.importing = true }
-                        )
+                VStack(alignment: .leading, spacing: 0) {
+                    BrandMark()
+                        .padding(.bottom, Theme.Space.xl)
+                    Group {
+                        if let book = model.currentBook {
+                            current(book)
+                        } else {
+                            EmptyState(
+                                title: "Tu biblioteca está vacía",
+                                message: "Añade EPUB, PDF, MOBI o cómics. Leo sus datos, les busco portada y los guardo ordenados en una carpeta que Calibre también puede abrir.",
+                                actionTitle: "Añadir libros",
+                                action: { model.importing = true }
+                            )
+                        }
                     }
                 }
                 .screenContent()
@@ -67,8 +71,7 @@ struct MesaScreen: View {
             .padding(.top, Theme.Space.xl)
 
             if !model.desk.isEmpty {
-                Text("En la mesa")
-                    .font(.subheadline.weight(.semibold))
+                SectionLabel(text: "En la mesa")
                     .padding(.top, Theme.Space.xxl)
                     .padding(.bottom, Theme.Space.m)
                 CoverGrid {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Sistema de diseño de Lectora (estilo Editorial).
+/// Sistema de diseño de Gabinete (Editorial con identidad neoclásica mínima).
 ///
 /// **Regla:** las pantallas no usan números, colores ni fuentes sueltos. Todo
 /// sale de estos tokens y de los componentes de `Components.swift`; las recetas
@@ -8,22 +8,28 @@ import SwiftUI
 enum Theme {
     // MARK: Color — cada token tiene valor claro y oscuro
 
-    /// Fondo de todas las pantallas: un solo papel.
-    static let paper = Color(light: 0xF8F7F4, dark: 0x161514)
+    /// Fondo de todas las pantallas: papel en claro, verde fichero profundo en oscuro.
+    static let paper = Color(light: 0xF8F7F4, dark: 0x17221C)
     /// Campos, filtro activo y botones secundarios.
-    static let field = Color(light: 0xEFEDE8, dark: 0x242320)
-    /// Texto principal, botón principal y barras de progreso.
+    static let field = Color(light: 0xEFEDE8, dark: 0x24332B)
+    /// Texto principal.
     static let ink = Color(light: 0x1C1B19, dark: 0xECE9E2)
     /// Texto sobre tinta.
-    static let onInk = Color(light: 0xFFFFFF, dark: 0x141413)
+    static let onInk = Color(light: 0xFFFFFF, dark: 0x17221C)
+    /// Marca: verde fichero en claro, latón en oscuro. Acción principal, avance
+    /// y pestaña elegida; el gabinete del ícono hecho color.
+    static let brand = Color(light: 0x24332B, dark: 0xC9A66B)
+    /// Texto sobre la marca.
+    static let onBrand = Color(light: 0xFFFFFF, dark: 0x17221C)
     /// Texto secundario.
-    static let secondaryInk = Color(light: 0x77746D, dark: 0x9C988F)
+    static let secondaryInk = Color(light: 0x77746D, dark: 0x9DA89F)
     /// Texto terciario: folios y etiquetas pequeñas.
-    static let tertiaryInk = Color(light: 0x9A968D, dark: 0x6F6C65)
+    static let tertiaryInk = Color(light: 0x9A968D, dark: 0x6F7D73)
     /// Pistas de progreso y separadores.
-    static let track = Color(light: 0xE6E3DC, dark: 0x34322E)
-    /// Lápiz rojo: solo para tus marcas (subrayados, notas, cinta, audio sonando).
-    static let pencil = Color(light: 0xB8372A, dark: 0xE0675A)
+    static let track = Color(light: 0xE6E3DC, dark: 0x2C3B32)
+    /// Verde hoja: tus marcas y avisos (subrayados, notas, cinta, audio sonando,
+    /// pendientes). Sutil y escaso.
+    static let accent = Color(light: 0x3D6B55, dark: 0x8FBFA4)
 
     // MARK: Espacio — escala de 4 pt
 
@@ -80,6 +86,8 @@ enum Theme {
         static let hairline: CGFloat = 0.5
         static let progress: CGFloat = 2
         static let quoteRule: CGFloat = 2
+        /// Botón de acento redondo («+» de la Biblioteca).
+        static let accentButton: CGFloat = 44
         /// Borde de la opción elegida (portada en la cuadrícula).
         static let selection: CGFloat = 2
         /// Cinta del marcador en el lector.
@@ -114,7 +122,8 @@ enum Theme {
     }
 }
 
-// MARK: Tipografía — New York para lo que es del libro, SF para la interfaz
+// MARK: Tipografía — New York para lo que es del libro, SF para la interfaz,
+// Cinzel (mayúsculas romanas) solo para la marca y los rótulos de sección
 
 extension Font {
     /// Título de pantalla («Biblioteca», «Cuaderno»).
@@ -127,6 +136,18 @@ extension Font {
     static let quote = Font.system(size: 17, design: .serif).italic()
     /// Sinopsis y textos largos del libro.
     static let prose = Font.system(size: 16, design: .serif)
+    /// «GABINETE» arriba de la Mesa, como una inscripción.
+    static let brandMark = Font.custom("Cinzel", size: 16, relativeTo: .footnote)
+    /// Rótulo de sección en mayúsculas romanas («EN LA MESA»).
+    static let sectionLabel = Font.custom("Cinzel", size: 12, relativeTo: .caption).weight(.medium)
+}
+
+extension Theme {
+    /// Espaciado de letras de la marca y los rótulos romanos (proporción del tamaño).
+    enum Tracking {
+        static let brandMark: CGFloat = 6.7
+        static let sectionLabel: CGFloat = 2.9
+    }
 }
 
 extension Color {

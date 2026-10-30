@@ -75,11 +75,11 @@ struct ReaderPalette: Equatable {
     /// Modo de la interfaz sobre la página; `nil` deja el de la app.
     var scheme: ColorScheme?
 
-    static let paper = ReaderPalette(background: Color(hex: 0xF8F7F4), text: "#1C1B19", link: "#B8372A", scheme: .light)
-    static let white = ReaderPalette(background: Color(hex: 0xFFFFFF), text: "#1C1B19", link: "#B8372A", scheme: .light)
-    static let darkPaper = ReaderPalette(background: Color(hex: 0x161514), text: "#DAD6CE", link: "#E0675A", scheme: .dark)
-    static let night = ReaderPalette(background: Color(hex: 0x2B2420), text: "#E8D9C4", link: "#E0675A", scheme: .dark)
-    static let black = ReaderPalette(background: Color(hex: 0x000000), text: "#BDB8AE", link: "#E0675A", scheme: .dark)
+    static let paper = ReaderPalette(background: Color(hex: 0xF8F7F4), text: "#1C1B19", link: "#3D6B55", scheme: .light)
+    static let white = ReaderPalette(background: Color(hex: 0xFFFFFF), text: "#1C1B19", link: "#3D6B55", scheme: .light)
+    static let darkPaper = ReaderPalette(background: Color(hex: 0x161514), text: "#DAD6CE", link: "#8FBFA4", scheme: .dark)
+    static let night = ReaderPalette(background: Color(hex: 0x2B2420), text: "#E8D9C4", link: "#8FBFA4", scheme: .dark)
+    static let black = ReaderPalette(background: Color(hex: 0x000000), text: "#BDB8AE", link: "#8FBFA4", scheme: .dark)
 
     static func resolve(_ theme: ReaderTheme, autoNight: Bool, appIsDark: Bool, now: Date = Date()) -> ReaderPalette {
         switch theme {

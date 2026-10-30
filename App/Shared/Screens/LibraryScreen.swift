@@ -40,8 +40,8 @@ struct LibraryScreen: View {
                                 Image(systemName: layout == .covers ? "list.bullet" : "square.grid.2x2")
                             }
                             .accessibilityLabel(layout == .covers ? "Ver como lista" : "Ver portadas")
-                            Button { model.importing = true } label: { Image(systemName: "plus") }
-                                .accessibilityLabel("Añadir libro")
+                            // El único acento verde de la pantalla.
+                            AccentIconButton(systemImage: "plus", label: "Añadir libro") { model.importing = true }
                         }
 
                         FilterBar(items: LibraryFilter.allCases, selection: $filter) { $0.rawValue }

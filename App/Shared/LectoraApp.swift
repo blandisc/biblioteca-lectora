@@ -15,7 +15,7 @@ struct LectoraApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .tint(Theme.ink)
+                .tint(Theme.brand)
         }
     }
 }
