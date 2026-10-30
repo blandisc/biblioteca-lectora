@@ -21,15 +21,15 @@ un **componente**; toda pantalla sigue una **receta**.
 
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
-| `paper` | `#F8F7F4` | `#17221C` | Fondo de todas las pantallas (en oscuro, verde fichero profundo) |
-| `field` | `#EFEDE8` | `#24332B` | Campos, filtro activo, botón secundario |
+| `paper` | `#F8F7F4` | `#161514` | Fondo de todas las pantallas |
+| `field` | `#EFEDE8` | `#242320` | Campos, filtro activo, botón secundario |
 | `ink` | `#1C1B19` | `#ECE9E2` | Texto |
-| `onInk` | `#FFFFFF` | `#17221C` | Texto sobre tinta |
-| `brand` | `#24332B` | `#C9A66B` | Marca: botón principal, avance, pestaña elegida, el «+» de la Biblioteca (verde fichero; latón en oscuro) |
-| `onBrand` | `#FFFFFF` | `#17221C` | Texto sobre la marca |
-| `secondaryInk` | `#77746D` | `#9DA89F` | Texto secundario |
-| `tertiaryInk` | `#9A968D` | `#6F7D73` | Folios y etiquetas pequeñas |
-| `track` | `#E6E3DC` | `#2C3B32` | Pistas y separadores |
+| `onInk` | `#FFFFFF` | `#141413` | Texto sobre tinta |
+| `brand` | `#24332B` | `#8FBFA4` | Marca: botón principal, avance, pestaña elegida, el «+» de la Biblioteca (verde fichero) |
+| `onBrand` | `#FFFFFF` | `#141413` | Texto sobre la marca |
+| `secondaryInk` | `#77746D` | `#9C988F` | Texto secundario |
+| `tertiaryInk` | `#9A968D` | `#6F6C65` | Folios y etiquetas pequeñas |
+| `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
 | `accent` | `#3D6B55` | `#8FBFA4` | Verde hoja, **solo tus marcas y avisos**: subrayado, nota, cinta, audio sonando, pendientes, índice A–Z (antes `pencil`, rojo) |
 
 Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPalette`.
@@ -58,7 +58,8 @@ coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · se
 Neoclásico mínimo: del mundo grecorromano solo las mayúsculas romanas, el
 interpunto «·» y el aire. El gabinete (el portaetiquetas de latón de un cajón)
 vive en el ícono; en la app solo queda su color. Verde con mesura: la acción
-principal y **un** acento redondo por pantalla como mucho (`AccentIconButton`).
+principal y, como mucho, **un** ícono de acción en verde por pantalla (`AccentIconButton`).
+El modo oscuro se queda neutro; solo cambia el verde.
 Ícono en `App/Resources/Assets.xcassets/AppIcon.appiconset`: verde fichero
 (claro), tinta (oscuro) y tintado; los PNG se generan desde el diseño del lienzo.
 
@@ -104,7 +105,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
 | `BrandMark` | «GABINETE» en Cinzel, centrado | Arriba de la Mesa |
 | `SectionLabel` | Rótulo en mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`) | «EN LA MESA», «SE COMPLETARON SOLOS», «Nº 7» en la ficha |
-| `AccentIconButton` | Botón redondo en `brand`: el único acento verde de una pantalla | «+» de la Biblioteca |
+| `AccentIconButton` | Ícono de acción en `brand`, sin fondo: el único acento verde de una pantalla | «+» de la Biblioteca |
 | `SecondaryButton`, `LinkRow` | Acción secundaria a lo ancho; fila que lleva a otra pantalla | «Por revisar» |
 | `CandidateRow`, `CandidateCover` | Libro encontrado en internet: probabilidad y razones en palabras | Elegir los datos |
 | `CompareRow` | Dato nuevo frente al tuyo («Antes: …»), con «Deshacer» opcional | Vista previa, lo completado |

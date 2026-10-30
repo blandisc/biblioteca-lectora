@@ -8,25 +8,25 @@ import SwiftUI
 enum Theme {
     // MARK: Color — cada token tiene valor claro y oscuro
 
-    /// Fondo de todas las pantallas: papel en claro, verde fichero profundo en oscuro.
-    static let paper = Color(light: 0xF8F7F4, dark: 0x17221C)
+    /// Fondo de todas las pantallas: un solo papel.
+    static let paper = Color(light: 0xF8F7F4, dark: 0x161514)
     /// Campos, filtro activo y botones secundarios.
-    static let field = Color(light: 0xEFEDE8, dark: 0x24332B)
+    static let field = Color(light: 0xEFEDE8, dark: 0x242320)
     /// Texto principal.
     static let ink = Color(light: 0x1C1B19, dark: 0xECE9E2)
     /// Texto sobre tinta.
-    static let onInk = Color(light: 0xFFFFFF, dark: 0x17221C)
-    /// Marca: verde fichero en claro, latón en oscuro. Acción principal, avance
+    static let onInk = Color(light: 0xFFFFFF, dark: 0x141413)
+    /// Marca: verde fichero (en oscuro, verde claro). Acción principal, avance
     /// y pestaña elegida; el gabinete del ícono hecho color.
-    static let brand = Color(light: 0x24332B, dark: 0xC9A66B)
+    static let brand = Color(light: 0x24332B, dark: 0x8FBFA4)
     /// Texto sobre la marca.
-    static let onBrand = Color(light: 0xFFFFFF, dark: 0x17221C)
+    static let onBrand = Color(light: 0xFFFFFF, dark: 0x141413)
     /// Texto secundario.
-    static let secondaryInk = Color(light: 0x77746D, dark: 0x9DA89F)
+    static let secondaryInk = Color(light: 0x77746D, dark: 0x9C988F)
     /// Texto terciario: folios y etiquetas pequeñas.
-    static let tertiaryInk = Color(light: 0x9A968D, dark: 0x6F7D73)
+    static let tertiaryInk = Color(light: 0x9A968D, dark: 0x6F6C65)
     /// Pistas de progreso y separadores.
-    static let track = Color(light: 0xE6E3DC, dark: 0x2C3B32)
+    static let track = Color(light: 0xE6E3DC, dark: 0x34322E)
     /// Verde hoja: tus marcas y avisos (subrayados, notas, cinta, audio sonando,
     /// pendientes). Sutil y escaso.
     static let accent = Color(light: 0x3D6B55, dark: 0x8FBFA4)
@@ -86,7 +86,7 @@ enum Theme {
         static let hairline: CGFloat = 0.5
         static let progress: CGFloat = 2
         static let quoteRule: CGFloat = 2
-        /// Botón de acento redondo («+» de la Biblioteca).
+        /// Área de toque del botón de acento («+» de la Biblioteca).
         static let accentButton: CGFloat = 44
         /// Borde de la opción elegida (portada en la cuadrícula).
         static let selection: CGFloat = 2

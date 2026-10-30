@@ -128,7 +128,7 @@ struct PrimaryButton: View {
     }
 }
 
-/// Acento verde, redondo y escaso: el «+» de la Biblioteca. Uno por pantalla como mucho.
+/// Acento verde y escaso: un ícono de acción («+» de la Biblioteca) en verde, sin fondo. Uno por pantalla como mucho.
 struct AccentIconButton: View {
     let systemImage: String
     let label: String
@@ -138,9 +138,9 @@ struct AccentIconButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(Theme.onBrand)
+                .foregroundStyle(Theme.brand)
                 .frame(width: Theme.Size.accentButton, height: Theme.Size.accentButton)
-                .background(Theme.brand, in: Circle())
+                .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel(label)
