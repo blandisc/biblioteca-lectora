@@ -148,8 +148,11 @@ enum TextMatch {
         // lo delatan las suyas («amb», «els», «dels») y los apóstrofos («l'autor»).
         let catalan: Set<String> = ["amb", "els", "dels", "seva", "perque", "aquest", "aquesta", "l", "pel", "aixo"]
         if sample.filter(catalan.contains).count >= 3 { return "ca" }
+        // El español no usa acento grave: «Sàpiens», «història» no son español.
+        let graves = text.prefix(1_500).filter { "àèòÀÈÒ".contains($0) }.count
         let scores = common.mapValues { set in sample.filter(set.contains).count }
-        guard let best = scores.max(by: { $0.value < $1.value }), best.value >= 4 else { return nil }
+        guard let best = scores.filter({ graves < 2 || $0.key != "es" }).max(by: { $0.value < $1.value }),
+              best.value >= 4 else { return nil }
         return best.key
     }
 }
