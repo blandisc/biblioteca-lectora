@@ -229,14 +229,18 @@ public enum ReadwiseMerge {
 
     /// El libro de tu biblioteca para un subrayado de Readwise: mismo título y autor.
     public static func book(for highlight: ReadwiseClient.Incoming, in books: [Book]) -> Book? {
-        books
-            .map { book -> (Book, Double) in
-                let title = TextMatch.titleSimilarity(book.title, highlight.bookTitle)
-                let author = highlight.bookAuthor.map { TextMatch.sameAuthorScore(book.authors, [$0]) } ?? 0.5
-                return (book, title * 0.7 + author * 0.3)
+        var best: Book?
+        var bestScore = 0.8
+        for book in books {
+            let title = TextMatch.titleSimilarity(book.title, highlight.bookTitle)
+            let author: Double = highlight.bookAuthor.map { TextMatch.sameAuthorScore(book.authors, [$0]) } ?? 0.5
+            let score = title * 0.7 + author * 0.3
+            if score >= bestScore {
+                best = book
+                bestScore = score
             }
-            .filter { $0.1 >= 0.8 }
-            .max { $0.1 < $1.1 }?.0
+        }
+        return best
     }
 
     /// Id estable de un libro que no está en tu biblioteca, para agrupar sus subrayados.

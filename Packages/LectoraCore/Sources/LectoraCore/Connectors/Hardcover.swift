@@ -98,10 +98,18 @@ public struct HardcoverClient: Sendable {
     }
 
     static func best(_ matches: [Match], title: String, authors: [String]) -> Match? {
-        matches
-            .map { ($0, TextMatch.titleSimilarity($0.title, title), authors.isEmpty ? 1 : TextMatch.sameAuthorScore($0.authors, authors)) }
-            .filter { $0.1 >= 0.85 && $0.2 >= 0.6 }
-            .max { $0.1 + $0.2 < $1.1 + $1.2 }?.0
+        var best: Match?
+        var bestScore = 0.0
+        for match in matches {
+            let titleScore = TextMatch.titleSimilarity(match.title, title)
+            let authorScore: Double = authors.isEmpty ? 1 : TextMatch.sameAuthorScore(match.authors, authors)
+            guard titleScore >= 0.85, authorScore >= 0.6 else { continue }
+            if titleScore + authorScore > bestScore {
+                best = match
+                bestScore = titleScore + authorScore
+            }
+        }
+        return best
     }
 
     /// Lo que se manda de un libro: su estado y su avance.
