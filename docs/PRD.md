@@ -1,6 +1,8 @@
-# Gabinete: PRD v4.0 — leer y pensar
+# Gabinete: PRD v4.1 — leer y pensar
 
-> **Estado:** borrador para revisión · **Versión:** 4.0 · **Fecha:** 30 oct 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+> **Estado:** borrador para revisión · **Versión:** 4.1 · **Fecha:** 18 nov 2026 · **Alcance:** uso personal, diseñado para poder abrirse al público después.
+>
+> **Qué cambia en la v4.1:** las decisiones de arquitectura quedan fijas en [arquitectura.md](arquitectura.md), que manda sobre este documento: sin servidor propio nunca; Gabinete es dueño del catálogo y Calibre invitado; Readwise en las dos direcciones; Hardcover de ida; llaves propias en el Llavero de iCloud; la web, después, servida por tu Mac; solo libros y PDF propios sin DRM. Las fases cambian (§8).
 >
 > **Qué cambia en la v4.0:** la app se llama **Gabinete** (antes «Biblioteca Lectora» / «Lectora»): un gabinete guarda libros y también notas. Pasa a ser **dual, de lectura y de notas** (§2.1): notas libres en **Markdown dentro de la misma carpeta**, que enlazan libros y subrayados, al estilo Obsidian. La carpeta del Gabinete tiene dos partes: `Biblioteca/` (con forma de Calibre) y `Notas/`. Entran tres conectores de lectura: **Readwise**, **Kindle** y **Hardcover** (§3.6).
 >
@@ -50,12 +52,13 @@
 ## 3. Decisiones
 
 ### 3.1 Dónde vive la biblioteca: **iCloud Drive** (v1)
-La biblioteca es **una carpeta visible en Archivos y Finder** (`iCloud Drive/Biblioteca Lectora/`):
+La biblioteca es **una carpeta visible en Archivos y Finder** (`iCloud Drive/Gabinete/`):
 
 ```
-Biblioteca Lectora/
-  Libros/Autor/Título.epub        ← tus archivos, tal cual (también .pdf, .cbz…)
-  .lectora/
+Gabinete/
+  Notas/*.md                      ← tus notas en Markdown
+  Biblioteca/Autor/Título (id)/   ← forma de Calibre: archivo + cover.jpg + metadata.opf
+  Biblioteca/.lectora/
     registro/iphone-7F3A.jsonl    ← cada dispositivo escribe SOLO su propio registro de cambios
     registro/mac-19C2.jsonl
     instantaneas/2026-10-20.json  ← resumen periódico para arrancar rápido
@@ -73,7 +76,7 @@ Biblioteca Lectora/
 
 | Limitación conocida | Mitigación |
 |---|---|
-| La web no puede leer iCloud Drive | La web queda para la última fase. Opciones: espejo en CloudKit o biblioteca en Google Drive (v2) |
+| La web no puede leer iCloud Drive | La web la sirve tu Mac en tu red privada, más adelante ([arquitectura D8](arquitectura.md)). Sin servidor propio |
 | Google Drive en modo "prueba" pide reautorizar cada 7 días | Solo afecta al buzón; publicar la app requiere la auditoría de Google (fase pública) |
 | Espacio en iCloud | Es tu cuenta; la app muestra cuánto ocupa la biblioteca |
 
@@ -81,7 +84,7 @@ Biblioteca Lectora/
 - **La app guarda una copia ligera** de cada subrayado: texto, posición exacta, nota y color. Así funciona sin conexión y sabe dónde pintarlo.
 - **Readwise es el hub:** todo subrayado de la app se envía (API v2, con un enlace que vuelve al pasaje). De Readwise se traen los **subrayados de Kindle** (anclados dentro de tus EPUB por ASIN, título y cita), los de **Reader** y las ediciones que hagas allá.
 - **Reader:** importar los EPUB y PDF originales que tengas ahí, subrayados en ambos sentidos para libros vinculados y progreso de Reader hacia la app.
-- Si dejas Readwise, no pierdes nada: la copia local se exporta a Markdown o JSON.
+- Si dejas Readwise, no pierdes nada: la copia local se exporta a Markdown o JSON. Detalle de las dos direcciones y cómo se evitan duplicados: [arquitectura D4](arquitectura.md).
 
 ### 3.3 IA: dispositivo primero, cualquier proveedor compatible con OpenAI después *[07]*
 
@@ -122,7 +125,7 @@ Mismo código y misma biblioteca. El iPhone y el Duo son para leer; el Mac, para
 |---|---|---|
 | **Readwise** | Hub de subrayados: los de Gabinete van allá; de allá vienen los de Kindle y Reader | API oficial con clave (§3.2) |
 | **Kindle** | Subrayados de tus libros Kindle, anclados en tus EPUB; mandar un libro de Gabinete a tu Kindle | Amazon no tiene API pública: los subrayados llegan **vía Readwise** (que ya se conecta a Kindle) o del archivo `My Clippings.txt` de un Kindle por USB. Enviar libros: «Send to Kindle» por correo (EPUB). El progreso de lectura (Whispersync) no se puede sincronizar |
-| **Hardcover** | Registro de lectura: «Leyendo» al abrir, avance mientras lees, «Leído» con fecha y calificación al terminar; importar tu historial | API oficial (GraphQL, en beta) con clave personal o inicio de sesión (OAuth). Sustituye a Goodreads, cuya API cerró en 2020; Hardcover importa el CSV de Goodreads |
+| **Hardcover** | Registro de lectura, **de ida**: «Leyendo» al abrir, avance mientras lees, «Leído» con fecha y calificación al terminar | API oficial (GraphQL, en beta) con clave personal; iniciar sesión después. Sustituye a Goodreads, cuya API cerró en 2020; Hardcover importa el CSV de Goodreads |
 
 ## 4. Experiencia: la UI como hub
 - **Inicio:** "Seguir leyendo", llegadas recientes (del buzón o de Reader), subrayados destacados de la semana.
@@ -253,12 +256,14 @@ Cualquier libro de tu biblioteca se escucha como audiolibro, con una voz que sue
 | Subrayados de Kindle dentro de tus EPUB | ⚠️ Viable con margen de error | El emparejamiento por cita puede fallar con ediciones distintas; se muestran como "sin anclar" en lugar de perderse |
 | IA en el dispositivo + DeepSeek vía OpenRouter | ✅ Viable y barato | Verificar precios y proveedores antes de fijarlos |
 | Agnóstico de nube | ⚠️ Viable por etapas | Cada nube es una integración aparte: iCloud primero; Drive y OneDrive como buzón en la v1 y como biblioteca en la v2 |
-| Web | ⚠️ Difícil sin servidor | Al final, de solo lectura |
+| Web | ⚠️ Solo servida por tu Mac | Sin servidor propio: el Mac sirve la página en tu red privada ([D8](arquitectura.md)) |
 | Administración tipo Calibre en el Mac | ✅ Viable | SwiftUI `Table` en macOS: columnas, orden, selección múltiple |
 | Mac como requisito | ❌ No | Solo acelera |
-| Competencia | ⚠️ | Readest ya cubre parte. La diferencia: gestión de biblioteca real, Duo, lectura guiada, Readwise como hub |
+| Competencia | ⚠️ | Readest ya cubre parte, y **Readwise Books** (oct 2026) compite de frente: biblioteca, lector y sesiones. Por eso Readwise es un enchufe, no el centro: Gabinete funciona completo sin él. La diferencia: tus archivos en tu carpeta, gestión de biblioteca real, notas en Markdown |
 
 ## 8. Fases
+
+> **v4.1:** las fases vigentes son las de [arquitectura.md](arquitectura.md#fases): A. cerrar la app de iPhone (y Mac) · B. ecosistema · C. IA y audiolibro · D. compartir. Lo de abajo queda como referencia histórica.
 
 **Fase 0: Pruebas técnicas (2–3 semanas)**
 - S1 · Lector: foliate-js en SwiftUI con gestos nativos, guiones en español, VoiceOver, libro de 1,000 páginas. *Salida:* se siente como Apple Books en un test a ciegas contigo.

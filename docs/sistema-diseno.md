@@ -1,6 +1,6 @@
-# Sistema de diseño de Lectora
+# Sistema de diseño de Gabinete
 
-Un solo estilo (Editorial): papel, tipografía y el lápiz rojo para tus marcas, sobre
+Un solo estilo (Editorial): papel, tipografía y un verde escaso para la acción y tus marcas, sobre
 componentes nativos de Apple. Todo valor visual es un **token**; toda pieza repetida es
 un **componente**; toda pantalla sigue una **receta**.
 
