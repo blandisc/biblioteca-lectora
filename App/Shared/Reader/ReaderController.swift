@@ -26,6 +26,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     @Published var noteTarget: Annotation?
     /// Subrayado que se lleva a una nota del Cuaderno.
     @Published var noteLinkTarget: Annotation?
+    /// La sesión de lectura de este libro (se mide mientras lees).
+    @Published private(set) var session: SessionTracker?
 
     /// Toque en la página, con la posición horizontal de 0 a 1.
     var onTap: ((Double) -> Void)?
@@ -68,6 +70,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     func open(bookFile: URL, bookID: UUID? = nil, lastCFI: String? = nil) {
         schemeHandler.bookFile = bookFile
         self.bookID = bookID ?? AnnotationStore.bookID(for: bookFile)
+        // Solo los libros del catálogo tienen sesiones (para el diario y la ficha).
+        session = bookID.map { SessionTracker(bookID: $0) }
         let cfiArgument = lastCFI.map(Self.js) ?? "null"
         let script = "window.lectora.open('\(ReaderSchemeHandler.bookURL(for: bookFile).absoluteString)', \(cfiArgument))"
         if isReady { evaluate(script) } else { pendingOpen = script }
@@ -199,6 +203,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 pageCount: body["total"] as? Int,
                 excerpt: body["excerpt"] as? String
             )
+            session?.pageShown(words: body["words"] as? Int ?? 0,
+                               fraction: body["fraction"] as? Double ?? 0,
+                               jumped: body["jumped"] as? Bool ?? false)
             settleTask?.cancel()
             if let location {
                 settleTask = Task { [weak self] in

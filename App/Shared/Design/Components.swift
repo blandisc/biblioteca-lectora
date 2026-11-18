@@ -1,3 +1,4 @@
+import Charts
 import LectoraCore
 import SwiftUI
 
@@ -794,5 +795,166 @@ struct NoteBody: View {
         let resolved = NoteMarkdown.resolvingLinks(markdown)
         return (try? AttributedString(markdown: resolved, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
             ?? AttributedString(markdown)
+    }
+}
+
+// MARK: - Sesiones de lectura
+
+/// Cómo se escriben los números de una sesión.
+enum ReadingFormat {
+    /// «840», «4,4 mil», «1,1 M».
+    static func words(_ count: Int) -> String {
+        count.formatted(.number.notation(.compactName).precision(.fractionLength(0...1)).locale(Locale(identifier: "es")))
+    }
+
+    /// «19:37» (minutos y segundos), para la sesión en curso.
+    static func clock(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    /// «20 min», «1 h 21 min».
+    static func duration(_ seconds: TimeInterval) -> String {
+        let minutes = Int((seconds / 60).rounded())
+        if minutes < 60 { return "\(minutes) min" }
+        return minutes % 60 == 0 ? "\(minutes / 60) h" : "\(minutes / 60) h \(minutes % 60) min"
+    }
+}
+
+/// Tres números grandes en serif con su leyenda («4,4 mil · palabras»).
+struct StatTrio: View {
+    struct Item: Identifiable {
+        let value: String
+        let label: String
+        var id: String { label }
+    }
+
+    let items: [Item]
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(items) { item in
+                VStack(spacing: Theme.Space.xxs) {
+                    Text(item.value)
+                        .font(.bookTitle)
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.ink)
+                    Text(item.label)
+                        .font(.caption)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .combine)
+            }
+        }
+    }
+}
+
+/// La sesión como una barra partida en sus etapas.
+struct StageBar: View {
+    let segments: [StageSegment]
+
+    var body: some View {
+        GeometryReader { geometry in
+            let total = max(segments.reduce(0) { $0 + $1.duration }, 1)
+            HStack(spacing: Theme.Size.hairline * 2) {
+                ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+                    Rectangle()
+                        .fill(Theme.stage(segment.stage))
+                        .frame(width: max(geometry.size.width * segment.duration / total - Theme.Size.hairline * 2, Theme.Size.hairline))
+                }
+            }
+        }
+        .frame(height: Theme.Size.stageBar)
+        .clipShape(Capsule())
+        .accessibilityHidden(true)
+    }
+}
+
+/// Leyenda de las etapas con su tiempo («Inmersa 8 min»).
+struct StageLegend: View {
+    let seconds: (ReadingStage) -> TimeInterval
+
+    var body: some View {
+        FlowRow {
+            ForEach(ReadingStage.allCases.reversed(), id: \.self) { stage in
+                let time = seconds(stage)
+                if time >= 30 {
+                    HStack(spacing: Theme.Space.xs) {
+                        RoundedRectangle(cornerRadius: Theme.Size.hairline * 4)
+                            .fill(Theme.stage(stage))
+                            .frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
+                        Text("\(stage.title) \(ReadingFormat.duration(time))")
+                    }
+                }
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(Theme.secondaryInk)
+    }
+}
+
+/// Fila que pasa a la siguiente línea cuando no cabe.
+struct FlowRow<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Theme.Space.m) { content }
+            VStack(alignment: .leading, spacing: Theme.Space.xs) { content }
+        }
+    }
+}
+
+/// Las etapas en el tiempo: una fila por etapa, de interrumpida (arriba) a inmersa.
+struct StageChart: View {
+    let segments: [StageSegment]
+
+    var body: some View {
+        Chart(Array(segments.enumerated()), id: \.offset) { _, segment in
+            RectangleMark(
+                xStart: .value("Inicio", segment.start),
+                xEnd: .value("Fin", segment.end),
+                y: .value("Etapa", segment.stage.title),
+                height: .fixed(Theme.Size.stageMark)
+            )
+            .foregroundStyle(Theme.stage(segment.stage))
+            .cornerRadius(Theme.Radius.cover)
+        }
+        .chartYScale(domain: ReadingStage.allCases.map(\.title))
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                AxisValueLabel(format: .dateTime.hour().minute())
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading) { _ in AxisValueLabel() }
+        }
+        .chartPlotStyle { $0.background(Theme.paper) }
+        .frame(height: Theme.Size.stageRow * CGFloat(ReadingStage.allCases.count + 1))
+        .accessibilityLabel("Etapas de la sesión en el tiempo")
+    }
+}
+
+/// El contador de palabras del lector: discreto, en verde hoja, abajo a la izquierda.
+struct WordCounter: View {
+    let words: Int
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+                Circle().fill(Theme.accent).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
+                Text(ReadingFormat.words(words))
+                    .monospacedDigit()
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Theme.accent)
+            .padding(.horizontal, Theme.Space.s + Theme.Space.xxs)
+            .frame(minHeight: Theme.Size.tapTarget)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel("\(words) palabras en esta sesión. Ver la sesión")
     }
 }

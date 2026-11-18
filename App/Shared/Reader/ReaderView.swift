@@ -13,6 +13,9 @@ struct ReaderView: View {
     @StateObject private var controller = ReaderController()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(SessionKeys.counter) private var showsCounter = true
+    @State private var showsSession = false
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @State private var bookmarked = false
@@ -58,6 +61,15 @@ struct ReaderView: View {
         .statusBarHidden(!showsChrome)
         #endif
         .preferredColorScheme(palette.scheme ?? mode.colorScheme)
+        .sheet(isPresented: $showsSession) {
+            if let session = controller.session {
+                SessionSheet(tracker: session, bookTitle: catalogTitle, fraction: controller.location?.fraction ?? 0)
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { controller.session?.resume() } else { controller.session?.pause() }
+        }
+        .onDisappear { controller.session?.finish() }
         .sheet(isPresented: $showsAppearance) {
             ReaderAppearanceSheet()
                 .presentationDetents([.height(Theme.Size.appearanceSheet)])
@@ -146,6 +158,10 @@ struct ReaderView: View {
             if !showsChrome {
                 ReadingFolio(title: title, location: controller.location)
                     .transition(.opacity)
+                if showsCounter, let session = controller.session {
+                    SessionCounter(tracker: session) { showsSession = true }
+                        .transition(.opacity)
+                }
             }
             VStack(spacing: 0) {
                 if showsChrome {
@@ -289,6 +305,23 @@ private struct BottomPanel: View {
         .glassPanel(cornerRadius: Theme.Radius.panel)
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Space.s)
+    }
+}
+
+/// Contador de la sesión, abajo a la izquierda, a la altura del porcentaje.
+private struct SessionCounter: View {
+    @ObservedObject var tracker: SessionTracker
+    let action: () -> Void
+
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack {
+                WordCounter(words: tracker.words, action: action)
+                Spacer()
+            }
+        }
+        .padding(.leading, Theme.Reader.chromeInset)
     }
 }
 

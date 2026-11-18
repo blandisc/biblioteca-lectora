@@ -1,3 +1,4 @@
+import LectoraCore
 import SwiftUI
 
 /// Sistema de diseño de Gabinete (Editorial con identidad neoclásica mínima).
@@ -30,6 +31,18 @@ enum Theme {
     /// Verde hoja: tus marcas y avisos (subrayados, notas, cinta, audio sonando,
     /// pendientes). Sutil y escaso.
     static let accent = Color(light: 0x3D6B55, dark: 0x8FBFA4)
+
+    /// Etapas de una sesión de lectura: del gris (interrumpida) al verde fichero
+    /// (inmersa). Se distinguen por claridad; en oscuro, la más intensa es la más clara.
+    static func stage(_ stage: ReadingStage) -> Color {
+        switch stage {
+        case .interrupted: Color(light: 0xD9D6CF, dark: 0x4A4844)
+        case .skimming: Color(light: 0xCFDDD4, dark: 0x3B5546)
+        case .light: Color(light: 0x8FBFA4, dark: 0x5E8B73)
+        case .active: Color(light: 0x3D6B55, dark: 0x8FBFA4)
+        case .immersed: Color(light: 0x24332B, dark: 0xB9DCC6)
+        }
+    }
 
     // MARK: Espacio — escala de 4 pt
 
@@ -94,6 +107,13 @@ enum Theme {
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa».
         static let appearanceSheet: CGFloat = 440
+        /// Barra de etapas de una sesión.
+        static let stageBar: CGFloat = 8
+        /// Alto de una fila de la gráfica de etapas, y de su marca.
+        static let stageRow: CGFloat = 26
+        static let stageMark: CGFloat = 16
+        /// Muestra de color en la leyenda de etapas.
+        static let legendSwatch: CGFloat = 8
     }
 
     // MARK: Lector

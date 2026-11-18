@@ -8,6 +8,7 @@ struct RootView: View {
     }
 
     @StateObject private var model = AppModel()
+    @ObservedObject private var sessions = SessionStore.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @Namespace private var opening
@@ -39,11 +40,16 @@ struct RootView: View {
                 if phase == .active {
                     model.library.refreshFromCloud()
                     model.notes.refreshFromCloud()
+                    sessions.refreshFromCloud()
                 }
             }
             .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,
                           allowsMultipleSelection: true) { result in
                 model.finishImport(result)
+            }
+            // Al cerrar el libro, el resumen de la sesión.
+            .sheet(item: $sessions.justFinished) { session in
+                SessionSummarySheet(session: session).environmentObject(model)
             }
             .alert("Importación", isPresented: Binding(
                 get: { model.importReport != nil },

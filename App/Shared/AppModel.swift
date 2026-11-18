@@ -41,6 +41,7 @@ final class AppModel: ObservableObject {
             // Otro Gabinete (Ajustes › Gabinete): sus notas van con él.
             self.library.$root.dropFirst().sink { [weak self] root in
                 self?.notes.use(cabinet: root.deletingLastPathComponent())
+                SessionStore.shared.use(root: root)
             },
         ]
         rebuildShelf()

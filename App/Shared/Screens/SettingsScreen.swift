@@ -37,6 +37,8 @@ enum MetadataKeys {
 struct SettingsScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(SessionKeys.counter) private var showsCounter = true
+    @AppStorage(SessionKeys.summary) private var showsSummary = true
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @AppStorage(MetadataKeys.googleKey) private var googleKey = ""
     @State private var choosingFolder = false
@@ -52,6 +54,14 @@ struct SettingsScreen: View {
                         ForEach(AppearanceMode.allCases) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.segmented)
+                }
+                Section {
+                    Toggle("Contador en el lector", isOn: $showsCounter)
+                    Toggle("Resumen al cerrar el libro", isOn: $showsSummary)
+                } header: {
+                    Text("Sesiones de lectura")
+                } footer: {
+                    Text("Gabinete anota cada sesión (tiempo, palabras y cuánto sostuviste la atención) en tu carpeta. Nada sale de tus dispositivos.")
                 }
                 Section {
                     LabeledContent("Carpeta", value: CabinetLocation.displayName(model.library.cabinet))

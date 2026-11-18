@@ -33,9 +33,10 @@ public struct PageView: Codable, Hashable, Sendable {
     public var end: Date
     /// Palabras de la página.
     public var words: Int
-    /// Llegaste pasando a la siguiente página (no hacia atrás ni saltando).
+    /// La dejaste pasando a la siguiente página: la leíste. Releer, ir hacia
+    /// atrás o la página donde cerraste el libro no suman palabras.
     public var forward: Bool
-    /// Llegaste por el índice, la barra o un enlace.
+    /// La dejaste saltando (índice, barra o un enlace): no la terminaste.
     public var jumped: Bool
     /// Avance en el libro al ver la página (0 a 1).
     public var fraction: Double

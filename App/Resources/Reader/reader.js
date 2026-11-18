@@ -89,6 +89,20 @@ const excerptOf = range => {
     return text.slice(0, 160).replace(/\s+\S*$/, '') + '…'
 }
 
+// Palabras de la página (para las sesiones de lectura).
+const segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null
+const wordsOf = range => {
+    const text = range?.toString() ?? ''
+    if (!text.trim()) return 0
+    if (!segmenter) return text.trim().split(/\s+/).length
+    let count = 0
+    for (const part of segmenter.segment(text)) if (part.isWordLike) count++
+    return count
+}
+
+// Cómo se llegó a la página: «jump» si fue por el índice, la barra o un enlace.
+let navigation = null
+
 const onRelocate = ({ detail }) => {
     const { fraction, cfi, tocItem, location, range } = detail
     post('relocate', {
@@ -98,7 +112,10 @@ const onRelocate = ({ detail }) => {
         current: location?.current ?? null,
         total: location?.total ?? null,
         excerpt: excerptOf(range),
+        words: wordsOf(range),
+        jumped: navigation === 'jump',
     })
+    navigation = null
 }
 
 const onLoad = ({ detail: { doc, index } }) => {
@@ -217,8 +234,8 @@ window.lectora = {
     },
     next: () => view?.next(),
     prev: () => view?.prev(),
-    goTo: target => view?.goTo(target),
-    goToFraction: fraction => view?.goToFraction(fraction),
+    goTo: target => { navigation = 'jump'; return view?.goTo(target) },
+    goToFraction: fraction => { navigation = 'jump'; return view?.goToFraction(fraction) },
     setFlow: flow => view?.renderer?.setAttribute('flow', flow),
     setStyle(partial) {
         style = { ...style, ...partial }
