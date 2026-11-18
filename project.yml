@@ -6,6 +6,8 @@ options:
     iOS: "17.0"
     macOS: "14.0"
   createIntermediateGroups: true
+  # La app está en español: fechas, números y textos del sistema también.
+  developmentLanguage: es
 
 packages:
   LectoraCore:
@@ -31,6 +33,9 @@ targets:
       path: App/Generated/Info-${platform}.plist
       properties:
         CFBundleDisplayName: Gabinete
+        CFBundleDevelopmentRegion: es
+        CFBundleLocalizations:
+          - es
         LSApplicationCategoryType: public.app-category.books
         UILaunchScreen: {}
         UIAppFonts:

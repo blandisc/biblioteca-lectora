@@ -343,7 +343,7 @@ struct ThinProgress: View {
             .frame(height: height)
             .accessibilityElement()
             .accessibilityLabel("Progreso")
-            .accessibilityValue(Text(value, format: .percent.precision(.fractionLength(0))))
+            .accessibilityValue(Text((value).percentText))
     }
 }
 
@@ -741,7 +741,7 @@ struct NoteRow: View {
         let calendar = Calendar.current
         if calendar.isDateInToday(date) { return "Hoy" }
         if calendar.isDateInYesterday(date) { return "Ayer" }
-        return date.formatted(.dateTime.day().month(.abbreviated))
+        return date.es(.dateTime.day().month(.abbreviated))
     }
 }
 
@@ -800,13 +800,34 @@ struct NoteBody: View {
     }
 }
 
+// MARK: - Fechas y números en español
+
+extension Locale {
+    /// La app está en español, aunque el dispositivo esté en otro idioma.
+    static let gabinete = Locale(identifier: "es_MX")
+}
+
+extension Date {
+    /// Fecha en español: `fecha.es(.dateTime.day().month(.wide))` → «22 de noviembre».
+    func es(_ style: Date.FormatStyle) -> String {
+        formatted(style.locale(.gabinete))
+    }
+}
+
+extension Double {
+    /// «57 %».
+    var percentText: String {
+        formatted(.percent.precision(.fractionLength(0)).locale(.gabinete))
+    }
+}
+
 // MARK: - Sesiones de lectura
 
 /// Cómo se escriben los números de una sesión.
 enum ReadingFormat {
     /// «840», «4,4 mil», «1,1 M».
     static func words(_ count: Int) -> String {
-        count.formatted(.number.notation(.compactName).precision(.fractionLength(0...1)).locale(Locale(identifier: "es")))
+        count.formatted(.number.notation(.compactName).precision(.fractionLength(0...1)).locale(.gabinete))
     }
 
     /// «19:37» (minutos y segundos), para la sesión en curso.
@@ -938,7 +959,7 @@ struct StageChart: View {
         .chartYScale(domain: ReadingStage.allCases.map(\.title))
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 3)) { _ in
-                AxisValueLabel(format: .dateTime.hour().minute())
+                AxisValueLabel(format: .dateTime.hour().minute().locale(.gabinete))
             }
         }
         .chartYAxis {
@@ -1101,7 +1122,7 @@ struct WeekBars: View {
             HStack(spacing: Theme.Space.s) {
                 ForEach(days) { day in
                     let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
-                    Text(day.date.formatted(.dateTime.weekday(.narrow)).uppercased())
+                    Text(day.date.es(.dateTime.weekday(.narrow)).uppercased())
                         .font(.caption2.weight(isToday ? .semibold : .regular))
                         .foregroundStyle(isToday ? Theme.ink : Theme.tertiaryInk)
                         .frame(maxWidth: .infinity)
@@ -1109,7 +1130,7 @@ struct WeekBars: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(days.map { "\($0.date.formatted(.dateTime.weekday(.wide))): \(ReadingFormat.duration($0.seconds))" }.joined(separator: ", "))
+        .accessibilityLabel(days.map { "\($0.date.es(.dateTime.weekday(.wide))): \(ReadingFormat.duration($0.seconds))" }.joined(separator: ", "))
     }
 }
 
@@ -1132,14 +1153,14 @@ struct MonthCalendar: View {
                 ForEach(days) { day in
                     let future = day.date > today
                     let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
-                    Text(day.date.formatted(.dateTime.day()))
+                    Text(day.date.es(.dateTime.day()))
                         .font(.footnote)
                         .monospacedDigit()
                         .foregroundStyle(future ? Theme.track : (day.level.map { $0 == .active || $0 == .immersed } == true ? Theme.paper : Theme.ink))
                         .frame(width: Theme.Size.dayCell, height: Theme.Size.dayCell)
                         .background(day.level.map(Theme.stage) ?? Color.clear, in: Circle())
                         .overlay { if isToday { Circle().stroke(Theme.ink, lineWidth: Theme.Size.selection) } }
-                        .accessibilityLabel("\(day.date.formatted(.dateTime.day().month(.wide))): \(ReadingFormat.duration(day.seconds))")
+                        .accessibilityLabel("\(day.date.es(.dateTime.day().month(.wide))): \(ReadingFormat.duration(day.seconds))")
                 }
             }
             HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
@@ -1201,7 +1222,7 @@ struct SessionRow: View {
         HStack(alignment: .center, spacing: Theme.Space.m) {
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 HStack(spacing: Theme.Space.xs) {
-                    Text(session.start.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
+                    Text(session.start.es(.dateTime.weekday(.abbreviated).day().hour().minute()))
                     if let bookTitle {
                         Text("· \(bookTitle)").font(.rowTitle).lineLimit(1)
                     }

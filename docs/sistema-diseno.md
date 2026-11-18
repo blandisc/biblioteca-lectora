@@ -200,6 +200,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testEveryTokenIsUsed` | Ningún token de `Theme` sobra |
 | `testExceptionsAreDocumented` | Toda `ds-exception` tiene su motivo en «Excepciones» |
 | `testNoRedPencilLeft` | Decisión del 30 oct 2026: el rojo lápiz se fue; lo tuyo va en verde hoja |
+| `testDatesAndNumbersInSpanish` | Decisión del 18 nov 2026: fechas y porcentajes en español aunque el dispositivo no lo esté (`fecha.es(…)`, `percentText`) |
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |
 
 Cuando se decide algo de diseño que no debe volver a romperse, se vuelve una prueba con

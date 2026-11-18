@@ -197,6 +197,13 @@ final class DesignRulesTests: XCTestCase {
         check(hits(#"B8372A|E0675A|Theme\.pencil"#, in: Self.sources("App")), "El rojo lápiz ya no existe: usa Theme.accent")
     }
 
+    /// 18 nov 2026: la app está en español aunque el dispositivo no: fechas y
+    /// porcentajes con `Locale.gabinete` (`fecha.es(…)`, `valor.percentText`).
+    func testDatesAndNumbersInSpanish() {
+        check(hits(#"\.formatted\(\.dateTime|format: \.dateTime(?!.*locale)|format: \.percent"#, in: Self.sources("App")),
+              "Fecha o porcentaje sin español: usa fecha.es(…) o valor.percentText")
+    }
+
     /// 30 oct 2026: Cinzel solo para la marca y los rótulos (BrandMark, SectionLabel).
     func testRomanCapsOnlyForMarkAndLabels() {
         check(hits(#"\.brandMark|\.sectionLabel"#, in: Self.screens), "Cinzel solo a través de BrandMark y SectionLabel")

@@ -126,7 +126,7 @@ struct MesaScreen: View {
                 WeekBars(days: week.days)
                 if let longest = week.period.longest, longest.readingSeconds >= 20 * 60,
                    let book = model.shelfBook(id: longest.bookID.uuidString) {
-                    Text("El \(longest.start.formatted(.dateTime.weekday(.wide))) leíste \(ReadingFormat.duration(longest.readingSeconds)) seguidos de \(book.title): tu sesión más larga de la semana.")
+                    Text("El \(longest.start.es(.dateTime.weekday(.wide))) leíste \(ReadingFormat.duration(longest.readingSeconds)) seguidos de \(book.title): tu sesión más larga de la semana.")
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryInk)
                 }

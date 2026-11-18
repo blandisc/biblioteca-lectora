@@ -93,7 +93,7 @@ struct DiaryScreen: View {
 
     private func weekTitle(_ interval: DateInterval) -> String {
         let end = interval.end.addingTimeInterval(-1)
-        return "\(interval.start.formatted(.dateTime.day())) – \(end.formatted(.dateTime.day().month(.wide)))"
+        return "\(interval.start.es(.dateTime.day())) – \(end.es(.dateTime.day().month(.wide)))"
     }
 
     /// «Leíste 23 min más que la semana pasada, y casi la mitad del tiempo fue inmersa».
@@ -117,7 +117,7 @@ struct DiaryScreen: View {
         let interval = monthInterval
         let period = all.between(interval.start, interval.end)
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            PeriodStepper(title: interval.start.formatted(.dateTime.month(.wide).year()).capitalized,
+            PeriodStepper(title: interval.start.es(.dateTime.month(.wide).year()).capitalized,
                           canGoForward: offset > 0, back: { offset += 1 }, forward: { offset -= 1 })
             PeriodTotal(period: period, days: calendar.range(of: .day, in: .month, for: interval.start)?.count ?? 30, calendar: calendar)
             MonthCalendar(days: period.days(from: interval.start, to: interval.end, calendar: calendar))
@@ -180,7 +180,7 @@ struct DiaryScreen: View {
     private func shareLine(_ share: Double, since first: Double?, month: Date?) -> String {
         let now = "\(Int((share * 100).rounded())) %"
         guard let first, let month, abs(first - share) >= 0.02 else { return now }
-        return "\(now) · en \(month.formatted(.dateTime.month(.wide))) \(Int((first * 100).rounded())) %"
+        return "\(now) · en \(month.es(.dateTime.month(.wide))) \(Int((first * 100).rounded())) %"
     }
 
     // MARK: Secciones
@@ -305,7 +305,7 @@ struct SessionScreen: View {
                 VStack(alignment: .leading, spacing: Theme.Space.xl) {
                     if let book {
                         NavigationLink(value: book) {
-                            BookRow(book: book, detail: session.start.formatted(.dateTime.weekday(.wide).day().month(.wide).hour().minute()))
+                            BookRow(book: book, detail: session.start.es(.dateTime.weekday(.wide).day().month(.wide).hour().minute()))
                         }
                         .buttonStyle(.plain)
                     }

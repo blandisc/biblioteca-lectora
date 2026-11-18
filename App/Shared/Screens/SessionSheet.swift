@@ -73,9 +73,9 @@ struct SessionSummarySheet: View {
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 StageBar(segments: session.segments)
                 HStack {
-                    Text(session.start, format: .dateTime.hour().minute())
+                    Text(session.start.es(.dateTime.hour().minute()))
                     Spacer()
-                    Text(session.end, format: .dateTime.hour().minute())
+                    Text(session.end.es(.dateTime.hour().minute()))
                 }
                 .font(.caption)
                 .foregroundStyle(Theme.tertiaryInk)
@@ -129,7 +129,7 @@ struct SessionDetail: View {
                     .font(.rowTitle)
                 HStack(spacing: Theme.Space.s) {
                     ThinProgress(value: fraction)
-                    Text(fraction, format: .percent.precision(.fractionLength(0)))
+                    Text((fraction).percentText)
                         .font(.caption)
                         .monospacedDigit()
                         .foregroundStyle(Theme.secondaryInk)
@@ -173,7 +173,7 @@ struct SessionDetail: View {
 enum SessionNote {
     @MainActor
     static func write(_ session: ReadingSession, bookTitle: String) -> String {
-        let day = session.start.formatted(.dateTime.day().month(.wide))
+        let day = session.start.es(.dateTime.day().month(.wide))
         let text = """
         # \(bookTitle), \(day)
 

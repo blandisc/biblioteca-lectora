@@ -255,7 +255,7 @@ private struct BottomPanel: View {
                 }
                 .accessibilityLabel("Índice")
                 Spacer()
-                Text(fraction, format: .percent.precision(.fractionLength(0)))
+                Text((fraction).percentText)
                     .font(.footnote)
                     .monospacedDigit()
                     .foregroundStyle(Theme.secondaryInk)
@@ -327,7 +327,7 @@ private struct ReadingFolio: View {
                 .padding(.horizontal, Theme.Space.xxxl + Theme.Space.m)
                 .padding(.top, Theme.Space.m + Theme.Space.xxs)
             Spacer()
-            Text(location?.fraction ?? 0, format: .percent.precision(.fractionLength(0)))
+            Text((location?.fraction ?? 0).percentText)
                 .monospacedDigit()
                 .padding(.bottom, Theme.Space.xs + Theme.Space.xxs)
         }
