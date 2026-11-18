@@ -5,6 +5,7 @@ import SwiftUI
 struct BookDetailScreen: View {
     let book: ShelfBook
     @EnvironmentObject private var model: AppModel
+    @ObservedObject private var sessionStore = SessionStore.shared
     @State private var editing = false
     @State private var searching = false
     @State private var choosingCover = false
@@ -53,6 +54,8 @@ struct BookDetailScreen: View {
                         .padding(.top, Theme.Space.s)
                 }
 
+                readingSection
+                    .padding(.top, Theme.Space.m)
                 notesSection
                     .padding(.top, Theme.Space.m)
                 highlightsSection
@@ -88,6 +91,35 @@ struct BookDetailScreen: View {
 
 /// Portadas de internet para un libro, en cuadrícula: eliges una y listo.
 extension BookDetailScreen {
+    /// «Lectura»: cuánto le has dedicado, cuánto falta, tu ritmo y sus sesiones.
+    @ViewBuilder
+    private var readingSection: some View {
+        let sessions = live.bookID.map { sessionStore.sessions(forBook: $0) } ?? []
+        if !sessions.isEmpty {
+            let period = ReadingPeriod(sessions)
+            let remaining = live.bookID.flatMap { sessionStore.remaining(forBook: $0, progress: live.progress) }
+            VStack(alignment: .leading, spacing: Theme.Space.m) {
+                SectionLabel(text: "Lectura")
+                StatTrio(items: [
+                    .init(value: ReadingFormat.duration(period.readingSeconds), label: "leído"),
+                    .init(value: remaining.map { "~" + ReadingFormat.duration($0) } ?? "—", label: "te faltan"),
+                    .init(value: period.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
+                ])
+                StageBar(segments: sessions.flatMap(\.segments))
+                Text("\(Int((period.immersedShare * 100).rounded())) % del tiempo inmersa")
+                    .font(.caption)
+                    .foregroundStyle(Theme.tertiaryInk)
+                VStack(spacing: 0) {
+                    ForEach(sessions.reversed().prefix(5)) { session in
+                        NavigationLink(value: SessionRef(id: session.id)) { SessionRow(session: session) }
+                            .buttonStyle(.plain)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     /// Notas que enlazan este libro con `[[Título]]`, y «Nota nueva» ya enlazada.
     private var notesSection: some View {
         let notes = model.notes.notes(linking: live.title)

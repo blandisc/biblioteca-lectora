@@ -69,6 +69,28 @@ final class SessionStore: ObservableObject {
         }
     }
 
+    /// Guarda sin mostrar el resumen (sesiones de muestra para las capturas).
+    func add(_ session: ReadingSession) {
+        guard (try? log.append(session)) != nil else { return }
+        sessions.append(session)
+        sessions.sort { $0.start < $1.start }
+    }
+
+    /// La semana (lunes a domingo) de `date`, con sus días.
+    func week(of date: Date = Date()) -> (period: ReadingPeriod, days: [ReadingDay]) {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
+        guard let interval = calendar.dateInterval(of: .weekOfYear, for: date) else { return (all, []) }
+        let period = all.between(interval.start, interval.end)
+        return (period, period.days(from: interval.start, to: interval.end, calendar: calendar))
+    }
+
+    /// «~3 h» para terminar el libro, con tu ritmo en él.
+    func remaining(forBook id: UUID, progress: Double) -> TimeInterval? {
+        guard progress < 0.99 else { return nil }
+        return ReadingPeriod(sessions(forBook: id)).remainingSeconds(progress: progress)
+    }
+
     func sessions(forBook id: UUID) -> [ReadingSession] {
         sessions.filter { $0.bookID == id }
     }

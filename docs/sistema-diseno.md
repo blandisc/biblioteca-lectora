@@ -68,7 +68,9 @@ Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPale
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-macReader 720×820`
+macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375`
+
+`Theme.Emphasis.secondary` (0,75): texto secundario sobre la marca (tarjeta para compartir).
 
 ### Identidad
 
@@ -136,6 +138,11 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `StageChart` | Etapas en el tiempo, una fila por etapa (Swift Charts) | Sesión actual, una sesión pasada |
 | `WordCounter` | Contador de palabras de la sesión, en verde hoja | Lector, abajo a la izquierda |
 | `FlowRow` | Fila que baja a otra línea si no cabe | Leyendas |
+| `WeekBars` | Una barra por día (lunes a domingo), partida en etapas; hoy en tinta | Mesa › Esta semana, Diario › Semana |
+| `MonthCalendar` | El mes como calendario: más oscuro cuanto más leíste; hoy con anillo | Diario › Mes |
+| `YearBars` | Una barra por mes; el actual en verde hoja | Diario › Año |
+| `SessionRow` | Una sesión en una lista: cuándo, palabras, avance y duración | Diario, ficha › Lectura |
+| `ShareCard`, `ShareSessionButton` | Tarjeta verde fichero de una sesión, para compartir como imagen | Resumen al cerrar, una sesión pasada |
 | `CoverChoiceRow`, `CoverChoiceCell` | Portadas para elegir (fila o cuadrícula); la elegida con borde `selection` | Vista previa, ficha › Elegir portada |
 
 ## Recetas

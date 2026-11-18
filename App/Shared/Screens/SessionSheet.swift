@@ -58,7 +58,12 @@ struct SessionSummarySheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                SectionLabel(text: "Sesión terminada")
+                HStack {
+                    SectionLabel(text: "Sesión terminada")
+                    Spacer()
+                    ShareSessionButton(card: ShareCard(session: session, title: book?.title ?? "", author: book?.author ?? ""))
+                        .foregroundStyle(Theme.ink)
+                }
                 Text("\(ReadingFormat.duration(session.readingSeconds)) de lectura")
                     .font(.bookTitle)
                 Text(progressLine)

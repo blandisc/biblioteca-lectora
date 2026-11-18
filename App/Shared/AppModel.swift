@@ -147,8 +147,34 @@ final class AppModel: ObservableObject {
         try? FileManager.default.removeItem(at: folder)
         seedSampleHighlights()
         seedSampleNotes()
+        seedSampleSessions()
         rebuildShelf()
         if LaunchOptions.listening { listening = currentBook }
+    }
+
+    /// Sesiones de muestra de esta semana para las capturas de la Mesa y el diario.
+    private func seedSampleSessions() {
+        guard let book = currentBook?.bookID ?? library.books.first?.id else { return }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        // (días atrás, hora, minutos, cada cuánto te interrumpes)
+        let plan: [(Int, Int, Int, Int)] = [(6, 21, 22, 9), (4, 22, 41, 18), (3, 8, 12, 4), (1, 21, 58, 30), (0, 18, 20, 7)]
+        var fraction = 0.12
+        for (daysAgo, hour, minutes, every) in plan {
+            guard let start = calendar.date(byAdding: .day, value: -daysAgo, to: today)
+                .flatMap({ calendar.date(bySettingHour: hour, minute: 10, second: 0, of: $0) }) else { continue }
+            var pages: [PageView] = []
+            var cursor = start
+            for index in 0..<(minutes * 60 / 65) {
+                let end = cursor.addingTimeInterval(65)
+                pages.append(PageView(start: cursor, end: end, words: 250, fraction: fraction))
+                fraction += 0.0012
+                cursor = index > 0 && index % (every * 60 / 65) == 0 ? end.addingTimeInterval(90) : end
+            }
+            if let session = SessionClassifier().session(bookID: book, device: AnnotationStore.deviceID, pages: pages) {
+                SessionStore.shared.add(session)
+            }
+        }
     }
 
     /// Notas de muestra (en Gabinete/Notas) para las capturas del Cuaderno.

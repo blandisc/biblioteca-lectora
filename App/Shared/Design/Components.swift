@@ -19,6 +19,8 @@ extension View {
             .navigationDestination(for: CandidatesRef.self) { CandidatesScreen(bookID: $0.bookID, searchesFirst: $0.searchesFirst) }
             .navigationDestination(for: FilledRef.self) { FilledScreen(bookID: $0.bookID) }
             .navigationDestination(for: NoteRef.self) { NoteScreen(ref: $0) }
+            .navigationDestination(for: DiaryRef.self) { _ in DiaryScreen() }
+            .navigationDestination(for: SessionRef.self) { SessionScreen(ref: $0) }
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
             #endif
@@ -813,6 +815,18 @@ enum ReadingFormat {
         return String(format: "%d:%02d", total / 60, total % 60)
     }
 
+    /// El año en números romanos (MMXXVI), para el rótulo del diario.
+    static func roman(_ number: Int) -> String {
+        let table: [(Int, String)] = [(1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"),
+                                      (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")]
+        var rest = number
+        var text = ""
+        for (value, letters) in table {
+            while rest >= value { text += letters; rest -= value }
+        }
+        return text
+    }
+
     /// «20 min», «1 h 21 min».
     static func duration(_ seconds: TimeInterval) -> String {
         let minutes = Int((seconds / 60).rounded())
@@ -1035,6 +1049,252 @@ struct TrailingIconLabelStyle: LabelStyle {
         HStack(spacing: Theme.Space.xs) {
             configuration.title
             configuration.icon.font(.caption2.weight(.semibold))
+        }
+    }
+}
+
+// MARK: - Diario de lectura
+
+extension ReadingDay {
+    /// Intensidad del día en el calendario: nada, poco… mucho (como las etapas).
+    var level: ReadingStage? {
+        switch seconds {
+        case ..<60: nil
+        case ..<(20 * 60): .skimming
+        case ..<(40 * 60): .light
+        case ..<(55 * 60): .active
+        default: .immersed
+        }
+    }
+}
+
+/// Una barra por día (lunes a domingo), partida en etapas; hoy, en tinta.
+struct WeekBars: View {
+    let days: [ReadingDay]
+    var today = Date()
+
+    private var most: TimeInterval { max(days.map(\.seconds).max() ?? 0, 1) }
+    private let stacked: [ReadingStage] = [.skimming, .light, .active, .immersed]
+
+    var body: some View {
+        VStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+            HStack(alignment: .bottom, spacing: Theme.Space.s) {
+                ForEach(days) { day in
+                    VStack(spacing: 0) {
+                        if day.seconds < 60 {
+                            Rectangle().fill(Theme.track).frame(height: Theme.Size.progress)
+                        } else {
+                            ForEach(stacked, id: \.self) { stage in
+                                Rectangle()
+                                    .fill(Theme.stage(stage))
+                                    .frame(height: Theme.Size.weekChart * day.seconds(in: stage) / most)
+                            }
+                        }
+                    }
+                    .frame(width: Theme.Size.weekBar)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover))
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(height: Theme.Size.weekChart, alignment: .bottom)
+            .overlay(alignment: .bottom) { Hairline() }
+            HStack(spacing: Theme.Space.s) {
+                ForEach(days) { day in
+                    let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
+                    Text(day.date.formatted(.dateTime.weekday(.narrow)).uppercased())
+                        .font(.caption2.weight(isToday ? .semibold : .regular))
+                        .foregroundStyle(isToday ? Theme.ink : Theme.tertiaryInk)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(days.map { "\($0.date.formatted(.dateTime.weekday(.wide))): \(ReadingFormat.duration($0.seconds))" }.joined(separator: ", "))
+    }
+}
+
+/// El mes como calendario: cada día, un círculo más oscuro cuanto más leíste; hoy con anillo.
+struct MonthCalendar: View {
+    let days: [ReadingDay]
+    var today = Date()
+
+    private var leadingBlanks: Int {
+        guard let first = days.first else { return 0 }
+        let weekday = Calendar.current.component(.weekday, from: first.date)
+        return (weekday + 5) % 7 // lunes primero
+    }
+
+    var body: some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
+        VStack(spacing: Theme.Space.s) {
+            LazyVGrid(columns: columns, spacing: Theme.Space.s) {
+                ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.frame(height: Theme.Size.dayCell) }
+                ForEach(days) { day in
+                    let future = day.date > today
+                    let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
+                    Text(day.date.formatted(.dateTime.day()))
+                        .font(.footnote)
+                        .monospacedDigit()
+                        .foregroundStyle(future ? Theme.track : (day.level.map { $0 == .active || $0 == .immersed } == true ? Theme.paper : Theme.ink))
+                        .frame(width: Theme.Size.dayCell, height: Theme.Size.dayCell)
+                        .background(day.level.map(Theme.stage) ?? Color.clear, in: Circle())
+                        .overlay { if isToday { Circle().stroke(Theme.ink, lineWidth: Theme.Size.selection) } }
+                        .accessibilityLabel("\(day.date.formatted(.dateTime.day().month(.wide))): \(ReadingFormat.duration(day.seconds))")
+                }
+            }
+            HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+                Text("Menos")
+                ForEach([ReadingStage.skimming, .light, .active, .immersed], id: \.self) { stage in
+                    Circle().fill(Theme.stage(stage)).frame(width: Theme.Size.legendSwatch + Theme.Space.xxs, height: Theme.Size.legendSwatch + Theme.Space.xxs)
+                }
+                Text("Más tiempo")
+            }
+            .font(.caption2)
+            .foregroundStyle(Theme.secondaryInk)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// El año: una barra por mes; el actual, en verde hoja.
+struct YearBars: View {
+    let months: [TimeInterval]
+    var current: Int
+
+    private static let initials = ["E", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"]
+
+    var body: some View {
+        let most = max(months.max() ?? 0, 1)
+        VStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+            HStack(alignment: .bottom, spacing: Theme.Space.xs + Theme.Space.xxs) {
+                ForEach(Array(months.enumerated()), id: \.offset) { index, seconds in
+                    Rectangle()
+                        .fill(index == current ? Theme.accent : (seconds > 0 ? Theme.stage(.light) : Theme.track))
+                        .frame(height: seconds > 0 ? Theme.Size.yearChart * seconds / most : Theme.Size.progress)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(height: Theme.Size.yearChart, alignment: .bottom)
+            .overlay(alignment: .bottom) { Hairline() }
+            HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+                ForEach(Array(Self.initials.enumerated()), id: \.offset) { index, letter in
+                    Text(letter)
+                        .font(.caption2.weight(index == current ? .semibold : .regular))
+                        .foregroundStyle(index == current ? Theme.ink : Theme.tertiaryInk)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Tiempo leyendo por mes")
+    }
+}
+
+/// Una sesión en una lista: cuándo, palabras y avance, y su duración.
+struct SessionRow: View {
+    let session: ReadingSession
+    /// El libro, si la lista mezcla libros.
+    var bookTitle: String? = nil
+
+    var body: some View {
+        HStack(alignment: .center, spacing: Theme.Space.m) {
+            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                HStack(spacing: Theme.Space.xs) {
+                    Text(session.start.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
+                    if let bookTitle {
+                        Text("· \(bookTitle)").font(.rowTitle).lineLimit(1)
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(Theme.ink)
+                Text("\(ReadingFormat.words(session.words)) palabras · \(Int((session.fromFraction * 100).rounded())) → \(Int((session.toFraction * 100).rounded())) %")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.tertiaryInk)
+            }
+            Spacer(minLength: 0)
+            Text(ReadingFormat.duration(session.readingSeconds))
+                .font(.subheadline)
+                .monospacedDigit()
+                .foregroundStyle(Theme.secondaryInk)
+        }
+        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Tarjeta para compartir una sesión: verde fichero, la marca, el libro, una cita opcional,
+/// las etapas y los números. Se manda como imagen.
+struct ShareCard: View {
+    let session: ReadingSession
+    let title: String
+    let author: String
+    var quote: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("GABINETE")
+                .font(.sectionLabel)
+                .tracking(Theme.Tracking.sectionLabel)
+            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                Text(title).font(.rowTitle.weight(.medium))
+                Text(author).font(.footnote).opacity(Theme.Emphasis.secondary)
+            }
+            .padding(.top, Theme.Space.xl)
+            if let quote {
+                Text("«\(quote)»")
+                    .font(.quote)
+                    .lineLimit(4)
+                    .padding(.top, Theme.Space.l)
+            }
+            Spacer(minLength: Theme.Space.l)
+            StageBar(segments: session.segments)
+            HStack(alignment: .firstTextBaseline) {
+                cardNumber(ReadingFormat.duration(session.readingSeconds), "")
+                Spacer()
+                cardNumber(ReadingFormat.words(session.words), "palabras")
+                Spacer()
+                cardNumber(ReadingFormat.duration(session.seconds(in: .immersed)), "inmersa")
+            }
+            .padding(.top, Theme.Space.m)
+        }
+        .foregroundStyle(Theme.onBrand)
+        .padding(Theme.Space.xl)
+        .frame(width: Theme.Size.shareCard.width, height: Theme.Size.shareCard.height, alignment: .topLeading)
+        .background(Theme.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
+    }
+
+    private func cardNumber(_ value: String, _ label: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.xs) {
+            Text(value).font(.rowTitle.weight(.medium)).monospacedDigit()
+            if !label.isEmpty { Text(label).font(.caption).opacity(Theme.Emphasis.secondary) }
+        }
+    }
+
+    /// La tarjeta como imagen, para compartirla.
+    @MainActor
+    func image(scale: CGFloat = 3) -> Image? {
+        let renderer = ImageRenderer(content: self)
+        renderer.scale = scale
+        #if os(iOS)
+        return renderer.uiImage.map(Image.init(uiImage:))
+        #else
+        return renderer.nsImage.map(Image.init(nsImage:))
+        #endif
+    }
+}
+
+/// Compartir una sesión como imagen.
+struct ShareSessionButton: View {
+    let card: ShareCard
+
+    var body: some View {
+        if let image = card.image() {
+            ShareLink(item: image, preview: SharePreview("Sesión de lectura", image: image)) {
+                Image(systemName: "square.and.arrow.up")
+            }
+            .accessibilityLabel("Compartir la sesión")
         }
     }
 }

@@ -82,6 +82,21 @@ final class SessionTests: XCTestCase {
         XCTAssertEqual(period.words, a.words + b.words)
         XCTAssertEqual(period.days(), 2)
         XCTAssertEqual(period.books().first?.sessions, 2)
+        XCTAssertEqual(period.days(from: t0, to: t0.addingTimeInterval(3 * 86_400)).filter { $0.seconds > 0 }.count, 2)
+    }
+
+    func testRemainingTimeUsesYourPaceInThatBook() throws {
+        // 10 % del libro en 20 páginas de 250 palabras a 250 por minuto: el libro tiene ~50 mil palabras.
+        let views = pages(from: t0, count: 20, words: 250, wpm: 250, fraction: 0.10).enumerated().map { index, page -> PageView in
+            var page = page
+            page.fraction = 0.10 + Double(index) * 0.10 / 19
+            return page
+        }
+        let session = try XCTUnwrap(SessionClassifier().session(bookID: book, device: "iphone", pages: views))
+        let remaining = try XCTUnwrap(ReadingPeriod([session]).remainingSeconds(progress: 0.20))
+        // 80 % de 50 mil palabras a 250 por minuto: 160 min.
+        XCTAssertEqual(remaining / 60, 160, accuracy: 2)
+        XCTAssertNil(ReadingPeriod([]).remainingSeconds(progress: 0.5))
     }
 }
 

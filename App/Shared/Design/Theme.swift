@@ -122,6 +122,15 @@ enum Theme {
         static let playRing: CGFloat = 38
         /// Barras del ecualizador (audio sonando).
         static let equalizerBar: CGFloat = 2
+        /// Alto de las barras de la semana y del año en el diario.
+        static let weekChart: CGFloat = 112
+        static let yearChart: CGFloat = 80
+        /// Ancho de una barra de la semana.
+        static let weekBar: CGFloat = 18
+        /// Día del calendario del mes.
+        static let dayCell: CGFloat = 34
+        /// Tarjeta para compartir una sesión.
+        static let shareCard = CGSize(width: 300, height: 375)
         /// Ventana mínima del lector en el Mac.
         static let macReader = CGSize(width: 720, height: 820)
     }
@@ -134,6 +143,13 @@ enum Theme {
         static let edgeZone = 0.28
         /// Margen de los controles de vidrio, igual arriba y abajo, izquierda y derecha.
         static let chromeInset: CGFloat = 16
+    }
+
+    // MARK: Énfasis
+
+    enum Emphasis {
+        /// Texto secundario sobre la marca (tarjeta para compartir).
+        static let secondary = 0.75
     }
 
     // MARK: Movimiento

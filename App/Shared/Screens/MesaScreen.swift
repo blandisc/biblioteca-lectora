@@ -1,9 +1,13 @@
+import LectoraCore
 import SwiftUI
 
 /// Mesa: el libro que estás leyendo y los siguientes en la pila.
 struct MesaScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.bookOpeningNamespace) private var opening
+    @ObservedObject private var sessions = SessionStore.shared
+    /// Capturas automáticas: `-screenshot.screen diary` abre el diario.
+    @State private var showsDiary = LaunchOptions.screen == "diary"
 
     var body: some View {
         NavigationStack {
@@ -27,6 +31,7 @@ struct MesaScreen: View {
                 .screenContent()
             }
             .screen()
+            .navigationDestination(isPresented: $showsDiary) { DiaryScreen() }
         }
     }
 
@@ -54,7 +59,7 @@ struct MesaScreen: View {
             ThinProgress(value: book.progress)
                 .padding(.top, Theme.Space.xl)
             HStack {
-                Text("\(Int(book.progress * 100)) % leído")
+                Text(progressLine(book))
                 Spacer()
                 Text(book.note ?? "")
             }
@@ -70,6 +75,9 @@ struct MesaScreen: View {
             }
             .padding(.top, Theme.Space.xl)
 
+            weekSection
+                .padding(.top, Theme.Space.xxl)
+
             if !model.desk.isEmpty {
                 SectionLabel(text: "En la mesa")
                     .padding(.top, Theme.Space.xxl)
@@ -79,6 +87,48 @@ struct MesaScreen: View {
                         NavigationLink(value: item) { CoverCell(book: item, caption: item.caption) }
                             .buttonStyle(PressableStyle())
                     }
+                }
+            }
+        }
+    }
+
+    /// «57 % leído · te faltan ~3 h»
+    private func progressLine(_ book: ShelfBook) -> String {
+        let percent = "\(Int(book.progress * 100)) % leído"
+        guard let id = book.bookID, let remaining = sessions.remaining(forBook: id, progress: book.progress) else { return percent }
+        return "\(percent) · te faltan ~\(ReadingFormat.duration(remaining))"
+    }
+
+    /// «Esta semana»: tu tiempo, tus días y la entrada al diario.
+    @ViewBuilder
+    private var weekSection: some View {
+        if !sessions.sessions.isEmpty {
+            let week = sessions.week()
+            VStack(alignment: .leading, spacing: Theme.Space.m) {
+                HStack(alignment: .firstTextBaseline) {
+                    SectionLabel(text: "Esta semana")
+                    Spacer()
+                    NavigationLink(value: DiaryRef()) {
+                        Label("Diario", systemImage: "chevron.right")
+                            .labelStyle(TrailingIconLabelStyle())
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryInk)
+                    }
+                    .buttonStyle(.plain)
+                }
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+                    Text(ReadingFormat.duration(week.period.readingSeconds))
+                        .font(.bookTitle)
+                    Text("\(ReadingFormat.words(week.period.words)) palabras · \(week.period.days()) días")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+                WeekBars(days: week.days)
+                if let longest = week.period.longest, longest.readingSeconds >= 20 * 60,
+                   let book = model.shelfBook(id: longest.bookID.uuidString) {
+                    Text("El \(longest.start.formatted(.dateTime.weekday(.wide))) leíste \(ReadingFormat.duration(longest.readingSeconds)) seguidos de \(book.title): tu sesión más larga de la semana.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
                 }
             }
         }

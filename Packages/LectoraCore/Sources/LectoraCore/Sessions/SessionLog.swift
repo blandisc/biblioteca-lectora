@@ -90,6 +90,54 @@ public struct ReadingPeriod: Sendable {
         ReadingPeriod(sessions.filter { $0.start >= start && $0.start < end })
     }
 
+    /// Tiempo por día (y por etapa) entre `start` y `end`, un elemento por día aunque no se haya leído.
+    public func days(from start: Date, to end: Date, calendar: Calendar = .current) -> [ReadingDay] {
+        var result: [ReadingDay] = []
+        var day = calendar.startOfDay(for: start)
+        while day < end {
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            result.append(ReadingDay(date: day, period: between(day, next)))
+            day = next
+        }
+        return result
+    }
+
+    /// Tiempo leyendo por mes del año de `date` (12 elementos).
+    public func months(ofYearContaining date: Date, calendar: Calendar = .current) -> [TimeInterval] {
+        guard let year = calendar.dateInterval(of: .year, for: date) else { return [] }
+        return (0..<12).map { offset in
+            guard let start = calendar.date(byAdding: .month, value: offset, to: year.start),
+                  let end = calendar.date(byAdding: .month, value: 1, to: start) else { return 0 }
+            return between(start, end).readingSeconds
+        }
+    }
+
+    /// La sesión más larga (leyendo de verdad).
+    public var longest: ReadingSession? { sessions.max { $0.readingSeconds < $1.readingSeconds } }
+
+    /// Parte del tiempo leyendo que fue inmersa (0 a 1).
+    public var immersedShare: Double {
+        let reading = readingSeconds
+        return reading > 0 ? seconds(in: .immersed) / reading : 0
+    }
+
+    /// Palabras por minuto en este periodo.
+    public var wordsPerMinute: Int? {
+        let seconds = readingSeconds
+        guard seconds >= 60, words > 0 else { return nil }
+        return Int((Double(words) / (seconds / 60)).rounded())
+    }
+
+    /// Cuánto falta para terminar un libro, con tu ritmo en él: palabras por
+    /// avance (de sus sesiones) entre palabras por minuto. `nil` si aún no hay
+    /// datos suficientes (al menos 2 % del libro leído en sesiones).
+    public func remainingSeconds(progress: Double) -> TimeInterval? {
+        let advanced = sessions.reduce(0) { $0 + max(0, $1.toFraction - $1.fromFraction) }
+        guard advanced >= 0.02, let wpm = wordsPerMinute, wpm > 0 else { return nil }
+        let wordsPerBook = Double(words) / advanced
+        return max(0, 1 - progress) * wordsPerBook / Double(wpm) * 60
+    }
+
     /// La semana (lunes a domingo) que contiene `date`.
     public func week(of date: Date, calendar: Calendar = .current) -> ReadingPeriod {
         var calendar = calendar
@@ -97,4 +145,15 @@ public struct ReadingPeriod: Sendable {
         guard let interval = calendar.dateInterval(of: .weekOfYear, for: date) else { return self }
         return between(interval.start, interval.end)
     }
+}
+
+/// Un día del diario: su fecha y lo que leíste.
+public struct ReadingDay: Identifiable, Sendable {
+    public var date: Date
+    public var period: ReadingPeriod
+    public var id: Date { date }
+
+    public var seconds: TimeInterval { period.readingSeconds }
+
+    public func seconds(in stage: ReadingStage) -> TimeInterval { period.seconds(in: stage) }
 }
