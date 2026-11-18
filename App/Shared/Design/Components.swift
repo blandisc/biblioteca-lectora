@@ -857,11 +857,11 @@ struct StageBar: View {
     var body: some View {
         GeometryReader { geometry in
             let total = max(segments.reduce(0) { $0 + $1.duration }, 1)
-            HStack(spacing: Theme.Size.hairline * 2) {
+            HStack(spacing: Theme.Size.stageGap) {
                 ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
                     Rectangle()
                         .fill(Theme.stage(segment.stage))
-                        .frame(width: max(geometry.size.width * segment.duration / total - Theme.Size.hairline * 2, Theme.Size.hairline))
+                        .frame(width: max(geometry.size.width * segment.duration / total - Theme.Size.stageGap, Theme.Size.stageGap))
                 }
             }
         }
@@ -881,7 +881,7 @@ struct StageLegend: View {
                 let time = seconds(stage)
                 if time >= 30 {
                     HStack(spacing: Theme.Space.xs) {
-                        RoundedRectangle(cornerRadius: Theme.Size.hairline * 4)
+                        RoundedRectangle(cornerRadius: Theme.Radius.swatch)
                             .fill(Theme.stage(stage))
                             .frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
                         Text("\(stage.title) \(ReadingFormat.duration(time))")
@@ -956,5 +956,85 @@ struct WordCounter: View {
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel("\(words) palabras en esta sesión. Ver la sesión")
+    }
+}
+
+// MARK: - Lector y audio
+
+/// Botón en cápsula del panel del lector («Guiada», «Escuchar»). El destacado va en tinta.
+struct ReaderPillButton: View {
+    let title: String
+    let systemImage: String
+    var prominent = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .foregroundStyle(prominent ? Theme.onInk : Theme.ink)
+                .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget)
+                .background(prominent ? Theme.ink : Theme.field, in: Capsule())
+        }
+        .font(.subheadline.weight(.medium))
+        .buttonStyle(.plain)
+    }
+}
+
+/// Reproducir o pausar, con el avance del capítulo en un anillo verde.
+struct PlayRingButton: View {
+    let playing: Bool
+    let progress: Double
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle().stroke(Theme.track, lineWidth: Theme.Size.quoteRule)
+                Circle().trim(from: 0, to: progress)
+                    .stroke(Theme.accent, style: StrokeStyle(lineWidth: Theme.Size.quoteRule, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Image(systemName: playing ? "pause.fill" : "play.fill")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .frame(width: Theme.Size.playRing, height: Theme.Size.playRing)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(playing ? "Pausa" : "Reproducir")
+    }
+}
+
+/// Tres barras que se mueven: hay audio sonando.
+struct EqualizerBars: View {
+    var body: some View {
+        HStack(alignment: .bottom, spacing: Theme.Space.xxs) {
+            ForEach([0.5, 1.0, 0.7], id: \.self) { height in
+                Capsule()
+                    .fill(Theme.accent)
+                    .frame(width: Theme.Size.equalizerBar, height: Theme.Space.m * height)
+                    .phaseAnimator([1.0, 0.4]) { bar, phase in
+                        bar.scaleEffect(y: phase, anchor: .bottom)
+                    } animation: { _ in .easeInOut(duration: 0.45 + height * 0.2) }
+            }
+        }
+        .frame(height: Theme.Space.m, alignment: .bottom)
+        .accessibilityHidden(true)
+    }
+}
+
+extension View {
+    /// Esquinas de portada para una imagen que hace de portada.
+    func coverShape() -> some View {
+        clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover))
+    }
+}
+
+/// «Recientes ⇅»: texto primero, icono después.
+struct TrailingIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: Theme.Space.xs) {
+            configuration.title
+            configuration.icon.font(.caption2.weight(.semibold))
+        }
     }
 }

@@ -78,6 +78,8 @@ enum Theme {
         static let panel: CGFloat = 28
         /// Cápsula de controles de 44 pt de alto.
         static let capsule: CGFloat = 22
+        /// Muestra de color de una leyenda.
+        static let swatch: CGFloat = 2
     }
 
     // MARK: Tamaño
@@ -114,6 +116,14 @@ enum Theme {
         static let stageMark: CGFloat = 16
         /// Muestra de color en la leyenda de etapas.
         static let legendSwatch: CGFloat = 8
+        /// Separación entre las etapas de la barra.
+        static let stageGap: CGFloat = 1
+        /// Botón de reproducir del mini reproductor, con su anillo de avance.
+        static let playRing: CGFloat = 38
+        /// Barras del ecualizador (audio sonando).
+        static let equalizerBar: CGFloat = 2
+        /// Ventana mínima del lector en el Mac.
+        static let macReader = CGSize(width: 720, height: 820)
     }
 
     // MARK: Lector
@@ -124,14 +134,6 @@ enum Theme {
         static let edgeZone = 0.28
         /// Margen de los controles de vidrio, igual arriba y abajo, izquierda y derecha.
         static let chromeInset: CGFloat = 16
-    }
-
-    // MARK: Énfasis
-
-    enum Emphasis {
-        /// Lo que no se puede tocar mientras otra cosa está en curso.
-        static let dimmed = 0.4
-        static let full = 1.0
     }
 
     // MARK: Movimiento

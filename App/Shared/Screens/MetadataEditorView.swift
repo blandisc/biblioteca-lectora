@@ -155,7 +155,7 @@ struct MetadataEditorView: View {
             Image(decorative: image, scale: 1)
                 .resizable()
                 .aspectRatio(2.0 / 3.0, contentMode: .fill)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover))
+                .coverShape()
         } else {
             CoverView(title: draft.title, author: authors, style: .generated(for: draft.title),
                       image: model.library.coverURL(for: book))

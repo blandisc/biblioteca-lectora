@@ -67,7 +67,7 @@ struct RootView: View {
             #else
             .sheet(item: $model.openBook) { book in
                 ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
-                    .frame(minWidth: 720, minHeight: 820)
+                    .frame(minWidth: Theme.Size.macReader.width, minHeight: Theme.Size.macReader.height)
             }
             #endif
     }

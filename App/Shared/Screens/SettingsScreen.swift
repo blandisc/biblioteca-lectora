@@ -53,7 +53,7 @@ struct SettingsScreen: View {
                     Picker("Modo", selection: $mode) {
                         ForEach(AppearanceMode.allCases) { Text($0.title).tag($0) }
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.segmented) // ds-exception: control nativo de Form
                 }
                 Section {
                     Toggle("Contador en el lector", isOn: $showsCounter)

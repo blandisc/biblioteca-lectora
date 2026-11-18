@@ -214,7 +214,7 @@ private struct TopControls: View {
                 }
                 .accessibilityLabel("Apariencia")
                 Button {
-                    withAnimation(.snappy) { bookmarked.toggle() }
+                    withAnimation(Theme.Motion.standard) { bookmarked.toggle() }
                 } label: {
                     Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
                         .font(.body.weight(.semibold))
@@ -283,19 +283,9 @@ private struct BottomPanel: View {
                 .padding(.top, -Theme.Space.s + Theme.Space.xxs)
             }
             HStack(spacing: Theme.Space.s) {
-                Button {} label: {
-                    Label("Guiada", systemImage: "text.viewfinder")
-                        .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget)
-                        .background(Theme.field, in: Capsule())
-                }
-                Button {} label: {
-                    Label("Escuchar", systemImage: "headphones")
-                        .foregroundStyle(Theme.onInk)
-                        .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget)
-                        .background(Theme.ink, in: Capsule())
-                }
+                ReaderPillButton(title: "Guiada", systemImage: "text.viewfinder") {}
+                ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
             }
-            .font(.subheadline.weight(.medium))
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)

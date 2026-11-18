@@ -11,8 +11,12 @@ un **componente**; toda pantalla sigue una **receta**.
    componentes de `Design/Components.swift`.
 2. Si falta un token o un componente, **se agrega al sistema** (Theme / Components) con
    su nombre y su uso, y se documenta aquí. No se resuelve en la pantalla.
-3. `scripts/lint-design.sh` lo verifica en cada push (CI, paso «Sistema de diseño»).
-   Excepción puntual: comentario `// lint-design: permitido` con el porqué.
+3. **Se comprueba solo**, en cada push: `DesignRulesTests` (en `swift test` de LectoraCore)
+   lee el código de la app y falla si una pantalla usa un valor o una forma a mano, si
+   una pieza no está en este catálogo, si un token sobra, o si se rompe una decisión de
+   diseño (abajo, «Cómo se cuida»). `scripts/lint-design.sh` es la versión rápida local.
+   Excepción puntual: `// ds-exception: <motivo>` en la línea, con el motivo en la tabla
+   «Excepciones». Antes de agregar una, intenta un token o una pieza nueva.
 4. Simetría: todo lo que tiene margen lo tiene igual a ambos lados (ver abajo).
 
 ## Tokens (`Design/Theme.swift`)
@@ -30,7 +34,18 @@ un **componente**; toda pantalla sigue una **receta**.
 | `secondaryInk` | `#77746D` | `#9C988F` | Texto secundario |
 | `tertiaryInk` | `#9A968D` | `#6F6C65` | Folios y etiquetas pequeñas |
 | `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
-| `accent` | `#3D6B55` | `#8FBFA4` | Verde hoja, **solo tus marcas y avisos**: subrayado, nota, cinta, audio sonando, pendientes, índice A–Z (antes `pencil`, rojo) |
+| `accent` | `#3D6B55` | `#8FBFA4` | Verde hoja, **solo tus marcas y avisos**: subrayado, nota, cinta, audio sonando, pendientes, índice A–Z, el «+» (antes `pencil`, rojo) |
+
+**Etapas de lectura** (`Theme.stage(_:)`), del gris al verde fichero; se distinguen por
+claridad, y en oscuro la más intensa es la más clara:
+
+| Etapa | Claro | Oscuro |
+|---|---|---|
+| Interrumpida | `#D9D6CF` | `#4A4844` |
+| Hojeo | `#CFDDD4` | `#3B5546` |
+| Ligera | `#8FBFA4` | `#5E8B73` |
+| Activa | `#3D6B55` | `#8FBFA4` |
+| Inmersa | `#24332B` | `#B9DCC6` |
 
 Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPalette`.
 
@@ -46,12 +61,14 @@ Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPale
 
 ### Radio (`Theme.Radius`)
 
-`cover 3 · chip 8 · control 10 · tile 14 · capsule 22 · panel 28`
+`swatch 2 · cover 3 · chip 8 · control 10 · tile 14 · capsule 22 · panel 28`
 
 ### Tamaño (`Theme.Size`)
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
-coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44`
+coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
+stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+macReader 720×820`
 
 ### Identidad
 
@@ -111,6 +128,14 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `CompareRow` | Dato nuevo frente al tuyo («Antes: …»), con «Deshacer» opcional | Vista previa, lo completado |
 | `NoteRow` | Nota: título serif, dos líneas, fecha y libros enlazados en `accent` | Cuaderno › Notas, ficha › Notas, «Llevar a una nota» |
 | `NoteBody` | Nota leída: título, párrafos `.prose`, citas con raya `accent`; `[[Libro]]` y «ir al pasaje» como enlaces | Nota |
+| `PressableStyle`, `TrailingIconLabelStyle` | Respuesta al toque; etiqueta con el ícono después («Recientes ⇅») | Todo botón del sistema; órdenes |
+| `ReaderPillButton` | Botón en cápsula del panel del lector; el destacado en tinta | «Guiada», «Escuchar» |
+| `PlayRingButton`, `EqualizerBars` | Reproducir con el avance en anillo; barras de audio sonando | Mini reproductor |
+| `StatTrio` | Tres números en serif con su leyenda | Sesión actual, resumen, ficha › Lectura, Diario |
+| `StageBar`, `StageLegend` | La sesión como barra de etapas; leyenda con minutos | Resumen al cerrar, ficha, Diario |
+| `StageChart` | Etapas en el tiempo, una fila por etapa (Swift Charts) | Sesión actual, una sesión pasada |
+| `WordCounter` | Contador de palabras de la sesión, en verde hoja | Lector, abajo a la izquierda |
+| `FlowRow` | Fila que baja a otra línea si no cabe | Leyendas |
 | `CoverChoiceRow`, `CoverChoiceCell` | Portadas para elegir (fila o cuadrícula); la elegida con borde `selection` | Vista previa, ficha › Elegir portada |
 
 ## Recetas
@@ -151,3 +176,30 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   (`Reader.edgeZone`, 28 %).
 - Cuadrículas: columnas iguales (`GridItem(.flexible())` ×3) con 16 pt entre columnas
   y 24 pt entre filas.
+
+## Cómo se cuida
+
+`Packages/LectoraCore/Tests/LectoraCoreTests/DesignRulesTests.swift` lee el código de la
+app como texto, línea por línea (como en Orbital), y corre en CI con `swift test`:
+
+| Prueba | Qué exige |
+|---|---|
+| `testScreensUseOnlyTokens` | Sin números, colores, fuentes, animaciones ni curvas a mano en las pantallas |
+| `testScreensUseCatalogPieces` | Sin segmentados, vacíos del sistema, botones `bordered`, `DateFormatter`, formas ni estilos nuevos en las pantallas: son piezas de `Components.swift` |
+| `testDesignPiecesDontKnowTheApp` | Las piezas de `Design/` no conocen `AppModel` ni los almacenes: reciben datos y avisan con acciones |
+| `testOneMainActionPerScreen` | Una `PrimaryButton` y un `AccentIconButton` por pantalla, como mucho |
+| `testScrollingScreensUseTheRecipe` | Toda pantalla con scroll usa `.screenContent()` |
+| `testEveryPieceIsInTheCatalog` | Toda pieza de `Components.swift` tiene fila en el catálogo de arriba |
+| `testEveryTokenIsUsed` | Ningún token de `Theme` sobra |
+| `testExceptionsAreDocumented` | Toda `ds-exception` tiene su motivo en «Excepciones» |
+| `testNoRedPencilLeft` | Decisión del 30 oct 2026: el rojo lápiz se fue; lo tuyo va en verde hoja |
+| `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |
+
+Cuando se decide algo de diseño que no debe volver a romperse, se vuelve una prueba con
+su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
+
+## Excepciones
+
+| Motivo | Dónde | Por qué |
+|---|---|---|
+| control nativo de Form | Ajustes › Apariencia, Reglas | Dentro de un `Form` del sistema, el segmentado nativo es lo esperado; `FilterBar` es para el contenido de una pantalla |

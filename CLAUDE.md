@@ -3,8 +3,12 @@
 - Interfaz en español; código y comentarios en español, como el resto del repo.
 - **Sistema de diseño obligatorio** (docs/sistema-diseno.md): las pantallas no usan
   números, colores ni fuentes sueltos; usan `Theme`, las fuentes de `Font` y los
-  componentes de `App/Shared/Design/Components.swift`. Si falta algo, se agrega al
-  sistema y se documenta. `scripts/lint-design.sh` lo verifica en CI.
+  componentes de `App/Shared/Design/Components.swift`. **Nada se crea suelto**: si falta
+  algo, se agrega al sistema y a su catálogo en el documento. `DesignRulesTests` (en
+  `swift test`) lo verifica en CI; excepciones con `// ds-exception: <motivo>` y su fila
+  en «Excepciones».
+- Antes de decir «listo»: `docs/entrega.md` (medir, claro y oscuro, y el informe con
+  «comprobado», «hecho sin comprobar» y «no hecho»).
 - Nombre visible: **Gabinete**. El código interno conserva «Lectora» (`LectoraCore`,
   `Lectora.xcodeproj`, `.lectora/`) hasta un renombre aparte; en textos de la app, Gabinete.
 - Interoperabilidad con Calibre: la carpeta de la biblioteca mantiene la forma de Calibre

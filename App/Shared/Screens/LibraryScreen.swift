@@ -95,7 +95,7 @@ struct LibraryScreen: View {
                     if layout == .list && sort == .title && !books.isEmpty {
                         LetterIndex { letter in
                             if let target = books.first(where: { $0.sortTitle.firstLetter == letter }) {
-                                withAnimation { scroller.scrollTo(target.id, anchor: .top) }
+                                withAnimation(Theme.Motion.standard) { scroller.scrollTo(target.id, anchor: .top) }
                             }
                         }
                     }
@@ -158,15 +158,5 @@ struct LibraryScreen: View {
         }
         // Deja libre la columna del índice A–Z.
         .padding(.trailing, sort == .title ? Theme.Space.s : 0)
-    }
-}
-
-/// «Recientes ⇅»: texto primero, icono después.
-struct TrailingIconLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: Theme.Space.xs) {
-            configuration.title
-            configuration.icon.font(.caption2.weight(.semibold))
-        }
     }
 }

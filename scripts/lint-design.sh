@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 files=$(ls App/Shared/Screens/*.swift App/Shared/Reader/ReaderView.swift)
 pattern='(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\()([^)]*[^A-Za-z_.0-9])?[1-9][0-9]*(\.[0-9]+)?|Color\(hex|\.system\(size|Font\.custom'
 
-violations=$(grep -nE "$pattern" $files | grep -vE '^\S+:\s*[0-9]+:\s*//' | grep -v 'lint-design: permitido')
+violations=$(grep -nE "$pattern" $files | grep -vE '^\S+:\s*[0-9]+:\s*//' | grep -v 'ds-exception:')
 if [ -n "$violations" ]; then
   echo "Valores sueltos fuera del sistema de diseño (usa tokens de Theme o un componente):"
   echo "$violations"

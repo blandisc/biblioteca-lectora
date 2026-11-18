@@ -24,7 +24,7 @@ struct RulesScreen: View {
                 Picker("Tipo", selection: $kind) {
                     ForEach(Kind.allCases) { Text($0.title).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.segmented) // ds-exception: control nativo de Form
                 TextField(kind == .author ? "Cuando diga (p. ej. Gabo)" : "Cuando diga (p. ej. Fiction)", text: $from)
                     .autocorrectionDisabled()
                 TextField(kind == .author ? "Cambiar por" : "Cambiar por (vacío: quitarla)", text: $to)
