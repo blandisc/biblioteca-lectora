@@ -37,19 +37,31 @@ final class AnnotationStore: ObservableObject {
             .sorted { $0.createdAt > $1.createdAt }
     }
 
+    /// Avisa de cada cambio (antes, después) a quien lo necesite: los conectores
+    /// mandan a Readwise las notas editadas y los borrados.
+    var onChange: ((_ before: Annotation?, _ after: Annotation?) -> Void)?
+
+    func annotation(id: UUID) -> Annotation? {
+        state.fields(of: .annotation, id: id).flatMap { Annotation(id: id, fields: $0) }
+    }
+
     /// Guarda un subrayado nuevo o actualiza uno existente (mismo `id`).
     func save(_ annotation: Annotation) throws {
+        let before = self.annotation(id: annotation.id)
         let changes = annotation.changes(clock: clock)
         try log.append(changes)
         state.apply(changes)
         revision += 1
+        onChange?(before, annotation)
     }
 
     func delete(id: UUID) throws {
+        let before = annotation(id: id)
         let change = Annotation.deletion(id: id, clock: clock)
         try log.append([change])
         state.apply(change)
         revision += 1
+        onChange?(before, nil)
     }
 
     nonisolated static var defaultDirectory: URL {

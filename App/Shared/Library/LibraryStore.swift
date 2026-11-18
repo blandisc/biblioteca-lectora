@@ -745,3 +745,47 @@ final class LibraryStore: ObservableObject {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 }
+
+// MARK: - Trabajos para servicios externos (arquitectura D7)
+
+extension LibraryStore {
+    /// Lista compartida de trabajos: cada uno lo hace un solo dispositivo.
+    nonisolated static let jobBoard = JobBoard()
+
+    /// Anota un trabajo (si ya existía y está hecho, lo vuelve a abrir con los datos nuevos).
+    func enqueueJob(kind: String, target: String, payload: JSONValue = .null, reopen: Bool = false) {
+        let id = JobBoard.jobID(kind: kind, target: target)
+        var changes = Self.jobBoard.enqueue(kind: kind, target: target, payload: payload, in: state, clock: clock)
+        if changes.isEmpty, reopen, let job = JobBoard.job(id: id, in: state), job.done || job.payload != payload {
+            changes = Self.jobBoard.reopen(id, payload: payload, clock: clock)
+        }
+        record(changes)
+    }
+
+    /// Toma los trabajos libres de estos tipos y devuelve los que ya le tocan a este dispositivo.
+    func takeJobs(kinds: Set<String>) -> [Job] {
+        let device = AnnotationStore.deviceID
+        for job in Self.jobBoard.claimable(in: state, device: device) where kinds.contains(job.kind) {
+            record(Self.jobBoard.claim(job.id, device: device, clock: clock))
+        }
+        return Self.jobBoard.runnable(in: state, device: device).filter { kinds.contains($0.kind) }
+    }
+
+    func pendingJobs(kinds: Set<String>) -> [Job] {
+        JobBoard.jobs(in: state).filter { !$0.done && kinds.contains($0.kind) }
+    }
+
+    func completeJob(_ job: Job) {
+        record(Self.jobBoard.complete(job.id, device: AnnotationStore.deviceID, clock: clock))
+    }
+
+    func failJob(_ job: Job, error: Error) {
+        record(Self.jobBoard.fail(job, device: AnnotationStore.deviceID, error: error.localizedDescription, clock: clock))
+    }
+
+    private func record(_ changes: [Change]) {
+        guard !changes.isEmpty else { return }
+        try? log.append(changes)
+        state.apply(changes)
+    }
+}

@@ -64,7 +64,7 @@ struct NotebookScreen: View {
             .screen()
             .sheet(isPresented: $showsAccount) { SettingsScreen() }
             .sheet(item: $toNote) { highlight in
-                NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? "Sin título")
+                NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? "Sin título")
             }
             .onAppear(perform: openForScreenshots)
         }
@@ -130,7 +130,7 @@ struct NotebookScreen: View {
         } else {
             VStack(alignment: .leading, spacing: Theme.Space.xl) {
                 ForEach(highlights) { highlight in
-                    QuoteBlock(label: shelfBook(highlight.bookID)?.title, text: highlight.quote, note: highlight.note)
+                    QuoteBlock(label: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle, text: highlight.quote, note: highlight.note)
                         .contextMenu {
                             Button { toNote = highlight } label: { Label("Llevar a una nota", systemImage: "note.text.badge.plus") }
                         }

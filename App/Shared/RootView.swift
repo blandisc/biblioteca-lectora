@@ -32,6 +32,8 @@ struct RootView: View {
                 if LaunchOptions.opensFirstBook, let first = model.currentBook {
                     model.open(first)
                 }
+                // Readwise y Hardcover, si están conectados.
+                ConnectorsStore.shared.start()
                 // Los que se importaron sin internet se buscan ahora.
                 await model.library.retryPendingLookups()
             }
@@ -41,6 +43,9 @@ struct RootView: View {
                     model.library.refreshFromCloud()
                     model.notes.refreshFromCloud()
                     sessions.refreshFromCloud()
+                    ConnectorsStore.shared.start()
+                } else if phase == .background {
+                    ConnectorsStore.shared.stop()
                 }
             }
             .fileImporter(isPresented: $model.importing, allowedContentTypes: LibraryStore.importableTypes,

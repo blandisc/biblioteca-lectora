@@ -60,6 +60,12 @@ Readwise es buen producto (su lector no) y debe poderse **entrar y salir sin per
 - **Salida libre:** exportar todo el Cuaderno a Markdown y al CSV de Readwise. **Entrada
   libre:** importar todo Readwise la primera vez.
 
+**Hecho (sin probar contra Readwise real):** `LectoraCore/Connectors/Readwise.swift` y
+`App/Shared/Library/Connectors.swift`. Los nuevos se mandan en un envío; las notas
+editadas y los borrados, uno por uno; lo que llega se empareja por `readwise_id` o por
+el enlace `gabinete://`. Lo que llega de un libro que no tienes queda con su título
+(«fuera de tu biblioteca»). Anclar en el EPUB los que llegan (por la cita) queda pendiente.
+
 ### D5. Hardcover: de ida
 Gabinete es la verdad; Hardcover es el registro público de lectura.
 - Al abrir un libro: «Leyendo»; mientras lees: el avance; al terminar: «Leído» con fecha y,
@@ -67,6 +73,9 @@ Gabinete es la verdad; Hardcover es el registro público de lectura.
 - Cada libro se reconoce en Hardcover por ISBN o título y autor, con el mismo motor de
   búsqueda de metadatos; su id se guarda como identificador (`hardcover:`) en el OPF.
 - Su API está en beta: el conector va aislado para que una ruptura no afecte nada más.
+
+**Hecho (sin probar contra Hardcover real):** `LectoraCore/Connectors/Hardcover.swift`.
+El avance sale de la posición de lectura; se manda cuando cambia al menos 1 %.
 
 ### D6. Llaves propias hoy; iniciar sesión después
 - Hoy pegas tus llaves (Readwise, Hardcover, OpenRouter). Se guardan en el **Llavero con

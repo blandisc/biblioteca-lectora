@@ -161,8 +161,8 @@ public struct JobBoard: Sendable {
 }
 
 /// Ids estables a partir de un texto (FNV-1a de 128 bits), iguales en todos los dispositivos.
-enum StableID {
-    static func uuid(for text: String) -> UUID {
+public enum StableID {
+    public static func uuid(for text: String) -> UUID {
         var a: UInt64 = 0xcbf2_9ce4_8422_2325
         var b: UInt64 = 0x8422_2325_cbf2_9ce4
         for byte in text.utf8 {

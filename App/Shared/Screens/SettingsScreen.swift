@@ -37,6 +37,7 @@ enum MetadataKeys {
 struct SettingsScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var connectors = ConnectorsStore.shared
     @AppStorage(SessionKeys.counter) private var showsCounter = true
     @AppStorage(SessionKeys.summary) private var showsSummary = true
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
@@ -101,10 +102,19 @@ struct SettingsScreen: View {
                 } footer: {
                     Text("Portadas, sinopsis y datos se buscan en Open Library. Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.")
                 }
-                Section("Conexiones") {
-                    LabeledContent("iCloud Drive", value: "Próximamente")
-                    LabeledContent("Readwise", value: "Próximamente")
-                    LabeledContent("IA en la nube", value: "Sin configurar")
+                Section {
+                    ForEach(Connector.allCases) { connector in
+                        NavigationLink {
+                            ConnectorScreen(connector: connector)
+                        } label: {
+                            LabeledContent(connector.title, value: connectors.isConnected(connector) ? "Conectado" : "Sin conectar")
+                        }
+                    }
+                    LabeledContent("IA en la nube", value: "Próximamente")
+                } header: {
+                    Text("Conexiones")
+                } footer: {
+                    Text("Cada servicio se usa con tu propia llave, guardada en tu Llavero de iCloud. Gabinete no tiene servidor: habla directo con cada uno.")
                 }
             }
             .navigationTitle("Ajustes")

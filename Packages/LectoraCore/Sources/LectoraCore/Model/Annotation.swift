@@ -14,8 +14,14 @@ public struct Annotation: Identifiable, Hashable, Sendable {
     public var color: String
     public var note: String?
     public var createdAt: Date
-    /// ID del subrayado en Readwise, una vez enviado.
+    /// ID del subrayado en Readwise, una vez enviado (o el que traía, si vino de allá).
     public var readwiseID: String?
+    /// De dónde vino: `nil` si lo hiciste en Gabinete; «readwise» si llegó de allá
+    /// (Kindle, Apple Books…). Lo que vino de Readwise no se vuelve a mandar.
+    public var source: String?
+    /// Título y autor del libro tal como venían, para los que no están en tu biblioteca.
+    public var bookTitle: String?
+    public var bookAuthor: String?
 
     public init(
         id: UUID = UUID(),
@@ -27,7 +33,10 @@ public struct Annotation: Identifiable, Hashable, Sendable {
         color: String = "yellow",
         note: String? = nil,
         createdAt: Date = Date(),
-        readwiseID: String? = nil
+        readwiseID: String? = nil,
+        source: String? = nil,
+        bookTitle: String? = nil,
+        bookAuthor: String? = nil
     ) {
         self.id = id
         self.bookID = bookID
@@ -39,7 +48,13 @@ public struct Annotation: Identifiable, Hashable, Sendable {
         self.note = note
         self.createdAt = createdAt
         self.readwiseID = readwiseID
+        self.source = source
+        self.bookTitle = bookTitle
+        self.bookAuthor = bookAuthor
     }
+
+    /// Hecho en Gabinete (no traído de Readwise).
+    public var isOwn: Bool { source == nil }
 }
 
 extension Annotation {
@@ -53,6 +68,9 @@ extension Annotation {
         static let note = "note"
         static let createdAt = "created_at"
         static let readwiseID = "readwise_id"
+        static let source = "source"
+        static let bookTitle = "book_title"
+        static let bookAuthor = "book_author"
     }
 
     public init?(id: UUID, fields: [String: JSONValue]) {
@@ -70,7 +88,10 @@ extension Annotation {
             color: fields[Field.color]?.stringValue ?? "yellow",
             note: fields[Field.note]?.stringValue,
             createdAt: Date(timeIntervalSince1970: fields[Field.createdAt]?.doubleValue ?? 0),
-            readwiseID: fields[Field.readwiseID]?.stringValue
+            readwiseID: fields[Field.readwiseID]?.stringValue,
+            source: fields[Field.source]?.stringValue,
+            bookTitle: fields[Field.bookTitle]?.stringValue,
+            bookAuthor: fields[Field.bookAuthor]?.stringValue
         )
     }
 
@@ -85,6 +106,9 @@ extension Annotation {
             (Field.note, note.map(JSONValue.string) ?? .null),
             (Field.createdAt, .number(createdAt.timeIntervalSince1970)),
             (Field.readwiseID, readwiseID.map(JSONValue.string) ?? .null),
+            (Field.source, source.map(JSONValue.string) ?? .null),
+            (Field.bookTitle, bookTitle.map(JSONValue.string) ?? .null),
+            (Field.bookAuthor, bookAuthor.map(JSONValue.string) ?? .null),
         ]
         return fields.map { field, value in
             Change(hlc: clock.tick(), entity: .annotation, entityID: id, field: field, value: value)
