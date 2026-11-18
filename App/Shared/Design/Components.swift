@@ -805,6 +805,8 @@ struct NoteBody: View {
 extension Locale {
     /// La app está en español, aunque el dispositivo esté en otro idioma.
     static let gabinete = Locale(identifier: "es_MX")
+    /// Para cifras compactas: «17,8 mil» (con es_MX saldría «17.8 k»).
+    static let gabineteNumbers = Locale(identifier: "es")
 }
 
 extension Date {
@@ -827,7 +829,7 @@ extension Double {
 enum ReadingFormat {
     /// «840», «4,4 mil», «1,1 M».
     static func words(_ count: Int) -> String {
-        count.formatted(.number.notation(.compactName).precision(.fractionLength(0...1)).locale(.gabinete))
+        count.formatted(.number.notation(.compactName).precision(.fractionLength(0...1)).locale(.gabineteNumbers))
     }
 
     /// «19:37» (minutos y segundos), para la sesión en curso.
