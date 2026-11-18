@@ -6,6 +6,8 @@ public enum EntityKind: String, Codable, Sendable, CaseIterable {
     case annotation
     case progress
     case shelf
+    /// Trabajo para un servicio externo (Readwise, Hardcover…): ver `JobBoard`.
+    case job
 }
 
 /// Un cambio atómico: "el campo `field` de la entidad `entityID` vale `value`".
