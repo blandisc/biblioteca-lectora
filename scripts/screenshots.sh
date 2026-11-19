@@ -80,5 +80,7 @@ for style in editorial; do
   for mode in light dark; do
     shoot "$style-$mode-reader" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES
     shoot "$style-$mode-page" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.hideChrome YES
+    shoot "$style-$mode-contents" 9 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.screen contents
+    shoot "$style-$mode-booksearch" 11 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.screen booksearch
   done
 done

@@ -85,6 +85,8 @@ enum ConnectorKeys {
     static let readwiseLastImport = "readwise.ultimaImportacion"
     static let hardcoverFinish = "hardcover.marcarLeido"
     static let hardcoverSent = "hardcover.enviado"
+    /// Calificación mandada por libro (para mandarla otra vez si cambia).
+    static let hardcoverRated = "hardcover.calificado"
     /// Páginas de cada libro en Hardcover (para mandar el avance en páginas).
     static let hardcoverPages = "hardcover.paginas"
     static func lastSync(_ connector: Connector) -> String { "\(connector.rawValue).ultimaSincronizacion" }
@@ -331,15 +333,21 @@ final class ConnectorsStore: ObservableObject {
         status[.hardcover] = .syncing
         // Lo que se mandó por libro (porcentaje), para no repetir.
         var sent = defaults.dictionary(forKey: ConnectorKeys.hardcoverSent) as? [String: Double] ?? [:]
+        var rated = defaults.dictionary(forKey: ConnectorKeys.hardcoverRated) as? [String: Double] ?? [:]
         for book in library.books {
             guard let position = library.position(for: book.id), position.fraction > 0 else { continue }
+            let key = book.id.uuidString
             let percent = (position.fraction * 100).rounded()
-            if let last = sent[book.id.uuidString], abs(last - percent) < 1 { continue }
-            library.enqueueJob(kind: Kind.hardcoverProgress, target: book.id.uuidString,
-                               payload: .number(position.fraction), reopen: true)
-            sent[book.id.uuidString] = percent
+            let rating = book.rating ?? 0
+            let moved = sent[key].map { abs($0 - percent) >= 1 } ?? true
+            let rerated = (rated[key] ?? 0) != rating
+            guard moved || rerated else { continue }
+            library.enqueueJob(kind: Kind.hardcoverProgress, target: key, payload: .number(position.fraction), reopen: true)
+            sent[key] = percent
+            rated[key] = rating
         }
         defaults.set(sent, forKey: ConnectorKeys.hardcoverSent)
+        defaults.set(rated, forKey: ConnectorKeys.hardcoverRated)
         do {
             for job in library.takeJobs(kinds: Kind.hardcover) {
                 do {
@@ -386,7 +394,7 @@ final class ConnectorsStore: ObservableObject {
             status: finished ? .read : HardcoverClient.status(for: min(progress, 0.98)),
             progress: progress, pages: pages,
             startedAt: started, finishedAt: finished ? Date() : nil,
-            rating: nil))
+            rating: book.rating.flatMap { $0 > 0 ? $0 : nil }))
     }
 
     // MARK: Salida libre

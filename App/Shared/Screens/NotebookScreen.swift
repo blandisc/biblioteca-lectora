@@ -141,10 +141,16 @@ struct NotebookScreen: View {
 
     @ViewBuilder
     private var byBook: some View {
-        let groups = Dictionary(grouping: highlights, by: \.bookID)
+        let grouped = Dictionary(grouping: highlights, by: \.bookID)
+        let groups = grouped
             .compactMap { id, items in shelfBook(id).map { BookCount(book: $0, count: items.count) } }
             .sorted { $0.book.title.localizedStandardCompare($1.book.title) == .orderedAscending }
-        if groups.isEmpty {
+        // Lo que llegó de Readwise de libros que no están en tu biblioteca.
+        let outside = grouped.filter { shelfBook($0.key) == nil }
+            .map { OutsideBook(id: $0.key, title: $0.value.first?.bookTitle ?? "Sin título",
+                               author: $0.value.first?.bookAuthor, highlights: $0.value) }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        if groups.isEmpty && outside.isEmpty {
             EmptyState(title: "Sin libros subrayados", message: "Aquí verás cada libro con el número de subrayados que tiene.")
         } else {
             LazyVStack(spacing: 0) {
@@ -157,8 +163,32 @@ struct NotebookScreen: View {
                     .buttonStyle(.plain)
                 }
             }
+            if !outside.isEmpty {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
+                    SectionLabel(text: "Fuera de tu biblioteca")
+                    Text("Subrayados que llegaron de Readwise (Kindle, Apple Books…) de libros que no tienes en Gabinete.")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryInk)
+                    ForEach(outside) { book in
+                        VStack(alignment: .leading, spacing: Theme.Space.m) {
+                            Text(book.author.map { "\(book.title) · \($0)" } ?? book.title)
+                                .font(.rowTitle)
+                            ForEach(book.highlights) { QuoteBlock(text: $0.quote, note: $0.note) }
+                        }
+                    }
+                }
+                .padding(.top, Theme.Space.xxl)
+            }
         }
     }
+}
+
+/// Un libro que solo existe en Readwise, con sus subrayados.
+private struct OutsideBook: Identifiable {
+    let id: UUID
+    let title: String
+    let author: String?
+    let highlights: [Annotation]
 }
 
 private struct BookCount: Identifiable {

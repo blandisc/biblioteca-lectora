@@ -115,7 +115,7 @@ struct ConnectorScreen: View {
             } header: {
                 Text("Qué viaja")
             } footer: {
-                Text("Cada libro se busca en Hardcover una vez (por ISBN o título y autor) y su número queda en el catálogo como hardcover:…, también en el OPF.")
+                Text("Tu calificación (las estrellas de la ficha) también viaja. Cada libro se busca en Hardcover una vez (por ISBN o título y autor) y su número queda en el catálogo como hardcover:…, también en el OPF.")
             }
         }
         Section {

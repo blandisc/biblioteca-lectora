@@ -150,6 +150,17 @@ struct ReaderView: View {
                 controller.open(bookFile: file, bookID: bookID, lastCFI: resume)
             }
         }
+        // Capturas automáticas: el índice o una búsqueda, ya con el libro abierto.
+        .onChange(of: controller.contents) { _, contents in
+            guard tools == nil, !contents.isEmpty else { return }
+            switch LaunchOptions.screen {
+            case "contents": tools = .contents
+            case "booksearch":
+                controller.search("Mancha")
+                tools = .search
+            default: break
+            }
+        }
         .onChange(of: palette) { _, _ in applyStyle() }
         .onChange(of: font) { _, _ in applyStyle() }
         .onChange(of: scale) { _, _ in applyStyle() }
