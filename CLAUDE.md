@@ -15,4 +15,6 @@
   (`Gabinete/Biblioteca/Autor/Título (id)/archivo + cover.jpg + metadata.opf`). No romper ese formato.
 - Notas: Markdown normal en `Gabinete/Notas/`, legible fuera de la app.
 - Sin servidor: el catálogo y los subrayados viven en los registros de LectoraCore.
+- Pruebas con fechas: no supongas UTC. Arma las fechas en el calendario local (`Calendar.current`);
+  CI corre `swift test` también con `TZ=America/Mexico_City` para atraparlo.
 - Antes de subir: `swift test` en `Packages/LectoraCore` (en CI) y `scripts/lint-design.sh`.

@@ -138,8 +138,11 @@ final class HardcoverTests: XCTestCase {
             (200, #"{"data": {"insert_user_book": {"id": 77, "error": null}}}"#),
             (200, #"{"data": {"insert_user_book_read": {"id": 5, "error": null}}}"#),
         ])
+        // El día se cuenta en tu zona horaria: la fecha se arma en el calendario local
+        // para que la prueba dé lo mismo en CI (UTC) que en el Mac.
+        let started = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 1970, month: 1, day: 1, hour: 12)))
         try await HardcoverClient(token: "t", transport: transport).apply(
-            .init(bookID: 11, status: .reading, progress: 0.5, pages: 600, startedAt: Date(timeIntervalSince1970: 0), finishedAt: nil, rating: nil))
+            .init(bookID: 11, status: .reading, progress: 0.5, pages: 600, startedAt: started, finishedAt: nil, rating: nil))
         XCTAssertEqual(transport.requests.count, 3)
         let last = try XCTUnwrap(transport.requests.last?.httpBody.flatMap { try JSONSerialization.jsonObject(with: $0) as? [String: Any] })
         let read = try XCTUnwrap((last["variables"] as? [String: Any])?["r"] as? [String: Any])
