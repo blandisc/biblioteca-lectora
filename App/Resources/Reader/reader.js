@@ -1,6 +1,7 @@
 // Puente entre foliate-js y la app nativa.
 // La app llama a `window.lectora.*` y recibe eventos por `webkit.messageHandlers.lectora`.
 import { makeBook } from './foliate/view.js'
+import { collapse, compare } from './foliate/epubcfi.js'
 
 const post = (type, payload = {}) =>
     window.webkit?.messageHandlers?.lectora?.postMessage({ type, ...payload })
@@ -112,10 +113,26 @@ let searchToken = 0
 // Cómo se llegó a la página: «jump» si fue por el índice, la barra o un enlace.
 let navigation = null
 
+// Marcadores: la app manda sus CFI y aquí se ve cuáles caen en la página visible.
+// Se compara el punto del marcador con el principio y el final de la página, no
+// el principio exacto: al cambiar la letra o el área visible, foliate vuelve a
+// paginar y la página empieza en otro punto, pero el marcador sigue en ella.
+let bookmarkCFIs = []
+let pageCFI = null
+const isOnPage = cfi => {
+    if (!cfi || !pageCFI) return false
+    try {
+        const point = collapse(cfi)
+        return compare(point, collapse(pageCFI)) >= 0 && compare(point, collapse(pageCFI, true)) < 0
+    } catch { return false }
+}
+const postMarks = () => post('marks', { cfis: bookmarkCFIs.filter(isOnPage) })
+
 const onRelocate = ({ detail }) => {
     const { fraction, cfi, tocItem, location, range } = detail
     post('relocate', {
-        fraction,
+        // foliate da NaN en secciones de dos páginas (0 ÷ 0): no se manda.
+        fraction: Number.isFinite(fraction) ? fraction : null,
         cfi,
         chapter: tocItem?.label ?? null,
         chapterHref: tocItem?.href ?? null,
@@ -126,6 +143,8 @@ const onRelocate = ({ detail }) => {
         jumped: navigation === 'jump',
     })
     navigation = null
+    pageCFI = cfi
+    postMarks()
 }
 
 const onLoad = ({ detail: { doc, index } }) => {
@@ -216,6 +235,11 @@ const extract = async url => {
 
 window.lectora = {
     extract,
+
+    setBookmarks(cfis) {
+        bookmarkCFIs = cfis ?? []
+        postMarks()
+    },
 
     async open(url, lastLocation) {
         view?.close?.()

@@ -204,6 +204,23 @@ final class DesignRulesTests: XCTestCase {
               "Fecha o porcentaje sin español: usa fecha.es(…) o valor.percentText")
     }
 
+    /// 18 nov 2026: el avance que manda el lector (fraction, progress) puede ser NaN
+    /// (foliate, secciones de dos páginas) y cerraba la app. Siempre por `readingFraction`.
+    func testReaderFractionsAreChecked() {
+        check(hits(#"\["(fraction|progress)"\] as\? Double(?!\)?\??\.readingFraction)"#, in: Self.sources("App")),
+              "Avance del lector sin revisar: usa (body[\"fraction\"] as? Double)?.readingFraction")
+    }
+
+    /// 18 nov 2026: la cinta se iba al esconder los controles o cambiar la letra
+    /// porque se comparaba el principio exacto de la página. Si un marcador está en
+    /// la página lo dice reader.js (`bookmarksOnPage`), que compara contra toda la página.
+    func testBookmarksComparedAgainstTheWholePage() {
+        check(hits(#"\.marks\(cfi:|abs\(.*fraction.*\) < "#, in: Self.sources("App")),
+              "Marcador comparado con el principio exacto o el avance: usa controller.bookmarksOnPage")
+        let reader = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
+        XCTAssertTrue(reader.contains("collapse(pageCFI, true)"), "reader.js debe comparar el marcador con el final de la página")
+    }
+
     /// 30 oct 2026: Cinzel solo para la marca y los rótulos (BrandMark, SectionLabel).
     func testRomanCapsOnlyForMarkAndLabels() {
         check(hits(#"\.brandMark|\.sectionLabel"#, in: Self.screens), "Cinzel solo a través de BrandMark y SectionLabel")

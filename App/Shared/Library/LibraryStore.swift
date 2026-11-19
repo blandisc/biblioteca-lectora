@@ -695,7 +695,7 @@ final class LibraryStore: ObservableObject {
         guard let fields = state.fields(of: .progress, id: bookID) else { return nil }
         return ReadingPosition(
             cfi: fields["cfi"]?.stringValue,
-            fraction: fields["fraction"]?.doubleValue ?? 0,
+            fraction: fields["fraction"]?.doubleValue?.readingFraction ?? 0,
             excerpt: fields["excerpt"]?.stringValue,
             updatedAt: fields["updated_at"]?.doubleValue.map(Date.init(timeIntervalSince1970:))
         )
@@ -703,9 +703,10 @@ final class LibraryStore: ObservableObject {
 
     /// Guarda dónde vas (en el mismo registro que se sincroniza).
     func savePosition(_ position: ReadingPosition, for bookID: UUID) {
+        guard let fraction = position.fraction.readingFraction else { return }
         let values: [(String, JSONValue)] = [
             ("cfi", position.cfi.map(JSONValue.string) ?? .null),
-            ("fraction", .number(position.fraction)),
+            ("fraction", .number(fraction)),
             ("excerpt", position.excerpt.map(JSONValue.string) ?? .null),
             ("updated_at", .number(Date().timeIntervalSince1970)),
         ]

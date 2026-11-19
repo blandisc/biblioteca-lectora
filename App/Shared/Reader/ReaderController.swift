@@ -44,6 +44,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     @Published private(set) var searchProgress: Double?
     @Published private(set) var searchedQuery = ""
     @Published private(set) var location: Location?
+    /// CFI de los marcadores que caen en la página visible. Lo calcula reader.js
+    /// comparando cada marcador con el principio y el final de la página, así
+    /// la cinta sigue ahí aunque la página se vuelva a paginar (letra, controles).
+    @Published private(set) var bookmarksOnPage: Set<String> = []
     @Published var errorMessage: String?
     /// Avisos que no impiden seguir leyendo (p. ej. un subrayado que no se guardó).
     @Published var notice: String?
@@ -67,6 +71,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     private var isReady = false
     private var pendingOpen: String?
     private var colorScript: String?
+    private var bookmarksScript: String?
     private var fontScript: String?
     private var bookID: UUID?
 
@@ -130,6 +135,15 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     func setColors(text: String, link: String) {
         let script = "window.lectora.setStyle({ textColor: '\(text)', linkColor: '\(link)' })"
         colorScript = script
+        if isReady { evaluate(script) }
+    }
+
+    /// Los marcadores del libro (sus CFI), para saber cuáles caen en la página.
+    func setBookmarks(_ cfis: [String]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: cfis),
+              let json = String(data: data, encoding: .utf8) else { return }
+        let script = "window.lectora.setBookmarks(\(json))"
+        bookmarksScript = script
         if isReady { evaluate(script) }
     }
 
@@ -249,6 +263,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             isReady = true
             if let colorScript { evaluate(colorScript) }
             if let fontScript { evaluate(fontScript) }
+            if let bookmarksScript { evaluate(bookmarksScript) }
             if let pendingOpen {
                 evaluate(pendingOpen)
                 self.pendingOpen = nil
@@ -262,9 +277,14 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             }
             restoreHighlights()
             anchorPending()
+        case "marks":
+            bookmarksOnPage = Set(body["cfis"] as? [String] ?? [])
         case "relocate":
+            // Un avance que no es número (NaN de foliate en secciones de dos páginas)
+            // no mueve nada: se queda el último bueno.
+            let fraction = (body["fraction"] as? Double)?.readingFraction ?? location?.fraction ?? 0
             location = Location(
-                fraction: body["fraction"] as? Double ?? 0,
+                fraction: fraction,
                 cfi: body["cfi"] as? String,
                 chapter: body["chapter"] as? String,
                 chapterHref: body["chapterHref"] as? String,
@@ -273,7 +293,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 excerpt: body["excerpt"] as? String
             )
             session?.pageShown(words: body["words"] as? Int ?? 0,
-                               fraction: body["fraction"] as? Double ?? 0,
+                               fraction: fraction,
                                jumped: body["jumped"] as? Bool ?? false)
             settleTask?.cancel()
             if let location {
@@ -284,7 +304,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 }
             }
         case "searchProgress":
-            if (body["query"] as? String) == searchedQuery { searchProgress = body["progress"] as? Double }
+            if (body["query"] as? String) == searchedQuery { searchProgress = (body["progress"] as? Double)?.readingFraction }
         case "searchResults":
             guard (body["query"] as? String) == searchedQuery else { break }
             searchProgress = nil

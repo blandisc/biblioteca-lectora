@@ -51,11 +51,9 @@ public struct Bookmark: Identifiable, Hashable, Sendable {
         Change(hlc: clock.tick(), entity: .bookmark, entityID: id, field: Change.deletedField, value: .bool(true))
     }
 
-    /// ¿Marca esta página? (mismo lugar, aunque el CFI de la página cambie con el tamaño de letra).
-    public func marks(cfi other: String?, fraction otherFraction: Double) -> Bool {
-        if let other, other == cfi { return true }
-        return abs(fraction - otherFraction) < 0.002
-    }
+    // Si un marcador cae en la página visible lo decide reader.js (`setBookmarks`):
+    // compara su punto con el principio y el final de la página. Comparar el
+    // principio exacto o el avance falla en cuanto la página se vuelve a paginar.
 }
 
 extension LibraryState {

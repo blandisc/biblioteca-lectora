@@ -32,14 +32,24 @@ de ida (sin probar contra los servicios reales), migración de Calibre, bienveni
 3. Audiolibro escondido: `Features.audiobook` (Guiada, Escuchar, audífonos de la Mesa,
    mini reproductor) hasta la fase C.
 
+## Verificado en el Mac (18 nov 2026, noche)
+- Simulador propio «Gabinete» (iPhone 17 Pro, adelgazado con simslim). Compilación en
+  `/tmp/dd-gabinete`. Para tocar la pantalla sirve la herramienta del panel de simulador
+  de Claude Code; AXe falla en el simulador adelgazado.
+- Arreglado: la app se cerraba la primera vez que abrías un libro desde el principio
+  (foliate da NaN en secciones de dos páginas; ahora todo avance pasa por
+  `readingFraction`). La cinta ahora se decide en reader.js comparando el marcador con
+  toda la página (`setBookmarks` / `bookmarksOnPage`). La prueba de Hardcover ya no
+  depende de la zona horaria.
+- Visto en claro y oscuro: poner y quitar la cinta, que siga al agrandar y achicar la
+  letra, Lector › Marcas, y sin botones de audiolibro (Mesa y ficha).
+- Pendiente de decidir: con los controles abiertos la cinta tapa la batería de la barra
+  de estado. Y el subrayado de muestra «de Readwise» no se ancla porque su cita termina
+  en punto y el libro dice «astillero,»: ¿anclar ignorando la puntuación final?
+
 ## Primero, al llegar al Mac
-1. Ver que CI del último commit de `app-esqueleto` pasó. Fallos ya arreglados: un
-   `import LectoraCore` en `ReaderView.swift` (`9193c9c`) y la fecha de la prueba de
-   marcadores (`654ea19`; el registro guarda la fecha como número y pierde fracciones de
-   segundo). Si algo sigue rojo, arreglar primero.
-2. Correr la app en el simulador y comprobar en claro y oscuro: la cinta (poner, quitar,
-   que siga al cambiar la letra), Lector › Marcas, y que no aparezcan los botones del
-   audiolibro. Con un EPUB que tenga subrayados de Calibre: que se pinten al abrir.
+1. Ver que CI del último commit de `app-esqueleto` pasó.
+2. Con un EPUB que tenga subrayados de Calibre: que se pinten al abrir (no probado aún).
 3. Probar Readwise y Hardcover con tus llaves reales (Ajustes › Conexiones). Es lo único
    de la fase A que solo se ha probado contra respuestas escritas a mano.
 4. Migración con tu `metadata.db` real (Ajustes › Gabinete › Traer de Calibre).

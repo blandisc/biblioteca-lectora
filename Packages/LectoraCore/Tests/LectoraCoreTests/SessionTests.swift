@@ -161,10 +161,18 @@ final class BookmarkTests: XCTestCase {
                             createdAt: Date(timeIntervalSince1970: 1_763_500_000))
         state.apply(mark.changes(clock: clock))
         XCTAssertEqual(state.bookmarks(for: book), [mark])
-        // Con otra letra la página empieza en otro CFI, pero es el mismo lugar.
-        XCTAssertTrue(mark.marks(cfi: "epubcfi(/6/8!/4/6)", fraction: 0.4205))
-        XCTAssertFalse(mark.marks(cfi: nil, fraction: 0.5))
         state.apply(Bookmark.deletion(id: mark.id, clock: clock))
         XCTAssertTrue(state.bookmarks(for: book).isEmpty)
+    }
+}
+
+final class ReadingFractionTests: XCTestCase {
+    func testOnlyRealNumbersBetweenZeroAndOne() {
+        XCTAssertNil(Double.nan.readingFraction)
+        XCTAssertNil(Double.infinity.readingFraction)
+        XCTAssertNil((0.0 / 0.0).readingFraction)
+        XCTAssertEqual((-0.2).readingFraction, 0)
+        XCTAssertEqual(1.4.readingFraction, 1)
+        XCTAssertEqual(0.37.readingFraction, 0.37)
     }
 }

@@ -162,6 +162,7 @@ struct ReaderView: View {
             default: break
             }
         }
+        .onChange(of: bookmarkCFIs, initial: true) { _, cfis in controller.setBookmarks(cfis) }
         .onChange(of: palette) { _, _ in applyStyle() }
         .onChange(of: font) { _, _ in applyStyle() }
         .onChange(of: scale) { _, _ in applyStyle() }
@@ -198,10 +199,18 @@ struct ReaderView: View {
         }
     }
 
-    /// El marcador de la página que se ve, si tiene.
+    /// El marcador de la página que se ve, si tiene: el que reader.js ve dentro
+    /// de la página, o el recién puesto mientras reader.js contesta.
     private var currentBookmark: Bookmark? {
         guard let bookID, let location = controller.location else { return nil }
-        return library.bookmarks(for: bookID).first { $0.marks(cfi: location.cfi, fraction: location.fraction) }
+        return library.bookmarks(for: bookID).first {
+            controller.bookmarksOnPage.contains($0.cfi) || $0.cfi == location.cfi
+        }
+    }
+
+    /// Los CFI de los marcadores del libro, para mandarlos a reader.js.
+    private var bookmarkCFIs: [String] {
+        bookID.map { library.bookmarks(for: $0).map(\.cfi) } ?? []
     }
 
     private func toggleBookmark() {
