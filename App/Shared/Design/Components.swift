@@ -1405,3 +1405,42 @@ struct SearchField: View {
         .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
     }
 }
+
+// MARK: - Bienvenida
+
+/// Una opción para elegir entre varias: ícono, título, explicación y, si es la
+/// elegida, el borde y la marca verdes.
+struct OptionRow: View {
+    let systemImage: String
+    let title: String
+    let detail: String
+    var selected = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Theme.Space.m) {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .foregroundStyle(selected ? Theme.accent : Theme.secondaryInk)
+                .frame(width: Theme.Size.tapTarget)
+            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                Text(title).font(.rowTitle).foregroundStyle(Theme.ink)
+                Text(detail).font(.subheadline).foregroundStyle(Theme.secondaryInk)
+                    .multilineTextAlignment(.leading)
+            }
+            Spacer(minLength: 0)
+            if selected {
+                Image(systemName: "checkmark").font(.body.weight(.semibold)).foregroundStyle(Theme.accent)
+            }
+        }
+        .padding(Theme.Space.l)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
+        .overlay {
+            RoundedRectangle(cornerRadius: Theme.Radius.tile)
+                .stroke(selected ? Theme.accent : Color.clear, lineWidth: Theme.Size.selection)
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}

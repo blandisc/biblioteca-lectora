@@ -9,6 +9,9 @@ struct RootView: View {
 
     @StateObject private var model = AppModel()
     @ObservedObject private var sessions = SessionStore.shared
+    @AppStorage(WelcomeKeys.seen) private var welcomeSeen = false
+    /// Se decide al arrancar: la bienvenida no se cierra sola si a media bienvenida llegan libros.
+    @State private var showsWelcome = false
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @Namespace private var opening
@@ -32,6 +35,8 @@ struct RootView: View {
                 if LaunchOptions.opensFirstBook, let first = model.currentBook {
                     model.open(first)
                 }
+                // Primer arranque, con el Gabinete vacío (no en las capturas automáticas).
+                showsWelcome = !welcomeSeen && !LaunchOptions.seed && model.library.books.isEmpty
                 // Readwise y Hardcover, si están conectados.
                 ConnectorsStore.shared.start()
                 // Los que se importaron sin internet se buscan ahora.
@@ -52,6 +57,9 @@ struct RootView: View {
                           allowsMultipleSelection: true) { result in
                 model.finishImport(result)
             }
+            // Primer arranque: dónde vive tu Gabinete, tus libros y Readwise.
+            .modifier(WelcomeCover(isPresented: $showsWelcome, model: model))
+            .onChange(of: welcomeSeen) { _, seen in if seen { showsWelcome = false } }
             // Al cerrar el libro, el resumen de la sesión.
             .sheet(item: $sessions.justFinished) { session in
                 SessionSummarySheet(session: session).environmentObject(model)
@@ -102,5 +110,19 @@ struct RootView: View {
                     .tag(Place.search)
             }
         }
+    }
+}
+
+/// Bienvenida a pantalla completa en el iPhone y como hoja en el Mac.
+private struct WelcomeCover: ViewModifier {
+    @Binding var isPresented: Bool
+    let model: AppModel
+
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        content.fullScreenCover(isPresented: $isPresented) { WelcomeScreen().environmentObject(model) }
+        #else
+        content.sheet(isPresented: $isPresented) { WelcomeScreen().environmentObject(model).frame(minWidth: Theme.Size.macReader.width, minHeight: Theme.Size.macReader.height) }
+        #endif
     }
 }
