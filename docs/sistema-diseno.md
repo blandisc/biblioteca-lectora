@@ -31,8 +31,8 @@ un **componente**; toda pantalla sigue una **receta**.
 | `onInk` | `#FFFFFF` | `#141413` | Texto sobre tinta |
 | `brand` | `#24332B` | `#8FBFA4` | Marca: botón principal, avance, pestaña elegida, el «+» de la Biblioteca (verde fichero) |
 | `onBrand` | `#FFFFFF` | `#141413` | Texto sobre la marca |
-| `secondaryInk` | `#77746D` | `#9C988F` | Texto secundario |
-| `tertiaryInk` | `#9A968D` | `#6F6C65` | Folios y etiquetas pequeñas |
+| `secondaryInk` | `#6F6C65` | `#9C988F` | Texto secundario (contraste ≥ 4,5 sobre `paper`) |
+| `tertiaryInk` | `#837F78` | `#7C7870` | Folios y etiquetas pequeñas (contraste ≥ 3 sobre `paper`) |
 | `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
 | `accent` | `#3D6B55` | `#8FBFA4` | Verde hoja, **solo tus marcas y avisos**: subrayado, nota, cinta, audio sonando, pendientes, índice A–Z, el «+» (antes `pencil`, rojo) |
 
@@ -58,6 +58,16 @@ Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPale
 | `gutter` | 28 | Margen lateral de toda pantalla, igual a ambos lados |
 | `screenTop` | 24 | Del área segura al título de pantalla |
 | `screenBottom` | 32 | Aire antes del dock |
+| `chipInset` | 20 (`gutter − s`) | Interior de una fila de filtros que llega al borde: su primer texto cae en el margen |
+| `hair` | 1 | Entre las letras del índice A–Z |
+| `inline` | 6 | Entre un ícono y su texto; dentro de piezas pequeñas (leyendas, barras) |
+| `rowY` | 10 | Aire arriba y abajo de una fila de lista |
+| `rowGap` | 14 | Entre la portada (o la raya de una cita) y su texto |
+| `buttonX` | 20 | Interior horizontal del botón principal |
+
+**Nunca se suman tokens** («`s + xxs`», «`xl + xs`»): cada suma era un valor nuevo sin
+nombre, y la misma separación salía distinta en cada pieza. Si hace falta otra medida,
+se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 ### Radio (`Theme.Radius`)
 
@@ -66,9 +76,9 @@ Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPale
 ### Tamaño (`Theme.Size`)
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
-coverMini 26 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
+coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375`
+textEditor 120 · ribbon 12×64 · appearanceSheet 440 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375`
 
 `Theme.Emphasis.secondary` (0,75): texto secundario sobre la marca (tarjeta para compartir).
 
@@ -108,6 +118,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | Componente | Qué es | Dónde |
 |---|---|---|
 | `.screen()` | Receta de pantalla raíz: papel, sin barra de navegación, destinos de libro y serie | Mesa, Biblioteca, Cuaderno |
+| `.formScreen()` | Receta de formulario: el papel de la app de fondo, no el gris del sistema; botones e interruptores en `accent` (con la marca, casi negra en claro, parecían texto) | Ajustes, Conexiones, Reglas, Editar datos, Buscar con otros datos |
 | `.screenContent()` | Margen `gutter`, aire `screenTop`/`screenBottom`, tinta | Todo contenido con scroll |
 | `ScreenHeading` | Título serif + acciones a la derecha | Cada pantalla |
 | `PrimaryButton` | Acción principal en tinta (una por pantalla) | «Seguir leyendo», «Leer», estado vacío |
@@ -145,7 +156,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `OptionRow` | Opción para elegir: ícono, título, explicación; la elegida con borde y marca verdes | Bienvenida |
 | `ContentsRow` | Entrada del índice del libro, con sangría por nivel y punto verde donde vas | Lector › Índice |
 | `SearchResultRow` | Resultado de buscar en el libro: capítulo y texto alrededor, lo buscado en verde | Lector › Buscar |
-| `SearchField` | Campo de búsqueda sobre `field`, con lupa y borrar | Lector › Buscar |
+| `SearchField` | Campo de búsqueda sobre `field`, con lupa y borrar; nunca `.searchable` (en Buscar quedaba escondido) | Buscar, Lector › Buscar |
 | `ShareCard`, `ShareSessionButton` | Tarjeta verde fichero de una sesión, para compartir como imagen | Resumen al cerrar, una sesión pasada |
 | `CoverChoiceRow`, `CoverChoiceCell` | Portadas para elegir (fila o cuadrícula); la elegida con borde `selection` | Vista previa, ficha › Elegir portada |
 
@@ -184,7 +195,8 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   el título del sistema, 35 pt más abajo y con 16–20 pt de margen).
 - Lector: los controles de vidrio tienen el mismo margen (`Reader.chromeInset`, 16 pt)
   arriba y abajo; las zonas de toque izquierda y derecha son franjas iguales
-  (`Reader.edgeZone`, 28 %).
+  (`Reader.edgeZone`, 28 %). Sin controles, el folio deja `Reader.folioInset` (60) a los lados
+  y `Reader.folioTop` (14) arriba.
 - Cuadrículas: columnas iguales (`GridItem(.flexible())` ×3) con 16 pt entre columnas
   y 24 pt entre filas.
 
@@ -196,7 +208,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | Prueba | Qué exige |
 |---|---|
 | `testScreensUseOnlyTokens` | Sin números, colores, fuentes, animaciones ni curvas a mano en las pantallas |
-| `testScreensUseCatalogPieces` | Sin segmentados, vacíos del sistema, botones `bordered`, `DateFormatter`, formas ni estilos nuevos en las pantallas: son piezas de `Components.swift` |
+| `testScreensUseCatalogPieces` | Sin segmentados, `.searchable`, vacíos del sistema, botones `bordered`, `DateFormatter`, formas ni estilos nuevos en las pantallas: son piezas de `Components.swift` |
 | `testDesignPiecesDontKnowTheApp` | Las piezas de `Design/` no conocen `AppModel` ni los almacenes: reciben datos y avisan con acciones |
 | `testOneMainActionPerScreen` | Una `PrimaryButton` y un `AccentIconButton` por pantalla, como mucho |
 | `testScrollingScreensUseTheRecipe` | Toda pantalla con scroll usa `.screenContent()` |
@@ -204,7 +216,12 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testEveryTokenIsUsed` | Ningún token de `Theme` sobra |
 | `testExceptionsAreDocumented` | Toda `ds-exception` tiene su motivo en «Excepciones» |
 | `testNoRedPencilLeft` | Decisión del 30 oct 2026: el rojo lápiz se fue; lo tuyo va en verde hoja |
-| `testDatesAndNumbersInSpanish` | Decisión del 18 nov 2026: fechas y porcentajes en español aunque el dispositivo no lo esté (`fecha.es(…)`, `percentText`) |
+| `testDatesAndNumbersInSpanish` | Decisión del 18 nov 2026: fechas y porcentajes en español aunque el dispositivo no lo esté (`fecha.es(…)`, `percentText`); desde el 19 nov, todo porcentaje sale de `percentText` («57 %», con espacio que no se parte) |
+| `testNoArithmeticBetweenTokens` | Decisión del 19 nov 2026: ninguna medida se arma sumando tokens; se nombra en `Theme` |
+| `testAccentActionGoesLast` | Decisión del 19 nov 2026: el ícono verde de un encabezado va siempre al final, a la derecha |
+| `testFormsUseThePaper` | Decisión del 19 nov 2026: todo `Form` lleva `.formScreen()` |
+| `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra |
+| `testTextColorsAreReadable` | Decisión del 19 nov 2026: sobre `paper`, tinta y secundario ≥ 4,5 : 1; terciario y verde ≥ 3 : 1, en claro y oscuro |
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |
 
 Cuando se decide algo de diseño que no debe volver a romperse, se vuelve una prueba con

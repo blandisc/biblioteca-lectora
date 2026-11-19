@@ -19,7 +19,8 @@ struct NotebookScreen: View {
     @EnvironmentObject private var model: AppModel
     @State private var part: Part = LaunchOptions.screen == "highlights" ? .highlights : .notes
     @State private var order: HighlightOrder = .recent
-    @State private var showsAccount = false
+    /// Capturas automáticas: `-screenshot.screen settings` abre Ajustes.
+    @State private var showsAccount = LaunchOptions.screen == "settings"
     @State private var path = NavigationPath()
     /// Subrayado que se lleva a una nota (toque largo en el Cuaderno).
     @State private var toNote: Annotation?
@@ -36,10 +37,10 @@ struct NotebookScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: "Cuaderno") {
-                        // El acento verde de la pantalla: escribir una nota.
+                        Button { showsAccount = true } label: { Image(systemName: "gearshape") }
+                            .accessibilityLabel("Ajustes: conexiones, carpeta y apariencia")
+                        // El acento verde de la pantalla, siempre al final: escribir una nota.
                         AccentIconButton(systemImage: "plus", label: "Nota nueva") { path.append(NoteRef.new()) }
-                        Button { showsAccount = true } label: { Image(systemName: "person.crop.circle") }
-                            .accessibilityLabel("Cuenta, conexiones y apariencia")
                     }
                     FilterBar(items: Part.allCases, selection: $part) { $0.rawValue }
                         .padding(.top, Theme.Space.m)

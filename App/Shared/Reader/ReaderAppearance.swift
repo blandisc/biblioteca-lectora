@@ -107,7 +107,7 @@ struct ReaderAppearanceSheet: View {
     private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.l + Theme.Space.xxs) {
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
             LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                 ForEach(ReaderFont.allCases) { item in
                     Button { font = item } label: {
@@ -142,7 +142,7 @@ struct ReaderAppearanceSheet: View {
             HStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
-                        VStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+                        VStack(spacing: Theme.Space.inline) {
                             swatch(for: item)
                                 .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
                                 .overlay {

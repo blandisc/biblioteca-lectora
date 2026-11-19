@@ -59,6 +59,7 @@ struct RulesScreen: View {
                 }
             }
         }
+        .formScreen()
         .navigationTitle("Reglas")
         .alert("Reglas aplicadas", isPresented: Binding(
             get: { appliedMessage != nil },

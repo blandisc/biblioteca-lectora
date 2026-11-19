@@ -115,6 +115,7 @@ struct MetadataEditorView: View {
                         .frame(minHeight: Theme.Size.textEditor)
                 }
             }
+            .formScreen()
             .navigationTitle("Editar datos")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

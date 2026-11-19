@@ -106,7 +106,7 @@ extension BookDetailScreen {
                     .init(value: period.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
                 ])
                 StageBar(segments: sessions.flatMap(\.segments))
-                Text("\(Int((period.immersedShare * 100).rounded())) % del tiempo inmersa")
+                Text("\(period.immersedShare.percentText) del tiempo inmersa")
                     .font(.caption)
                     .foregroundStyle(Theme.tertiaryInk)
                 VStack(spacing: 0) {

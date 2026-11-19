@@ -4,10 +4,11 @@ import SwiftUI
 struct LectoraApp: App {
     init() {
         #if os(iOS)
-        // Títulos grandes en New York, como en el diseño elegido (v7).
-        let base = UIFont.systemFont(ofSize: 34, weight: .bold)
+        // Títulos grandes (Ajustes, formularios) iguales a `Font.screenTitle`: New York 30
+        // medium. Antes eran 34 en negrita y se veían distintos al resto de las pantallas.
+        let base = UIFont.systemFont(ofSize: 30, weight: .medium)
         if let serif = base.fontDescriptor.withDesign(.serif) {
-            UINavigationBar.appearance().largeTitleTextAttributes = [.font: UIFont(descriptor: serif, size: 34)]
+            UINavigationBar.appearance().largeTitleTextAttributes = [.font: UIFont(descriptor: serif, size: 30)]
         }
         #endif
     }

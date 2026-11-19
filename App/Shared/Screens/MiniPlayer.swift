@@ -33,7 +33,7 @@ struct MiniPlayer: View {
                 Text(book.title)
                     .font(.rowTitle.weight(.medium))
                     .lineLimit(1)
-                HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+                HStack(spacing: Theme.Space.inline) {
                     if playing { EqualizerBars() }
                     Text("Cap. VII · quedan 18 min")
                 }

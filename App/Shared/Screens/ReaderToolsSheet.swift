@@ -186,6 +186,8 @@ struct ReaderToolsSheet: View {
                     }
                 }
             }
+            // El primer rótulo a la misma altura que la primera entrada del Índice.
+            .padding(.top, Theme.Space.rowY)
         }
     }
 

@@ -85,6 +85,83 @@ final class DesignRulesTests: XCTestCase {
         }
     }
 
+    /// 19 nov 2026: había 35 medidas armadas a mano sumando tokens («s + xxs», «xl + xs»)
+    /// que daban valores fuera de la escala y distintos para lo mismo. Si hace falta
+    /// otra medida, se nombra en `Theme` (como `rowY` o `inline`); nunca se suma.
+    func testNoArithmeticBetweenTokens() {
+        let files = Self.sources("App").filter { !$0.path.hasSuffix("Design/Theme.swift") }
+        check(hits(#"Theme\.(Space|Size|Radius|Reader)\.\w+\s*[-+/]\s*(Theme\.|\d)"#, in: files),
+              "Medida sumada a mano: nómbrala en Theme y úsala")
+    }
+
+    /// 19 nov 2026: en la Biblioteca el «+» verde iba al final y en el Cuaderno antes
+    /// de otro ícono. El acento de un encabezado va siempre al final (a la derecha).
+    func testAccentActionGoesLast() {
+        var problems: [String] = []
+        for file in Self.screens {
+            for (index, line) in file.lines.enumerated() where line.contains("AccentIconButton(") {
+                let next = file.lines.dropFirst(index + 1)
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .first { !$0.isEmpty && !$0.hasPrefix("//") } ?? "}"
+                if !next.hasPrefix("}") { problems.append("\(file.path):\(index + 1)") }
+            }
+        }
+        check(problems, "El AccentIconButton va al final del encabezado")
+    }
+
+    /// 19 nov 2026: «Pronto, también…» en Buscar y «IA en la nube · Próximamente» en
+    /// Ajustes. Nada en la app promete lo que todavía no hace (ver `Features`).
+    func testNoPromisesOfFutureFeatures() {
+        check(hits(#"(?i)"[^"]*\b(pronto|próximamente|coming soon)\b[^"]*""#, in: Self.sources("App")),
+              "Texto que promete algo que no hace: escóndelo hasta que funcione")
+    }
+
+    /// 19 nov 2026: los formularios (Ajustes, Conexiones…) salían en el gris frío del
+    /// sistema, no en el papel de la app. Todo `Form` lleva `.formScreen()`.
+    func testFormsUseThePaper() {
+        let problems = Self.screens.filter { file in
+            file.lines.filter { $0.trimmingCharacters(in: .whitespaces) == "Form {" }.count
+                > file.lines.filter { $0.contains(".formScreen()") }.count
+        }.map(\.path)
+        check(problems, "Form sin .formScreen(): usa la receta de formulario")
+    }
+
+    /// 19 nov 2026: el gris secundario (4,35 : 1) y el terciario (2,75 : 1) no se
+    /// leían bien sobre el papel. Texto contra `paper`, en claro y en oscuro: tinta y
+    /// secundario ≥ 4,5; terciario y verde ≥ 3 (WCAG).
+    func testTextColorsAreReadable() {
+        let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.text ?? ""
+        func pair(_ name: String) -> (UInt32, UInt32)? {
+            let regex = try! NSRegularExpression(pattern: "static let \(name) = Color\\(light: 0x([0-9A-F]{6}), dark: 0x([0-9A-F]{6})\\)")
+            guard let match = regex.firstMatch(in: theme, range: NSRange(theme.startIndex..., in: theme)),
+                  let light = Range(match.range(at: 1), in: theme), let dark = Range(match.range(at: 2), in: theme)
+            else { return nil }
+            return (UInt32(theme[light], radix: 16)!, UInt32(theme[dark], radix: 16)!)
+        }
+        func luminance(_ hex: UInt32) -> Double {
+            func linear(_ value: UInt32) -> Double {
+                let channel = Double(value & 0xFF) / 255
+                return channel <= 0.03928 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+            }
+            let red: Double = linear(hex >> 16), green: Double = linear(hex >> 8), blue: Double = linear(hex)
+            return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+        }
+        func contrast(_ a: UInt32, _ b: UInt32) -> Double {
+            let (x, y) = (luminance(a), luminance(b))
+            return (max(x, y) + 0.05) / (min(x, y) + 0.05)
+        }
+        guard let paper = pair("paper") else { return XCTFail("No encontré Theme.paper") }
+        var problems: [String] = []
+        for (name, minimum) in [("ink", 4.5), ("secondaryInk", 4.5), ("tertiaryInk", 3.0), ("accent", 3.0)] {
+            guard let color = pair(name) else { problems.append("\(name): no lo encontré"); continue }
+            for (mode, text, background) in [("claro", color.0, paper.0), ("oscuro", color.1, paper.1)]
+            where contrast(text, background) < minimum {
+                problems.append("\(name) en \(mode): \(String(format: "%.2f", contrast(text, background))) < \(minimum)")
+            }
+        }
+        check(problems, "Texto que no se lee bien sobre el papel")
+    }
+
     // MARK: Piezas del catálogo
 
     func testScreensUseCatalogPieces() {
@@ -95,6 +172,8 @@ final class DesignRulesTests: XCTestCase {
             (#"DateFormatter\(\)"#, "Fechas: usa .formatted(…) o NoteRow.day"),
             (#"\b(RoundedRectangle\(|Capsule\(\)|Circle\(\)|Ellipse\(\))"#, "Forma a mano: es una pieza de Components.swift"),
             (#"struct \w+: (ButtonStyle|LabelStyle)"#, "Estilo nuevo: va en Components.swift"),
+            // 19 nov 2026: en Buscar, el campo de `.searchable` quedaba escondido y no había dónde escribir.
+            (#"\.searchable\("#, "Búsqueda: usa SearchField bajo el título"),
         ]
         for (pattern, rule) in rules {
             check(hits(pattern, in: Self.screens), rule)
@@ -202,6 +281,11 @@ final class DesignRulesTests: XCTestCase {
     func testDatesAndNumbersInSpanish() {
         check(hits(#"\.formatted\(\.dateTime|format: \.dateTime(?!.*locale)|format: \.percent"#, in: Self.sources("App")),
               "Fecha o porcentaje sin español: usa fecha.es(…) o valor.percentText")
+        // 19 nov 2026: la Mesa decía «2 % leído» y el lector «3%» del mismo libro.
+        // Todo porcentaje en pantalla sale de percentText / percentNumber.
+        let screensAndPieces = Self.sources("App").filter { !$0.path.hasSuffix("Library/Connectors.swift") }
+        check(hits(#"\* *100\b(?!.*percentNumber)"#, in: screensAndPieces).filter { !$0.contains("var percentNumber") },
+              "Porcentaje armado a mano: usa valor.percentText")
     }
 
     /// 18 nov 2026: el avance que manda el lector (fraction, progress) puede ser NaN

@@ -3,6 +3,8 @@ import SwiftUI
 /// Biblioteca: título con dos acciones, filtros en texto, conteo con el orden,
 /// y portadas (con series en pila) o lista con índice A–Z.
 struct LibraryScreen: View {
+    /// Desde cuántos libros aparece el índice A–Z.
+    static let letterIndexMinimum = 15
     @EnvironmentObject private var model: AppModel
     @AppStorage(LibraryKeys.sort) private var sort: LibrarySort = .recent
     @AppStorage(LibraryKeys.layout) private var layout: LibraryLayout = .covers
@@ -91,8 +93,9 @@ struct LibraryScreen: View {
                     .screenContent()
                 }
                 .overlay(alignment: .trailing) {
-                    // El índice solo tiene sentido con la lista ordenada por título.
-                    if layout == .list && sort == .title && !books.isEmpty {
+                    // El índice solo tiene sentido con la lista ordenada por título y más
+                    // libros de los que caben en una pantalla (con dos, eran 27 letras de adorno).
+                    if layout == .list && sort == .title && books.count >= Self.letterIndexMinimum {
                         LetterIndex { letter in
                             if let target = books.first(where: { $0.sortTitle.firstLetter == letter }) {
                                 withAnimation(Theme.Motion.standard) { scroller.scrollTo(target.id, anchor: .top) }

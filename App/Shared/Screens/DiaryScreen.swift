@@ -101,8 +101,8 @@ struct DiaryScreen: View {
         let difference = period.readingSeconds - previous.readingSeconds
         guard period.readingSeconds > 0, previous.readingSeconds > 0, abs(difference) >= 60 else { return nil }
         let direction = difference > 0 ? "más" : "menos"
-        let share = Int((period.immersedShare * 100).rounded())
-        return "Leíste \(ReadingFormat.duration(abs(difference))) \(direction) que la semana pasada; el \(share) % del tiempo fue inmersa."
+        let share = period.immersedShare.percentText
+        return "Leíste \(ReadingFormat.duration(abs(difference))) \(direction) que la semana pasada; el \(share) del tiempo fue inmersa."
     }
 
     // MARK: Mes
@@ -178,9 +178,9 @@ struct DiaryScreen: View {
     }
 
     private func shareLine(_ share: Double, since first: Double?, month: Date?) -> String {
-        let now = "\(Int((share * 100).rounded())) %"
+        let now = share.percentText
         guard let first, let month, abs(first - share) >= 0.02 else { return now }
-        return "\(now) · en \(month.es(.dateTime.month(.wide))) \(Int((first * 100).rounded())) %"
+        return "\(now) · en \(month.es(.dateTime.month(.wide))) \(first.percentText)"
     }
 
     // MARK: Secciones
@@ -194,7 +194,7 @@ struct DiaryScreen: View {
                 ForEach(books, id: \.bookID) { entry in
                     if let book = model.shelfBook(id: entry.bookID.uuidString) {
                         NavigationLink(value: book) {
-                            BookRow(book: book, detail: "\(entry.sessions == 1 ? "1 sesión" : "\(entry.sessions) sesiones") · de \(Int((entry.from * 100).rounded())) % a \(Int((entry.to * 100).rounded())) %") {
+                            BookRow(book: book, detail: "\(entry.sessions == 1 ? "1 sesión" : "\(entry.sessions) sesiones") · de \(entry.from.percentText) a \(entry.to.percentText)") {
                                 Text(ReadingFormat.duration(entry.seconds)).monospacedDigit()
                             }
                         }

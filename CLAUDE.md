@@ -7,6 +7,11 @@
   algo, se agrega al sistema y a su catálogo en el documento. `DesignRulesTests` (en
   `swift test`) lo verifica en CI; excepciones con `// ds-exception: <motivo>` y su fila
   en «Excepciones».
+- Pulida del 19 nov 2026, cada una con su prueba en `DesignRulesTests`: nunca se suman
+  tokens («s + xxs»): la medida que falte se nombra en `Theme`; todo `Form` lleva
+  `.formScreen()` (papel, no el gris del sistema); el ícono verde va al final del
+  encabezado; ningún texto dice «pronto» ni «próximamente»; los grises de texto
+  pasan el contraste mínimo sobre el papel; todo porcentaje sale de `percentText`.
 - Antes de decir «listo»: `docs/entrega.md` (medir, claro y oscuro, y el informe con
   «comprobado», «hecho sin comprobar» y «no hecho»).
 - Nombre visible: **Gabinete**. El código interno conserva «Lectora» (`LectoraCore`,

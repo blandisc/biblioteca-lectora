@@ -82,9 +82,21 @@ const applyStyle = () => {
     view.renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
 }
 
+// Texto del rango sin los títulos (h1–h6): «Capítulo primero» no es parte de la frase.
+// Si la página solo tiene un título, se usa el título.
+const proseOf = range => {
+    if (!range) return ''
+    const fragment = range.cloneContents()
+    const headings = fragment.querySelectorAll?.('h1, h2, h3, h4, h5, h6') ?? []
+    const all = fragment.textContent ?? ''
+    headings.forEach(heading => heading.remove())
+    const prose = fragment.textContent ?? ''
+    return prose.trim() ? prose : all
+}
+
 // Primeras palabras de la página, cortadas en una palabra completa.
 const excerptOf = range => {
-    const text = range?.toString().replace(/\s+/g, ' ').trim()
+    const text = proseOf(range).replace(/\s+/g, ' ').trim()
     if (!text) return null
     if (text.length <= 160) return text
     return text.slice(0, 160).replace(/\s+\S*$/, '') + '…'

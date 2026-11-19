@@ -27,10 +27,13 @@ struct ReviewScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ScreenHeading(title: "Por revisar")
-                Text("Encontré estos libros en internet, pero no estoy seguro de que sean los tuyos. Elige los datos correctos o conserva los que tienen.")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.secondaryInk)
-                    .padding(.top, Theme.Space.xs)
+                // La explicación solo si hay libros dudosos: sobre «Se completaron solos» confunde.
+                if !pending.isEmpty {
+                    Text("Encontré estos libros en internet, pero no estoy seguro de que sean los tuyos. Elige los datos correctos o conserva los que tienen.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                        .padding(.top, Theme.Space.xs)
+                }
                 if !model.library.pendingLookup.isEmpty {
                     waiting.padding(.top, Theme.Space.l)
                 }
@@ -397,6 +400,7 @@ struct OtherSearchSheet: View {
                     Text("Con el ISBN de la página legal del libro la búsqueda es exacta.")
                 }
             }
+            .formScreen()
             .navigationTitle("Buscar con otros datos")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

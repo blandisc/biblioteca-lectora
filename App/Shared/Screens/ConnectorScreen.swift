@@ -27,6 +27,7 @@ struct ConnectorScreen: View {
             }
             if connected { connectedSections } else { connectSection }
         }
+        .formScreen()
         .navigationTitle(connector.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

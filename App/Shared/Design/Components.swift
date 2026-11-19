@@ -31,6 +31,16 @@ extension View {
         padding(.horizontal, Theme.Space.gutter)
     }
 
+    /// Receta de formulario (Ajustes, Conexiones, Reglas, Editar datos): el mismo papel
+    /// que el resto de la app, no el gris frío del sistema. Sus botones y interruptores
+    /// en verde hoja: con la marca (casi negra en claro) parecían texto fijo.
+    func formScreen() -> some View {
+        self
+            .scrollContentBackground(.hidden)
+            .background(Theme.paper.ignoresSafeArea())
+            .tint(Theme.accent)
+    }
+
     /// Contenedor de una pantalla con scroll: margen, aire arriba y abajo.
     func screenContent() -> some View {
         self
@@ -124,7 +134,7 @@ struct PrimaryButton: View {
             }
             .font(.body.weight(.medium))
             .foregroundStyle(Theme.onBrand)
-            .padding(.horizontal, Theme.Space.l + Theme.Space.xs)
+            .padding(.horizontal, Theme.Space.buttonX)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Theme.Size.control)
             .background(Theme.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
         }
@@ -189,7 +199,7 @@ struct FilterBar<Item: Hashable & Identifiable>: View {
                             .font(.subheadline.weight(selected ? .semibold : .regular))
                             .foregroundStyle(selected ? Theme.ink : Theme.secondaryInk)
                             .padding(.horizontal, Theme.Space.s)
-                            .padding(.vertical, Theme.Space.s - Theme.Space.xxs)
+                            .padding(.vertical, Theme.Space.inline)
                             .background(selected ? Theme.field : .clear,
                                         in: RoundedRectangle(cornerRadius: Theme.Radius.chip, style: .continuous))
                     }
@@ -198,7 +208,7 @@ struct FilterBar<Item: Hashable & Identifiable>: View {
                 }
             }
             // El texto de la primera opción queda alineado con el margen.
-            .padding(.horizontal, Theme.Space.gutter - Theme.Space.s)
+            .padding(.horizontal, Theme.Space.chipInset)
         }
         .padding(.horizontal, -Theme.Space.gutter)
     }
@@ -295,7 +305,7 @@ struct BookRow<Trailing: View>: View {
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
-        HStack(spacing: Theme.Space.m + Theme.Space.xxs) {
+        HStack(spacing: Theme.Space.rowGap) {
             CoverView(title: book.title, author: book.author, style: book.cover, image: book.coverImage)
                 .frame(width: Theme.Size.coverRow)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
@@ -313,7 +323,7 @@ struct BookRow<Trailing: View>: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
         }
-        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .padding(.vertical, Theme.Space.rowY)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
     }
@@ -373,7 +383,7 @@ struct QuoteBlock: View {
             }
         }
         .foregroundStyle(Theme.ink)
-        .padding(.leading, Theme.Space.m + Theme.Space.xxs)
+        .padding(.leading, Theme.Space.rowGap)
         .overlay(alignment: .leading) {
             Rectangle().fill(Theme.accent).frame(width: Theme.Size.quoteRule)
         }
@@ -393,7 +403,7 @@ struct FactRow: View {
         }
         .font(.subheadline)
         .foregroundStyle(Theme.ink)
-        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .padding(.vertical, Theme.Space.rowY)
         .overlay(alignment: .bottom) { Hairline() }
     }
 }
@@ -436,12 +446,12 @@ struct LetterIndex: View {
     private let letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".map(String.init)
 
     var body: some View {
-        VStack(spacing: Theme.Space.xxs / 2) {
+        VStack(spacing: Theme.Space.hair) {
             ForEach(letters, id: \.self) { letter in
                 Button(letter) { onSelect(letter) }
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(Theme.accent)
-                    .frame(width: Theme.Space.l + Theme.Space.xxs)
+                    .frame(width: Theme.Size.letterIndex)
             }
         }
         .buttonStyle(.plain)
@@ -528,7 +538,7 @@ struct CandidateRow: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: Theme.Space.m + Theme.Space.xxs) {
+        HStack(alignment: .top, spacing: Theme.Space.rowGap) {
             CandidateCover(candidate: candidate, width: Theme.Size.coverRow)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 Text(candidate.title)
@@ -545,7 +555,7 @@ struct CandidateRow: View {
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Theme.tertiaryInk)
         }
-        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .padding(.vertical, Theme.Space.rowY)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
         .accessibilityElement(children: .combine)
@@ -615,7 +625,7 @@ struct CompareRow: View {
             }
         }
         .font(.subheadline)
-        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .padding(.vertical, Theme.Space.rowY)
         .overlay(alignment: .bottom) { Hairline() }
     }
 }
@@ -787,7 +797,7 @@ struct NoteBody: View {
                     .foregroundStyle(Theme.secondaryInk)
             }
         }
-        .padding(.leading, Theme.Space.m + Theme.Space.xxs)
+        .padding(.leading, Theme.Space.rowGap)
         .overlay(alignment: .leading) {
             Rectangle().fill(Theme.accent).frame(width: Theme.Size.quoteRule)
         }
@@ -817,10 +827,12 @@ extension Date {
 }
 
 extension Double {
-    /// «57 %».
-    var percentText: String {
-        formatted(.percent.precision(.fractionLength(0)).locale(.gabinete))
-    }
+    /// 57 (de 0,57), redondeado igual en toda la app.
+    var percentNumber: Int { Int((Swift.min(1, Swift.max(0, self)) * 100).rounded()) }
+
+    /// «57 %»: con espacio (como en español) que no se parte, igual en toda la app.
+    /// Antes la Mesa decía «2 %» y el lector «3%» del mismo libro.
+    var percentText: String { "\(percentNumber)\u{00A0}%" }
 }
 
 // MARK: - Sesiones de lectura
@@ -980,14 +992,14 @@ struct WordCounter: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+            HStack(spacing: Theme.Space.inline) {
                 Circle().fill(Theme.accent).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
                 Text(ReadingFormat.words(words))
                     .monospacedDigit()
             }
             .font(.caption.weight(.semibold))
             .foregroundStyle(Theme.accent)
-            .padding(.horizontal, Theme.Space.s + Theme.Space.xxs)
+            .padding(.horizontal, Theme.Space.rowY)
             .frame(minHeight: Theme.Size.tapTarget)
             .contentShape(Rectangle())
         }
@@ -1100,7 +1112,7 @@ struct WeekBars: View {
     private let stacked: [ReadingStage] = [.skimming, .light, .active, .immersed]
 
     var body: some View {
-        VStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+        VStack(spacing: Theme.Space.inline) {
             HStack(alignment: .bottom, spacing: Theme.Space.s) {
                 ForEach(days) { day in
                     VStack(spacing: 0) {
@@ -1165,10 +1177,10 @@ struct MonthCalendar: View {
                         .accessibilityLabel("\(day.date.es(.dateTime.day().month(.wide))): \(ReadingFormat.duration(day.seconds))")
                 }
             }
-            HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+            HStack(spacing: Theme.Space.inline) {
                 Text("Menos")
                 ForEach([ReadingStage.skimming, .light, .active, .immersed], id: \.self) { stage in
-                    Circle().fill(Theme.stage(stage)).frame(width: Theme.Size.legendSwatch + Theme.Space.xxs, height: Theme.Size.legendSwatch + Theme.Space.xxs)
+                    Circle().fill(Theme.stage(stage)).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
                 }
                 Text("Más tiempo")
             }
@@ -1188,8 +1200,8 @@ struct YearBars: View {
 
     var body: some View {
         let most = max(months.max() ?? 0, 1)
-        VStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
-            HStack(alignment: .bottom, spacing: Theme.Space.xs + Theme.Space.xxs) {
+        VStack(spacing: Theme.Space.inline) {
+            HStack(alignment: .bottom, spacing: Theme.Space.inline) {
                 ForEach(Array(months.enumerated()), id: \.offset) { index, seconds in
                     Rectangle()
                         .fill(index == current ? Theme.accent : (seconds > 0 ? Theme.stage(.light) : Theme.track))
@@ -1200,7 +1212,7 @@ struct YearBars: View {
             }
             .frame(height: Theme.Size.yearChart, alignment: .bottom)
             .overlay(alignment: .bottom) { Hairline() }
-            HStack(spacing: Theme.Space.xs + Theme.Space.xxs) {
+            HStack(spacing: Theme.Space.inline) {
                 ForEach(Array(Self.initials.enumerated()), id: \.offset) { index, letter in
                     Text(letter)
                         .font(.caption2.weight(index == current ? .semibold : .regular))
@@ -1231,7 +1243,7 @@ struct SessionRow: View {
                 }
                 .font(.subheadline)
                 .foregroundStyle(Theme.ink)
-                Text("\(ReadingFormat.words(session.words)) palabras · \(Int((session.fromFraction * 100).rounded())) → \(Int((session.toFraction * 100).rounded())) %")
+                Text("\(ReadingFormat.words(session.words)) palabras · \(session.fromFraction.percentNumber) → \(session.toFraction.percentText)")
                     .font(.footnote)
                     .foregroundStyle(Theme.tertiaryInk)
             }
@@ -1241,7 +1253,7 @@ struct SessionRow: View {
                 .monospacedDigit()
                 .foregroundStyle(Theme.secondaryInk)
         }
-        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .padding(.vertical, Theme.Space.rowY)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
     }
@@ -1343,7 +1355,7 @@ struct ContentsRow: View {
             }
         }
         .padding(.leading, Theme.Space.l * CGFloat(min(depth, 3)))
-        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .padding(.vertical, Theme.Space.rowY)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
@@ -1365,15 +1377,30 @@ struct SearchResultRow: View {
                     .foregroundStyle(Theme.tertiaryInk)
                     .lineLimit(1)
             }
-            (Text("…" + before) + Text(match).bold().foregroundStyle(Theme.accent) + Text(after + "…"))
+            (Text(Self.lead(before)) + Text(match).bold().foregroundStyle(Theme.accent) + Text(Self.tail(after)))
                 .font(.prose)
                 .foregroundStyle(Theme.ink)
                 .lineLimit(3)
         }
-        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .padding(.vertical, Theme.Space.rowY)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
+    }
+
+    /// Lo que se quita de los bordes de un pasaje cortado: espacios y puntos suspensivos.
+    private static let cut = CharacterSet.whitespaces.union(CharacterSet(charactersIn: ".…"))
+
+    /// El texto de foliate ya puede traer «...» o «…»: se quitan y se pone uno solo,
+    /// y ninguno si el pasaje empieza o termina ahí.
+    static func lead(_ text: String) -> String {
+        let core = text.trimmingCharacters(in: Self.cut)
+        return core.isEmpty ? "" : "…" + core + (text.last?.isWhitespace == true ? " " : "")
+    }
+
+    static func tail(_ text: String) -> String {
+        let core = text.trimmingCharacters(in: Self.cut)
+        return core.isEmpty ? "" : (text.first?.isWhitespace == true ? " " : "") + core + "…"
     }
 }
 

@@ -45,7 +45,7 @@ struct MesaScreen: View {
 
             Text(book.title)
                 .font(.bookTitle)
-                .padding(.top, Theme.Space.xl + Theme.Space.xs)
+                .padding(.top, Theme.Space.xl)
             Text(book.author)
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
@@ -53,7 +53,7 @@ struct MesaScreen: View {
 
             if let sentence = book.lastSentence {
                 QuoteBlock(label: "Donde lo dejaste", text: sentence, italic: true)
-                    .padding(.top, Theme.Space.l + Theme.Space.xxs)
+                    .padding(.top, Theme.Space.l)
             }
 
             ThinProgress(value: book.progress)
@@ -96,7 +96,7 @@ struct MesaScreen: View {
 
     /// «57 % leído · te faltan ~3 h»
     private func progressLine(_ book: ShelfBook) -> String {
-        let percent = "\(Int(book.progress * 100)) % leído"
+        let percent = "\(book.progress.percentText) leído"
         guard let id = book.bookID, let remaining = sessions.remaining(forBook: id, progress: book.progress) else { return percent }
         return "\(percent) · te faltan ~\(ReadingFormat.duration(remaining))"
     }

@@ -23,9 +23,9 @@ enum Theme {
     /// Texto sobre la marca.
     static let onBrand = Color(light: 0xFFFFFF, dark: 0x141413)
     /// Texto secundario.
-    static let secondaryInk = Color(light: 0x77746D, dark: 0x9C988F)
+    static let secondaryInk = Color(light: 0x6F6C65, dark: 0x9C988F)
     /// Texto terciario: folios y etiquetas pequeñas.
-    static let tertiaryInk = Color(light: 0x9A968D, dark: 0x6F6C65)
+    static let tertiaryInk = Color(light: 0x837F78, dark: 0x7C7870)
     /// Pistas de progreso y separadores.
     static let track = Color(light: 0xE6E3DC, dark: 0x34322E)
     /// Verde hoja: tus marcas y avisos (subrayados, notas, cinta, audio sonando,
@@ -55,12 +55,27 @@ enum Theme {
         static let xl: CGFloat = 24
         static let xxl: CGFloat = 32
         static let xxxl: CGFloat = 48
+        // Medidas con nombre para lo que se repite fuera de la escala. Nunca se suman
+        // tokens en una pantalla o pieza («s + xxs»): si hace falta otra medida, va aquí.
+        /// Separación mínima: entre las letras del índice A–Z.
+        static let hair: CGFloat = 1
+        /// Entre un ícono y su texto, y dentro de piezas pequeñas (leyendas, barras).
+        static let inline: CGFloat = 6
+        /// Aire arriba y abajo de una fila de lista (libro, dato, sesión, resultado).
+        static let rowY: CGFloat = 10
+        /// Entre la portada (o la raya de una cita) y su texto.
+        static let rowGap: CGFloat = 14
+        /// Interior horizontal de un botón principal.
+        static let buttonX: CGFloat = 20
         /// Margen lateral de toda pantalla. Igual a la izquierda y a la derecha.
         static let gutter: CGFloat = 28
         /// Del área segura superior al título de la pantalla.
         static let screenTop: CGFloat = 24
         /// Aire al final del contenido, antes del dock.
         static let screenBottom: CGFloat = 32
+        /// Interior lateral de una fila de filtros que llega al borde: con el aire
+        /// de cada filtro (`s`), su primer texto cae justo en el margen.
+        static let chipInset: CGFloat = gutter - s
     }
 
     // MARK: Radio
@@ -96,6 +111,8 @@ enum Theme {
         static let coverEditor: CGFloat = 84
         /// Alto mínimo de un campo de texto largo (sinopsis).
         static let textEditor: CGFloat = 120
+        /// Ancho del índice A–Z.
+        static let letterIndex: CGFloat = 18
         /// Columnas de la cuadrícula de portadas.
         static let gridColumns = 3
         static let hairline: CGFloat = 0.5
@@ -143,6 +160,9 @@ enum Theme {
         static let edgeZone = 0.28
         /// Margen de los controles de vidrio, igual arriba y abajo, izquierda y derecha.
         static let chromeInset: CGFloat = 16
+        /// Folio sin controles: margen lateral del capítulo y su aire arriba.
+        static let folioInset: CGFloat = 60
+        static let folioTop: CGFloat = 14
     }
 
     // MARK: Énfasis

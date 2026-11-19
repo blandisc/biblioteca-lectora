@@ -4,6 +4,7 @@ import SwiftUI
 struct SearchScreen: View {
     @EnvironmentObject private var model: AppModel
     @State private var query = ""
+    @FocusState private var focused: Bool
 
     private var results: [ShelfBook] {
         let term = query.trimmingCharacters(in: .whitespaces)
@@ -19,9 +20,13 @@ struct SearchScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: "Buscar")
+                    // Campo propio bajo el título: el del sistema (`.searchable`) quedaba
+                    // escondido con la barra de navegación y no había dónde escribir.
+                    SearchField(prompt: "Títulos, autores y series", text: $query, focused: $focused, onSubmit: {})
+                        .padding(.top, Theme.Space.m)
                     if query.isEmpty {
                         EmptyState(title: "Busca en tu biblioteca",
-                                   message: "Títulos, autores y series. Pronto, también el texto de tus libros y tus subrayados.")
+                                   message: "Encuentra cualquier libro de tu Gabinete por su título, su autor o su serie.")
                     } else if results.isEmpty {
                         EmptyState(title: "Sin resultados", message: "Nada coincide con «\(query)».")
                     } else {
@@ -39,25 +44,10 @@ struct SearchScreen: View {
             .background(Theme.paper.ignoresSafeArea())
             .navigationDestination(for: ShelfBook.self) { BookDetailScreen(book: $0) }
             .navigationDestination(for: NoteRef.self) { NoteScreen(ref: $0) }
-            .searchable(text: $query, prompt: "Títulos, autores y series")
-            .modifier(SearchBarPlacement())
+            #if os(iOS)
+            .toolbar(.hidden, for: .navigationBar)
+            #endif
+            .onAppear { if query.isEmpty { focused = true } }
         }
-    }
-}
-
-/// En iOS 26 el campo de búsqueda vive en el dock, así que la barra de
-/// navegación sobra y el título queda a la misma altura que en las demás
-/// pantallas. Antes de iOS 26 el campo va en esa barra y se conserva.
-private struct SearchBarPlacement: ViewModifier {
-    func body(content: Content) -> some View {
-        #if os(iOS)
-        if #available(iOS 26.0, *) {
-            content.toolbar(.hidden, for: .navigationBar)
-        } else {
-            content.navigationBarTitleDisplayMode(.inline)
-        }
-        #else
-        content
-        #endif
     }
 }

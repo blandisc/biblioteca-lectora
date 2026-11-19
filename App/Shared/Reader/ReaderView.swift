@@ -49,7 +49,9 @@ struct ReaderView: View {
                 .ignoresSafeArea(edges: .bottom)
         }
         .overlay(alignment: .topTrailing) {
-            if currentBookmark != nil {
+            // Con los controles a la vista, la barra de estado ocupa el borde y la cinta
+            // tapaba la batería: ahí lo dice el ícono relleno del marcador.
+            if currentBookmark != nil && !showsChrome {
                 Ribbon()
                     .fill(Theme.accent)
                     .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
@@ -156,6 +158,8 @@ struct ReaderView: View {
             guard tools == nil, !contents.isEmpty else { return }
             switch LaunchOptions.screen {
             case "contents": tools = .contents
+            case "marks": tools = .highlights
+            case "appearance": showsAppearance = true
             case "booksearch":
                 controller.search("Mancha")
                 tools = .search
@@ -290,7 +294,7 @@ private struct BottomPanel: View {
     private var fraction: Double { dragValue ?? location?.fraction ?? 0 }
 
     var body: some View {
-        VStack(spacing: Theme.Space.s + Theme.Space.xxs) {
+        VStack(spacing: Theme.Space.rowY) {
             HStack(alignment: .firstTextBaseline) {
                 Button(action: onContents) {
                     HStack(spacing: Theme.Space.xxs) {
@@ -326,7 +330,7 @@ private struct BottomPanel: View {
                 .font(.caption)
                 .monospacedDigit()
                 .foregroundStyle(Theme.secondaryInk)
-                .padding(.top, -Theme.Space.s + Theme.Space.xxs)
+                .padding(.top, -Theme.Space.inline)
             }
             if Features.audiobook {
                 HStack(spacing: Theme.Space.s) {
@@ -338,7 +342,7 @@ private struct BottomPanel: View {
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
         .padding(.horizontal, Theme.Space.l)
-        .padding(.top, Theme.Space.m + Theme.Space.xxs)
+        .padding(.top, Theme.Space.rowGap)
         .padding(.bottom, Theme.Space.m)
         .glassPanel(cornerRadius: Theme.Radius.panel)
         .padding(.horizontal, Theme.Reader.chromeInset)
@@ -372,12 +376,12 @@ private struct ReadingFolio: View {
         VStack {
             Text(location?.chapter ?? title)
                 .lineLimit(1)
-                .padding(.horizontal, Theme.Space.xxxl + Theme.Space.m)
-                .padding(.top, Theme.Space.m + Theme.Space.xxs)
+                .padding(.horizontal, Theme.Reader.folioInset)
+                .padding(.top, Theme.Reader.folioTop)
             Spacer()
             Text((location?.fraction ?? 0).percentText)
                 .monospacedDigit()
-                .padding(.bottom, Theme.Space.xs + Theme.Space.xxs)
+                .padding(.bottom, Theme.Space.inline)
         }
         .font(.caption)
         .foregroundStyle(Theme.tertiaryInk)

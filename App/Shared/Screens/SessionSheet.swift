@@ -108,9 +108,9 @@ struct SessionSummarySheet: View {
 
     private var progressLine: String {
         let title = book?.title ?? "Tu libro"
-        let from = Int((session.fromFraction * 100).rounded())
-        let to = Int((session.toFraction * 100).rounded())
-        return from == to ? "\(title) · \(to) %" : "\(title) · de \(from) % a \(to) %"
+        let from = session.fromFraction.percentText
+        let to = session.toFraction.percentText
+        return from == to ? "\(title) · \(to)" : "\(title) · de \(from) a \(to)"
     }
 }
 

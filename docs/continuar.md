@@ -43,9 +43,28 @@ de ida (sin probar contra los servicios reales), migración de Calibre, bienveni
   depende de la zona horaria.
 - Visto en claro y oscuro: poner y quitar la cinta, que siga al agrandar y achicar la
   letra, Lector › Marcas, y sin botones de audiolibro (Mesa y ficha).
-- Pendiente de decidir: con los controles abiertos la cinta tapa la batería de la barra
-  de estado. Y el subrayado de muestra «de Readwise» no se ancla porque su cita termina
+- Resuelto el 19 nov: con los controles abiertos la cinta ya no se dibuja (tapaba la
+  batería; ahí lo dice el ícono relleno del marcador). Pendiente: el subrayado de muestra «de Readwise» no se ancla porque su cita termina
   en punto y el libro dice «astillero,»: ¿anclar ignorando la puntuación final?
+
+## Pulida visual (19 nov 2026)
+Pasada pantalla por pantalla en el simulador, en claro y oscuro (capturas con
+`-screenshot.screen`; ahora también `settings`, `marks` y `appearance`). Arreglado:
+- Buscar no tenía dónde escribir (el campo de `.searchable` quedaba escondido): ahora
+  `SearchField` bajo el título.
+- Ajustes y los demás formularios salían en el gris frío del sistema y sus botones, casi
+  negros en claro, parecían texto: `.formScreen()` (papel y acciones en verde hoja). El
+  título grande es ahora igual a los demás (New York 30 medium).
+- Grises de texto con poco contraste (secundario 4,35 y terciario 2,75 : 1): ajustados.
+- 35 medidas armadas sumando tokens: ahora tienen nombre (`inline`, `rowY`, `rowGap`…).
+- Porcentajes: la Mesa decía «2 %» y el lector «3%» del mismo libro; todo sale de
+  `percentText` («3 %»).
+- «Donde lo dejaste» ya no empieza con el título del capítulo; «Listo para leer» ya no
+  aparece junto a un libro empezado; el índice A–Z solo con 15 libros o más; la
+  explicación de «Por revisar» solo si hay libros dudosos; puntos suspensivos dobles en
+  Lector › Buscar; el «+» verde va al final del encabezado (Cuaderno) y Ajustes usa un
+  engrane; sin «Pronto…» ni «Próximamente».
+Cada regla tiene su prueba en `DesignRulesTests` y su fila en `docs/sistema-diseno.md`.
 
 ## Primero, al llegar al Mac
 1. Ver que CI del último commit de `app-esqueleto` pasó.

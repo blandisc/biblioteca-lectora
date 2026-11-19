@@ -112,13 +112,13 @@ struct SettingsScreen: View {
                             LabeledContent(connector.title, value: connectors.isConnected(connector) ? "Conectado" : "Sin conectar")
                         }
                     }
-                    LabeledContent("IA en la nube", value: "Próximamente")
                 } header: {
                     Text("Conexiones")
                 } footer: {
                     Text("Cada servicio se usa con tu propia llave, guardada en tu Llavero de iCloud. Gabinete no tiene servidor: habla directo con cada uno.")
                 }
             }
+            .formScreen()
             .navigationTitle("Ajustes")
             .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
             .toolbar {
