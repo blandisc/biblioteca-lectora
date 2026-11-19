@@ -17,3 +17,10 @@ enum LaunchOptions {
     /// Importar los libros de `Documents/Semilla` al arrancar (biblioteca vacía).
     static var seed: Bool { UserDefaults.standard.bool(forKey: "screenshot.seed") }
 }
+
+/// Lo que todavía no funciona no se muestra: nada en la app promete algo que no hace.
+enum Features {
+    /// Audiolibro (Escuchar, Guiada, mini reproductor): llega en la fase C.
+    /// Las capturas lo enseñan para revisar su diseño.
+    static var audiobook: Bool { LaunchOptions.listening }
+}

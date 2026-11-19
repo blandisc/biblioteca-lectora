@@ -2,12 +2,12 @@ import LectoraCore
 import SwiftUI
 
 /// Herramientas del lector, en una hoja: el índice del libro, buscar en el
-/// libro y tus subrayados de este libro. Tocar algo lleva ahí y cierra la hoja.
+/// libro y tus marcas en él (marcadores y subrayados). Tocar algo lleva ahí y cierra la hoja.
 struct ReaderToolsSheet: View {
     enum Part: String, CaseIterable, Identifiable {
         case contents = "Índice"
         case search = "Buscar"
-        case highlights = "Subrayados"
+        case highlights = "Marcas"
         var id: Self { self }
     }
 
@@ -15,13 +15,18 @@ struct ReaderToolsSheet: View {
     let bookID: UUID?
     @State var part: Part
     @ObservedObject private var annotations = AnnotationStore.shared
+    @ObservedObject private var library = LibraryStore.shared
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @FocusState private var searchFocused: Bool
 
     private var highlights: [Annotation] {
         guard let bookID else { return [] }
-        return annotations.annotations(forBook: bookID).filter { $0.cfi != nil }
+        return annotations.annotations(forBook: bookID)
+    }
+
+    private var bookmarks: [Bookmark] {
+        bookID.map { library.bookmarks(for: $0) } ?? []
     }
 
     var body: some View {
@@ -127,32 +132,68 @@ struct ReaderToolsSheet: View {
         }
     }
 
-    // MARK: Subrayados
+    // MARK: Marcas
 
     @ViewBuilder
     private var highlightList: some View {
-        if highlights.isEmpty {
-            EmptyState(title: "Sin subrayados en este libro",
-                       message: "Mantén el dedo sobre el texto y elige «Subrayar». Aquí los encuentras para volver a cada pasaje.")
+        if highlights.isEmpty && bookmarks.isEmpty {
+            EmptyState(title: "Sin marcas en este libro",
+                       message: "Toca la cinta arriba para marcar una página, o mantén el dedo sobre el texto y elige «Subrayar». Aquí las encuentras para volver.")
         } else {
             VStack(alignment: .leading, spacing: Theme.Space.xl) {
-                ForEach(highlights) { highlight in
-                    Button {
-                        if let cfi = highlight.cfi { controller.goTo(target: cfi) }
-                        dismiss()
-                    } label: {
-                        QuoteBlock(label: highlight.createdAt.es(.dateTime.day().month(.abbreviated)), text: highlight.quote, note: highlight.note)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
+                if !bookmarks.isEmpty {
+                    VStack(alignment: .leading, spacing: 0) {
+                        SectionLabel(text: "Marcadores")
+                        ForEach(bookmarks) { mark in
+                            Button {
+                                controller.goTo(target: mark.cfi)
+                                dismiss()
+                            } label: {
+                                ContentsRow(label: "\(mark.fraction.percentText) · \(mark.excerpt ?? "Página marcada")")
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button(role: .destructive) { library.removeBookmark(id: mark.id) } label: {
+                                    Label("Quitar marcador", systemImage: "bookmark.slash")
+                                }
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button(role: .destructive) {
-                            if let cfi = highlight.cfi { controller.removeHighlight(cfi: cfi) }
-                        } label: { Label("Borrar subrayado", systemImage: "trash") }
+                }
+                if !highlights.isEmpty {
+                    VStack(alignment: .leading, spacing: Theme.Space.l) {
+                        SectionLabel(text: "Subrayados")
+                        ForEach(highlights) { highlight in
+                            Button {
+                                if let cfi = highlight.cfi {
+                                    controller.goTo(target: cfi)
+                                    dismiss()
+                                }
+                            } label: {
+                                QuoteBlock(label: label(for: highlight), text: highlight.quote, note: highlight.note)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                if let cfi = highlight.cfi {
+                                    Button(role: .destructive) { controller.removeHighlight(cfi: cfi) } label: {
+                                        Label("Borrar subrayado", systemImage: "trash")
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+
+    /// «12 nov», y de dónde vino si no se encontró su lugar en este libro.
+    private func label(for highlight: Annotation) -> String {
+        let day = highlight.createdAt.es(.dateTime.day().month(.abbreviated))
+        guard highlight.cfi == nil else { return day }
+        let origin = highlight.source == "calibre" ? "de Calibre" : "de Readwise"
+        return "\(day) · \(origin), sin lugar en este libro"
     }
 }

@@ -276,6 +276,24 @@ window.lectora = {
         searchToken++
         view?.clearSearch()
     },
+    // Busca en el libro la cita de cada subrayado que llegó sin posición (de
+    // Calibre o de Kindle vía Readwise) y manda dónde quedó, uno por uno.
+    async anchor(items) {
+        for (const { id, text } of items) {
+            const query = (text ?? '').replace(/\s+/g, ' ').trim().slice(0, 300)
+            let cfi = null
+            if (view && query.length >= 4) {
+                try {
+                    for await (const result of view.search({ query })) {
+                        if (result === 'done') break
+                        if (result.subitems?.length) { cfi = result.subitems[0].cfi; break }
+                    }
+                } catch {}
+                view.clearSearch()
+            }
+            post('anchored', { id, cfi })
+        }
+    },
     setStyle(partial) {
         style = { ...style, ...partial }
         applyStyle()

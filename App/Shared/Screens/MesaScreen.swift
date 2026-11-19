@@ -69,8 +69,10 @@ struct MesaScreen: View {
 
             HStack(spacing: Theme.Space.m) {
                 PrimaryButton(title: "Seguir leyendo", action: model.continueReading)
-                RoundIconButton(systemImage: "headphones", label: "Escuchar como audiolibro") {
-                    withAnimation(Theme.Motion.standard) { model.listening = model.listening == nil ? book : nil }
+                if Features.audiobook {
+                    RoundIconButton(systemImage: "headphones", label: "Escuchar como audiolibro") {
+                        withAnimation(Theme.Motion.standard) { model.listening = model.listening == nil ? book : nil }
+                    }
                 }
             }
             .padding(.top, Theme.Space.xl)

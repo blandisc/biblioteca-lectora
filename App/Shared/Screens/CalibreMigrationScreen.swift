@@ -136,7 +136,7 @@ private struct ReviewStep: View {
                 FactRow(label: "Ya estaban en tu Gabinete", value: "\(plan.alreadyHere.count)")
                 FactRow(label: "Sin archivo en Calibre", value: "\(plan.withoutFiles.count)")
             }
-            Text("Los subrayados de Calibre llegan a tu Cuaderno con su libro; todavía no se pintan dentro del texto.")
+            Text("Los subrayados de Calibre llegan a tu Cuaderno con su libro, y se pintan en el texto la primera vez que abres cada libro.")
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
             if plan.toImport.isEmpty {

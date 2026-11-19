@@ -151,3 +151,19 @@ final class JobBoardTests: XCTestCase {
         XCTAssertEqual(JobBoard.job(id: id, in: state)?.lastError, "Sin conexión")
     }
 }
+
+final class BookmarkTests: XCTestCase {
+    func testBookmarksTravelInTheLogAndCanBeRemoved() {
+        var state = LibraryState()
+        let clock = HybridLogicalClock(node: "iphone")
+        let book = UUID()
+        let mark = Bookmark(bookID: book, cfi: "epubcfi(/6/8!/4/2)", fraction: 0.42, excerpt: "En un lugar")
+        state.apply(mark.changes(clock: clock))
+        XCTAssertEqual(state.bookmarks(for: book), [mark])
+        // Con otra letra la página empieza en otro CFI, pero es el mismo lugar.
+        XCTAssertTrue(mark.marks(cfi: "epubcfi(/6/8!/4/6)", fraction: 0.4205))
+        XCTAssertFalse(mark.marks(cfi: nil, fraction: 0.5))
+        state.apply(Bookmark.deletion(id: mark.id, clock: clock))
+        XCTAssertTrue(state.bookmarks(for: book).isEmpty)
+    }
+}

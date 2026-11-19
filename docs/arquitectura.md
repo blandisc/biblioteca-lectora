@@ -51,7 +51,7 @@ una copia de `metadata.db` (libros, autores, series, etiquetas, editorial, idiom
 calificación, sinopsis, identificadores con el uuid de Calibre, formatos y los subrayados
 del visor); `CalibreMigrationPlan` separa lo nuevo, lo que ya estaba (mismo uuid, o título
 y autor) y lo que no tiene archivo; la copia conserva la carpeta y el número de Calibre si
-están libres. Los subrayados de Calibre llegan al Cuaderno sin pintarse en el texto aún.
+están libres. Los subrayados de Calibre se pintan en el texto al abrir el libro (se buscan por su cita).
 
 ### D4. Readwise: el lugar central de los subrayados, en las dos direcciones
 Readwise es buen producto (su lector no) y debe poderse **entrar y salir sin perder nada**.
@@ -71,7 +71,7 @@ Readwise es buen producto (su lector no) y debe poderse **entrar y salir sin per
 `App/Shared/Library/Connectors.swift`. Los nuevos se mandan en un envío; las notas
 editadas y los borrados, uno por uno; lo que llega se empareja por `readwise_id` o por
 el enlace `gabinete://`. Lo que llega de un libro que no tienes queda con su título
-(«fuera de tu biblioteca»). Anclar en el EPUB los que llegan (por la cita) queda pendiente.
+(«fuera de tu biblioteca»). Los que llegan sin posición (de Readwise o de Calibre) se buscan por su cita la primera vez que abres el libro y, si aparecen, se pintan y quedan con su lugar.
 
 ### D5. Hardcover: de ida
 Gabinete es la verdad; Hardcover es el registro público de lectura.

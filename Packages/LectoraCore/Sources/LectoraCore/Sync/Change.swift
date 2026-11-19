@@ -8,6 +8,8 @@ public enum EntityKind: String, Codable, Sendable, CaseIterable {
     case shelf
     /// Trabajo para un servicio externo (Readwise, Hardcover…): ver `JobBoard`.
     case job
+    /// Marcador en un libro (la cinta del lector).
+    case bookmark
 }
 
 /// Un cambio atómico: "el campo `field` de la entidad `entityID` vale `value`".

@@ -20,7 +20,7 @@ struct ReaderView: View {
     @State private var tools: ReaderToolsSheet.Part?
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
-    @State private var bookmarked = false
+    @ObservedObject private var library = LibraryStore.shared
     @State private var showsAppearance = false
     @State private var noteText = ""
     @AppStorage(ReaderKeys.font) private var font: ReaderFont = .newYork
@@ -48,7 +48,7 @@ struct ReaderView: View {
                 .ignoresSafeArea(edges: .bottom)
         }
         .overlay(alignment: .topTrailing) {
-            if bookmarked {
+            if currentBookmark != nil {
                 Ribbon()
                     .fill(Theme.accent)
                     .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
@@ -181,7 +181,7 @@ struct ReaderView: View {
             }
             VStack(spacing: 0) {
                 if showsChrome {
-                    TopControls(bookmarked: $bookmarked, onClose: { dismiss() },
+                    TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() },
                                 onSearch: { tools = .search },
                                 onAppearance: { showsAppearance = true })
                         .transition(.move(edge: .top).combined(with: .opacity))
@@ -197,6 +197,21 @@ struct ReaderView: View {
         }
     }
 
+    /// El marcador de la página que se ve, si tiene.
+    private var currentBookmark: Bookmark? {
+        guard let bookID, let location = controller.location else { return nil }
+        return library.bookmarks(for: bookID).first { $0.marks(cfi: location.cfi, fraction: location.fraction) }
+    }
+
+    private func toggleBookmark() {
+        guard let bookID, let location = controller.location else { return }
+        if let mark = currentBookmark {
+            library.removeBookmark(id: mark.id)
+        } else if let cfi = location.cfi {
+            library.addBookmark(Bookmark(bookID: bookID, cfi: cfi, fraction: location.fraction, excerpt: location.excerpt))
+        }
+    }
+
     private func applyStyle() {
         controller.setColors(text: palette.text, link: palette.link)
         controller.setFont(family: font.css, scale: scale)
@@ -204,7 +219,8 @@ struct ReaderView: View {
 }
 
 private struct TopControls: View {
-    @Binding var bookmarked: Bool
+    let bookmarked: Bool
+    let onBookmark: () -> Void
     let onClose: () -> Void
     let onSearch: () -> Void
     let onAppearance: () -> Void
@@ -233,7 +249,7 @@ private struct TopControls: View {
                 }
                 .accessibilityLabel("Apariencia")
                 Button {
-                    withAnimation(Theme.Motion.standard) { bookmarked.toggle() }
+                    withAnimation(Theme.Motion.standard) { onBookmark() }
                 } label: {
                     Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
                         .font(.body.weight(.semibold))
@@ -252,8 +268,8 @@ private struct TopControls: View {
     }
 }
 
-/// Panel inferior: el capítulo es el botón del índice, páginas en vez de
-/// porcentaje y solo dos acciones grandes, Guiada y Escuchar.
+/// Panel inferior: el capítulo es el botón del índice y páginas en vez de
+/// porcentaje. Guiada y Escuchar aparecen cuando llegue el audiolibro.
 private struct BottomPanel: View {
     let title: String
     let location: ReaderController.Location?
@@ -302,9 +318,11 @@ private struct BottomPanel: View {
                 .foregroundStyle(Theme.secondaryInk)
                 .padding(.top, -Theme.Space.s + Theme.Space.xxs)
             }
-            HStack(spacing: Theme.Space.s) {
-                ReaderPillButton(title: "Guiada", systemImage: "text.viewfinder") {}
-                ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
+            if Features.audiobook {
+                HStack(spacing: Theme.Space.s) {
+                    ReaderPillButton(title: "Guiada", systemImage: "text.viewfinder") {}
+                    ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
+                }
             }
         }
         .buttonStyle(.plain)

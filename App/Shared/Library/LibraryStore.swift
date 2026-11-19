@@ -864,3 +864,21 @@ extension LibraryStore {
         return report
     }
 }
+
+// MARK: - Marcadores
+
+extension LibraryStore {
+    func bookmarks(for bookID: UUID) -> [Bookmark] {
+        state.bookmarks(for: bookID)
+    }
+
+    func addBookmark(_ bookmark: Bookmark) {
+        record(bookmark.changes(clock: clock))
+        objectWillChange.send()
+    }
+
+    func removeBookmark(id: UUID) {
+        record([Bookmark.deletion(id: id, clock: clock)])
+        objectWillChange.send()
+    }
+}

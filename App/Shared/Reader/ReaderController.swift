@@ -208,6 +208,24 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         evaluate("window.lectora.setHighlights(\(array))")
     }
 
+    /// Subrayados que llegaron sin posición (Calibre, Kindle): se buscan una
+    /// vez por su cita; los que se encuentran se pintan y se guardan con su lugar.
+    private func anchorPending() {
+        guard let bookID else { return }
+        var tried = Set(UserDefaults.standard.stringArray(forKey: Self.anchorTriedKey) ?? [])
+        let pending = AnnotationStore.shared.annotations(forBook: bookID)
+            .filter { $0.cfi == nil && !tried.contains($0.id.uuidString) }
+        guard !pending.isEmpty,
+              let data = try? JSONSerialization.data(withJSONObject: pending.map { ["id": $0.id.uuidString, "text": $0.quote] }),
+              let array = String(data: data, encoding: .utf8)
+        else { return }
+        pending.forEach { tried.insert($0.id.uuidString) }
+        UserDefaults.standard.set(Array(tried), forKey: Self.anchorTriedKey)
+        evaluate("window.lectora.anchor(\(array))")
+    }
+
+    private static let anchorTriedKey = "subrayados.anclajeIntentado"
+
     /// Literal de cadena JavaScript seguro.
     private static func js(_ string: String) -> String {
         guard let data = try? JSONSerialization.data(withJSONObject: [string]),
@@ -243,6 +261,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 return ContentsEntry(id: index, label: label, href: entry["href"] as? String, depth: entry["depth"] as? Int ?? 0)
             }
             restoreHighlights()
+            anchorPending()
         case "relocate":
             location = Location(
                 fraction: body["fraction"] as? Double ?? 0,
@@ -275,6 +294,12 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                                     before: item["pre"] as? String ?? "", match: item["match"] as? String ?? "",
                                     after: item["post"] as? String ?? "")
             }
+        case "anchored":
+            guard let id = (body["id"] as? String).flatMap(UUID.init(uuidString:)), let cfi = body["cfi"] as? String,
+                  var annotation = AnnotationStore.shared.annotation(id: id), annotation.cfi == nil else { break }
+            annotation.cfi = cfi
+            try? AnnotationStore.shared.save(annotation)
+            evaluate("window.lectora.addHighlight(\(Self.js(cfi)))")
         case "tap":
             if let x = body["x"] as? Double { onTap?(x) }
         case "annotation":
