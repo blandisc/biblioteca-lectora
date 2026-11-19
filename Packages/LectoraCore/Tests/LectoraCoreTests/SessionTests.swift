@@ -157,7 +157,8 @@ final class BookmarkTests: XCTestCase {
         var state = LibraryState()
         let clock = HybridLogicalClock(node: "iphone")
         let book = UUID()
-        let mark = Bookmark(bookID: book, cfi: "epubcfi(/6/8!/4/2)", fraction: 0.42, excerpt: "En un lugar")
+        let mark = Bookmark(bookID: book, cfi: "epubcfi(/6/8!/4/2)", fraction: 0.42, excerpt: "En un lugar",
+                            createdAt: Date(timeIntervalSince1970: 1_763_500_000))
         state.apply(mark.changes(clock: clock))
         XCTAssertEqual(state.bookmarks(for: book), [mark])
         // Con otra letra la página empieza en otro CFI, pero es el mismo lugar.
