@@ -16,8 +16,8 @@ public struct Annotation: Identifiable, Hashable, Sendable {
     public var createdAt: Date
     /// ID del subrayado en Readwise, una vez enviado (o el que traía, si vino de allá).
     public var readwiseID: String?
-    /// De dónde vino: `nil` si lo hiciste en Gabinete; «readwise» si llegó de allá
-    /// (Kindle, Apple Books…). Lo que vino de Readwise no se vuelve a mandar.
+    /// De dónde vino: `nil` si lo hiciste en Gabinete; «calibre» si vino de su visor;
+    /// «readwise» si llegó de allá (Kindle, Apple Books…), y eso no se vuelve a mandar.
     public var source: String?
     /// Título y autor del libro tal como venían, para los que no están en tu biblioteca.
     public var bookTitle: String?
@@ -53,8 +53,8 @@ public struct Annotation: Identifiable, Hashable, Sendable {
         self.bookAuthor = bookAuthor
     }
 
-    /// Hecho en Gabinete (no traído de Readwise).
-    public var isOwn: Bool { source == nil }
+    /// Tuyo para mandar a Readwise: hecho en Gabinete o traído de Calibre (no llegó de Readwise).
+    public var isOwn: Bool { source != "readwise" }
 }
 
 extension Annotation {

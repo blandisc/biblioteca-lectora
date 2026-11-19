@@ -43,6 +43,7 @@ struct SettingsScreen: View {
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @AppStorage(MetadataKeys.googleKey) private var googleKey = ""
     @State private var choosingFolder = false
+    @State private var migratingCalibre = false
     @State private var chosenFolder: URL?
     @State private var tidyReport: LibraryStore.TidyReport?
     @State private var errorMessage: String?
@@ -78,6 +79,7 @@ struct SettingsScreen: View {
                             Button("Volver a la carpeta de este dispositivo") { model.library.useLocalCabinet() }
                         }
                     }
+                    Button("Traer mi biblioteca de Calibre…") { migratingCalibre = true }
                     Button("Ordenar la biblioteca") { tidyReport = model.library.tidy() }
                 } header: {
                     Text("Gabinete")
@@ -118,6 +120,7 @@ struct SettingsScreen: View {
                 }
             }
             .navigationTitle("Ajustes")
+            .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Listo") { dismiss() }

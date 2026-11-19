@@ -789,3 +789,78 @@ extension LibraryStore {
         state.apply(changes)
     }
 }
+
+// MARK: - Migración de Calibre (arquitectura D3)
+
+/// Cómo fue traer una biblioteca de Calibre.
+struct CalibreMigrationReport {
+    var imported = 0
+    var alreadyHere = 0
+    var annotations = 0
+    /// Libros sin ningún archivo en Calibre.
+    var withoutFiles: [String] = []
+    /// Libros que no se pudieron copiar, con el porqué.
+    var failed: [(title: String, reason: String)] = []
+}
+
+extension LibraryStore {
+    /// Trae una biblioteca de Calibre: copia cada carpeta de libro tal cual
+    /// (archivos, portada), conserva su número de Calibre si está libre, escribe
+    /// su OPF al día y anota el libro y sus subrayados en tu Gabinete. La
+    /// biblioteca de Calibre no se toca.
+    func migrateFromCalibre(_ source: URL, plan: CalibreMigrationPlan,
+                            annotations: AnnotationStore) async -> CalibreMigrationReport {
+        let accessing = source.startAccessingSecurityScopedResource()
+        defer { if accessing { source.stopAccessingSecurityScopedResource() } }
+        var report = CalibreMigrationReport()
+        report.alreadyHere = plan.alreadyHere.count
+        report.withoutFiles = plan.withoutFiles.map(\.book.title)
+        progress = (0, plan.toImport.count)
+        defer { progress = nil }
+
+        var lastID = books.compactMap(\.calibreID).max() ?? 0
+        for (index, entry) in plan.toImport.enumerated() {
+            var book = rules.apply(to: entry.book)
+            var calibreID = entry.book.calibreID ?? lastID + 1
+            var folder = entry.folder
+            let taken = books.contains { $0.calibreID == calibreID }
+                || FileManager.default.fileExists(atPath: root.appendingPathComponent(folder).path)
+            if taken {
+                lastID = max(lastID, books.compactMap(\.calibreID).max() ?? 0) + 1
+                calibreID = lastID
+                folder = CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)
+            }
+            lastID = max(lastID, calibreID)
+            book.calibreID = calibreID
+
+            let from = source.appendingPathComponent(entry.folder, isDirectory: true)
+            let to = root.appendingPathComponent(folder, isDirectory: true)
+            guard let preferred = entry.preferredFile else { continue }
+            let fileName = (preferred as NSString).lastPathComponent
+            do {
+                book.fileHash = try await Task.detached(priority: .userInitiated) {
+                    try FileManager.default.createDirectory(at: to.deletingLastPathComponent(), withIntermediateDirectories: true)
+                    try FileManager.default.copyItem(at: from, to: to)
+                    return try LibraryStore.sha256(of: to.appendingPathComponent(fileName))
+                }.value
+                book.filePath = "\(folder)/\(fileName)"
+                let hasCover = FileManager.default.fileExists(atPath: to.appendingPathComponent(CalibreLayout.coverFileName).path)
+                try writeOPF(book, hasCover: hasCover)
+                try record(book)
+                for highlight in entry.annotations {
+                    try? annotations.save(Annotation(bookID: book.id, cfi: nil, quote: highlight.text, color: "pencil",
+                                                     note: highlight.note, createdAt: highlight.createdAt ?? Date(),
+                                                     source: "calibre"))
+                    report.annotations += 1
+                }
+                report.imported += 1
+            } catch {
+                try? FileManager.default.removeItem(at: to)
+                removeIfEmpty(to.deletingLastPathComponent())
+                report.failed.append((entry.book.title, error.localizedDescription))
+            }
+            progress = (index + 1, plan.toImport.count)
+        }
+        return report
+    }
+}

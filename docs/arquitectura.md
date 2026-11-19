@@ -46,6 +46,13 @@ la escriben o si iCloud la sincroniza a medias. Por eso:
 - Abrir Calibre sobre la carpeta de iCloud está permitido para **consultar o convertir**,
   con la carpeta en «Mantener descargado» y sin editar datos en los dos lados.
 
+**Hecho:** Ajustes › Gabinete › «Traer mi biblioteca de Calibre…». `CalibreLibrary` lee
+una copia de `metadata.db` (libros, autores, series, etiquetas, editorial, idioma,
+calificación, sinopsis, identificadores con el uuid de Calibre, formatos y los subrayados
+del visor); `CalibreMigrationPlan` separa lo nuevo, lo que ya estaba (mismo uuid, o título
+y autor) y lo que no tiene archivo; la copia conserva la carpeta y el número de Calibre si
+están libres. Los subrayados de Calibre llegan al Cuaderno sin pintarse en el texto aún.
+
 ### D4. Readwise: el lugar central de los subrayados, en las dos direcciones
 Readwise es buen producto (su lector no) y debe poderse **entrar y salir sin perder nada**.
 - **Gabinete → Readwise:** cada subrayado (cita, nota, posición, fecha y enlace

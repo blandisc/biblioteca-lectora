@@ -144,7 +144,7 @@ public enum CalibreOPF {
         return "\(year)-\(month)-\(day)T12:00:00+00:00"
     }
 
-    private static func ourDate(_ date: String) -> String? {
+    static func ourDate(_ date: String) -> String? {
         let day = calendarDay(date) ?? String(date.prefix(10))
         guard day.count >= 4 else { return nil }
         if day.hasSuffix("-01-01") { return String(day.prefix(4)) }
@@ -171,7 +171,7 @@ public enum CalibreOPF {
         return formatter.string(from: date)
     }
 
-    private static func parseTimestamp(_ value: String) -> Date? {
+    static func parseTimestamp(_ value: String) -> Date? {
         // Calibre escribe microsegundos («…05.123456+00:00»); se descartan.
         let trimmed = value.replacingOccurrences(of: #"\.\d+"#, with: "", options: .regularExpression)
         let formatter = ISO8601DateFormatter()
