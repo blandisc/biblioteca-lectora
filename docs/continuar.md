@@ -33,8 +33,10 @@ de ida (sin probar contra los servicios reales), migración de Calibre, bienveni
    mini reproductor) hasta la fase C.
 
 ## Primero, al llegar al Mac
-1. Ver que CI de `9193c9c` pasó (el fallo de `4173da4` era solo un `import LectoraCore`
-   que faltaba en `ReaderView.swift`). Si no, arreglar.
+1. Ver que CI del último commit de `app-esqueleto` pasó. Fallos ya arreglados: un
+   `import LectoraCore` en `ReaderView.swift` (`9193c9c`) y la fecha de la prueba de
+   marcadores (`654ea19`; el registro guarda la fecha como número y pierde fracciones de
+   segundo). Si algo sigue rojo, arreglar primero.
 2. Correr la app en el simulador y comprobar en claro y oscuro: la cinta (poner, quitar,
    que siga al cambiar la letra), Lector › Marcas, y que no aparezcan los botones del
    audiolibro. Con un EPUB que tenga subrayados de Calibre: que se pinten al abrir.
