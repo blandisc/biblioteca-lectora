@@ -2,10 +2,9 @@ name: Capturas
 
 # Abre la app en el simulador de iPhone y publica las capturas en la rama
 # `capturas` (una carpeta por commit), para revisar el diseño sin un Mac.
+# Solo a mano (Actions › Capturas › Run workflow): en cada push se cancelaban
+# unas a otras y cada cancelación mandaba un correo. En el Mac: scripts/screenshots.sh.
 on:
-  push:
-    branches: [app-esqueleto]
-    paths: ['App/**', 'scripts/**', 'project.yml', '.github/workflows/capturas.yml']
   workflow_dispatch:
 
 permissions:
