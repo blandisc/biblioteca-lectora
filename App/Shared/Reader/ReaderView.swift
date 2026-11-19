@@ -16,6 +16,8 @@ struct ReaderView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SessionKeys.counter) private var showsCounter = true
     @State private var showsSession = false
+    /// Hoja de herramientas abierta (índice, buscar o subrayados).
+    @State private var tools: ReaderToolsSheet.Part?
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @State private var bookmarked = false
@@ -61,6 +63,9 @@ struct ReaderView: View {
         .statusBarHidden(!showsChrome)
         #endif
         .preferredColorScheme(palette.scheme ?? mode.colorScheme)
+        .sheet(item: $tools) { part in
+            ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
+        }
         .sheet(isPresented: $showsSession) {
             if let session = controller.session {
                 SessionSheet(tracker: session, bookTitle: catalogTitle, fraction: controller.location?.fraction ?? 0)
@@ -166,12 +171,14 @@ struct ReaderView: View {
             VStack(spacing: 0) {
                 if showsChrome {
                     TopControls(bookmarked: $bookmarked, onClose: { dismiss() },
+                                onSearch: { tools = .search },
                                 onAppearance: { showsAppearance = true })
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 Spacer(minLength: 0)
                 if showsChrome {
                     BottomPanel(title: title, location: controller.location,
+                                onContents: { tools = .contents },
                                 onSeek: { controller.goTo(fraction: $0) })
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -188,6 +195,7 @@ struct ReaderView: View {
 private struct TopControls: View {
     @Binding var bookmarked: Bool
     let onClose: () -> Void
+    let onSearch: () -> Void
     let onAppearance: () -> Void
 
     var body: some View {
@@ -201,7 +209,7 @@ private struct TopControls: View {
             .accessibilityLabel("Cerrar libro")
             Spacer()
             HStack(spacing: 0) {
-                Button {} label: {
+                Button(action: onSearch) {
                     Image(systemName: "magnifyingglass")
                         .font(.body.weight(.semibold))
                         .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
@@ -238,6 +246,7 @@ private struct TopControls: View {
 private struct BottomPanel: View {
     let title: String
     let location: ReaderController.Location?
+    let onContents: () -> Void
     let onSeek: (Double) -> Void
     @State private var dragValue: Double?
 
@@ -246,7 +255,7 @@ private struct BottomPanel: View {
     var body: some View {
         VStack(spacing: Theme.Space.s + Theme.Space.xxs) {
             HStack(alignment: .firstTextBaseline) {
-                Button {} label: {
+                Button(action: onContents) {
                     HStack(spacing: Theme.Space.xxs) {
                         Text(location?.chapter ?? title).lineLimit(1)
                         Image(systemName: "chevron.right").font(.caption.weight(.bold))

@@ -9,6 +9,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         var fraction: Double
         var cfi: String?
         var chapter: String?
+        /// Entrada del índice del capítulo actual.
+        var chapterHref: String? = nil
         /// Posición en «páginas» de foliate (ubicaciones de ~1,500 caracteres).
         var page: Int?
         var pageCount: Int?
@@ -16,6 +18,31 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
 
     @Published private(set) var title: String?
+
+    /// Una entrada del índice del libro.
+    struct ContentsEntry: Identifiable, Equatable {
+        let id: Int
+        let label: String
+        let href: String?
+        /// 0 = capítulo; 1, 2… = secciones dentro.
+        let depth: Int
+    }
+
+    /// Un resultado de buscar en el libro: el texto alrededor y dónde está.
+    struct SearchResult: Identifiable, Equatable {
+        let id: Int
+        let cfi: String
+        let chapter: String
+        let before: String
+        let match: String
+        let after: String
+    }
+
+    @Published private(set) var contents: [ContentsEntry] = []
+    @Published private(set) var searchResults: [SearchResult] = []
+    /// Búsqueda en curso (0 a 1), o `nil`.
+    @Published private(set) var searchProgress: Double?
+    @Published private(set) var searchedQuery = ""
     @Published private(set) var location: Location?
     @Published var errorMessage: String?
     /// Avisos que no impiden seguir leyendo (p. ej. un subrayado que no se guardó).
@@ -80,6 +107,23 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     func next() { evaluate("window.lectora.next()") }
     func previous() { evaluate("window.lectora.prev()") }
     func goTo(fraction: Double) { evaluate("window.lectora.goToFraction(\(fraction))") }
+    /// Ir a una entrada del índice, a un resultado o a un subrayado (href o CFI).
+    func goTo(target: String) { evaluate("window.lectora.goTo(\(Self.js(target)))") }
+
+    func search(_ query: String) {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        searchedQuery = text
+        searchProgress = text.count >= 2 ? 0 : nil
+        if text.count < 2 { searchResults = [] }
+        evaluate("window.lectora.search(\(Self.js(text)))")
+    }
+
+    func clearSearch() {
+        searchedQuery = ""
+        searchResults = []
+        searchProgress = nil
+        evaluate("window.lectora.clearSearch()")
+    }
     func setScrolled(_ scrolled: Bool) { evaluate("window.lectora.setFlow('\(scrolled ? "scrolled" : "paginated")')") }
 
     /// Colores del texto según el tema (hex CSS, p. ej. "#1C1B19").
@@ -193,12 +237,18 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             }
         case "opened":
             title = body["title"] as? String
+            let entries = (body["toc"] as? [[String: Any]]) ?? []
+            contents = entries.enumerated().compactMap { index, entry in
+                guard let label = entry["label"] as? String, !label.isEmpty else { return nil }
+                return ContentsEntry(id: index, label: label, href: entry["href"] as? String, depth: entry["depth"] as? Int ?? 0)
+            }
             restoreHighlights()
         case "relocate":
             location = Location(
                 fraction: body["fraction"] as? Double ?? 0,
                 cfi: body["cfi"] as? String,
                 chapter: body["chapter"] as? String,
+                chapterHref: body["chapterHref"] as? String,
                 page: (body["current"] as? Int).map { $0 + 1 },
                 pageCount: body["total"] as? Int,
                 excerpt: body["excerpt"] as? String
@@ -213,6 +263,17 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                     guard !Task.isCancelled else { return }
                     self?.onPositionSettled?(location)
                 }
+            }
+        case "searchProgress":
+            if (body["query"] as? String) == searchedQuery { searchProgress = body["progress"] as? Double }
+        case "searchResults":
+            guard (body["query"] as? String) == searchedQuery else { break }
+            searchProgress = nil
+            searchResults = ((body["results"] as? [[String: Any]]) ?? []).enumerated().compactMap { index, item in
+                guard let cfi = item["cfi"] as? String else { return nil }
+                return SearchResult(id: index, cfi: cfi, chapter: item["chapter"] as? String ?? "",
+                                    before: item["pre"] as? String ?? "", match: item["match"] as? String ?? "",
+                                    after: item["post"] as? String ?? "")
             }
         case "tap":
             if let x = body["x"] as? Double { onTap?(x) }

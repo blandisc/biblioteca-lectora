@@ -100,6 +100,15 @@ const wordsOf = range => {
     return count
 }
 
+// El índice del libro en una lista, con la profundidad de cada entrada.
+const flattenTOC = (items, depth = 0) => items.flatMap(item => [
+    { label: (item.label ?? '').trim(), href: item.href ?? null, depth },
+    ...flattenTOC(item.subitems ?? [], depth + 1),
+])
+
+// Búsqueda en el libro: una a la vez; la más reciente gana.
+let searchToken = 0
+
 // Cómo se llegó a la página: «jump» si fue por el índice, la barra o un enlace.
 let navigation = null
 
@@ -109,6 +118,7 @@ const onRelocate = ({ detail }) => {
         fraction,
         cfi,
         chapter: tocItem?.label ?? null,
+        chapterHref: tocItem?.href ?? null,
         current: location?.current ?? null,
         total: location?.total ?? null,
         excerpt: excerptOf(range),
@@ -224,7 +234,7 @@ window.lectora = {
                 title: typeof book.metadata?.title === 'string'
                     ? book.metadata.title
                     : Object.values(book.metadata?.title ?? {})[0] ?? null,
-                toc: (book.toc ?? []).map(item => ({ label: item.label, href: item.href })),
+                toc: flattenTOC(book.toc ?? []),
             })
             applyStyle()
             await view.init({ lastLocation: lastLocation || null, showTextStart: !lastLocation })
@@ -237,6 +247,35 @@ window.lectora = {
     goTo: target => { navigation = 'jump'; return view?.goTo(target) },
     goToFraction: fraction => { navigation = 'jump'; return view?.goToFraction(fraction) },
     setFlow: flow => view?.renderer?.setAttribute('flow', flow),
+    // Busca en todo el libro y manda los resultados (con su capítulo y el texto alrededor).
+    async search(query) {
+        const token = ++searchToken
+        view?.clearSearch()
+        const text = (query ?? '').trim()
+        if (!view || text.length < 2) { post('searchResults', { query: text, results: [] }); return }
+        const results = []
+        try {
+            for await (const result of view.search({ query: text })) {
+                if (token !== searchToken) return
+                if (result === 'done') break
+                if (result.progress != null) post('searchProgress', { query: text, progress: result.progress })
+                for (const item of result.subitems ?? []) {
+                    results.push({
+                        cfi: item.cfi, chapter: result.label ?? '',
+                        pre: item.excerpt?.pre ?? '', match: item.excerpt?.match ?? text, post: item.excerpt?.post ?? '',
+                    })
+                }
+                if (results.length >= 300) break
+            }
+        } catch (error) {
+            post('error', { message: String(error?.message ?? error) })
+        }
+        if (token === searchToken) post('searchResults', { query: text, results })
+    },
+    clearSearch() {
+        searchToken++
+        view?.clearSearch()
+    },
     setStyle(partial) {
         style = { ...style, ...partial }
         applyStyle()

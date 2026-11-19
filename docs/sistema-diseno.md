@@ -142,6 +142,9 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `MonthCalendar` | El mes como calendario: más oscuro cuanto más leíste; hoy con anillo | Diario › Mes |
 | `YearBars` | Una barra por mes; el actual en verde hoja | Diario › Año |
 | `SessionRow` | Una sesión en una lista: cuándo, palabras, avance y duración | Diario, ficha › Lectura |
+| `ContentsRow` | Entrada del índice del libro, con sangría por nivel y punto verde donde vas | Lector › Índice |
+| `SearchResultRow` | Resultado de buscar en el libro: capítulo y texto alrededor, lo buscado en verde | Lector › Buscar |
+| `SearchField` | Campo de búsqueda sobre `field`, con lupa y borrar | Lector › Buscar |
 | `ShareCard`, `ShareSessionButton` | Tarjeta verde fichero de una sesión, para compartir como imagen | Resumen al cerrar, una sesión pasada |
 | `CoverChoiceRow`, `CoverChoiceCell` | Portadas para elegir (fila o cuadrícula); la elegida con borde `selection` | Vista previa, ficha › Elegir portada |
 

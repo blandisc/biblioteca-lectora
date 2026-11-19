@@ -1321,3 +1321,87 @@ struct ShareSessionButton: View {
         }
     }
 }
+
+// MARK: - Herramientas del lector
+
+/// Una entrada del índice del libro: sangría por nivel y, si es donde vas, un punto verde.
+struct ContentsRow: View {
+    let label: String
+    var depth = 0
+    var isCurrent = false
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            Text(label)
+                .font(depth == 0 ? .rowTitle : .subheadline)
+                .foregroundStyle(depth == 0 ? Theme.ink : Theme.secondaryInk)
+                .multilineTextAlignment(.leading)
+            Spacer(minLength: Theme.Space.s)
+            if isCurrent {
+                Circle().fill(Theme.accent).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
+                    .accessibilityLabel("Aquí vas")
+            }
+        }
+        .padding(.leading, Theme.Space.l * CGFloat(min(depth, 3)))
+        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Un resultado de buscar en el libro: el capítulo y el texto alrededor, con lo buscado resaltado.
+struct SearchResultRow: View {
+    let chapter: String
+    let before: String
+    let match: String
+    let after: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+            if !chapter.isEmpty {
+                Text(chapter)
+                    .font(.caption)
+                    .foregroundStyle(Theme.tertiaryInk)
+                    .lineLimit(1)
+            }
+            (Text("…" + before) + Text(match).bold().foregroundStyle(Theme.accent) + Text(after + "…"))
+                .font(.prose)
+                .foregroundStyle(Theme.ink)
+                .lineLimit(3)
+        }
+        .padding(.vertical, Theme.Space.s + Theme.Space.xxs)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Campo de búsqueda sobre `field`, con lupa y botón para borrar.
+struct SearchField: View {
+    let prompt: String
+    @Binding var text: String
+    var focused: FocusState<Bool>.Binding
+    let onSubmit: () -> Void
+    var onClear: () -> Void = {}
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            Image(systemName: "magnifyingglass").foregroundStyle(Theme.tertiaryInk)
+            TextField(prompt, text: $text)
+                .focused(focused)
+                .submitLabel(.search)
+                .autocorrectionDisabled()
+                .onSubmit(onSubmit)
+            if !text.isEmpty {
+                Button { text = ""; onClear() } label: { Image(systemName: "xmark.circle.fill") }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.tertiaryInk)
+                    .accessibilityLabel("Borrar la búsqueda")
+            }
+        }
+        .padding(.horizontal, Theme.Space.m)
+        .frame(minHeight: Theme.Size.control)
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
+    }
+}
