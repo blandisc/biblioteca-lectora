@@ -4,7 +4,7 @@
 set -euo pipefail
 
 OUT=${1:-capturas}
-BUNDLE=com.example.lectora
+BUNDLE=mx.iracheta.gabinete
 mkdir -p "$OUT"
 
 DEVICE=$(xcrun simctl list devices available -j | python3 -c '

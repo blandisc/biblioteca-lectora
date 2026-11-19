@@ -1,7 +1,7 @@
 # Proyecto de Xcode generado con XcodeGen: `xcodegen generate` (ver README).
 name: Lectora
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: mx.iracheta
   deploymentTarget:
     iOS: "17.0"
     macOS: "14.0"
@@ -51,7 +51,9 @@ targets:
     settings:
       base:
         PRODUCT_NAME: Gabinete
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.lectora
+        PRODUCT_BUNDLE_IDENTIFIER: mx.iracheta.gabinete
+        # Equipo de Fernando (el mismo que Orbital): firma para instalar en su iPhone.
+        DEVELOPMENT_TEAM: B7KRCF776Z
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"

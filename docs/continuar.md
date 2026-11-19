@@ -72,7 +72,11 @@ Cada regla tiene su prueba en `DesignRulesTests` y su fila en `docs/sistema-dise
 3. Probar Readwise y Hardcover con tus llaves reales (Ajustes › Conexiones). Es lo único
    de la fase A que solo se ha probado contra respuestas escritas a mano.
 4. Migración con tu `metadata.db` real (Ajustes › Gabinete › Traer de Calibre).
-5. Instalar en tu iPhone (cuenta de desarrollador, fase A.6).
+5. Hecho el 19 nov: instalada en el iPhone de Fer (Release, identificador
+   `mx.iracheta.gabinete`, equipo B7KRCF776Z, el mismo de Orbital). Para reinstalar:
+   `xcodebuild build -project Lectora.xcodeproj -scheme Lectora_iOS -configuration Release
+   -destination 'id=<udid>' -derivedDataPath /tmp/dd-gabinete-release -allowProvisioningUpdates`
+   y `xcrun devicectl device install app --device <udid> /tmp/dd-gabinete-release/Build/Products/Release-iphoneos/Gabinete.app`.
 
 ## Lo que sigue (propuesto)
 - «Buscar en todo»: notas y subrayados además de libros.
