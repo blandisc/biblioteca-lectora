@@ -1,3 +1,4 @@
+import LectoraCore
 import SwiftUI
 import WebKit
 
