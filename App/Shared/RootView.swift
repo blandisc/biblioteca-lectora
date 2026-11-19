@@ -36,7 +36,8 @@ struct RootView: View {
                     model.open(first)
                 }
                 // Primer arranque, con el Gabinete vacío (no en las capturas automáticas).
-                showsWelcome = !welcomeSeen && !LaunchOptions.seed && model.library.books.isEmpty
+                showsWelcome = (!welcomeSeen && !LaunchOptions.seed && model.library.books.isEmpty)
+                    || LaunchOptions.screen == "welcome"
                 // Readwise y Hardcover, si están conectados.
                 ConnectorsStore.shared.start()
                 // Los que se importaron sin internet se buscan ahora.

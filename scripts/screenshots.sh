@@ -69,6 +69,7 @@ for mode in light dark; do
   shoot "editorial-$mode-library-list" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab library -library.layout Lista -library.sort Título
   shoot "editorial-$mode-detail" 5 -appearance.mode "$mode" -screenshot.tab library -screenshot.screen detail
   shoot "editorial-$mode-review" 5 -appearance.mode "$mode" -screenshot.tab library -screenshot.screen review
+  shoot "editorial-$mode-welcome" 4 -appearance.mode "$mode" -screenshot.screen welcome
   shoot "editorial-$mode-diary" 5 -appearance.mode "$mode" -screenshot.tab reading -screenshot.screen diary
   shoot "editorial-$mode-note" 5 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen note
   shoot "editorial-$mode-highlights" 4 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen highlights
