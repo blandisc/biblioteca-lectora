@@ -7,6 +7,26 @@ enum ReaderKeys {
     static let theme = "reader.theme"
     static let autoNight = "reader.autoNight"
     static let flow = "reader.flow"
+    /// Qué dice el pie de la página (tocándolo se elige).
+    static let footer = "reader.footer"
+    /// Una vibración muy ligera al pasar a la página siguiente.
+    static let haptics = "reader.haptics"
+}
+
+/// Lo que dice abajo, en el pie de la página, mientras lees.
+enum ReaderFooter: String, CaseIterable, Identifiable {
+    case chapterTime, bookTime, page, percent
+    var id: Self { self }
+
+    /// Cómo se llama en el menú del pie.
+    var name: String {
+        switch self {
+        case .chapterTime: "Tiempo del capítulo"
+        case .bookTime: "Tiempo del libro"
+        case .page: "Página"
+        case .percent: "Porcentaje"
+        }
+    }
 }
 
 /// Cómo se avanza en el libro: de página en página (deslizando de lado) o
@@ -141,6 +161,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.theme) private var theme: ReaderTheme = .auto
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
     @AppStorage(ReaderKeys.flow) private var flow: ReaderFlow = .paged
+    @AppStorage(ReaderKeys.haptics) private var haptics = true
 
     private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
@@ -225,6 +246,9 @@ struct ReaderAppearanceSheet: View {
 
             Toggle("Noche cálida al atardecer", isOn: $autoNight)
                 .disabled(theme != .auto)
+            #if os(iOS)
+            Toggle("Vibrar al pasar de página", isOn: $haptics)
+            #endif
         }
         .foregroundStyle(Theme.ink)
         .padding(Theme.Space.xl)

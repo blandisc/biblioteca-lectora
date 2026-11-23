@@ -97,6 +97,9 @@ final class SessionStore: ObservableObject {
 
     var all: ReadingPeriod { ReadingPeriod(sessions) }
 
+    /// El ritmo de una persona que lee con calma, mientras no hay sesiones tuyas.
+    static let defaultWordsPerMinute: Double = 230
+
     /// Tu ritmo habitual (palabras por minuto), de tus últimas sesiones.
     var usualWordsPerMinute: Double? {
         let recent = sessions.suffix(20)

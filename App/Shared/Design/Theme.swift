@@ -125,7 +125,7 @@ enum Theme {
         /// Cinta del marcador en el lector.
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa».
-        static let appearanceSheet: CGFloat = 530
+        static let appearanceSheet: CGFloat = 580
         /// Barra de etapas de una sesión.
         static let stageBar: CGFloat = 8
         /// Alto de una fila de la gráfica de etapas, y de su marca.
@@ -214,6 +214,13 @@ enum Theme {
         /// El revés de la hoja que se dobla: el mismo papel con esta fracción de su
         /// luz (más oscuro, como papel a contraluz; UIKit le suma su propio brillo).
         static let pageBack: CGFloat = 0.82
+        /// La vibración al pasar a la página siguiente: muy ligera (0 a 1).
+        static let turnHaptic: CGFloat = 0.45
+        /// El lomo del libro: sombra en la orilla izquierda de la hoja, su ancho y
+        /// qué tan oscura empieza en papel claro y en papel oscuro.
+        static let spineWidth: CGFloat = 26
+        static let spineShadeLight: CGFloat = 0.07
+        static let spineShadeDark: CGFloat = 0.3
     }
 
     // MARK: Énfasis

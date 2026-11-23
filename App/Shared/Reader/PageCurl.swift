@@ -20,7 +20,12 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
 
     /// Color del papel: la hoja es opaca (el WebView es transparente).
     var paper: UIColor = .systemBackground {
-        didSet { [current, turning?.page].compactMap { $0 }.forEach { $0.view.backgroundColor = paper } }
+        didSet { [current, turning?.page].compactMap { $0 }.forEach { $0.paper = paper } }
+    }
+
+    /// El lomo del libro en la orilla izquierda (en páginas; en continuo no).
+    var spine = true {
+        didSet { [current, turning?.page].compactMap { $0 }.forEach { $0.showsSpine = spine } }
     }
 
     /// Se puede doblar con el dedo (en páginas, sin selección, sin «reducir movimiento»).
@@ -46,7 +51,8 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         view.backgroundColor = .clear
         dataSource = curls ? self : nil
         delegate = self
-        current.view.backgroundColor = paper
+        current.paper = paper
+        current.showsSpine = spine
         current.embed(webView)
         setViewControllers([current], direction: .forward, animated: false)
         // Los toques los resuelve el lector (orillas para pasar, centro para los controles).
@@ -90,7 +96,8 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         guard turning == nil, let reverse = viewController as? ReaderBack, reverse.forward == forward else { return nil }
         let page = ReaderPage()
         page.forward = forward
-        page.view.backgroundColor = paper
+        page.paper = paper
+        page.showsSpine = spine
         return page
     }
 
@@ -106,7 +113,7 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
 
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool,
                             previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        finish(completed: completed)
+        finish(completed: completed, fromDrag: true)
     }
 
     // MARK: Con un toque en la orilla
@@ -115,7 +122,8 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         guard turning == nil, reader?.canTurn(forward: forward) == true else { return }
         let page = ReaderPage()
         page.forward = forward
-        page.view.backgroundColor = paper
+        page.paper = paper
+        page.showsSpine = spine
         coverCurrent()
         turning = (page, forward)
         // El lector pasa de página aún dentro de la ventana (fuera de ella no pinta)
@@ -123,6 +131,7 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         reader?.turnInstantly(forward: forward) { [weak self] moved in
             guard let self else { return }
             guard moved else { self.finish(completed: false, turnBack: false); return }
+            if forward { self.reader?.turnedForward() }
             page.embed(self.webView)
             // Con dos caras, la animación pide la hoja nueva y el revés de la que se dobla.
             self.setViewControllers([page, self.back()], direction: forward ? .forward : .reverse, animated: true) { [weak self] done in
@@ -156,7 +165,8 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         photo.frame = webView.frame
         photo.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         photo.isUserInteractionEnabled = false
-        current.view.addSubview(photo)
+        // Debajo del lomo: la sombra se queda encima de la foto y se dobla con la hoja.
+        current.view.insertSubview(photo, belowSubview: current.spineShade)
         cover = photo
     }
 
@@ -164,10 +174,12 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         UIView.animate(withDuration: Theme.Reader.pageReveal) { self.webView.alpha = 1 }
     }
 
-    private func finish(completed: Bool, turnBack: Bool = true) {
+    private func finish(completed: Bool, turnBack: Bool = true, fromDrag: Bool = false) {
         guard let turning else { return }
         self.turning = nil
         if completed {
+            // Con el dedo, la vibración llega al asentarse la hoja (con un toque, al empezar).
+            if fromDrag && turning.forward { reader?.turnedForward() }
             cover?.removeFromSuperview()
             cover = nil
             current = turning.page
@@ -197,9 +209,35 @@ final class ReaderBack: UIViewController {
     var forward = true
 }
 
-/// Una hoja: el papel y, encima, el lector cuando le toca.
+/// Una hoja: el papel, encima el lector cuando le toca y, hasta arriba, el lomo.
 final class ReaderPage: UIViewController {
     var forward = true
+    let spineShade = SpineShade()
+
+    var paper: UIColor = .systemBackground {
+        didSet {
+            loadViewIfNeeded()
+            view.backgroundColor = paper
+            spineShade.paper = paper
+        }
+    }
+
+    var showsSpine = true {
+        didSet { loadViewIfNeeded(); spineShade.isHidden = !showsSpine }
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.addSubview(spineShade)
+    }
+
+    /// El lomo sube hasta la orilla de la pantalla (la hoja empieza bajo la isla):
+    /// si no, se cortaba en seco arriba.
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let top = view.window?.safeAreaInsets.top ?? 0
+        spineShade.frame = CGRect(x: 0, y: -top, width: Theme.Reader.spineWidth, height: view.bounds.height + top)
+    }
 
     func embed(_ webView: WKWebView) {
         loadViewIfNeeded()
@@ -207,6 +245,37 @@ final class ReaderPage: UIViewController {
         webView.frame = view.bounds
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.insertSubview(webView, at: 0)
+    }
+}
+
+/// El lomo del libro: una sombra suave que se desvanece desde la orilla izquierda,
+/// como la hoja de un libro abierto. Más marcada en papel oscuro, donde la clara no se ve.
+final class SpineShade: UIView {
+    override class var layerClass: AnyClass { CAGradientLayer.self }
+
+    var paper: UIColor = .systemBackground { didSet { update() } }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        update()
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) no se usa") }
+
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        update()
+    }
+
+    private func update() {
+        guard let gradient = layer as? CAGradientLayer else { return }
+        var brightness: CGFloat = 1
+        paper.resolvedColor(with: traitCollection).getHue(nil, saturation: nil, brightness: &brightness, alpha: nil)
+        let shade = brightness < 0.5 ? Theme.Reader.spineShadeDark : Theme.Reader.spineShadeLight
+        gradient.colors = [UIColor.black.withAlphaComponent(shade).cgColor, UIColor.black.withAlphaComponent(0).cgColor]
+        gradient.startPoint = CGPoint(x: 0, y: 0.5)
+        gradient.endPoint = CGPoint(x: 1, y: 0.5)
     }
 }
 #endif

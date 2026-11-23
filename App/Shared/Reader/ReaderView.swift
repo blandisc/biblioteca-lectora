@@ -29,6 +29,8 @@ struct ReaderView: View {
     @AppStorage(ReaderKeys.theme) private var theme: ReaderTheme = .auto
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
     @AppStorage(ReaderKeys.flow) private var flow: ReaderFlow = .paged
+    @AppStorage(ReaderKeys.footer) private var footer: ReaderFooter = .chapterTime
+    @ObservedObject private var sessions = SessionStore.shared
 
     private var palette: ReaderPalette {
         ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: colorScheme == .dark)
@@ -199,7 +201,8 @@ struct ReaderView: View {
     private var chrome: some View {
         ZStack {
             if !showsChrome {
-                ReadingFolio(title: title, location: controller.location, color: palette.textColor,
+                ReadingFolio(title: title, location: controller.location, footerText: footerText,
+                             footer: $footer, color: palette.textColor,
                              paper: flow == .scrolled ? palette.background : nil)
                     .transition(.opacity)
                 if showsCounter, let session = controller.session {
@@ -223,6 +226,30 @@ struct ReaderView: View {
                 }
             }
         }
+    }
+
+    /// El pie de la página según lo que elegiste; si no hay con qué calcularlo
+    /// (un libro sin sesiones, un capítulo sin texto), el porcentaje.
+    private var footerText: String {
+        let fraction = controller.location?.fraction ?? 0
+        switch footer {
+        case .chapterTime:
+            guard let words = controller.location?.chapterWordsLeft else { break }
+            let perMinute = sessions.usualWordsPerMinute ?? SessionStore.defaultWordsPerMinute
+            let seconds = Double(words) / perMinute * 60
+            return seconds < 60 ? "Menos de 1 min para terminar el capítulo"
+                : "\(ReadingFormat.duration(seconds)) para terminar el capítulo"
+        case .bookTime:
+            guard let bookID, let seconds = sessions.remaining(forBook: bookID, progress: fraction) else { break }
+            return seconds < 60 ? "Menos de 1 min para terminar el libro"
+                : "\(ReadingFormat.duration(seconds)) para terminar el libro"
+        case .page:
+            guard let page = controller.location?.page, let count = controller.location?.pageCount, count > 0 else { break }
+            return "Página \(page) de \(count)"
+        case .percent:
+            break
+        }
+        return fraction.percentText
     }
 
     /// El marcador de la página que se ve, si tiene: el que reader.js ve dentro
@@ -393,10 +420,14 @@ private struct SessionCounter: View {
     }
 }
 
-/// Editorial sin controles: capítulo arriba y porcentaje abajo, en pequeño.
+/// Editorial sin controles: capítulo arriba y, abajo, el pie que elijas
+/// (tiempo para terminar el capítulo o el libro, página o porcentaje). Tocando
+/// el pie aparecen las opciones.
 private struct ReadingFolio: View {
     let title: String
     let location: ReaderController.Location?
+    let footerText: String
+    @Binding var footer: ReaderFooter
     /// El color del texto del libro: el folio se lee sobre cualquier fondo
     /// (papel, noche cálida, negro), no con el gris de la app.
     let color: Color
@@ -412,17 +443,31 @@ private struct ReadingFolio: View {
                 .padding(.bottom, Theme.Space.s)
                 .frame(maxWidth: .infinity)
                 .background { fade(.top) }
+                .allowsHitTesting(false)
             Spacer()
-            Text((location?.fraction ?? 0).percentText)
-                .monospacedDigit()
-                .padding(.top, Theme.Space.s)
-                .padding(.bottom, Theme.Space.inline)
-                .frame(maxWidth: .infinity)
-                .background { fade(.bottom) }
+            Menu {
+                Picker("Abajo", selection: $footer) {
+                    ForEach(ReaderFooter.allCases) { Text($0.name).tag($0) }
+                }
+            } label: {
+                Text(footerText)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .padding(.horizontal, Theme.Space.m)
+                    .padding(.top, Theme.Space.s)
+                    .padding(.bottom, Theme.Space.inline)
+                    .contentShape(Rectangle())
+                    .foregroundStyle(color.opacity(Theme.Emphasis.folio))
+            }
+            .buttonStyle(.plain)
+            .tint(color.opacity(Theme.Emphasis.folio))
+            .accessibilityLabel("Pie de página")
+            .accessibilityValue(footerText)
+            .frame(maxWidth: .infinity)
+            .background { fade(.bottom) }
         }
         .font(.caption.weight(.medium))
         .foregroundStyle(color.opacity(Theme.Emphasis.folio))
-        .allowsHitTesting(false)
     }
 
     @ViewBuilder
@@ -432,6 +477,7 @@ private struct ReadingFolio: View {
                                    .init(color: paper.opacity(0), location: 1)],
                            startPoint: edge == .top ? .top : .bottom, endPoint: edge == .top ? .bottom : .top)
                 .ignoresSafeArea()
+                .allowsHitTesting(false)
         }
     }
 }

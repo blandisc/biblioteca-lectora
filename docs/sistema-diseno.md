@@ -219,7 +219,10 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   arriba y abajo; las zonas de toque izquierda y derecha son franjas iguales
   (`Reader.edgeZone`, 28 %). Sin controles, el folio deja `Reader.folioInset` (60) a los lados
   y `Reader.folioTop` (14) arriba. Al doblar la hoja, la página nueva aparece en
-  `Reader.pageReveal` (0,12 s) y el revés es el mismo papel con `Reader.pageBack` (82 %) de su luz.
+  `Reader.pageReveal` (0,12 s) y el revés es el mismo papel con `Reader.pageBack` (82 %) de su luz. El lomo del libro es
+  una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
+  (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
+  siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
 - Cuadrículas: columnas iguales (`GridItem(.flexible())` ×3) con 16 pt entre columnas
   y 24 pt entre filas.
 

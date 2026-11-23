@@ -79,6 +79,7 @@ const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, .
     }
     ${getColorCSS(colors)}
     ${pageMarkCSS({ flow, textColor: colors.textColor })}
+    ${chapterCSS(colors)}
     body { font-family: ${fontFamily} !important; }
     body *:not(code):not(pre):not(kbd):not(samp) { font-family: inherit !important; }
     p, li, blockquote, dd {
@@ -120,6 +121,8 @@ const pencil = (rects, { color = '#3D6B55' } = {}) => {
         const y = bottom + 1
         const path = document.createElementNS(SVG_NS, 'path')
         // Un trazo apenas irregular, como hecho a mano.
+        path.setAttribute('pathLength', '1')
+        path.dataset.width = String(w)
         path.setAttribute('d', `M${left + 1} ${y + 0.6} C ${left + w * 0.25} ${y - 0.8}, ${left + w * 0.5} ${y + 1}, `
             + `${left + w * 0.72} ${y - 0.2} S ${right - w * 0.06} ${y + 0.4}, ${right - 1} ${y - 0.5}`)
         g.append(path)
@@ -189,14 +192,81 @@ const excerptOf = range => {
 
 // Palabras de la página (para las sesiones de lectura).
 const segmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null
-const wordsOf = range => {
-    const text = range?.toString() ?? ''
+const wordsOf = range => wordsOfText(range?.toString() ?? '')
+const wordsOfText = text => {
     if (!text.trim()) return 0
     if (!segmenter) return text.trim().split(/\s+/).length
     let count = 0
     for (const part of segmenter.segment(text)) if (part.isWordLike) count++
     return count
 }
+
+// Palabras que faltan para terminar el capítulo (el archivo del libro en que
+// estás): lo que queda después de la página, con la proporción de palabras por
+// letra del capítulo (se cuenta una vez por capítulo, no en cada página).
+const wordsPerChar = new WeakMap()
+const chapterLeftOf = range => {
+    const doc = range?.endContainer?.ownerDocument
+    if (!doc?.body) return null
+    let rate = wordsPerChar.get(doc)
+    if (rate == null) {
+        const all = doc.body.textContent ?? ''
+        rate = all.length ? wordsOfText(all) / all.length : 0
+        wordsPerChar.set(doc, rate)
+    }
+    try {
+        const rest = doc.createRange()
+        rest.setStart(range.endContainer, range.endOffset)
+        rest.setEnd(doc.body, doc.body.childNodes.length)
+        return Math.round(rest.toString().length * rate)
+    } catch { return null }
+}
+
+// Inicio de capítulo como en un libro bien editado: el primer título del archivo
+// (si abre el capítulo) va centrado, en cursiva y con un adorno, y el primer
+// párrafo empieza con letra capital. Se marca con atributos y se dibuja con CSS:
+// no se agregan nodos, así los CFI siguen apuntando al mismo lugar.
+const isTitleLike = el => /^H[1-6]$/.test(el.tagName)
+    || /tit|cap|chap|head/i.test(`${el.className} ${el.parentElement?.className ?? ''}`)
+const markChapter = doc => {
+    // Los primeros renglones cortos antes del primer párrafo de verdad son el
+    // título (en muchos libros es un <p class="titulo">, no un <h1>).
+    const titles = []
+    let first = null
+    for (const el of doc.body.querySelectorAll('h1, h2, h3, h4, h5, h6, p')) {
+        if (el.parentElement?.closest('p, li, blockquote, figure')) continue
+        const length = el.textContent?.trim().length ?? 0
+        if (!length) continue
+        if (length > 80) { first = el; break }
+        titles.push(el)
+        if (titles.length > 3) return
+    }
+    if (!first || !titles.length || !titles.some(isTitleLike)) return
+    titles.forEach((el, i) => el.setAttribute('data-gabinete-chapter',
+        [i === 0 ? 'first' : '', i === titles.length - 1 ? 'last' : ''].join(' ').trim()))
+    if (/^[«"“¿¡(]?\p{L}/u.test(first.textContent.trim())) first.setAttribute('data-gabinete-drop', '')
+}
+
+const chapterCSS = ({ linkColor }) => `
+    [data-gabinete-chapter] {
+        text-align: center !important; text-indent: 0 !important;
+        font-style: italic !important; font-weight: 400 !important;
+        font-size: 1.45em !important; line-height: 1.25 !important;
+        margin: 0 0 0.3em !important;
+    }
+    [data-gabinete-chapter~="first"] { margin-top: 1em !important; }
+    [data-gabinete-chapter~="last"] { margin-bottom: 0 !important; padding-bottom: 1.4em !important; }
+    [data-gabinete-chapter] * { font-style: inherit !important; font-weight: inherit !important; }
+    [data-gabinete-chapter~="last"]::after {
+        content: '❦'; display: block; font-style: normal; font-size: 0.7em;
+        line-height: 1; margin-top: 0.6em; opacity: 0.5;
+    }
+    [data-gabinete-drop] { text-indent: 0 !important; }
+    [data-gabinete-drop]::first-letter {
+        float: left; font-size: 3.3em; line-height: 0.85; font-weight: 500;
+        padding: 0.06em 0.08em 0 0; color: ${linkColor ?? 'currentColor'} !important;
+    }
+`
 
 // El índice del libro en una lista, con la profundidad de cada entrada.
 const flattenTOC = (items, depth = 0) => items.flatMap(item => [
@@ -240,6 +310,7 @@ const onRelocate = ({ detail }) => {
         total: location?.total ?? null,
         excerpt: excerptOf(range),
         words: wordsOf(range),
+        chapterLeft: chapterLeftOf(range),
         jumped: navigation === 'jump',
     })
     navigation = null
@@ -255,6 +326,7 @@ const onLoad = ({ detail: { doc, index } }) => {
     }
     watchPull(doc)
     markPages(doc, index)
+    markChapter(doc)
     doc.addEventListener('selectionchange', () => {
         const selection = doc.getSelection()
         const active = !!selection && !selection.isCollapsed
@@ -275,8 +347,26 @@ const onLoad = ({ detail: { doc, index } }) => {
     })
 }
 
-const onDrawAnnotation = ({ detail: { draw } }) =>
-    draw(pencil, { color: style.linkColor ?? '#3D6B55' })
+// Un subrayado recién hecho se dibuja solo, como trazo de marcador: renglón por
+// renglón, de izquierda a derecha. Los que ya estaban aparecen quietos.
+const freshHighlights = new Set()
+const drawingPencil = (rects, options) => {
+    const g = pencil(rects, options)
+    let delay = 0
+    for (const path of g.children) {
+        const duration = Math.min(520, 140 + Number(path.dataset.width ?? 0) * 1.1)
+        path.style.strokeDasharray = '1'
+        path.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }],
+            { duration, delay, easing: 'cubic-bezier(0.33, 1, 0.68, 1)', fill: 'both' })
+        delay += duration * 0.85
+    }
+    return g
+}
+
+const onDrawAnnotation = ({ detail: { draw, annotation } }) => {
+    const animated = freshHighlights.delete(annotation?.value) && !reducedMotion?.matches
+    draw(animated ? drawingPencil : pencil, { color: style.linkColor ?? '#3D6B55' })
+}
 
 const onCreateOverlay = () => {
     for (const value of highlights) view.addAnnotation({ value })
@@ -472,6 +562,7 @@ window.lectora = {
         for (const value of highlights) view?.addAnnotation({ value })
     },
     addHighlight(value) {
+        if (!highlights.has(value)) freshHighlights.add(value)
         highlights.add(value)
         view?.addAnnotation({ value })
     },

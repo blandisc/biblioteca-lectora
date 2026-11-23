@@ -15,6 +15,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         var page: Int?
         var pageCount: Int?
         var excerpt: String?
+        /// Palabras que faltan para terminar el capítulo (para «6 min para terminar el capítulo»).
+        var chapterWordsLeft: Int? = nil
     }
 
     @Published private(set) var title: String?
@@ -132,6 +134,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         #if os(iOS)
         pages?.curls = !isScrolled && !isSelecting && !UIAccessibility.isReduceMotionEnabled
         pages?.paper = pageBackground
+        pages?.spine = !isScrolled
         #endif
     }
 
@@ -141,9 +144,20 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             pages.turn(forward: forward)
             return
         }
+        if forward, canTurn(forward: true) { turnedForward() }
         #endif
         evaluate(forward ? "window.lectora.next()" : "window.lectora.prev()")
     }
+
+    #if os(iOS)
+    private let turnFeedback = UIImpactFeedbackGenerator(style: .soft)
+
+    /// Un toque muy leve en la mano al pasar a la página siguiente (se apaga en «Aa»).
+    func turnedForward() {
+        guard UserDefaults.standard.object(forKey: ReaderKeys.haptics) as? Bool ?? true else { return }
+        turnFeedback.impactOccurred(intensity: Theme.Reader.turnHaptic)
+    }
+    #endif
 
     /// Pasa de página sin animación y avisa si de verdad se movió.
     func turnInstantly(forward: Bool, done: @escaping (Bool) -> Void) {
@@ -348,7 +362,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 chapterHref: body["chapterHref"] as? String,
                 page: (body["current"] as? Int).map { $0 + 1 },
                 pageCount: body["total"] as? Int,
-                excerpt: body["excerpt"] as? String
+                excerpt: body["excerpt"] as? String,
+                chapterWordsLeft: body["chapterLeft"] as? Int
             )
             session?.pageShown(words: body["words"] as? Int ?? 0,
                                fraction: fraction,
