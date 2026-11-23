@@ -68,7 +68,7 @@ struct MesaScreen: View {
             .padding(.top, Theme.Space.s)
 
             HStack(spacing: Theme.Space.m) {
-                PrimaryButton(title: "Seguir leyendo", action: model.continueReading)
+                PrimaryButton(title: book.progress > 0 ? "Seguir leyendo" : "Empezar a leer", action: model.continueReading)
                 if Features.audiobook {
                     RoundIconButton(systemImage: "headphones", label: "Escuchar como audiolibro") {
                         withAnimation(Theme.Motion.standard) { model.listening = model.listening == nil ? book : nil }
@@ -94,10 +94,13 @@ struct MesaScreen: View {
         }
     }
 
-    /// «57 % leído · te faltan ~3 h»
+    /// «57 % leído · te faltan ~3 h»; sin empezar, solo lo que dura («~15 h de lectura»):
+    /// «0 % leído» junto a «Listo para leer» y «Seguir leyendo» se contradecía.
     private func progressLine(_ book: ShelfBook) -> String {
+        let remaining = book.bookID.flatMap { sessions.remaining(forBook: $0, progress: book.progress) }
+        guard book.progress > 0 else { return remaining.map { "~\(ReadingFormat.duration($0)) de lectura" } ?? "" }
         let percent = "\(book.progress.percentText) leído"
-        guard let id = book.bookID, let remaining = sessions.remaining(forBook: id, progress: book.progress) else { return percent }
+        guard let remaining else { return percent }
         return "\(percent) · te faltan ~\(ReadingFormat.duration(remaining))"
     }
 

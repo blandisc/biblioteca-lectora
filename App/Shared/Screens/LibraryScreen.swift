@@ -71,7 +71,9 @@ struct LibraryScreen: View {
 
                         if !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
                             NavigationLink(value: ReviewInboxRef()) {
-                                LinkRow(title: "Por revisar", value: "\(model.library.reviews.count + model.library.filled.count)",
+                                // El número es lo que espera una decisión tuya; lo que se completó solo se
+                                // cuenta solo cuando no queda nada dudoso.
+                                LinkRow(title: "Por revisar", value: "\(model.library.reviews.isEmpty ? model.library.filled.count : model.library.reviews.count)",
                                         marked: !model.library.reviews.isEmpty)
                             }
                             .buttonStyle(.plain)

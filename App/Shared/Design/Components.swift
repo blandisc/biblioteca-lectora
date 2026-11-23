@@ -42,9 +42,9 @@ extension View {
     }
 
     /// Receta de pantalla empujada u hoja (ficha, serie, nota, Lector › herramientas…):
-    /// papel de fondo, título en línea y las acciones de la barra («Listo», «Cancelar»,
-    /// «Editar») en `accent`. Con la marca de la app, casi negra en claro, parecían texto,
-    /// y cada pantalla las pintaba distinto (22 nov 2026).
+    /// papel de fondo, título en línea y controles del contenido en `accent`. Los botones
+    /// de la barra de vidrio («Listo», «Cancelar», «Editar») van en tinta, como en iOS 26;
+    /// antes unas hojas los forzaban a verde y otras no (22 nov 2026).
     func pushedScreen(_ title: String = "") -> some View {
         self
             .background(Theme.paper.ignoresSafeArea())

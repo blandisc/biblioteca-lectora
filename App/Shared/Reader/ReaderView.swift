@@ -38,8 +38,12 @@ struct ReaderView: View {
         bookID.flatMap { LibraryStore.shared.book(id: $0)?.title } ?? title
     }
 
+    /// El título limpio de tu biblioteca; el del EPUB o el nombre del archivo solo
+    /// si el libro no está en el catálogo. Antes, mientras cargaba, salía el nombre
+    /// del archivo («Don Quijote de la Mancha - Miguel de Cervantes»).
     private var title: String {
-        controller.title ?? bookFile.deletingPathExtension().lastPathComponent
+        bookID.flatMap { LibraryStore.shared.book(id: $0)?.title }
+            ?? controller.title ?? bookFile.deletingPathExtension().lastPathComponent
     }
 
     var body: some View {

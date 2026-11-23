@@ -126,7 +126,7 @@ final class DesignRulesTests: XCTestCase {
     /// 19 nov 2026: los formularios (Ajustes, Conexiones…) salían en el gris frío del
     /// sistema, no en el papel de la app. Todo `Form` lleva `.formScreen()`.
     /// 22 nov 2026: cada pantalla empujada u hoja armaba a mano su fondo y su título, y las
-    /// acciones de la barra salían unas en verde y otras casi negras. Todas usan su receta:
+    /// acciones de la barra salían unas en verde y otras en tinta (en iOS 26 van en tinta). Todas usan su receta:
     /// `.screen()` (pestaña), `.pushedScreen()` (empujada u hoja) o `.formScreen()` (formulario).
     func testPushedScreensUseTheRecipe() {
         check(hits(#"\.navigationBarTitleDisplayMode\(|\.background\(Theme\.paper\.ignoresSafeArea|\.toolbar\(\.hidden, for: \.navigationBar\)|Button\("[^"]+"\)[^\n]*\.foregroundStyle\(Theme\.accent\)"#,

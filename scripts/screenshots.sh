@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Toma capturas de la app en el simulador de iPhone: los dos estilos, en claro
 # y oscuro, de cada pestaña y del lector. Uso: scripts/screenshots.sh <carpeta>
-# Opcional: DEVICE=<udid> (el simulador del proyecto, «Gabinete») y DERIVED=<carpeta>
+# Opcional: SKIP_BUILD=1, DEVICE=<udid> (el simulador del proyecto, «Gabinete») y DERIVED=<carpeta>
 # (en el Mac, /tmp/dd-gabinete, la misma de todas las sesiones).
 set -euo pipefail
 
@@ -26,7 +26,8 @@ echo "Simulador: $DEVICE"
 xcrun simctl boot "$DEVICE" || true
 xcrun simctl bootstatus "$DEVICE" -b
 
-xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS -configuration Debug \
+# SKIP_BUILD=1 reutiliza la app ya compilada en DERIVED.
+[ -n "${SKIP_BUILD:-}" ] || xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS -configuration Debug \
   -destination "id=$DEVICE" -derivedDataPath "${DERIVED:-build/screens}" build CODE_SIGNING_ALLOWED=NO -quiet
 xcrun simctl install "$DEVICE" "${DERIVED:-build/screens}"/Build/Products/Debug-iphonesimulator/Gabinete.app
 xcrun simctl status_bar "$DEVICE" override --time 9:41 --batteryState discharging --batteryLevel 100 \
@@ -58,7 +59,16 @@ shoot() { # nombre, espera, argumentos…
   xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
   xcrun simctl launch "$DEVICE" "$BUNDLE" "$@" >/dev/null
   sleep "$wait"
-  xcrun simctl io "$DEVICE" screenshot "$OUT/$name.png" >/dev/null
+  # Con la Mac ocupada la app tarda en pintar: se repite mientras la captura salga en
+  # blanco (una pantalla en blanco pesa menos de 80 KB; cualquiera de la app, más).
+  local tries=0
+  while :; do
+    xcrun simctl io "$DEVICE" screenshot "$OUT/$name.png" >/dev/null 2>&1
+    [ "$(stat -f%z "$OUT/$name.png")" -gt 80000 ] || [ $tries -ge 15 ] && break
+    tries=$((tries + 1)); sleep 2
+  done
+  # Y un respiro más para que termine de acomodarse lo que llega después (portadas).
+  [ $tries -gt 0 ] && sleep 2 && xcrun simctl io "$DEVICE" screenshot "$OUT/$name.png" >/dev/null 2>&1
   echo "  $name"
 }
 

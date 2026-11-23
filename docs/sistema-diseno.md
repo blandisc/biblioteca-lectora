@@ -129,7 +129,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 |---|---|---|
 | `.screen()` | Receta de pantalla raíz: papel, sin barra de navegación, destinos de libro y serie | Mesa, Biblioteca, Cuaderno |
 | `.formScreen()` | Receta de formulario: el papel de la app de fondo, no el gris del sistema; botones e interruptores en `accent` (con la marca, casi negra en claro, parecían texto) | Ajustes, Conexiones, Reglas, Editar datos, Buscar con otros datos |
-| `.pushedScreen(título)` | Receta de pantalla empujada u hoja: papel, título en línea y acciones de la barra en `accent` | Ficha, serie, nota, Diario, Por revisar, Lector › herramientas, Sesión, Llevar a una nota, Traer de Calibre, Bienvenida |
+| `.pushedScreen(título)` | Receta de pantalla empujada u hoja: papel, título en línea, controles del contenido en `accent`; los botones de la barra de vidrio, en tinta como en iOS 26 | Ficha, serie, nota, Diario, Por revisar, Lector › herramientas, Sesión, Llevar a una nota, Traer de Calibre, Bienvenida |
 | `.inlineTitle(título)` | Título pequeño en la barra (lo usan `.pushedScreen` y los formularios empujados) | Conexión, Editar datos, Buscar con otros datos |
 | `.screenContent()` | Margen `gutter`, aire `screenTop`/`screenBottom`, tinta | Todo contenido con scroll |
 | `ScreenHeading` | Título serif + acciones a la derecha | Cada pantalla |
@@ -196,7 +196,7 @@ NavigationStack {
 **Pantalla empujada u hoja (ficha, serie, herramientas del lector):**
 ```swift
 ScrollView { VStack(alignment: .leading, spacing: Theme.Space.xl) { … }.screenContent() }
-    .pushedScreen("Título")          // papel, título en línea, «Listo» en verde hoja
+    .pushedScreen("Título")          // papel y título en línea; «Listo» en tinta, como iOS
     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Listo") { dismiss() } } }
 ```
 Una hoja lleva además `.presentationDetents([.medium, .large])` o `[.large]`.
@@ -240,7 +240,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testDatesAndNumbersInSpanish` | Decisión del 18 nov 2026: fechas y porcentajes en español aunque el dispositivo no lo esté (`fecha.es(…)`, `percentText`); desde el 19 nov, todo porcentaje sale de `percentText` («57 %», con espacio que no se parte) |
 | `testNoArithmeticBetweenTokens` | Decisión del 19 nov 2026: ninguna medida se arma sumando tokens; se nombra en `Theme` |
 | `testAccentActionGoesLast` | Decisión del 19 nov 2026: el ícono verde de un encabezado va siempre al final, a la derecha |
-| `testPushedScreensUseTheRecipe` | Decisión del 22 nov 2026: ninguna pantalla arma a mano su fondo, su título en línea ni el color de los botones de la barra; usa `.screen()`, `.pushedScreen()` o `.formScreen()` |
+| `testPushedScreensUseTheRecipe` | Decisión del 22 nov 2026: ninguna pantalla arma a mano su fondo, su título en línea ni el color de los botones de la barra (van en tinta, como en iOS 26); usa `.screen()`, `.pushedScreen()` o `.formScreen()` |
 | `testFormsUseThePaper` | Decisión del 19 nov 2026: todo `Form` lleva `.formScreen()` |
 | `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra |
 | `testTextColorsAreReadable` | Decisión del 19 nov 2026: sobre `paper`, tinta y secundario ≥ 4,5 : 1; terciario y verde ≥ 3 : 1, en claro y oscuro |

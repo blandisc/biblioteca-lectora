@@ -9,7 +9,7 @@
   en «Excepciones».
 - Pulida del 19 nov 2026, cada una con su prueba en `DesignRulesTests`: nunca se suman
   tokens («s + xxs»): la medida que falte se nombra en `Theme`; toda pantalla usa su receta
-  (`.screen()`, `.pushedScreen()` o `.formScreen()`: papel y acciones de la barra en verde hoja); el ícono verde va al final del
+  (`.screen()`, `.pushedScreen()` o `.formScreen()`: papel de fondo y botones de la barra en tinta, como iOS); el ícono verde va al final del
   encabezado; ningún texto dice «pronto» ni «próximamente»; los grises de texto
   pasan el contraste mínimo sobre el papel; todo porcentaje sale de `percentText`.
 - Antes de decir «listo»: `docs/entrega.md` (medir, claro y oscuro, y el informe con
