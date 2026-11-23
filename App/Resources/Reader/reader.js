@@ -17,6 +17,8 @@ const defaultStyle = {
     // Colores del tema de la app (claro u oscuro). null = los del libro.
     textColor: null,
     linkColor: null,
+    // «paginated» (de página en página) o «scrolled» (continuo, hacia abajo).
+    flow: 'paginated',
 }
 
 const getColorCSS = ({ textColor, linkColor }) => !textColor ? '' : `
@@ -76,10 +78,42 @@ const pencil = (rects, { color = '#3D6B55' } = {}) => {
     return g
 }
 
+// Pasar de página deslizando (la página sigue al dedo y se acomoda sola),
+// salvo que el sistema pida reducir el movimiento.
+const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+
 const applyStyle = () => {
-    if (!view?.renderer) return
-    view.renderer.setStyles?.(getCSS(style))
-    view.renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
+    const renderer = view?.renderer
+    if (!renderer) return
+    renderer.setStyles?.(getCSS(style))
+    renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
+    renderer.toggleAttribute('animated', !reducedMotion?.matches)
+    // Cambiar el modo vuelve a paginar todo: solo si de verdad cambió.
+    if (renderer.getAttribute('flow') !== style.flow) renderer.setAttribute('flow', style.flow)
+}
+reducedMotion?.addEventListener?.('change', applyStyle)
+
+// En continuo, foliate muestra un capítulo a la vez. Al llegar al final y seguir
+// jalando hacia arriba, pasa al siguiente; al principio y jalando hacia abajo, al
+// anterior. Así se lee de corrido, sin botones.
+const pullThreshold = 64
+const watchPull = doc => {
+    let startY = null
+    let edge = null
+    doc.addEventListener('touchstart', event => {
+        const renderer = view?.renderer
+        if (!renderer?.scrolled || event.touches.length > 1) { startY = null; return }
+        startY = event.touches[0].screenY
+        edge = renderer.viewSize - renderer.end <= 2 ? 'end' : renderer.start <= 0 ? 'start' : null
+    }, { passive: true })
+    doc.addEventListener('touchend', event => {
+        const renderer = view?.renderer
+        if (startY == null || !edge || !renderer?.scrolled) return
+        const dy = startY - (event.changedTouches[0]?.screenY ?? startY)
+        startY = null
+        if (edge === 'end' && dy > pullThreshold) view.next()
+        else if (edge === 'start' && dy < -pullThreshold) view.prev()
+    }, { passive: true })
 }
 
 // Texto del rango sin los títulos (h1–h6): «Capítulo primero» no es parte de la frase.
@@ -165,6 +199,7 @@ const onLoad = ({ detail: { doc, index } }) => {
         const lang = view.book.metadata.language
         doc.documentElement.lang = Array.isArray(lang) ? lang[0] : lang
     }
+    watchPull(doc)
     doc.addEventListener('selectionchange', () => {
         const selection = doc.getSelection()
         if (!selection || selection.isCollapsed || selection.rangeCount === 0) return
@@ -282,7 +317,6 @@ window.lectora = {
     prev: () => view?.prev(),
     goTo: target => { navigation = 'jump'; return view?.goTo(target) },
     goToFraction: fraction => { navigation = 'jump'; return view?.goToFraction(fraction) },
-    setFlow: flow => view?.renderer?.setAttribute('flow', flow),
     // Busca en todo el libro y manda los resultados (con su capítulo y el texto alrededor).
     async search(query) {
         const token = ++searchToken

@@ -6,6 +6,40 @@ enum ReaderKeys {
     static let scale = "reader.scale"
     static let theme = "reader.theme"
     static let autoNight = "reader.autoNight"
+    static let flow = "reader.flow"
+}
+
+/// Cómo se avanza en el libro: de página en página (deslizando de lado) o
+/// continuo, hacia abajo y sin cortes, de un capítulo al siguiente.
+enum ReaderFlow: String, CaseIterable, Identifiable {
+    case paged, scrolled
+    var id: Self { self }
+
+    var name: String {
+        switch self {
+        case .paged: "Páginas"
+        case .scrolled: "Continuo"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .paged: "Deslizas de lado"
+        case .scrolled: "Bajas sin cortes"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .paged: "book.pages"
+        case .scrolled: "scroll"
+        }
+    }
+
+    /// Leer el modo fuera de una vista (los toques en la página).
+    static var current: ReaderFlow {
+        UserDefaults.standard.string(forKey: ReaderKeys.flow).flatMap(ReaderFlow.init) ?? .paged
+    }
 }
 
 /// Pocas tipografías y buenas, todas incluidas en iOS y macOS.
@@ -100,12 +134,13 @@ struct ReaderPalette: Equatable {
     }
 }
 
-/// Hoja «Aa»: tipografía, tamaño, fondo y noche cálida automática.
+/// Hoja «Aa»: tipografía, páginas o continuo, tamaño, fondo y noche cálida automática.
 struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.font) private var font: ReaderFont = .newYork
     @AppStorage(ReaderKeys.scale) private var scale = 1.0
     @AppStorage(ReaderKeys.theme) private var theme: ReaderTheme = .auto
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
+    @AppStorage(ReaderKeys.flow) private var flow: ReaderFlow = .paged
 
     private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
@@ -129,6 +164,29 @@ struct ReaderAppearanceSheet: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(item == font ? .isSelected : [])
+                }
+            }
+
+            HStack(spacing: Theme.Space.s) {
+                ForEach(ReaderFlow.allCases) { item in
+                    Button { flow = item } label: {
+                        HStack(spacing: Theme.Space.s) {
+                            Image(systemName: item.symbol).font(.body)
+                            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                                Text(item.name).font(.subheadline.weight(.medium))
+                                Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(Theme.Space.m)
+                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                                .strokeBorder(item == flow ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(item == flow ? .isSelected : [])
                 }
             }
 

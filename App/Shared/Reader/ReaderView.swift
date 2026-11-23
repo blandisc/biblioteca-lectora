@@ -28,6 +28,7 @@ struct ReaderView: View {
     @AppStorage(ReaderKeys.scale) private var scale = 1.0
     @AppStorage(ReaderKeys.theme) private var theme: ReaderTheme = .auto
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
+    @AppStorage(ReaderKeys.flow) private var flow: ReaderFlow = .paged
 
     private var palette: ReaderPalette {
         ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: colorScheme == .dark)
@@ -143,7 +144,10 @@ struct ReaderView: View {
             // Sin capturar la vista: el controlador no debe retenerse a sí mismo.
             let chrome = $showsChrome
             controller.onTap = { [weak controller] x in
-                if x < Theme.Reader.edgeZone {
+                // En continuo, como en Libros de Apple, tocar solo muestra u oculta los controles.
+                if ReaderFlow.current == .scrolled {
+                    withAnimation(Theme.Motion.standard) { chrome.wrappedValue.toggle() }
+                } else if x < Theme.Reader.edgeZone {
                     controller?.previous()
                 } else if x > 1 - Theme.Reader.edgeZone {
                     controller?.next()
@@ -186,6 +190,7 @@ struct ReaderView: View {
         .onChange(of: palette) { _, _ in applyStyle() }
         .onChange(of: font) { _, _ in applyStyle() }
         .onChange(of: scale) { _, _ in applyStyle() }
+        .onChange(of: flow) { _, _ in applyStyle() }
     }
 
     /// Controles de vidrio al tocar el centro (los dos estilos). Sin controles,
@@ -245,6 +250,7 @@ struct ReaderView: View {
     private func applyStyle() {
         controller.setColors(text: palette.text, link: palette.link)
         controller.setFont(family: font.css, scale: scale)
+        controller.setScrolled(flow == .scrolled)
     }
 }
 

@@ -125,7 +125,7 @@ enum Theme {
         /// Cinta del marcador en el lector.
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa».
-        static let appearanceSheet: CGFloat = 440
+        static let appearanceSheet: CGFloat = 530
         /// Barra de etapas de una sesión.
         static let stageBar: CGFloat = 8
         /// Alto de una fila de la gráfica de etapas, y de su marca.

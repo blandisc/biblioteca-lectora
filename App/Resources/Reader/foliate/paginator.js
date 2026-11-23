@@ -16,6 +16,10 @@ const debounce = (f, wait, immediate) => {
 
 const lerp = (min, max, x) => x * (max - min) + min
 const easeOutQuad = x => 1 - (1 - x) * (1 - x)
+// Gabinete: salida cúbica, que arranca rápido y aterriza suave, como el
+// deslizar de página de Libros de Apple. Arranca a 3 × distancia / duración.
+const easeOutCubic = x => 1 - (1 - x) ** 3
+const pageTurnDuration = 380
 const animate = (a, b, duration, ease, render) => new Promise(resolve => {
     let start
     const step = now => {
@@ -899,7 +903,8 @@ export class Paginator extends HTMLElement {
         // FIXME: vertical-rl only, not -lr
         if (this.scrolled && this.#vertical) offset = -offset
         if ((reason === 'snap' || smooth) && this.hasAttribute('animated')) return animate(
-            element[scrollProp], offset, 300, easeOutQuad,
+            element[scrollProp], offset, this.#turnDuration(element[scrollProp], offset, reason),
+            this.scrolled ? easeOutQuad : easeOutCubic,
             x => element[scrollProp] = x,
         ).then(() => {
             this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
@@ -910,6 +915,17 @@ export class Paginator extends HTMLElement {
             this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
             this.#afterScroll(reason)
         }
+    }
+    // Gabinete: al soltar el dedo, la página sigue a la misma velocidad que
+    // traía (sin frenón ni salto) y tarda menos si ya iba casi llegando.
+    #turnDuration(from, to, reason) {
+        const distance = Math.abs(to - from)
+        if (reason !== 'snap' || !distance) return pageTurnDuration
+        const state = this.#touchState ?? {}
+        const speed = Math.abs((this.#vertical ? state.vy : state.vx) ?? 0)
+        const byDistance = pageTurnDuration * Math.min(1, distance / this.size)
+        const bySpeed = speed > 0.05 ? 3 * distance / speed : byDistance
+        return Math.max(160, Math.min(pageTurnDuration, bySpeed, Math.max(byDistance, 220)))
     }
     async #scrollToPage(page, reason, smooth) {
         const offset = this.size * (this.#rtl ? -page : page)

@@ -73,6 +73,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     private var colorScript: String?
     private var bookmarksScript: String?
     private var fontScript: String?
+    private var flowScript: String?
     private var bookID: UUID?
 
     func makeWebView() -> WKWebView {
@@ -129,7 +130,12 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         searchProgress = nil
         evaluate("window.lectora.clearSearch()")
     }
-    func setScrolled(_ scrolled: Bool) { evaluate("window.lectora.setFlow('\(scrolled ? "scrolled" : "paginated")')") }
+    /// Páginas o continuo. Se guarda para mandarlo cuando el lector esté listo.
+    func setScrolled(_ scrolled: Bool) {
+        let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")' })"
+        flowScript = script
+        if isReady { evaluate(script) }
+    }
 
     /// Colores del texto según el tema (hex CSS, p. ej. "#1C1B19").
     func setColors(text: String, link: String) {
@@ -264,6 +270,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             isReady = true
             if let colorScript { evaluate(colorScript) }
             if let fontScript { evaluate(fontScript) }
+            if let flowScript { evaluate(flowScript) }
             if let bookmarksScript { evaluate(bookmarksScript) }
             if let pendingOpen {
                 evaluate(pendingOpen)
