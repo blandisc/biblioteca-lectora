@@ -114,31 +114,18 @@ reducedMotion?.addEventListener?.('change', applyStyle)
 // jalando hacia arriba, pasa al siguiente; al principio y jalando hacia abajo, al
 // anterior. Así se lee de corrido, sin botones.
 const pullThreshold = 64
-const swipeThreshold = 40
+let selecting = false
 const watchPull = doc => {
     let startY = null
-    let startX = null
     let edge = null
     doc.addEventListener('touchstart', event => {
         const renderer = view?.renderer
-        startX = event.touches.length === 1 ? event.touches[0].screenX : null
         if (!renderer?.scrolled || event.touches.length > 1) { startY = event.touches[0]?.screenY ?? null; edge = null; return }
         startY = event.touches[0].screenY
         edge = renderer.viewSize - renderer.end <= 2 ? 'end' : renderer.start <= 0 ? 'start' : null
     }, { passive: true })
     doc.addEventListener('touchend', event => {
         const renderer = view?.renderer
-        // Hoja que da vuelta: un deslizar de lado pasa de página (la app la dobla).
-        if (style.curl && renderer && !renderer.scrolled && startX != null) {
-            const touch = event.changedTouches[0]
-            const dx = (touch?.screenX ?? startX) - startX
-            const dy = (touch?.screenY ?? startY) - (startY ?? 0)
-            const selection = doc.getSelection()
-            if (Math.abs(dx) > swipeThreshold && Math.abs(dx) > Math.abs(dy) * 1.5
-                && (!selection || selection.isCollapsed)) post('swipe', { dir: dx < 0 ? 1 : -1 })
-            startX = null
-            return
-        }
         if (startY == null || !edge || !renderer?.scrolled) return
         const dy = startY - (event.changedTouches[0]?.screenY ?? startY)
         startY = null
@@ -214,6 +201,9 @@ const onRelocate = ({ detail }) => {
         chapter: tocItem?.label ?? null,
         chapterHref: tocItem?.href ?? null,
         current: location?.current ?? null,
+        // Si hay página antes o después (para no doblar la hoja en la portada o al final).
+        atStart: view.renderer?.atStart ?? false,
+        atEnd: view.renderer?.atEnd ?? false,
         total: location?.total ?? null,
         excerpt: excerptOf(range),
         words: wordsOf(range),
@@ -233,6 +223,8 @@ const onLoad = ({ detail: { doc, index } }) => {
     watchPull(doc)
     doc.addEventListener('selectionchange', () => {
         const selection = doc.getSelection()
+        const active = !!selection && !selection.isCollapsed
+        if (active !== selecting) { selecting = active; post('selecting', { active }) }
         if (!selection || selection.isCollapsed || selection.rangeCount === 0) return
         lastSelection = { doc, index, range: selection.getRangeAt(0).cloneRange() }
     })
@@ -361,7 +353,11 @@ window.lectora = {
         const turning = dir < 0 ? view.prev() : view.next()
         await Promise.race([relocated, turning])
         if (animated) renderer.setAttribute('animated', '')
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        // Que la página nueva quede pintada (sin esperar de más si la vista no pinta).
+        await Promise.race([
+            new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+            new Promise(resolve => setTimeout(resolve, 80)),
+        ])
         return pageCFI !== before
     },
     goTo: target => { navigation = 'jump'; return view?.goTo(target) },

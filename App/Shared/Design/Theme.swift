@@ -209,6 +209,8 @@ enum Theme {
         /// Folio sin controles: margen lateral del capítulo y su aire arriba.
         static let folioInset: CGFloat = 60
         static let folioTop: CGFloat = 14
+        /// La página nueva aparece debajo de la hoja que se dobla (segundos).
+        static let pageReveal: TimeInterval = 0.12
     }
 
     // MARK: Énfasis

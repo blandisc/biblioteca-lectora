@@ -437,10 +437,15 @@ private struct ReadingFolio: View {
 }
 
 #if os(iOS)
-private struct ReaderWebView: UIViewRepresentable {
+/// El lector dentro de sus hojas: la página se dobla con el dedo.
+private struct ReaderWebView: UIViewControllerRepresentable {
     let controller: ReaderController
-    func makeUIView(context: Context) -> WKWebView { controller.makeWebView() }
-    func updateUIView(_ webView: WKWebView, context: Context) {}
+    func makeUIViewController(context: Context) -> ReaderPagesController {
+        let pages = ReaderPagesController(webView: controller.makeWebView(), reader: controller)
+        controller.pages = pages
+        return pages
+    }
+    func updateUIViewController(_ pages: ReaderPagesController, context: Context) {}
 }
 #else
 private struct ReaderWebView: NSViewRepresentable {
