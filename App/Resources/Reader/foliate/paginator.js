@@ -838,7 +838,9 @@ export class Paginator extends HTMLElement {
         state.pinched = globalThis.visualViewport.scale > 1
         if (this.scrolled || state.pinched) return
         // Gabinete: con la hoja que da vuelta, la app dobla la página; aquí no se arrastra.
-        if (this.hasAttribute('no-drag')) { if (e.touches.length === 1) e.preventDefault(); return }
+        // Sin preventDefault: en el iPhone, bloquear el toque cancela también el gesto
+        // nativo de la hoja (el contenedor tiene overflow hidden: no se mueve solo).
+        if (this.hasAttribute('no-drag')) return
         if (e.touches.length > 1) {
             if (this.#touchScrolled) e.preventDefault()
             return
