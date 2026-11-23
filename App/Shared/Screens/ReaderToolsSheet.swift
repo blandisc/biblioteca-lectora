@@ -45,14 +45,10 @@ struct ReaderToolsSheet: View {
                 }
                 .screenContent()
             }
-            .background(Theme.paper.ignoresSafeArea())
-            .navigationTitle(controller.title ?? "Libro")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen(controller.title ?? "Libro")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") { dismiss() }.foregroundStyle(Theme.accent)
+                    Button("Listo") { dismiss() }
                 }
             }
             .onAppear {

@@ -40,11 +40,7 @@ struct NoteLinkSheet: View {
                 }
                 .screenContent()
             }
-            .background(Theme.paper.ignoresSafeArea())
-            .navigationTitle("Llevar a una nota")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen("Llevar a una nota")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { dismiss() } }
             }

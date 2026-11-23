@@ -41,12 +41,7 @@ struct SearchScreen: View {
                 }
                 .screenContent()
             }
-            .background(Theme.paper.ignoresSafeArea())
-            .navigationDestination(for: ShelfBook.self) { BookDetailScreen(book: $0) }
-            .navigationDestination(for: NoteRef.self) { NoteScreen(ref: $0) }
-            #if os(iOS)
-            .toolbar(.hidden, for: .navigationBar)
-            #endif
+            .screen()
             .onAppear { if query.isEmpty { focused = true } }
         }
     }

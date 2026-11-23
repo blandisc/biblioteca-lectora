@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Toma capturas de la app en el simulador de iPhone: los dos estilos, en claro
 # y oscuro, de cada pestaña y del lector. Uso: scripts/screenshots.sh <carpeta>
+# Opcional: DEVICE=<udid> (el simulador del proyecto, «Gabinete») y DERIVED=<carpeta>
+# (en el Mac, /tmp/dd-gabinete, la misma de todas las sesiones).
 set -euo pipefail
 
 OUT=${1:-capturas}
 BUNDLE=mx.iracheta.gabinete
 mkdir -p "$OUT"
 
-DEVICE=$(xcrun simctl list devices available -j | python3 -c '
+DEVICE=${DEVICE:-$(xcrun simctl list devices available -j | python3 -c '
 import json, re, sys
 found = []
 for runtime, devices in json.load(sys.stdin)["devices"].items():
@@ -19,14 +21,14 @@ for runtime, devices in json.load(sys.stdin)["devices"].items():
             found.append((tuple(map(int, match.groups())), device["name"], device["udid"]))
 found.sort()
 print(found[-1][2])
-')
+')}
 echo "Simulador: $DEVICE"
 xcrun simctl boot "$DEVICE" || true
 xcrun simctl bootstatus "$DEVICE" -b
 
 xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS -configuration Debug \
-  -destination "id=$DEVICE" -derivedDataPath build/screens build CODE_SIGNING_ALLOWED=NO -quiet
-xcrun simctl install "$DEVICE" build/screens/Build/Products/Debug-iphonesimulator/Gabinete.app
+  -destination "id=$DEVICE" -derivedDataPath "${DERIVED:-build/screens}" build CODE_SIGNING_ALLOWED=NO -quiet
+xcrun simctl install "$DEVICE" "${DERIVED:-build/screens}"/Build/Products/Debug-iphonesimulator/Gabinete.app
 xcrun simctl status_bar "$DEVICE" override --time 9:41 --batteryState discharging --batteryLevel 100 \
   --cellularMode active --cellularBars 4 --wifiBars 3 || true
 
@@ -73,6 +75,7 @@ for mode in light dark; do
   shoot "editorial-$mode-diary" 5 -appearance.mode "$mode" -screenshot.tab reading -screenshot.screen diary
   shoot "editorial-$mode-note" 5 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen note
   shoot "editorial-$mode-highlights" 4 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen highlights
+  shoot "editorial-$mode-settings" 4 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen settings
   shoot "editorial-$mode-listening" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab reading -screenshot.listening YES
 done
 
@@ -82,6 +85,8 @@ for style in editorial; do
     shoot "$style-$mode-reader" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES
     shoot "$style-$mode-page" 8 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.hideChrome YES
     shoot "$style-$mode-contents" 9 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.screen contents
+    shoot "$style-$mode-marks" 9 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.screen marks
+    shoot "$style-$mode-appearance" 9 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.screen appearance
     shoot "$style-$mode-booksearch" 11 -appearance.style "$style" -appearance.mode "$mode" -screenshot.openFirst YES -screenshot.screen booksearch
   done
 done

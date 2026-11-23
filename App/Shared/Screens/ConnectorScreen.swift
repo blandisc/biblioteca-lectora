@@ -28,10 +28,7 @@ struct ConnectorScreen: View {
             if connected { connectedSections } else { connectSection }
         }
         .formScreen()
-        .navigationTitle(connector.title)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .inlineTitle(connector.title)
         .alert("No se pudo conectar", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {

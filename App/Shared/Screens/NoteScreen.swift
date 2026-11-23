@@ -42,10 +42,7 @@ struct NoteScreen: View {
 
     var body: some View {
         content
-            .background(Theme.paper.ignoresSafeArea())
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen()
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if editing {

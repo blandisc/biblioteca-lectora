@@ -39,56 +39,62 @@ struct CoverView: View {
                         .clipped()
                 } else {
                 style.background
-                VStack(alignment: style.illustration == .windmill ? .center : .leading, spacing: width * 0.05) {
+                VStack(alignment: style.illustration == .windmill ? .center : .leading, spacing: width * Theme.CoverArt.gap) {
                     if style.illustration == .windmill {
                         Text(author.uppercased())
-                            .font(.system(size: width * 0.06))
-                            .tracking(0.6)
+                            .font(.system(size: width * Theme.CoverArt.authorTop)) // ds-exception: portada dibujada
+                            .tracking(Theme.CoverArt.authorTracking)
                     }
                     Text(title)
-                        .font(.system(size: width * 0.14, design: .serif))
+                        .font(.system(size: width * Theme.CoverArt.title, design: .serif)) // ds-exception: portada dibujada
                         .italic(style.illustration == .windmill)
                         .multilineTextAlignment(style.illustration == .windmill ? .center : .leading)
                         .lineLimit(4)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(Theme.CoverArt.titleMinScale)
                     Spacer(minLength: 0)
                     illustration(width: width)
                     if style.illustration != .windmill {
                         Text(author.uppercased())
-                            .font(.system(size: width * 0.07))
-                            .tracking(0.6)
+                            .font(.system(size: width * Theme.CoverArt.author)) // ds-exception: portada dibujada
+                            .tracking(Theme.CoverArt.authorTracking)
                             .lineLimit(1)
                     }
                 }
                 .foregroundStyle(style.foreground)
-                .padding(width * 0.09)
-                .padding(.trailing, showsRibbon ? width * 0.1 : 0)
+                .padding(width * Theme.CoverArt.inset)
+                .padding(.trailing, showsRibbon ? width * Theme.CoverArt.ribbonClear : 0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: style.illustration == .windmill ? .top : .topLeading)
                 }
 
-                LinearGradient(colors: [.black.opacity(0.28), .clear], startPoint: .leading, endPoint: .trailing)
-                    .frame(width: max(3, width * 0.05))
+                LinearGradient(colors: [.black.opacity(Theme.CoverArt.spineShade), .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: max(Theme.CoverArt.spineMin, width * Theme.CoverArt.spine))
 
                 if showsRibbon {
                     Ribbon()
                         .fill(Theme.accent)
-                        .frame(width: max(5, width * 0.065), height: proxy.size.height + 22)
-                        .offset(x: width * 0.88, y: -3)
-                        .shadow(color: .black.opacity(0.2), radius: 1, y: 1)
+                        .frame(width: max(Theme.CoverArt.ribbonMin, width * Theme.CoverArt.ribbon),
+                               height: proxy.size.height + Theme.CoverArt.ribbonOverhang)
+                        .offset(x: width * Theme.CoverArt.ribbonX, y: -Theme.CoverArt.ribbonRise)
+                        .shadow(color: .black.opacity(Theme.CoverArt.ribbonShade), radius: Theme.CoverArt.thinLine, y: Theme.CoverArt.thinLine)
                 }
             }
-            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 2, bottomLeadingRadius: 2, bottomTrailingRadius: 4, topTrailingRadius: 4))
+            .clipShape(coverShape)
             .overlay {
                 if style.bordered {
-                    UnevenRoundedRectangle(topLeadingRadius: 2, bottomLeadingRadius: 2, bottomTrailingRadius: 4, topTrailingRadius: 4)
-                        .strokeBorder(.black.opacity(0.12), lineWidth: 0.5)
+                    coverShape
+                        .strokeBorder(.black.opacity(Theme.CoverArt.edgeLine), lineWidth: Theme.Size.hairline)
                 }
             }
         }
-        .aspectRatio(2.0 / 3.0, contentMode: .fit)
-        .shadow(color: .black.opacity(0.28), radius: 7, x: 0, y: 6)
+        .aspectRatio(Theme.Size.coverAspect, contentMode: .fit)
+        .shadow(color: .black.opacity(Theme.CoverArt.shadow), radius: Theme.CoverArt.shadowRadius, x: 0, y: Theme.CoverArt.shadowY)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(title), de \(author)")
+    }
+
+    private var coverShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(topLeadingRadius: Theme.CoverArt.spineRadius, bottomLeadingRadius: Theme.CoverArt.spineRadius,
+                               bottomTrailingRadius: Theme.CoverArt.edgeRadius, topTrailingRadius: Theme.CoverArt.edgeRadius)
     }
 
     @ViewBuilder
@@ -98,21 +104,21 @@ struct CoverView: View {
             EmptyView()
         case .windmill:
             Windmill()
-                .stroke(style.foreground, style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
-                .frame(width: width * 0.55, height: width * 0.6)
+                .stroke(style.foreground, style: StrokeStyle(lineWidth: Theme.CoverArt.line, lineCap: .round, lineJoin: .round))
+                .frame(width: width * Theme.CoverArt.windmill.width, height: width * Theme.CoverArt.windmill.height)
         case .circles:
-            HStack(spacing: -width * 0.12) {
+            HStack(spacing: -width * Theme.CoverArt.circlesOverlap) {
                 Circle().fill(style.foreground)
-                Circle().stroke(style.foreground, lineWidth: 1.2)
+                Circle().stroke(style.foreground, lineWidth: Theme.CoverArt.line)
             }
-            .frame(width: width * 0.6, height: width * 0.3)
+            .frame(width: width * Theme.CoverArt.circles.width, height: width * Theme.CoverArt.circles.height)
         case .rings:
             ZStack {
-                Circle().stroke(style.foreground, lineWidth: 1)
-                Circle().stroke(style.foreground, lineWidth: 1).padding(width * 0.1)
-                Circle().fill(style.foreground).frame(width: width * 0.07)
+                Circle().stroke(style.foreground, lineWidth: Theme.CoverArt.thinLine)
+                Circle().stroke(style.foreground, lineWidth: Theme.CoverArt.thinLine).padding(width * Theme.CoverArt.ringGap)
+                Circle().fill(style.foreground).frame(width: width * Theme.CoverArt.ringDot)
             }
-            .frame(width: width * 0.5, height: width * 0.5)
+            .frame(width: width * Theme.CoverArt.rings, height: width * Theme.CoverArt.rings)
             .frame(maxWidth: .infinity)
         }
     }

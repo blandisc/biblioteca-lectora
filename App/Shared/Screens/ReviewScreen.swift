@@ -58,10 +58,7 @@ struct ReviewScreen: View {
             }
             .screenContent()
         }
-        .background(Theme.paper.ignoresSafeArea())
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .pushedScreen()
     }
 
     private var filled: [ShelfBook] {
@@ -199,10 +196,7 @@ struct CandidatesScreen: View {
             }
             .screenContent()
         }
-        .background(Theme.paper.ignoresSafeArea())
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .pushedScreen()
         .task {
             if searchesFirst { await research() }
         }
@@ -311,11 +305,7 @@ struct CandidatePreview: View {
                 }
                 .screenContent()
             }
-            .background(Theme.paper.ignoresSafeArea())
-            .navigationTitle("Vista previa")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen("Vista previa")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
@@ -401,10 +391,7 @@ struct OtherSearchSheet: View {
                 }
             }
             .formScreen()
-            .navigationTitle("Buscar con otros datos")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .inlineTitle("Buscar con otros datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
@@ -469,10 +456,7 @@ struct FilledScreen: View {
             }
             .screenContent()
         }
-        .background(Theme.paper.ignoresSafeArea())
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .pushedScreen()
         .alert("No se pudo deshacer", isPresented: Binding(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }

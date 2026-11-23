@@ -78,9 +78,18 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-textEditor 120 · ribbon 12×64 · appearanceSheet 440 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375`
+textEditor 120 · ribbon 12×64 · appearanceSheet 440 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
+coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
-`Theme.Emphasis.secondary` (0,75): texto secundario sobre la marca (tarjeta para compartir).
+`Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir);
+`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta.
+
+### Portada tipográfica (`Theme.CoverArt`)
+
+La portada que se dibuja para un libro sin imagen se escala con su ancho: cada medida
+es una fracción de ese ancho (`inset` 0,09 · `title` 0,14 · `author` 0,07 · `spine` 0,05 ·
+`ribbon` 0,065 …), así se ve igual en una fila de 40 pt y en la ficha de 168 pt. Sus
+esquinas (`spineRadius` 2, `edgeRadius` 4) imitan un libro: lomo casi recto, canto redondeado.
 
 ### Identidad
 
@@ -111,7 +120,8 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 
 ### Movimiento (`Theme.Motion`)
 
-`standard` (snappy 0.25 s) para cambios de estado; `press` (0.15 s) al tocar.
+`standard` (snappy 0.25 s) para cambios de estado; `press` (0.15 s) al tocar;
+`equalizer(alto)` para las barras de audio sonando (cada una a su ritmo).
 
 ## Componentes (`Design/Components.swift`)
 
@@ -119,6 +129,8 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 |---|---|---|
 | `.screen()` | Receta de pantalla raíz: papel, sin barra de navegación, destinos de libro y serie | Mesa, Biblioteca, Cuaderno |
 | `.formScreen()` | Receta de formulario: el papel de la app de fondo, no el gris del sistema; botones e interruptores en `accent` (con la marca, casi negra en claro, parecían texto) | Ajustes, Conexiones, Reglas, Editar datos, Buscar con otros datos |
+| `.pushedScreen(título)` | Receta de pantalla empujada u hoja: papel, título en línea y acciones de la barra en `accent` | Ficha, serie, nota, Diario, Por revisar, Lector › herramientas, Sesión, Llevar a una nota, Traer de Calibre, Bienvenida |
+| `.inlineTitle(título)` | Título pequeño en la barra (lo usan `.pushedScreen` y los formularios empujados) | Conexión, Editar datos, Buscar con otros datos |
 | `.screenContent()` | Margen `gutter`, aire `screenTop`/`screenBottom`, tinta | Todo contenido con scroll |
 | `ScreenHeading` | Título serif + acciones a la derecha | Cada pantalla |
 | `PrimaryButton` | Acción principal en tinta (una por pantalla) | «Seguir leyendo», «Leer», estado vacío |
@@ -181,7 +193,16 @@ NavigationStack {
 
 **Cuadrícula:** `CoverGrid { ForEach { NavigationLink(value: book) { CoverCell(book: book) }.buttonStyle(PressableStyle()) } }`
 
-**Pantalla empujada (ficha, serie):** `ScrollView { … .screenContent() }.background(Theme.paper.ignoresSafeArea())` con título en línea.
+**Pantalla empujada u hoja (ficha, serie, herramientas del lector):**
+```swift
+ScrollView { VStack(alignment: .leading, spacing: Theme.Space.xl) { … }.screenContent() }
+    .pushedScreen("Título")          // papel, título en línea, «Listo» en verde hoja
+    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Listo") { dismiss() } } }
+```
+Una hoja lleva además `.presentationDetents([.medium, .large])` o `[.large]`.
+
+**Formulario (Ajustes, Conexiones, Editar datos):** `Form { Section("…") { … } }.formScreen()`,
+y `.inlineTitle("…")` si es empujado. Nunca otro fondo ni otro color de botones.
 
 **Vacío:** siempre `EmptyState` con qué falta y cómo resolverlo; con acción si existe.
 
@@ -207,7 +228,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 
 | Prueba | Qué exige |
 |---|---|
-| `testScreensUseOnlyTokens` | Sin números, colores, fuentes, animaciones ni curvas a mano en las pantallas |
+| `testScreensUseOnlyTokens` | Sin números (también decimales, sombras, escalas y proporciones), colores, fuentes, animaciones ni curvas a mano en las pantallas **ni dentro de las piezas** (`Design/`, «Aa» del lector); desde el 22 nov 2026 |
 | `testScreensUseCatalogPieces` | Sin segmentados, `.searchable`, vacíos del sistema, botones `bordered`, `DateFormatter`, formas ni estilos nuevos en las pantallas: son piezas de `Components.swift` |
 | `testDesignPiecesDontKnowTheApp` | Las piezas de `Design/` no conocen `AppModel` ni los almacenes: reciben datos y avisan con acciones |
 | `testOneMainActionPerScreen` | Una `PrimaryButton` y un `AccentIconButton` por pantalla, como mucho |
@@ -219,6 +240,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testDatesAndNumbersInSpanish` | Decisión del 18 nov 2026: fechas y porcentajes en español aunque el dispositivo no lo esté (`fecha.es(…)`, `percentText`); desde el 19 nov, todo porcentaje sale de `percentText` («57 %», con espacio que no se parte) |
 | `testNoArithmeticBetweenTokens` | Decisión del 19 nov 2026: ninguna medida se arma sumando tokens; se nombra en `Theme` |
 | `testAccentActionGoesLast` | Decisión del 19 nov 2026: el ícono verde de un encabezado va siempre al final, a la derecha |
+| `testPushedScreensUseTheRecipe` | Decisión del 22 nov 2026: ninguna pantalla arma a mano su fondo, su título en línea ni el color de los botones de la barra; usa `.screen()`, `.pushedScreen()` o `.formScreen()` |
 | `testFormsUseThePaper` | Decisión del 19 nov 2026: todo `Form` lleva `.formScreen()` |
 | `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra |
 | `testTextColorsAreReadable` | Decisión del 19 nov 2026: sobre `paper`, tinta y secundario ≥ 4,5 : 1; terciario y verde ≥ 3 : 1, en claro y oscuro |
@@ -232,3 +254,6 @@ su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
 | Motivo | Dónde | Por qué |
 |---|---|---|
 | control nativo de Form | Ajustes › Apariencia, Reglas | Dentro de un `Form` del sistema, el segmentado nativo es lo esperado; `FilterBar` es para el contenido de una pantalla |
+| portada dibujada | `CoverView` | La letra de la portada tipográfica es una fracción de su ancho (`Theme.CoverArt`), no un tamaño de la interfaz |
+| fuente del lector | Lector › «Aa» | La muestra de cada fuente es la fuente que vas a leer, al tamaño que elegiste |
+| paleta del lector | `ReaderPalette` | Los fondos del lector son sus propios tokens: el texto viaja como color CSS a la página |

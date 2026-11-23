@@ -313,12 +313,13 @@ window.lectora = {
         view?.clearSearch()
     },
     // Busca en el libro la cita de cada subrayado que llegó sin posición (de
-    // Calibre o de Kindle vía Readwise) y manda dónde quedó, uno por uno.
+    // Calibre o de Kindle vía Readwise) y manda dónde quedó, uno por uno. Cada uno
+    // trae sus búsquedas de la más exacta a la más suelta (QuoteAnchor en LectoraCore).
     async anchor(items) {
-        for (const { id, text } of items) {
-            const query = (text ?? '').replace(/\s+/g, ' ').trim().slice(0, 300)
+        for (const { id, queries } of items) {
             let cfi = null
-            if (view && query.length >= 4) {
+            for (const query of queries ?? []) {
+                if (!view || cfi) break
                 try {
                     for await (const result of view.search({ query })) {
                         if (result === 'done') break

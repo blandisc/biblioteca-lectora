@@ -41,6 +41,13 @@ final class DesignRulesTests: XCTestCase {
         }
     }
 
+    /// Piezas del sistema y del lector: tampoco usan valores sueltos (22 nov 2026: la
+    /// regla solo miraba las pantallas y dentro de las piezas quedaban 20 números sin nombre).
+    static var pieces: [Source] {
+        sources("App/Shared/Design").filter { !$0.path.hasSuffix("Theme.swift") }
+            + sources("App/Shared/Reader").filter { $0.path.hasSuffix("ReaderAppearance.swift") }
+    }
+
     static let doc = (try? String(contentsOf: root.appendingPathComponent("docs/sistema-diseno.md"), encoding: .utf8)) ?? ""
 
     /// Líneas que cumplen `pattern`, salvo comentarios y excepciones marcadas.
@@ -73,7 +80,7 @@ final class DesignRulesTests: XCTestCase {
 
     func testScreensUseOnlyTokens() {
         let rules: [(String, String)] = [
-            (#"(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\()([^)]*[^A-Za-z_.0-9])?[1-9][0-9]*(\.[0-9]+)?"#,
+            (#"(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\(|\.scaleEffect\(|\.shadow\(|\.tracking\(|\.aspectRatio\(|minimumScaleFactor\(|radius: )([^)]*[^A-Za-z_.0-9])?(0?\.[0-9]+|[1-9][0-9]*(\.[0-9]+)?)"#,
              "Número suelto: usa un token de Theme"),
             (#"Color\(hex|Color\(red:|Color\.(white|black)\b"#, "Color a mano: usa un color de Theme"),
             (#"\.system\(size|Font\.custom"#, "Fuente a mano: usa una de Font (screenTitle, rowTitle…)"),
@@ -81,7 +88,7 @@ final class DesignRulesTests: XCTestCase {
             (#"\.easeInOut\(duration|\.spring\(|\.snappy\("#, "Curva a mano: usa Theme.Motion"),
         ]
         for (pattern, rule) in rules {
-            check(hits(pattern, in: Self.screens), rule)
+            check(hits(pattern, in: Self.screens + Self.pieces), rule)
         }
     }
 
@@ -118,6 +125,15 @@ final class DesignRulesTests: XCTestCase {
 
     /// 19 nov 2026: los formularios (Ajustes, Conexiones…) salían en el gris frío del
     /// sistema, no en el papel de la app. Todo `Form` lleva `.formScreen()`.
+    /// 22 nov 2026: cada pantalla empujada u hoja armaba a mano su fondo y su título, y las
+    /// acciones de la barra salían unas en verde y otras casi negras. Todas usan su receta:
+    /// `.screen()` (pestaña), `.pushedScreen()` (empujada u hoja) o `.formScreen()` (formulario).
+    func testPushedScreensUseTheRecipe() {
+        check(hits(#"\.navigationBarTitleDisplayMode\(|\.background\(Theme\.paper\.ignoresSafeArea|\.toolbar\(\.hidden, for: \.navigationBar\)|Button\("[^"]+"\)[^\n]*\.foregroundStyle\(Theme\.accent\)"#,
+                   in: Self.screens),
+              "Fondo, título o color de la barra a mano: usa .screen(), .pushedScreen() o .formScreen()")
+    }
+
     func testFormsUseThePaper() {
         let problems = Self.screens.filter { file in
             file.lines.filter { $0.trimmingCharacters(in: .whitespaces) == "Form {" }.count

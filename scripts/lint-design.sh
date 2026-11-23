@@ -5,8 +5,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-files=$(ls App/Shared/Screens/*.swift App/Shared/Reader/ReaderView.swift)
-pattern='(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\()([^)]*[^A-Za-z_.0-9])?[1-9][0-9]*(\.[0-9]+)?|Color\(hex|\.system\(size|Font\.custom'
+files=$(ls App/Shared/Screens/*.swift App/Shared/RootView.swift App/Shared/Reader/ReaderView.swift App/Shared/Reader/ReaderAppearance.swift App/Shared/Design/*.swift | grep -v Theme.swift)
+pattern='(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\(|\.scaleEffect\(|\.shadow\(|\.tracking\(|\.aspectRatio\(|minimumScaleFactor\(|radius: )([^)]*[^A-Za-z_.0-9])?(0?\.[0-9]+|[1-9][0-9]*(\.[0-9]+)?)|Color\(hex|\.system\(size|Font\.custom'
 
 violations=$(grep -nE "$pattern" $files | grep -vE '^\S+:\s*[0-9]+:\s*//' | grep -v 'ds-exception:')
 if [ -n "$violations" ]; then

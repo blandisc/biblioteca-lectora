@@ -230,7 +230,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let pending = AnnotationStore.shared.annotations(forBook: bookID)
             .filter { $0.cfi == nil && !tried.contains($0.id.uuidString) }
         guard !pending.isEmpty,
-              let data = try? JSONSerialization.data(withJSONObject: pending.map { ["id": $0.id.uuidString, "text": $0.quote] }),
+              let data = try? JSONSerialization.data(withJSONObject: pending.map { ["id": $0.id.uuidString, "queries": QuoteAnchor.queries(for: $0.quote)] as [String: Any] }),
               let array = String(data: data, encoding: .utf8)
         else { return }
         pending.forEach { tried.insert($0.id.uuidString) }
@@ -238,7 +238,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         evaluate("window.lectora.anchor(\(array))")
     }
 
-    private static let anchorTriedKey = "subrayados.anclajeIntentado"
+    /// v2 (22 nov 2026): con `QuoteAnchor` se vuelven a buscar los que no aparecieron antes.
+    private static let anchorTriedKey = "subrayados.anclajeIntentado.v2"
 
     /// Literal de cadena JavaScript seguro.
     private static func js(_ string: String) -> String {

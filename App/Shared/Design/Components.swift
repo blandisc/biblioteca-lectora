@@ -41,6 +41,26 @@ extension View {
             .tint(Theme.accent)
     }
 
+    /// Receta de pantalla empujada u hoja (ficha, serie, nota, Lector › herramientas…):
+    /// papel de fondo, título en línea y las acciones de la barra («Listo», «Cancelar»,
+    /// «Editar») en `accent`. Con la marca de la app, casi negra en claro, parecían texto,
+    /// y cada pantalla las pintaba distinto (22 nov 2026).
+    func pushedScreen(_ title: String = "") -> some View {
+        self
+            .background(Theme.paper.ignoresSafeArea())
+            .inlineTitle(title)
+            .tint(Theme.accent)
+    }
+
+    /// Título pequeño, centrado en la barra (pantallas empujadas, hojas y formularios).
+    func inlineTitle(_ title: String) -> some View {
+        self
+            .navigationTitle(title)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+    }
+
     /// Contenedor de una pantalla con scroll: margen, aire arriba y abajo.
     func screenContent() -> some View {
         self
@@ -110,8 +130,8 @@ struct SectionLabel: View {
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .opacity(configuration.isPressed ? 0.85 : 1)
+            .scaleEffect(configuration.isPressed ? Theme.Emphasis.pressedScale : Theme.Emphasis.rest)
+            .opacity(configuration.isPressed ? Theme.Emphasis.pressed : Theme.Emphasis.rest)
             .animation(Theme.Motion.press, value: configuration.isPressed)
     }
 }
@@ -574,7 +594,7 @@ struct CandidateCover: View {
             CoverView(title: candidate.title, author: candidate.authors.first ?? "",
                       style: .generated(for: candidate.title))
         }
-        .frame(width: width, height: width * 3 / 2)
+        .frame(width: width, height: width / Theme.Size.coverAspect)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous))
     }
 }
@@ -665,7 +685,7 @@ struct CoverChoiceCell: View {
         Button { selection = option } label: {
             VStack(spacing: Theme.Space.xs) {
                 image
-                    .frame(width: width, height: width * 3 / 2)
+                    .frame(width: width, height: width / Theme.Size.coverAspect)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: Theme.Radius.cover, style: .continuous)
@@ -958,6 +978,8 @@ struct FlowRow<Content: View>: View {
 /// Las etapas en el tiempo: una fila por etapa, de interrumpida (arriba) a inmersa.
 struct StageChart: View {
     let segments: [StageSegment]
+    /// Una fila por etapa y una más para las horas.
+    private let chartRows = ReadingStage.allCases.count + 1
 
     var body: some View {
         Chart(Array(segments.enumerated()), id: \.offset) { _, segment in
@@ -980,7 +1002,7 @@ struct StageChart: View {
             AxisMarks(position: .leading) { _ in AxisValueLabel() }
         }
         .chartPlotStyle { $0.background(Theme.paper) }
-        .frame(height: Theme.Size.stageRow * CGFloat(ReadingStage.allCases.count + 1))
+        .frame(height: Theme.Size.stageRow * CGFloat(chartRows))
         .accessibilityLabel("Etapas de la sesión en el tiempo")
     }
 }
@@ -1063,7 +1085,7 @@ struct EqualizerBars: View {
                     .frame(width: Theme.Size.equalizerBar, height: Theme.Space.m * height)
                     .phaseAnimator([1.0, 0.4]) { bar, phase in
                         bar.scaleEffect(y: phase, anchor: .bottom)
-                    } animation: { _ in .easeInOut(duration: 0.45 + height * 0.2) }
+                    } animation: { _ in Theme.Motion.equalizer(height) }
             }
         }
         .frame(height: Theme.Space.m, alignment: .bottom)
@@ -1354,7 +1376,7 @@ struct ContentsRow: View {
                     .accessibilityLabel("Aquí vas")
             }
         }
-        .padding(.leading, Theme.Space.l * CGFloat(min(depth, 3)))
+        .padding(.leading, Theme.Space.l * CGFloat(min(depth, Theme.Size.indentLevels)))
         .padding(.vertical, Theme.Space.rowY)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())

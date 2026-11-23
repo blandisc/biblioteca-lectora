@@ -26,14 +26,10 @@ struct SessionSheet: View {
                     }
                 }
             }
-            .background(Theme.paper.ignoresSafeArea())
-            .navigationTitle("Sesión actual")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen("Sesión actual")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") { dismiss() }.foregroundStyle(Theme.accent)
+                    Button("Listo") { dismiss() }
                 }
             }
             .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
@@ -96,7 +92,7 @@ struct SessionSummarySheet: View {
         .gutter()
         .padding(.top, Theme.Space.xl)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Theme.paper.ignoresSafeArea())
+        .pushedScreen()
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {

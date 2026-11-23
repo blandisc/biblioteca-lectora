@@ -36,11 +36,7 @@ struct CalibreMigrationScreen: View {
                 }
                 .screenContent()
             }
-            .background(Theme.paper.ignoresSafeArea())
-            .navigationTitle("Traer de Calibre")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen("Traer de Calibre")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     if !isMigrating { Button("Cerrar") { dismiss() } }

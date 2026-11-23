@@ -150,6 +150,52 @@ enum Theme {
         static let shareCard = CGSize(width: 300, height: 375)
         /// Ventana mínima del lector en el Mac.
         static let macReader = CGSize(width: 720, height: 820)
+        /// Proporción de toda portada: ancho entre alto (2 : 3).
+        static let coverAspect: CGFloat = 2.0 / 3.0
+        /// Niveles de sangría del índice del libro; más hondo ya no se mete.
+        static let indentLevels = 3
+    }
+
+    // MARK: Portada tipográfica (proporciones del ancho de la portada)
+
+    /// La portada dibujada para libros sin imagen se escala con su ancho: cada
+    /// medida es una fracción de ese ancho, así se ve igual en la fila y en la ficha.
+    enum CoverArt {
+        static let inset: CGFloat = 0.09
+        static let gap: CGFloat = 0.05
+        static let title: CGFloat = 0.14
+        static let author: CGFloat = 0.07
+        static let authorTop: CGFloat = 0.06
+        static let authorTracking: CGFloat = 0.6
+        static let titleMinScale: CGFloat = 0.7
+        /// Lomo: sombra del borde izquierdo, nunca menor que `spineMin` puntos.
+        static let spine: CGFloat = 0.05
+        static let spineMin: CGFloat = 3
+        static let spineShade = 0.28
+        /// Cinta de «estás leyendo»: ancho, de dónde cuelga y cuánto sobresale.
+        static let ribbon: CGFloat = 0.065
+        static let ribbonMin: CGFloat = 5
+        static let ribbonX: CGFloat = 0.88
+        static let ribbonRise: CGFloat = 3
+        static let ribbonOverhang: CGFloat = 22
+        static let ribbonClear: CGFloat = 0.1
+        static let ribbonShade = 0.2
+        /// Esquinas: lomo casi recto, canto un poco redondeado.
+        static let spineRadius: CGFloat = 2
+        static let edgeRadius: CGFloat = 4
+        static let edgeLine = 0.12
+        static let line: CGFloat = 1.2
+        static let thinLine: CGFloat = 1
+        /// Sombra de la portada como objeto sobre el papel.
+        static let shadow = 0.28
+        static let shadowRadius: CGFloat = 7
+        static let shadowY: CGFloat = 6
+        static let windmill = CGSize(width: 0.55, height: 0.6)
+        static let circles = CGSize(width: 0.6, height: 0.3)
+        static let circlesOverlap: CGFloat = 0.12
+        static let rings: CGFloat = 0.5
+        static let ringGap: CGFloat = 0.1
+        static let ringDot: CGFloat = 0.07
     }
 
     // MARK: Lector
@@ -170,6 +216,13 @@ enum Theme {
     enum Emphasis {
         /// Texto secundario sobre la marca (tarjeta para compartir).
         static let secondary = 0.75
+        /// Al tocar: se hunde un poco y se apaga apenas, sin cambiar de color.
+        static let pressedScale = 0.97
+        /// En reposo: tamaño y opacidad completos.
+        static let rest = 1.0
+        static let pressed = 0.85
+        /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
+        static let labelMinScale: CGFloat = 0.8
     }
 
     // MARK: Movimiento
@@ -177,6 +230,10 @@ enum Theme {
     enum Motion {
         static let standard = Animation.snappy(duration: 0.25)
         static let press = Animation.easeOut(duration: 0.15)
+        /// Barras de audio sonando: cada una a su ritmo según su alto.
+        static func equalizer(_ height: Double) -> Animation {
+            .easeInOut(duration: 0.45 + height * 0.2)
+        }
     }
 }
 

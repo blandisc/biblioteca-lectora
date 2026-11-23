@@ -30,9 +30,6 @@ struct SeriesScreen: View {
             }
             .screenContent()
         }
-        .background(Theme.paper.ignoresSafeArea())
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .pushedScreen()
     }
 }

@@ -58,10 +58,7 @@ struct DiaryScreen: View {
             }
             .screenContent()
         }
-        .background(Theme.paper.ignoresSafeArea())
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .pushedScreen()
         .onChange(of: part) { _, _ in offset = 0 }
     }
 
@@ -331,10 +328,7 @@ struct SessionScreen: View {
                     .screenContent()
             }
         }
-        .background(Theme.paper.ignoresSafeArea())
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .pushedScreen()
         .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {

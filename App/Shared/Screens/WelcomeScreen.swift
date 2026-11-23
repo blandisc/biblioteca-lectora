@@ -64,10 +64,7 @@ struct WelcomeScreen: View {
                 }
                 .screenContent()
             }
-            .background(Theme.paper.ignoresSafeArea())
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen()
             .toolbar {
                 if step != .hello {
                     ToolbarItem(placement: .cancellationAction) {

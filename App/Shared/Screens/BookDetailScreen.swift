@@ -62,10 +62,7 @@ struct BookDetailScreen: View {
             }
             .screenContent()
         }
-        .background(Theme.paper.ignoresSafeArea())
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .pushedScreen()
         .toolbar {
             if record != nil {
                 ToolbarItem(placement: .primaryAction) {
@@ -218,11 +215,7 @@ struct CoverPickerSheet: View {
                 }
                 .screenContent()
             }
-            .background(Theme.paper.ignoresSafeArea())
-            .navigationTitle("Portada")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .pushedScreen("Portada")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }

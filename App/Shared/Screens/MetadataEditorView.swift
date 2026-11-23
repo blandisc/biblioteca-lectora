@@ -116,10 +116,7 @@ struct MetadataEditorView: View {
                 }
             }
             .formScreen()
-            .navigationTitle("Editar datos")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .inlineTitle("Editar datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
@@ -155,7 +152,7 @@ struct MetadataEditorView: View {
            let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
             Image(decorative: image, scale: 1)
                 .resizable()
-                .aspectRatio(2.0 / 3.0, contentMode: .fill)
+                .aspectRatio(Theme.Size.coverAspect, contentMode: .fill)
                 .coverShape()
         } else {
             CoverView(title: draft.title, author: authors, style: .generated(for: draft.title),
