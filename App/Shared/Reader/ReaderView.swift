@@ -51,7 +51,19 @@ struct ReaderView: View {
             palette.background.ignoresSafeArea()
             ReaderWebView(controller: controller)
                 .ignoresSafeArea(edges: .bottom)
+            // Hasta que aparece la primera página: que se note que está trabajando.
+            if controller.location == nil && controller.errorMessage == nil {
+                VStack(spacing: Theme.Space.s) {
+                    ProgressView()
+                    Text("Abriendo el libro…").font(.footnote)
+                }
+                .foregroundStyle(palette.textColor)
+                .tint(palette.textColor)
+                .transition(.opacity)
+                .accessibilityElement(children: .combine)
+            }
         }
+        .animation(Theme.Motion.standard, value: controller.location == nil)
         .overlay(alignment: .topTrailing) {
             // Con los controles a la vista, la barra de estado ocupa el borde y la cinta
             // tapaba la batería: ahí lo dice el ícono relleno del marcador.

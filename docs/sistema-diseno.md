@@ -149,6 +149,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `SectionLabel` | Rótulo en mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`) | «EN LA MESA», «SE COMPLETARON SOLOS», «Nº 7» en la ficha |
 | `AccentIconButton` | Ícono de acción en `accent` (verde hoja, se distingue de la tinta), sin fondo: el único acento verde de una pantalla | «+» de la Biblioteca y del Cuaderno |
 | `SecondaryButton`, `LinkRow` | Acción secundaria a lo ancho; fila que lleva a otra pantalla | «Por revisar» |
+| `QuietButton` | Salida discreta, solo texto, bajo opciones que importan más | «Empezar sin libros» en la bienvenida |
 | `CandidateRow`, `CandidateCover` | Libro encontrado en internet: probabilidad y razones en palabras | Elegir los datos |
 | `CompareRow` | Dato nuevo frente al tuyo («Antes: …»), con «Deshacer» opcional | Vista previa, lo completado |
 | `NoteRow` | Nota: título serif, dos líneas, fecha y libros enlazados en `accent` | Cuaderno › Notas, ficha › Notas, «Llevar a una nota» |
@@ -232,6 +233,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testScreensUseCatalogPieces` | Sin segmentados, `.searchable`, vacíos del sistema, botones `bordered`, `DateFormatter`, formas ni estilos nuevos en las pantallas: son piezas de `Components.swift` |
 | `testDesignPiecesDontKnowTheApp` | Las piezas de `Design/` no conocen `AppModel` ni los almacenes: reciben datos y avisan con acciones |
 | `testOneMainActionPerScreen` | Una `PrimaryButton` y un `AccentIconButton` por pantalla, como mucho |
+| `testSkippingIsNeverTheMainAction` | Saltar o no hacer nada («Ahora no», «Empezar sin…») nunca es `PrimaryButton`: va en `QuietButton` |
 | `testScrollingScreensUseTheRecipe` | Toda pantalla con scroll usa `.screenContent()` |
 | `testEveryPieceIsInTheCatalog` | Toda pieza de `Components.swift` tiene fila en el catálogo de arriba |
 | `testEveryTokenIsUsed` | Ningún token de `Theme` sobra |

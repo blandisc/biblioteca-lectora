@@ -512,6 +512,24 @@ struct SecondaryButton: View {
     }
 }
 
+/// Salida discreta: solo texto en tinta secundaria, centrado. Para «seguir sin
+/// hacer nada» bajo opciones que sí importan, sin competir con ellas.
+struct QuietButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(Theme.secondaryInk)
+                .frame(maxWidth: .infinity, minHeight: Theme.Size.control)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+    }
+}
+
 /// Fila que lleva a otra pantalla: título, valor y flecha. Con `marked`, un
 /// punto de lápiz avisa que hay algo pendiente.
 struct LinkRow: View {

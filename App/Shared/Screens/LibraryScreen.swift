@@ -122,9 +122,7 @@ struct LibraryScreen: View {
     }
 
     private var summary: String {
-        if let progress = model.library.progress {
-            return "Añadiendo \(min(progress.done + 1, progress.total)) de \(progress.total)…"
-        }
+        if let line = model.library.progressLine { return line }
         if !model.library.identifying.isEmpty {
             return "Buscando datos en internet…"
         }

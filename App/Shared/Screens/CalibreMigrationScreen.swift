@@ -30,7 +30,7 @@ struct CalibreMigrationScreen: View {
                     case .migrating:
                         let done = model.library.progress
                         progress(title: done.map { "Trayendo \($0.done) de \($0.total) libros…" } ?? "Trayendo…",
-                                 value: done.map { $0.total > 0 ? Double($0.done) / Double($0.total) : 0 })
+                                 value: model.library.progressFraction)
                     case .done(let report): SummaryStep(report: report) { dismiss() }
                     }
                 }

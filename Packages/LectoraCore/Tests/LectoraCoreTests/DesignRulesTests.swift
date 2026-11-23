@@ -226,6 +226,15 @@ final class DesignRulesTests: XCTestCase {
         check(problems, "Una acción principal y un ícono verde por pantalla")
     }
 
+    /// 22 nov 2026: «Empezar sin libros» y «Ahora no» eran el botón oscuro de la
+    /// bienvenida y pesaban más que añadir libros o conectar Readwise. Saltar o no
+    /// hacer nada nunca es la acción principal: va en `QuietButton`.
+    func testSkippingIsNeverTheMainAction() {
+        check(hits(#"PrimaryButton\(title:[^\n]*"(Ahora no|Saltar|Omitir|Cancelar|Más tarde|Después|Empezar sin[^"]*)""#,
+                   in: Self.screens),
+              "Saltar o no hacer nada como PrimaryButton: usa QuietButton")
+    }
+
     /// Toda pantalla con scroll arma su contenido con `.screenContent()` (margen y aire del sistema).
     func testScrollingScreensUseTheRecipe() {
         let problems = Self.screens

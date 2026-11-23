@@ -48,6 +48,8 @@ struct WelcomeScreen: View {
                         }
                     case .books:
                         BooksStep(count: model.library.books.count,
+                                  importing: model.library.progressLine,
+                                  importFraction: model.library.progressFraction,
                                   calibre: { migratingCalibre = true },
                                   add: { importingBooks = true }) {
                             step = .readwise
@@ -170,6 +172,9 @@ private struct PlaceStep: View {
 /// Tus libros: traerlos de Calibre, añadir archivos o empezar sin nada.
 private struct BooksStep: View {
     let count: Int
+    /// «Añadiendo 3 de 32…» si hay una importación en curso.
+    let importing: String?
+    let importFraction: Double?
     let calibre: () -> Void
     let add: () -> Void
     let next: () -> Void
@@ -177,9 +182,19 @@ private struct BooksStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             Text("Tus libros").font(.screenTitle)
-            Text(count == 0 ? "EPUB, PDF, MOBI y cómics propios, sin DRM." : "Ya hay \(count) libros en tu Gabinete.")
-                .font(.subheadline)
-                .foregroundStyle(Theme.secondaryInk)
+            if let importing {
+                // Se ve que trabaja: puedes seguir y los libros terminan de llegar solos.
+                VStack(alignment: .leading, spacing: Theme.Space.s) {
+                    Text(importing)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
+                    ThinProgress(value: importFraction ?? 0)
+                }
+            } else {
+                Text(count == 0 ? "EPUB, PDF, MOBI y cómics propios, sin DRM." : count == 1 ? "Ya hay 1 libro en tu Gabinete." : "Ya hay \(count) libros en tu Gabinete.")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.secondaryInk)
+            }
             Button(action: calibre) {
                 OptionRow(systemImage: "books.vertical", title: "Traer mi biblioteca de Calibre",
                           detail: "Libros, datos, portadas, series y subrayados. Calibre no se toca.")
@@ -190,7 +205,12 @@ private struct BooksStep: View {
                           detail: "Desde Archivos, iCloud Drive o donde los tengas.")
             }
             .buttonStyle(.plain)
-            PrimaryButton(title: count == 0 ? "Empezar sin libros" : "Seguir", fillsWidth: true, action: next)
+            // Sin libros, la salida es discreta: lo importante es traerlos.
+            if count == 0 {
+                QuietButton(title: "Empezar sin libros", action: next)
+            } else {
+                PrimaryButton(title: "Seguir", fillsWidth: true, action: next)
+            }
         }
     }
 }
@@ -212,7 +232,11 @@ private struct ReadwiseStep: View {
                           detail: "Con tu llave de readwise.io/access_token.", selected: connected)
             }
             .buttonStyle(.plain)
-            PrimaryButton(title: connected ? "Listo" : "Ahora no", fillsWidth: true, action: finish)
+            if connected {
+                PrimaryButton(title: "Listo", fillsWidth: true, action: finish)
+            } else {
+                QuietButton(title: "Ahora no", action: finish)
+            }
         }
     }
 }

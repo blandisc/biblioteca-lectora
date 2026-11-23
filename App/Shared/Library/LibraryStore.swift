@@ -52,6 +52,16 @@ final class LibraryStore: ObservableObject {
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
 
+    /// «Añadiendo 3 de 32…» mientras se importa; la misma frase en la Biblioteca y la bienvenida.
+    var progressLine: String? {
+        progress.map { "Añadiendo \(min($0.done + 1, $0.total)) de \($0.total)…" }
+    }
+
+    /// Lo hecho de la importación en curso, de 0 a 1.
+    var progressFraction: Double? {
+        progress.map { $0.total > 0 ? Double($0.done) / Double($0.total) : 0 }
+    }
+
     /// Carpeta de la biblioteca (`Gabinete/Biblioteca`): cambia si eliges otra.
     @Published private(set) var root: URL
     /// Moviendo la biblioteca a otra carpeta.
