@@ -211,6 +211,9 @@ enum Theme {
         static let folioTop: CGFloat = 14
         /// La página nueva aparece debajo de la hoja que se dobla (segundos).
         static let pageReveal: TimeInterval = 0.12
+        /// El revés de la hoja que se dobla: el mismo papel con esta fracción de su
+        /// luz (más oscuro, como papel a contraluz; UIKit le suma su propio brillo).
+        static let pageBack: CGFloat = 0.82
     }
 
     // MARK: Énfasis

@@ -218,7 +218,8 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
 - Lector: los controles de vidrio tienen el mismo margen (`Reader.chromeInset`, 16 pt)
   arriba y abajo; las zonas de toque izquierda y derecha son franjas iguales
   (`Reader.edgeZone`, 28 %). Sin controles, el folio deja `Reader.folioInset` (60) a los lados
-  y `Reader.folioTop` (14) arriba.
+  y `Reader.folioTop` (14) arriba. Al doblar la hoja, la página nueva aparece en
+  `Reader.pageReveal` (0,12 s) y el revés es el mismo papel con `Reader.pageBack` (82 %) de su luz.
 - Cuadrículas: columnas iguales (`GridItem(.flexible())` ×3) con 16 pt entre columnas
   y 24 pt entre filas.
 

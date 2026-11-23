@@ -32,7 +32,11 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         self.webView = webView
         self.reader = reader
         current = ReaderPage()
-        super.init(transitionStyle: .pageCurl, navigationOrientation: .horizontal)
+        super.init(transitionStyle: .pageCurl, navigationOrientation: .horizontal,
+                   options: [.spineLocation: NSNumber(value: UIPageViewController.SpineLocation.min.rawValue)])
+        // De dos caras: el revés de la hoja es papel un poco más oscuro (con una
+        // sola cara, UIKit lo pinta gris claro y en noche o negro deslumbra).
+        isDoubleSided = true
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) no se usa") }
@@ -40,13 +44,22 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .clear
-        isDoubleSided = false
         dataSource = curls ? self : nil
         delegate = self
         current.view.backgroundColor = paper
         current.embed(webView)
         setViewControllers([current], direction: .forward, animated: false)
         // Los toques los resuelve el lector (orillas para pasar, centro para los controles).
+        disableTaps()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        disableTaps()
+    }
+
+    /// Los toques los resuelve el lector; UIKit no debe pasar la hoja con un toque.
+    private func disableTaps() {
         gestureRecognizers.filter { $0 is UITapGestureRecognizer }.forEach { $0.isEnabled = false }
     }
 
@@ -62,8 +75,19 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
         nextPage(forward: false, from: viewController)
     }
 
+    /// Con dos caras, UIKit pide primero el revés de la hoja y luego la página siguiente.
     private func nextPage(forward: Bool, from viewController: UIViewController) -> UIViewController? {
-        guard viewController === current, turning == nil, reader?.canTurn(forward: forward) == true else { return nil }
+        if viewController === current {
+            if let turning {
+                guard turning.forward == forward else { return nil }
+            } else {
+                guard reader?.canTurn(forward: forward) == true else { return nil }
+            }
+            let reverse = back()
+            reverse.forward = forward
+            return reverse
+        }
+        guard turning == nil, let reverse = viewController as? ReaderBack, reverse.forward == forward else { return nil }
         let page = ReaderPage()
         page.forward = forward
         page.view.backgroundColor = paper
@@ -72,7 +96,7 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
 
     func pageViewController(_ pageViewController: UIPageViewController,
                             willTransitionTo pendingViewControllers: [UIViewController]) {
-        guard turning == nil, let page = pendingViewControllers.first as? ReaderPage else { return }
+        guard turning == nil, let page = pendingViewControllers.compactMap({ $0 as? ReaderPage }).first else { return }
         coverCurrent()
         turning = (page, page.forward)
         page.embed(webView)
@@ -100,7 +124,8 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
             guard let self else { return }
             guard moved else { self.finish(completed: false, turnBack: false); return }
             page.embed(self.webView)
-            self.setViewControllers([page], direction: forward ? .forward : .reverse, animated: true) { [weak self] done in
+            // Con dos caras, la animación pide la hoja nueva y el revés de la que se dobla.
+            self.setViewControllers([page, self.back()], direction: forward ? .forward : .reverse, animated: true) { [weak self] done in
                 self?.finish(completed: done)
             }
         }
@@ -108,10 +133,29 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
 
     // MARK: Piezas
 
+    private func back() -> ReaderBack {
+        let reverse = ReaderBack()
+        reverse.view.backgroundColor = Self.shaded(paper)
+        // Si UIKit deja el revés encima tras doblar, que no se quede con los toques.
+        reverse.view.isUserInteractionEnabled = false
+        return reverse
+    }
+
+    /// El papel con menos luz, para el revés de la hoja.
+    private static func shaded(_ color: UIColor) -> UIColor {
+        UIColor { traits in
+            var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 0
+            let resolved = color.resolvedColor(with: traits)
+            guard resolved.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else { return resolved }
+            return UIColor(hue: hue, saturation: saturation, brightness: brightness * Theme.Reader.pageBack, alpha: alpha)
+        }
+    }
+
     private func coverCurrent() {
         guard cover == nil, let photo = webView.snapshotView(afterScreenUpdates: false) else { return }
         photo.frame = webView.frame
         photo.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        photo.isUserInteractionEnabled = false
         current.view.addSubview(photo)
         cover = photo
     }
@@ -146,6 +190,11 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
             removeCover()
         }
     }
+}
+
+/// El revés de una hoja.
+final class ReaderBack: UIViewController {
+    var forward = true
 }
 
 /// Una hoja: el papel y, encima, el lector cuando le toca.
