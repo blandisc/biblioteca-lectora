@@ -194,7 +194,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         #else
         let curl = "false"
         #endif
-        let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl) })"
+        let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl), "
+            + "margin: \(Int(Theme.Reader.pageMargin)) })"
         flowScript = script
         if isReady { evaluate(script) }
     }

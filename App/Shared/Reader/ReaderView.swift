@@ -202,7 +202,7 @@ struct ReaderView: View {
         ZStack {
             if !showsChrome {
                 ReadingFolio(title: title, location: controller.location, footerText: footerText,
-                             footer: $footer, color: palette.textColor,
+                             options: footerOptions, footer: $footer, color: palette.textColor,
                              paper: flow == .scrolled ? palette.background : nil)
                     .transition(.opacity)
                 if showsCounter, let session = controller.session {
@@ -228,28 +228,41 @@ struct ReaderView: View {
         }
     }
 
-    /// El pie de la página según lo que elegiste; si no hay con qué calcularlo
-    /// (un libro sin sesiones, un capítulo sin texto), el porcentaje.
-    private var footerText: String {
+    /// Lo que diría el pie con cada opción: el dato grande y su leyenda
+    /// («9 min» · «para terminar el capítulo»). `nil` si aún no hay con qué calcularlo.
+    private func footerParts(_ kind: ReaderFooter) -> (value: String, caption: String)? {
         let fraction = controller.location?.fraction ?? 0
-        switch footer {
+        switch kind {
         case .chapterTime:
-            guard let words = controller.location?.chapterWordsLeft else { break }
+            guard let words = controller.location?.chapterWordsLeft else { return nil }
             let perMinute = sessions.usualWordsPerMinute ?? SessionStore.defaultWordsPerMinute
             let seconds = Double(words) / perMinute * 60
-            return seconds < 60 ? "Menos de 1 min para terminar el capítulo"
-                : "\(ReadingFormat.duration(seconds)) para terminar el capítulo"
+            return (seconds < 60 ? "Menos de 1 min" : ReadingFormat.duration(seconds), "para terminar el capítulo")
         case .bookTime:
-            guard let bookID, let seconds = sessions.remaining(forBook: bookID, progress: fraction) else { break }
-            return seconds < 60 ? "Menos de 1 min para terminar el libro"
-                : "\(ReadingFormat.duration(seconds)) para terminar el libro"
+            guard let bookID, let seconds = sessions.remaining(forBook: bookID, progress: fraction) else { return nil }
+            return (seconds < 60 ? "Menos de 1 min" : ReadingFormat.duration(seconds), "para terminar el libro")
         case .page:
-            guard let page = controller.location?.page, let count = controller.location?.pageCount, count > 0 else { break }
-            return "Página \(page) de \(count)"
+            guard let page = controller.location?.page, let count = controller.location?.pageCount, count > 0 else { return nil }
+            return ("Página \(page)", "de \(count)")
         case .percent:
-            break
+            return (fraction.percentText, "del libro")
         }
-        return fraction.percentText
+    }
+
+    /// Las opciones del pie, cada una con lo que diría ahora mismo.
+    private var footerOptions: [FooterOption] {
+        ReaderFooter.allCases.map { kind in
+            let parts = footerParts(kind)
+            return FooterOption(kind: kind, value: parts?.value ?? kind.name,
+                                caption: parts?.caption ?? "Lee unos minutos y aparece")
+        }
+    }
+
+    /// El pie según lo que elegiste; si no hay con qué calcularlo, el porcentaje.
+    private var footerText: String {
+        if footer == .percent { return (controller.location?.fraction ?? 0).percentText }
+        guard let parts = footerParts(footer) else { return (controller.location?.fraction ?? 0).percentText }
+        return "\(parts.value) \(parts.caption)"
     }
 
     /// El marcador de la página que se ve, si tiene: el que reader.js ve dentro
@@ -420,19 +433,32 @@ private struct SessionCounter: View {
     }
 }
 
+/// Una opción del pie con lo que diría ahora («9 min» · «para terminar el capítulo»).
+struct FooterOption: Identifiable {
+    let kind: ReaderFooter
+    let value: String
+    let caption: String
+    var id: ReaderFooter { kind }
+}
+
 /// Editorial sin controles: capítulo arriba y, abajo, el pie que elijas
 /// (tiempo para terminar el capítulo o el libro, página o porcentaje). Tocando
-/// el pie aparecen las opciones.
+/// el pie se abre un globo con las opciones, cada una con su dato de ahora.
+/// En páginas, el texto deja aire arriba y abajo (`Reader.pageMargin`): el folio
+/// queda sobre papel limpio. En continuo, el texto pasa por debajo: una franja
+/// de papel sólido tapa lo que queda detrás y solo su orilla se desvanece.
 private struct ReadingFolio: View {
     let title: String
     let location: ReaderController.Location?
     let footerText: String
+    let options: [FooterOption]
     @Binding var footer: ReaderFooter
     /// El color del texto del libro: el folio se lee sobre cualquier fondo
     /// (papel, noche cálida, negro), no con el gris de la app.
     let color: Color
-    /// En continuo el texto pasa por debajo: el papel se desvanece detrás del folio.
+    /// En continuo, el papel: va detrás del folio para que el texto no se cruce.
     var paper: Color? = nil
+    @State private var choosing = false
 
     var body: some View {
         VStack {
@@ -442,14 +468,10 @@ private struct ReadingFolio: View {
                 .padding(.top, Theme.Reader.folioTop)
                 .padding(.bottom, Theme.Space.s)
                 .frame(maxWidth: .infinity)
-                .background { fade(.top) }
+                .background { band(.top) }
                 .allowsHitTesting(false)
             Spacer()
-            Menu {
-                Picker("Abajo", selection: $footer) {
-                    ForEach(ReaderFooter.allCases) { Text($0.name).tag($0) }
-                }
-            } label: {
+            Button { choosing = true } label: {
                 Text(footerText)
                     .monospacedDigit()
                     .lineLimit(1)
@@ -457,28 +479,95 @@ private struct ReadingFolio: View {
                     .padding(.top, Theme.Space.s)
                     .padding(.bottom, Theme.Space.inline)
                     .contentShape(Rectangle())
-                    .foregroundStyle(color.opacity(Theme.Emphasis.folio))
             }
             .buttonStyle(.plain)
-            .tint(color.opacity(Theme.Emphasis.folio))
             .accessibilityLabel("Pie de página")
             .accessibilityValue(footerText)
+            .accessibilityHint("Elige qué dice")
+            .popover(isPresented: $choosing, arrowEdge: .bottom) {
+                FooterPicker(options: options, selection: $footer) { choosing = false }
+                    .presentationCompactAdaptation(.popover)
+            }
             .frame(maxWidth: .infinity)
-            .background { fade(.bottom) }
+            .background { band(.bottom) }
         }
         .font(.caption.weight(.medium))
         .foregroundStyle(color.opacity(Theme.Emphasis.folio))
     }
 
+    /// Papel sólido detrás del folio (hasta la orilla de la pantalla) y una
+    /// orilla corta que se desvanece hacia el texto.
     @ViewBuilder
-    private func fade(_ edge: VerticalEdge) -> some View {
+    private func band(_ edge: VerticalEdge) -> some View {
         if let paper {
-            LinearGradient(stops: [.init(color: paper, location: 0), .init(color: paper, location: 0.6),
-                                   .init(color: paper.opacity(0), location: 1)],
-                           startPoint: edge == .top ? .top : .bottom, endPoint: edge == .top ? .bottom : .top)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+            VStack(spacing: 0) {
+                if edge == .bottom { fadeEdge(paper, toward: .top) }
+                paper
+                if edge == .top { fadeEdge(paper, toward: .bottom) }
+            }
+            .padding(edge == .top ? .bottom : .top, -Theme.Reader.folioBand)
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
         }
+    }
+
+    private func fadeEdge(_ paper: Color, toward edge: VerticalEdge) -> some View {
+        LinearGradient(colors: [paper, paper.opacity(0)],
+                       startPoint: edge == .bottom ? .top : .bottom, endPoint: edge == .bottom ? .bottom : .top)
+            .frame(height: Theme.Reader.folioFade)
+    }
+}
+
+/// El globo del pie: cada opción muestra lo que diría ahora, en grande, con su
+/// leyenda debajo; la elegida lleva la palomita.
+private struct FooterPicker: View {
+    let options: [FooterOption]
+    @Binding var selection: ReaderFooter
+    let done: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Abajo de la página")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Theme.secondaryInk)
+                .padding(.horizontal, Theme.Space.l)
+                .padding(.top, Theme.Space.m)
+                .padding(.bottom, Theme.Space.s)
+            ForEach(options) { option in
+                Button {
+                    selection = option.kind
+                    done()
+                } label: {
+                    HStack(spacing: Theme.Space.m) {
+                        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                            Text(option.value)
+                                .font(.rowTitle)
+                                .monospacedDigit()
+                                .foregroundStyle(Theme.ink)
+                            Text(option.caption)
+                                .font(.caption)
+                                .foregroundStyle(Theme.secondaryInk)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "checkmark")
+                            .font(.body.weight(.semibold))
+                            // La palomita guarda su lugar aunque no se vea: las filas no brincan.
+                            .foregroundStyle(option.kind == selection ? Theme.accent : .clear)
+                    }
+                    .padding(.horizontal, Theme.Space.l)
+                    .padding(.vertical, Theme.Space.s)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(option.kind == selection ? .isSelected : [])
+                if option.id != options.last?.id {
+                    Divider().padding(.leading, Theme.Space.l)
+                }
+            }
+        }
+        .padding(.bottom, Theme.Space.s)
+        .frame(width: Theme.Size.footerPicker)
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 

@@ -21,6 +21,9 @@ const defaultStyle = {
     flow: 'paginated',
     // En el iPhone la página se dobla como hoja (lo hace la app): aquí no se arrastra.
     curl: false,
+    // Aire arriba y abajo de la página (px), para que el capítulo y el pie
+    // queden sobre papel limpio y nunca encima del texto. Lo manda la app.
+    margin: 48,
 }
 
 const getColorCSS = ({ textColor, linkColor }) => !textColor ? '' : `
@@ -140,6 +143,11 @@ const applyStyle = () => {
     renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
     renderer.toggleAttribute('animated', !reducedMotion?.matches)
     renderer.toggleAttribute('no-drag', !!style.curl)
+    const margin = `${style.margin}px`
+    if (renderer.getAttribute('margin') !== margin) {
+        renderer.setAttribute('margin', margin)
+        renderer.render?.()
+    }
     // Cambiar el modo vuelve a paginar todo: solo si de verdad cambió.
     if (renderer.getAttribute('flow') !== style.flow) renderer.setAttribute('flow', style.flow)
     renderer.setStyles?.(getCSS(style))

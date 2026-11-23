@@ -125,7 +125,9 @@ enum Theme {
         /// Cinta del marcador en el lector.
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa».
-        static let appearanceSheet: CGFloat = 580
+        static let appearanceSheet: CGFloat = 664
+        /// El globo para elegir qué dice el pie de la página.
+        static let footerPicker: CGFloat = 280
         /// Barra de etapas de una sesión.
         static let stageBar: CGFloat = 8
         /// Alto de una fila de la gráfica de etapas, y de su marca.
@@ -216,6 +218,20 @@ enum Theme {
         static let pageBack: CGFloat = 0.82
         /// La vibración al pasar a la página siguiente: muy ligera (0 a 1).
         static let turnHaptic: CGFloat = 0.45
+        /// Aire arriba y abajo del texto en páginas: deja el capítulo y el pie
+        /// sobre papel limpio (con 48 el último renglón chocaba con el pie).
+        static let pageMargin: CGFloat = 76
+        /// Muestra de «Aa»: tamaño de la letra a escala 1, su interlineado y su alto.
+        static let sampleSize: CGFloat = 17
+        static let sampleLeading: CGFloat = 5
+        /// Dónde empieza a desvanecerse la muestra (fracción de su alto).
+        static let sampleFadeStart = 0.7
+        static let sampleHeight: CGFloat = 104
+        /// En continuo, el papel bajo el folio se desvanece en este alto.
+        static let folioFade: CGFloat = 24
+        /// Cuánto sobresale la franja de papel del folio hacia el texto (en continuo):
+        /// la parte sólida es lo que sobra después del desvanecido.
+        static let folioBand: CGFloat = 40
         /// El lomo del libro: sombra en la orilla izquierda de la hoja, su ancho y
         /// qué tan oscura empieza en papel claro y en papel oscuro.
         static let spineWidth: CGFloat = 26
@@ -235,7 +251,7 @@ enum Theme {
         static let pressed = 0.85
         /// Folio del lector (capítulo y porcentaje): el color del texto del libro,
         /// un poco apagado, para que se lea sobre cualquier fondo sin competir.
-        static let folio = 0.62
+        static let folio = 0.74
         /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
         static let labelMinScale: CGFloat = 0.8
     }

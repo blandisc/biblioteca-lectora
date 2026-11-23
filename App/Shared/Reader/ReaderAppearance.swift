@@ -162,11 +162,31 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
     @AppStorage(ReaderKeys.flow) private var flow: ReaderFlow = .paged
     @AppStorage(ReaderKeys.haptics) private var haptics = true
+    /// El modo de la app: con «Automático», el tema sigue al claro u oscuro de iOS.
+    @Environment(\.colorScheme) private var appScheme
 
     private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
+    private var palette: ReaderPalette {
+        ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: appScheme == .dark)
+    }
+
     var body: some View {
+        content
+            // Toda la hoja toma el tema que eliges: papel, tinta y mosaicos.
+            .environment(\.colorScheme, palette.scheme ?? appScheme)
+            .presentationBackground(palette.background)
+            .animation(Theme.Motion.standard, value: theme)
+            .animation(Theme.Motion.standard, value: font)
+            .sensoryFeedback(.selection, trigger: scale)
+            .sensoryFeedback(.selection, trigger: theme)
+            .sensoryFeedback(.selection, trigger: font)
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
+            ReaderSample(font: font, scale: scale, palette: palette)
+
             LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                 ForEach(ReaderFont.allCases) { item in
                     Button { font = item } label: {
@@ -212,11 +232,11 @@ struct ReaderAppearanceSheet: View {
             }
 
             HStack(spacing: Theme.Space.m) {
-                Button { scale = max(0.8, scale - 0.05) } label: { Text("A").font(.footnote) }
+                Button { scale = max(Self.scales.lowerBound, scale - Self.scaleStep) } label: { Text("A").font(.footnote) }
                     .accessibilityLabel("Letra más chica")
-                Slider(value: $scale, in: 0.8...1.6, step: 0.05)
+                sizeSlider
                     .accessibilityLabel("Tamaño de letra")
-                Button { scale = min(1.6, scale + 0.05) } label: { Text("A").font(.title2) }
+                Button { scale = min(Self.scales.upperBound, scale + Self.scaleStep) } label: { Text("A").font(.title2) }
                     .accessibilityLabel("Letra más grande")
             }
             .buttonStyle(.plain)
@@ -254,6 +274,25 @@ struct ReaderAppearanceSheet: View {
         .padding(Theme.Space.xl)
     }
 
+    /// Los tamaños de letra: nueve niveles, cada uno con su marca en la barra.
+    private static let scales = 0.8...1.6
+    private static let scaleStep = 0.1
+
+    /// La barra del tamaño, con una marca por nivel (iOS 26 las dibuja en la
+    /// raya; antes, la barra sola).
+    @ViewBuilder
+    private var sizeSlider: some View {
+        if #available(iOS 26, macOS 26, *) {
+            Slider(value: $scale, in: Self.scales, step: Self.scaleStep) {
+                Text("Tamaño de letra")
+            } tick: { value in
+                SliderTick(value)
+            }
+        } else {
+            Slider(value: $scale, in: Self.scales, step: Self.scaleStep)
+        }
+    }
+
     @ViewBuilder
     private func swatch(for item: ReaderTheme) -> some View {
         switch item {
@@ -269,5 +308,38 @@ struct ReaderAppearanceSheet: View {
                         .foregroundStyle(palette.textColor)
                 }
         }
+    }
+}
+
+/// Un párrafo de muestra arriba de los ajustes: cambia en vivo con la letra,
+/// el tamaño y el tema, como se verá en el libro.
+private struct ReaderSample: View {
+    let font: ReaderFont
+    let scale: Double
+    let palette: ReaderPalette
+
+    var body: some View {
+        Text("En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor.")
+            .font(font.preview(size: Theme.Reader.sampleSize * scale))
+            .lineSpacing(Theme.Reader.sampleLeading)
+            .foregroundStyle(palette.textColor)
+            // El párrafo sigue de largo y se desvanece abajo, sin «…».
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Theme.Space.l)
+            .frame(height: Theme.Reader.sampleHeight, alignment: .top)
+            .clipped()
+            .mask {
+                LinearGradient(stops: [.init(color: .black, location: 0),
+                                       .init(color: .black, location: Theme.Reader.sampleFadeStart),
+                                       .init(color: .clear, location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+            }
+            .background(palette.background, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                    .strokeBorder(Theme.track, lineWidth: Theme.Size.hairline)
+            }
+            .accessibilityLabel("Muestra del texto")
     }
 }

@@ -78,7 +78,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-textEditor 120 · ribbon 12×64 · appearanceSheet 440 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
+textEditor 120 · ribbon 12×64 · appearanceSheet 664 · footerPicker 280 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir);
@@ -223,6 +223,16 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
   (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
   siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
+  En páginas, el texto deja `Reader.pageMargin` (76 pt) arriba y abajo para que el título del
+  capítulo y el pie queden sobre papel limpio; en continuo, una franja de papel sólido
+  sobresale `Reader.folioBand` (40 pt) y se desvanece en `Reader.folioFade` (24 pt). El folio
+  usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el pie se abre un globo
+  (`Size.footerPicker`) con cada opción y su dato de ahora.
+- Ajustes del lector («Aa»): arriba, un párrafo de muestra que cambia en vivo
+  (`Reader.sampleSize` 17 pt por el tamaño elegido, `Reader.sampleLeading` 5, alto
+  `Reader.sampleHeight` 104, se desvanece desde `Reader.sampleFadeStart` 70 %). Toda la hoja
+  toma el tema elegido. La barra del tamaño tiene nueve niveles con su marca y un toque
+  de vibración en cada uno.
 - Cuadrículas: columnas iguales (`GridItem(.flexible())` ×3) con 16 pt entre columnas
   y 24 pt entre filas.
 
