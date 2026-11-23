@@ -29,15 +29,48 @@ const getColorCSS = ({ textColor, linkColor }) => !textColor ? '' : `
     a, a * { color: ${linkColor ?? textColor} !important; }
 `
 
-// En continuo, una raya muy tenue cada alto de pantalla: dónde «cambias de página».
-const getPageLinesCSS = ({ flow, pageHeight, textColor }) => {
-    if (flow !== 'scrolled' || !pageHeight) return ''
-    const line = textColor ? `${textColor}33` : 'rgba(128, 128, 128, 0.25)'
-    return `html { background-image: repeating-linear-gradient(to bottom,
-        transparent 0 ${pageHeight - 1}px, ${line} ${pageHeight - 1}px ${pageHeight}px) !important; }`
+// En continuo, un separador «—— 24 ——» donde empieza cada página del libro.
+// Va antes de un párrafo (nunca cruza el texto) y se dibuja con CSS sobre un
+// atributo: no se agregan nodos al libro, así los CFI (subrayados, marcadores,
+// posición) siguen apuntando al mismo lugar.
+const pageMarkCSS = ({ flow, textColor }) => {
+    if (flow !== 'scrolled') return ''
+    const ink = textColor ? `${textColor}a6` : 'rgba(128, 128, 128, 0.8)'
+    const line = textColor ? `${textColor}38` : 'rgba(128, 128, 128, 0.3)'
+    return `[data-gabinete-page]::before {
+        content: attr(data-gabinete-page) !important;
+        display: block !important; text-align: center !important; text-indent: 0 !important;
+        font: 500 0.72rem/1 -apple-system, system-ui, sans-serif !important;
+        letter-spacing: 0.04em; color: ${ink} !important; margin: 1.6em 0 !important;
+        background: linear-gradient(${line}, ${line}) left center / calc(50% - 2.2em) 1px no-repeat,
+                    linear-gradient(${line}, ${line}) right center / calc(50% - 2.2em) 1px no-repeat !important;
+    }`
 }
 
-const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, pageHeight, ...colors }) => `
+// Página del libro en que empieza cada párrafo (la misma cuenta de foliate:
+// 1,500 caracteres del archivo por página) y la marca en el primero de cada una.
+const sizePerPage = 1500
+const markPages = (doc, index) => {
+    const sections = view?.book?.sections ?? []
+    const sizes = sections.map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
+    const size = sizes[index] ?? 0
+    if (!size) return
+    const before = sizes.slice(0, index).reduce((a, b) => a + b, 0)
+    const blocks = [...doc.body.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, figure, dt, dd')]
+        .filter(el => !el.parentElement?.closest('p, li, blockquote, pre, figure, dt, dd'))
+    const total = blocks.reduce((sum, el) => sum + (el.textContent?.length ?? 0), 0)
+    if (!total) return
+    let seen = 0
+    let page = Math.floor(before / sizePerPage)
+    blocks.forEach((el, i) => {
+        const here = Math.floor((before + (seen / total) * size) / sizePerPage)
+        if (i > 0 && here > page) el.setAttribute('data-gabinete-page', String(here + 1))
+        page = Math.max(page, here)
+        seen += el.textContent?.length ?? 0
+    })
+}
+
+const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, ...colors }) => `
     html {
         color-scheme: light dark; font-size: ${Math.round(fontScale * 100)}% !important;
         /* Sin esto, WebKit en el iPhone agranda la letra en continuo (la página es
@@ -45,7 +78,7 @@ const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, p
         -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important;
     }
     ${getColorCSS(colors)}
-    ${getPageLinesCSS({ flow, pageHeight, textColor: colors.textColor })}
+    ${pageMarkCSS({ flow, textColor: colors.textColor })}
     body { font-family: ${fontFamily} !important; }
     body *:not(code):not(pre):not(kbd):not(samp) { font-family: inherit !important; }
     p, li, blockquote, dd {
@@ -106,7 +139,7 @@ const applyStyle = () => {
     renderer.toggleAttribute('no-drag', !!style.curl)
     // Cambiar el modo vuelve a paginar todo: solo si de verdad cambió.
     if (renderer.getAttribute('flow') !== style.flow) renderer.setAttribute('flow', style.flow)
-    renderer.setStyles?.(getCSS({ ...style, pageHeight: style.flow === 'scrolled' ? Math.round(renderer.size) : 0 }))
+    renderer.setStyles?.(getCSS(style))
 }
 reducedMotion?.addEventListener?.('change', applyStyle)
 
@@ -221,6 +254,7 @@ const onLoad = ({ detail: { doc, index } }) => {
         doc.documentElement.lang = Array.isArray(lang) ? lang[0] : lang
     }
     watchPull(doc)
+    markPages(doc, index)
     doc.addEventListener('selectionchange', () => {
         const selection = doc.getSelection()
         const active = !!selection && !selection.isCollapsed
