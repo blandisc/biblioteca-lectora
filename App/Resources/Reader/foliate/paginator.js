@@ -837,6 +837,8 @@ export class Paginator extends HTMLElement {
         if (state.pinched) return
         state.pinched = globalThis.visualViewport.scale > 1
         if (this.scrolled || state.pinched) return
+        // Gabinete: con la hoja que da vuelta, la app dobla la página; aquí no se arrastra.
+        if (this.hasAttribute('no-drag')) { if (e.touches.length === 1) e.preventDefault(); return }
         if (e.touches.length > 1) {
             if (this.#touchScrolled) e.preventDefault()
             return
@@ -856,7 +858,7 @@ export class Paginator extends HTMLElement {
     }
     #onTouchEnd() {
         this.#touchScrolled = false
-        if (this.scrolled) return
+        if (this.scrolled || this.hasAttribute('no-drag')) return
 
         // XXX: Firefox seems to report scale as 1... sometimes...?
         // at this point I'm basically throwing `requestAnimationFrame` at

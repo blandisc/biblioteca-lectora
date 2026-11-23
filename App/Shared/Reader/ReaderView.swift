@@ -199,7 +199,8 @@ struct ReaderView: View {
     private var chrome: some View {
         ZStack {
             if !showsChrome {
-                ReadingFolio(title: title, location: controller.location)
+                ReadingFolio(title: title, location: controller.location, color: palette.textColor,
+                             paper: flow == .scrolled ? palette.background : nil)
                     .transition(.opacity)
                 if showsCounter, let session = controller.session {
                     SessionCounter(tracker: session) { showsSession = true }
@@ -251,6 +252,9 @@ struct ReaderView: View {
         controller.setColors(text: palette.text, link: palette.link)
         controller.setFont(family: font.css, scale: scale)
         controller.setScrolled(flow == .scrolled)
+        #if os(iOS)
+        controller.pageBackground = UIColor(palette.background)
+        #endif
     }
 }
 
@@ -393,6 +397,11 @@ private struct SessionCounter: View {
 private struct ReadingFolio: View {
     let title: String
     let location: ReaderController.Location?
+    /// El color del texto del libro: el folio se lee sobre cualquier fondo
+    /// (papel, noche cálida, negro), no con el gris de la app.
+    let color: Color
+    /// En continuo el texto pasa por debajo: el papel se desvanece detrás del folio.
+    var paper: Color? = nil
 
     var body: some View {
         VStack {
@@ -400,14 +409,30 @@ private struct ReadingFolio: View {
                 .lineLimit(1)
                 .padding(.horizontal, Theme.Reader.folioInset)
                 .padding(.top, Theme.Reader.folioTop)
+                .padding(.bottom, Theme.Space.s)
+                .frame(maxWidth: .infinity)
+                .background { fade(.top) }
             Spacer()
             Text((location?.fraction ?? 0).percentText)
                 .monospacedDigit()
+                .padding(.top, Theme.Space.s)
                 .padding(.bottom, Theme.Space.inline)
+                .frame(maxWidth: .infinity)
+                .background { fade(.bottom) }
         }
-        .font(.caption)
-        .foregroundStyle(Theme.tertiaryInk)
+        .font(.caption.weight(.medium))
+        .foregroundStyle(color.opacity(Theme.Emphasis.folio))
         .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func fade(_ edge: VerticalEdge) -> some View {
+        if let paper {
+            LinearGradient(stops: [.init(color: paper, location: 0), .init(color: paper, location: 0.6),
+                                   .init(color: paper.opacity(0), location: 1)],
+                           startPoint: edge == .top ? .top : .bottom, endPoint: edge == .top ? .bottom : .top)
+                .ignoresSafeArea()
+        }
     }
 }
 

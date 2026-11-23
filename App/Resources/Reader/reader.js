@@ -19,6 +19,8 @@ const defaultStyle = {
     linkColor: null,
     // «paginated» (de página en página) o «scrolled» (continuo, hacia abajo).
     flow: 'paginated',
+    // En el iPhone la página se dobla como hoja (lo hace la app): aquí no se arrastra.
+    curl: false,
 }
 
 const getColorCSS = ({ textColor, linkColor }) => !textColor ? '' : `
@@ -27,9 +29,23 @@ const getColorCSS = ({ textColor, linkColor }) => !textColor ? '' : `
     a, a * { color: ${linkColor ?? textColor} !important; }
 `
 
-const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, ...colors }) => `
-    html { color-scheme: light dark; font-size: ${Math.round(fontScale * 100)}% !important; }
+// En continuo, una raya muy tenue cada alto de pantalla: dónde «cambias de página».
+const getPageLinesCSS = ({ flow, pageHeight, textColor }) => {
+    if (flow !== 'scrolled' || !pageHeight) return ''
+    const line = textColor ? `${textColor}33` : 'rgba(128, 128, 128, 0.25)'
+    return `html { background-image: repeating-linear-gradient(to bottom,
+        transparent 0 ${pageHeight - 1}px, ${line} ${pageHeight - 1}px ${pageHeight}px) !important; }`
+}
+
+const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, pageHeight, ...colors }) => `
+    html {
+        color-scheme: light dark; font-size: ${Math.round(fontScale * 100)}% !important;
+        /* Sin esto, WebKit en el iPhone agranda la letra en continuo (la página es
+           larguísima y la «ajusta»): la letra debe ser la misma en los dos modos. */
+        -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important;
+    }
     ${getColorCSS(colors)}
+    ${getPageLinesCSS({ flow, pageHeight, textColor: colors.textColor })}
     body { font-family: ${fontFamily} !important; }
     body *:not(code):not(pre):not(kbd):not(samp) { font-family: inherit !important; }
     p, li, blockquote, dd {
@@ -85,11 +101,12 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')
 const applyStyle = () => {
     const renderer = view?.renderer
     if (!renderer) return
-    renderer.setStyles?.(getCSS(style))
     renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
     renderer.toggleAttribute('animated', !reducedMotion?.matches)
+    renderer.toggleAttribute('no-drag', !!style.curl)
     // Cambiar el modo vuelve a paginar todo: solo si de verdad cambió.
     if (renderer.getAttribute('flow') !== style.flow) renderer.setAttribute('flow', style.flow)
+    renderer.setStyles?.(getCSS({ ...style, pageHeight: style.flow === 'scrolled' ? Math.round(renderer.size) : 0 }))
 }
 reducedMotion?.addEventListener?.('change', applyStyle)
 
@@ -97,17 +114,31 @@ reducedMotion?.addEventListener?.('change', applyStyle)
 // jalando hacia arriba, pasa al siguiente; al principio y jalando hacia abajo, al
 // anterior. Así se lee de corrido, sin botones.
 const pullThreshold = 64
+const swipeThreshold = 40
 const watchPull = doc => {
     let startY = null
+    let startX = null
     let edge = null
     doc.addEventListener('touchstart', event => {
         const renderer = view?.renderer
-        if (!renderer?.scrolled || event.touches.length > 1) { startY = null; return }
+        startX = event.touches.length === 1 ? event.touches[0].screenX : null
+        if (!renderer?.scrolled || event.touches.length > 1) { startY = event.touches[0]?.screenY ?? null; edge = null; return }
         startY = event.touches[0].screenY
         edge = renderer.viewSize - renderer.end <= 2 ? 'end' : renderer.start <= 0 ? 'start' : null
     }, { passive: true })
     doc.addEventListener('touchend', event => {
         const renderer = view?.renderer
+        // Hoja que da vuelta: un deslizar de lado pasa de página (la app la dobla).
+        if (style.curl && renderer && !renderer.scrolled && startX != null) {
+            const touch = event.changedTouches[0]
+            const dx = (touch?.screenX ?? startX) - startX
+            const dy = (touch?.screenY ?? startY) - (startY ?? 0)
+            const selection = doc.getSelection()
+            if (Math.abs(dx) > swipeThreshold && Math.abs(dx) > Math.abs(dy) * 1.5
+                && (!selection || selection.isCollapsed)) post('swipe', { dir: dx < 0 ? 1 : -1 })
+            startX = null
+            return
+        }
         if (startY == null || !edge || !renderer?.scrolled) return
         const dy = startY - (event.changedTouches[0]?.screenY ?? startY)
         startY = null
@@ -315,6 +346,24 @@ window.lectora = {
     },
     next: () => view?.next(),
     prev: () => view?.prev(),
+    // Pasa de página sin animación y dice si se movió: la app ya tapó la página
+    // con su foto y la va a doblar. Espera a que la nueva esté pintada.
+    async turn(dir) {
+        const renderer = view?.renderer
+        if (!renderer) return false
+        const before = pageCFI
+        const animated = renderer.hasAttribute('animated')
+        renderer.removeAttribute('animated')
+        const relocated = new Promise(resolve => {
+            view.addEventListener('relocate', resolve, { once: true })
+            setTimeout(resolve, 600)
+        })
+        const turning = dir < 0 ? view.prev() : view.next()
+        await Promise.race([relocated, turning])
+        if (animated) renderer.setAttribute('animated', '')
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        return pageCFI !== before
+    },
     goTo: target => { navigation = 'jump'; return view?.goTo(target) },
     goToFraction: fraction => { navigation = 'jump'; return view?.goToFraction(fraction) },
     // Busca en todo el libro y manda los resultados (con su capítulo y el texto alrededor).

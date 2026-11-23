@@ -110,8 +110,32 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         if isReady { evaluate(script) } else { pendingOpen = script }
     }
 
-    func next() { evaluate("window.lectora.next()") }
-    func previous() { evaluate("window.lectora.prev()") }
+    func next() { turn(forward: true) }
+    func previous() { turn(forward: false) }
+
+    #if os(iOS)
+    /// Color del papel, para la hoja que da vuelta.
+    var pageBackground: UIColor = .systemBackground
+    private let curler = PageCurler()
+    #endif
+    /// En páginas (no en continuo) se pasa como una hoja que da vuelta.
+    private var isScrolled = false
+
+    private func turn(forward: Bool) {
+        #if os(iOS)
+        if !isScrolled, !UIAccessibility.isReduceMotionEnabled, let webView {
+            curler.turn(webView, forward: forward, background: pageBackground) { [weak self] done in
+                guard let webView = self?.webView else { done(false); return }
+                webView.callAsyncJavaScript("return await window.lectora.turn(dir)",
+                                            arguments: ["dir": forward ? 1 : -1], in: nil, in: .page) { result in
+                    done(((try? result.get()) as? Bool) ?? false)
+                }
+            }
+            return
+        }
+        #endif
+        evaluate(forward ? "window.lectora.next()" : "window.lectora.prev()")
+    }
     func goTo(fraction: Double) { evaluate("window.lectora.goToFraction(\(fraction))") }
     /// Ir a una entrada del índice, a un resultado o a un subrayado (href o CFI).
     func goTo(target: String) { evaluate("window.lectora.goTo(\(Self.js(target)))") }
@@ -132,7 +156,13 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
     /// Páginas o continuo. Se guarda para mandarlo cuando el lector esté listo.
     func setScrolled(_ scrolled: Bool) {
-        let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")' })"
+        isScrolled = scrolled
+        #if os(iOS)
+        let curl = "true" // en el iPhone la página se dobla; en la Mac se desliza
+        #else
+        let curl = "false"
+        #endif
+        let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl) })"
         flowScript = script
         if isReady { evaluate(script) }
     }
@@ -330,6 +360,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             evaluate("window.lectora.addHighlight(\(Self.js(cfi)))")
         case "tap":
             if let x = body["x"] as? Double { onTap?(x) }
+        case "swipe":
+            // Con la hoja que da vuelta, reader.js no arrastra la página: avisa el gesto.
+            if let dir = body["dir"] as? Int { dir < 0 ? previous() : next() }
         case "annotation":
             tappedHighlight = body["cfi"] as? String
         case "error":

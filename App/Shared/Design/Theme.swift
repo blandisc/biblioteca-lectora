@@ -221,6 +221,9 @@ enum Theme {
         /// En reposo: tamaño y opacidad completos.
         static let rest = 1.0
         static let pressed = 0.85
+        /// Folio del lector (capítulo y porcentaje): el color del texto del libro,
+        /// un poco apagado, para que se lea sobre cualquier fondo sin competir.
+        static let folio = 0.62
         /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
         static let labelMinScale: CGFloat = 0.8
     }
