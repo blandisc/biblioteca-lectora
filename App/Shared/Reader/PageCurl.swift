@@ -1,47 +1,37 @@
 #if os(iOS)
 import UIKit
 import WebKit
+import CoreImage
+import CoreImage.CIFilterBuiltins
 
-/// Pasar de página como una hoja que da vuelta y sigue al dedo (Libros de Apple).
+/// Pasar de página en páginas, con el estilo que elijas en «Aa» (`ReaderTurnStyle`):
+/// la hoja mate que se dobla siguiendo al dedo, deslizar, fundido o al instante.
 ///
-/// El lector vive dentro de una hoja de un `UIPageViewController` con la curva de
-/// UIKit. Al empezar a doblar, una foto de la página tapa la hoja que se va, el
-/// lector se muda a la hoja de abajo y pasa de página ahí (sin animación). Si
-/// sueltas sin terminar de doblar, el lector regresa y vuelve a la página de antes.
+/// Siempre igual: una foto de la página de ahora tapa al lector, el lector pasa de
+/// página debajo (sin animación) y la foto se va con el estilo elegido. Si sueltas
+/// sin pasar, la foto regresa a su lugar y el lector vuelve a la página de antes.
 @MainActor
-final class ReaderPagesController: UIPageViewController, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate {
     private let webView: WKWebView
     private weak var reader: ReaderController?
-    private var current: ReaderPage
-    /// La hoja que se está doblando y hacia dónde.
-    private var turning: (page: ReaderPage, forward: Bool)?
-    /// Foto de la página que tapa la hoja que se va.
-    private var cover: UIView?
+    private let page = ReaderPage()
+    private var turning: PageTurn?
+    private var link: CADisplayLink?
+    private lazy var pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
+    private let curl = MatteCurl()
 
     /// Color del papel: la hoja es opaca (el WebView es transparente).
-    var paper: UIColor = .systemBackground {
-        didSet { [current, turning?.page].compactMap { $0 }.forEach { $0.paper = paper } }
-    }
-
+    var paper: UIColor = .systemBackground { didSet { page.paper = paper } }
     /// El lomo del libro en la orilla izquierda (en páginas; en continuo no).
-    var spine = true {
-        didSet { [current, turning?.page].compactMap { $0 }.forEach { $0.showsSpine = spine } }
-    }
-
-    /// Se puede doblar con el dedo (en páginas, sin selección, sin «reducir movimiento»).
-    var curls = true {
-        didSet { dataSource = curls ? self : nil }
-    }
+    var spine = true { didSet { page.showsSpine = spine } }
+    /// Se pasa con el dedo (en páginas, sin texto seleccionado).
+    var drags = true { didSet { pan.isEnabled = drags } }
+    var style: ReaderTurnStyle = .matte
 
     init(webView: WKWebView, reader: ReaderController) {
         self.webView = webView
         self.reader = reader
-        current = ReaderPage()
-        super.init(transitionStyle: .pageCurl, navigationOrientation: .horizontal,
-                   options: [.spineLocation: NSNumber(value: UIPageViewController.SpineLocation.min.rawValue)])
-        // De dos caras: el revés de la hoja es papel un poco más oscuro (con una
-        // sola cara, UIKit lo pinta gris claro y en noche o negro deslumbra).
-        isDoubleSided = true
+        super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) no se usa") }
@@ -49,169 +39,320 @@ final class ReaderPagesController: UIPageViewController, UIPageViewControllerDat
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .clear
-        dataSource = curls ? self : nil
-        delegate = self
-        current.paper = paper
-        current.showsSpine = spine
-        current.embed(webView)
-        setViewControllers([current], direction: .forward, animated: false)
-        // Los toques los resuelve el lector (orillas para pasar, centro para los controles).
-        disableTaps()
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        disableTaps()
-    }
-
-    /// Los toques los resuelve el lector; UIKit no debe pasar la hoja con un toque.
-    private func disableTaps() {
-        gestureRecognizers.filter { $0 is UITapGestureRecognizer }.forEach { $0.isEnabled = false }
+        addChild(page)
+        page.view.frame = view.bounds
+        page.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(page.view)
+        page.didMove(toParent: self)
+        page.paper = paper
+        page.showsSpine = spine
+        page.embed(webView)
+        pan.delegate = self
+        pan.isEnabled = drags
+        view.addGestureRecognizer(pan)
     }
 
     // MARK: Con el dedo
 
-    func pageViewController(_ pageViewController: UIPageViewController,
-                            viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        nextPage(forward: true, from: viewController)
+    func gestureRecognizerShouldBegin(_ gesture: UIGestureRecognizer) -> Bool {
+        guard gesture === pan, turning == nil else { return false }
+        let velocity = pan.velocity(in: view)
+        guard abs(velocity.x) > abs(velocity.y) else { return false }
+        return reader?.canTurn(forward: velocity.x < 0) == true
     }
 
-    func pageViewController(_ pageViewController: UIPageViewController,
-                            viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        nextPage(forward: false, from: viewController)
-    }
+    func gestureRecognizer(_ gesture: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
 
-    /// Con dos caras, UIKit pide primero el revés de la hoja y luego la página siguiente.
-    private func nextPage(forward: Bool, from viewController: UIViewController) -> UIViewController? {
-        if viewController === current {
-            if let turning {
-                guard turning.forward == forward else { return nil }
-            } else {
-                guard reader?.canTurn(forward: forward) == true else { return nil }
-            }
-            let reverse = back()
-            reverse.forward = forward
-            return reverse
+    @objc private func panned(_ gesture: UIPanGestureRecognizer) {
+        let width = max(view.bounds.width, 1)
+        switch gesture.state {
+        case .began:
+            begin(forward: gesture.velocity(in: view).x < 0,
+                  fromTop: gesture.location(in: view).y < view.bounds.midY, fromDrag: true)
+        case .changed:
+            guard let turning, link == nil else { return }
+            let distance = gesture.translation(in: view).x * (turning.forward ? -1 : 1)
+            turning.progress = min(max(distance / width, 0), 1)
+            render()
+        case .ended, .cancelled, .failed:
+            guard let turning else { return }
+            let speed = gesture.velocity(in: view).x * (turning.forward ? -1 : 1)
+            let passes = gesture.state == .ended
+                && (turning.progress > Theme.Reader.turnCommit || speed > Theme.Reader.turnFling)
+            settle(passes)
+        default:
+            break
         }
-        guard turning == nil, let reverse = viewController as? ReaderBack, reverse.forward == forward else { return nil }
-        let page = ReaderPage()
-        page.forward = forward
-        page.paper = paper
-        page.showsSpine = spine
-        return page
-    }
-
-    func pageViewController(_ pageViewController: UIPageViewController,
-                            willTransitionTo pendingViewControllers: [UIViewController]) {
-        guard turning == nil, let page = pendingViewControllers.compactMap({ $0 as? ReaderPage }).first else { return }
-        coverCurrent()
-        turning = (page, page.forward)
-        page.embed(webView)
-        webView.alpha = 0
-        reader?.turnInstantly(forward: page.forward) { [weak self] _ in self?.reveal() }
-    }
-
-    func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool,
-                            previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        finish(completed: completed, fromDrag: true)
     }
 
     // MARK: Con un toque en la orilla
 
     func turn(forward: Bool) {
         guard turning == nil, reader?.canTurn(forward: forward) == true else { return }
-        let page = ReaderPage()
-        page.forward = forward
-        page.paper = paper
-        page.showsSpine = spine
-        coverCurrent()
-        turning = (page, forward)
-        // El lector pasa de página aún dentro de la ventana (fuera de ella no pinta)
-        // y ya con la página nueva se muda a la hoja de abajo y se dobla la de arriba.
-        reader?.turnInstantly(forward: forward) { [weak self] moved in
-            guard let self else { return }
-            guard moved else { self.finish(completed: false, turnBack: false); return }
-            if forward { self.reader?.turnedForward() }
-            page.embed(self.webView)
-            // Con dos caras, la animación pide la hoja nueva y el revés de la que se dobla.
-            self.setViewControllers([page, self.back()], direction: forward ? .forward : .reverse, animated: true) { [weak self] done in
-                self?.finish(completed: done)
-            }
+        begin(forward: forward, fromTop: false, fromDrag: false)
+        settle(true)
+    }
+
+    // MARK: La vuelta
+
+    private func begin(forward: Bool, fromTop: Bool, fromDrag: Bool) {
+        let turn = PageTurn(forward: forward, style: style, fromTop: fromTop, fromDrag: fromDrag)
+        turning = turn
+        // La foto de la página de ahora tapa al lector mientras pasa de página debajo.
+        if let cover = page.view.snapshotView(afterScreenUpdates: false) {
+            cover.frame = page.view.frame
+            cover.isUserInteractionEnabled = false
+            view.addSubview(cover)
+            turn.cover = cover
         }
+        if style == .matte { turn.from = image(of: page.view, afterUpdates: false) }
+        if forward && !fromDrag { reader?.turnedForward() }
+        reader?.turnInstantly(forward: forward) { [weak self] moved in
+            guard let self, self.turning === turn else { return }
+            guard moved else { self.clear(); return }
+            // Un respiro para que el lector pinte la página nueva antes de fotografiarla.
+            DispatchQueue.main.async { self.prepare(turn) }
+        }
+    }
+
+    /// Arma las piezas del estilo ya con la página nueva debajo.
+    private func prepare(_ turn: PageTurn) {
+        guard turning === turn else { return }
+        switch turn.style {
+        case .slide where !turn.forward:
+            // Atrás, la hoja anterior entra desde la izquierda encima de la de ahora.
+            if let incoming = page.view.snapshotView(afterScreenUpdates: true) {
+                incoming.frame = page.view.frame
+                incoming.isUserInteractionEnabled = false
+                shade(incoming)
+                view.addSubview(incoming)
+                turn.incoming = incoming
+            }
+        case .slide:
+            if let cover = turn.cover { shade(cover) }
+        case .matte:
+            turn.to = image(of: page.view, afterUpdates: true)
+            let canvas = UIImageView(frame: page.view.frame)
+            canvas.isUserInteractionEnabled = false
+            view.addSubview(canvas)
+            turn.canvas = canvas
+        case .fade, .none:
+            break
+        }
+        turn.ready = true
+        render()
+        if let passes = turn.pendingSettle { settle(passes) }
+    }
+
+    /// Lleva la vuelta hasta el final (pasa) o de regreso (se queda), animada.
+    private func settle(_ passes: Bool) {
+        guard let turn = turning else { return }
+        guard turn.ready else { turn.pendingSettle = passes; return }
+        let target: CGFloat = passes ? 1 : 0
+        let remaining = abs(target - turn.progress)
+        guard turn.style != .none, remaining > 0 else { finish(passes); return }
+        turn.animation = (from: turn.progress, to: target, start: CACurrentMediaTime(),
+                          duration: max(Theme.Reader.turnDuration * remaining, Theme.Reader.turnMinimum))
+        let link = CADisplayLink(target: self, selector: #selector(step))
+        link.add(to: .main, forMode: .common)
+        self.link = link
+    }
+
+    @objc private func step() {
+        guard let turn = turning, let animation = turn.animation else { link?.invalidate(); link = nil; return }
+        let elapsed = (CACurrentMediaTime() - animation.start) / animation.duration
+        let t = min(max(elapsed, 0), 1)
+        let eased = 1 - pow(1 - t, 3)
+        turn.progress = animation.from + (animation.to - animation.from) * eased
+        render()
+        if t >= 1 {
+            link?.invalidate()
+            link = nil
+            finish(animation.to == 1)
+        }
+    }
+
+    private func render() {
+        guard let turn = turning, turn.ready else { return }
+        let width = view.bounds.width
+        let p = turn.progress
+        switch turn.style {
+        case .none:
+            break
+        case .fade:
+            turn.cover?.alpha = 1 - p
+        case .slide:
+            if turn.forward {
+                turn.cover?.transform = CGAffineTransform(translationX: -p * width, y: 0)
+            } else {
+                turn.incoming?.transform = CGAffineTransform(translationX: -(1 - p) * width, y: 0)
+            }
+        case .matte:
+            guard let from = turn.from, let to = turn.to else { return }
+            // Atrás, la hoja de antes se desdobla encima de la de ahora.
+            let input = turn.forward ? from : to
+            let target = turn.forward ? to : from
+            let time = turn.forward ? p : 1 - p
+            let tilt = turn.fromTop ? Theme.Reader.curlTilt : -Theme.Reader.curlTilt
+            turn.canvas?.image = curl.render(input, over: target, back: Self.shaded(paper),
+                                             time: time, angle: .pi + tilt)
+            // La foto tapa mientras no hay dibujo; luego estorba.
+            turn.cover?.isHidden = true
+        }
+    }
+
+    private func finish(_ passed: Bool) {
+        guard let turn = turning else { return }
+        if passed {
+            if turn.forward && turn.fromDrag { reader?.turnedForward() }
+            clear()
+            return
+        }
+        // Se soltó sin pasar: la página de antes está a la vista (en la foto); el
+        // lector regresa debajo y luego se quitan las piezas.
+        turn.cover?.isHidden = false
+        turn.cover?.alpha = 1
+        turn.cover?.transform = .identity
+        turn.incoming?.removeFromSuperview()
+        turn.canvas?.removeFromSuperview()
+        reader?.turnInstantly(forward: !turn.forward) { [weak self] _ in
+            DispatchQueue.main.async { self?.clear() }
+        }
+    }
+
+    private func clear() {
+        link?.invalidate()
+        link = nil
+        guard let turn = turning else { return }
+        turn.cover?.removeFromSuperview()
+        turn.incoming?.removeFromSuperview()
+        turn.canvas?.removeFromSuperview()
+        turning = nil
     }
 
     // MARK: Piezas
 
-    private func back() -> ReaderBack {
-        let reverse = ReaderBack()
-        reverse.view.backgroundColor = Self.shaded(paper)
-        // Si UIKit deja el revés encima tras doblar, que no se quede con los toques.
-        reverse.view.isUserInteractionEnabled = false
-        return reverse
+    /// La sombra suave de la hoja que se desliza, en su orilla derecha.
+    private func shade(_ sheet: UIView) {
+        sheet.layer.shadowColor = UIColor.black.cgColor
+        sheet.layer.shadowOpacity = Theme.Reader.slideShadow
+        sheet.layer.shadowRadius = Theme.Reader.slideShadowRadius
+        sheet.layer.shadowOffset = .zero
+        sheet.layer.shadowPath = UIBezierPath(rect: sheet.bounds).cgPath
+    }
+
+    private func image(of source: UIView, afterUpdates: Bool) -> CIImage? {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = min(view.window?.screen.scale ?? Theme.Reader.curlScale, Theme.Reader.curlScale)
+        format.opaque = true
+        let image = UIGraphicsImageRenderer(bounds: source.bounds, format: format).image { _ in
+            source.drawHierarchy(in: source.bounds, afterScreenUpdates: afterUpdates)
+        }
+        return image.cgImage.map { CIImage(cgImage: $0) }
     }
 
     /// El papel con menos luz, para el revés de la hoja.
     private static func shaded(_ color: UIColor) -> UIColor {
-        UIColor { traits in
-            var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 0
-            let resolved = color.resolvedColor(with: traits)
-            guard resolved.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else { return resolved }
-            return UIColor(hue: hue, saturation: saturation, brightness: brightness * Theme.Reader.pageBack, alpha: alpha)
-        }
-    }
-
-    private func coverCurrent() {
-        guard cover == nil, let photo = webView.snapshotView(afterScreenUpdates: false) else { return }
-        photo.frame = webView.frame
-        photo.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        photo.isUserInteractionEnabled = false
-        // Debajo del lomo: la sombra se queda encima de la foto y se dobla con la hoja.
-        current.view.insertSubview(photo, belowSubview: current.spineShade)
-        cover = photo
-    }
-
-    private func reveal() {
-        UIView.animate(withDuration: Theme.Reader.pageReveal) { self.webView.alpha = 1 }
-    }
-
-    private func finish(completed: Bool, turnBack: Bool = true, fromDrag: Bool = false) {
-        guard let turning else { return }
-        self.turning = nil
-        if completed {
-            // Con el dedo, la vibración llega al asentarse la hoja (con un toque, al empezar).
-            if fromDrag && turning.forward { reader?.turnedForward() }
-            cover?.removeFromSuperview()
-            cover = nil
-            current = turning.page
-            current.embed(webView)
-            webView.alpha = 1
-            return
-        }
-        // Se soltó sin doblar: el lector regresa a su hoja, debajo de la foto, y
-        // vuelve a la página de antes; luego se quita la foto.
-        current.view.insertSubview(webView, at: 0)
-        webView.frame = current.view.bounds
-        webView.alpha = 1
-        let removeCover = { [weak self] in
-            self?.cover?.removeFromSuperview()
-            self?.cover = nil
-        }
-        if turnBack && webView.superview != nil {
-            reader?.turnInstantly(forward: !turning.forward) { _ in removeCover() }
-        } else {
-            removeCover()
-        }
+        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 0
+        guard color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else { return color }
+        return UIColor(hue: hue, saturation: saturation, brightness: brightness * Theme.Reader.pageBack, alpha: alpha)
     }
 }
 
-/// El revés de una hoja.
-final class ReaderBack: UIViewController {
-    var forward = true
+/// Una vuelta de hoja en curso.
+@MainActor
+private final class PageTurn {
+    let forward: Bool
+    let style: ReaderTurnStyle
+    let fromTop: Bool
+    let fromDrag: Bool
+    /// De 0 (la página de antes) a 1 (la nueva, del todo).
+    var progress: CGFloat = 0
+    /// Ya está la página nueva debajo y las piezas armadas.
+    var ready = false
+    var pendingSettle: Bool?
+    var animation: (from: CGFloat, to: CGFloat, start: CFTimeInterval, duration: TimeInterval)?
+    /// La foto de la página de antes.
+    var cover: UIView?
+    /// Deslizar atrás: la foto de la página que entra.
+    var incoming: UIView?
+    /// Hoja mate: las dos páginas y el dibujo de la hoja doblada.
+    var from: CIImage?
+    var to: CIImage?
+    var canvas: UIImageView?
+
+    init(forward: Bool, style: ReaderTurnStyle, fromTop: Bool, fromDrag: Bool) {
+        self.forward = forward
+        self.style = style
+        self.fromTop = fromTop
+        self.fromDrag = fromDrag
+    }
 }
 
-/// Una hoja: el papel, encima el lector cuando le toca y, hasta arriba, el lomo.
+/// La hoja mate: Core Image dobla la foto de la página sobre la siguiente. La hoja
+/// sale de `pageCurlTransition` con el revés de papel liso (apenas se transparenta
+/// el texto) y sin luz; la sombra que deja sobre la página de abajo, de
+/// `pageCurlWithShadowTransition`, cuyo revés sí brilla: una máscara con la forma de
+/// la hoja toma la hoja de la primera y lo demás de la segunda.
+@MainActor
+private final class MatteCurl {
+    private let context = CIContext(options: [.cacheIntermediates: false])
+    private let sheet = CIFilter.pageCurlTransition()
+    private let shadow = CIFilter.pageCurlWithShadowTransition()
+    private let blend = CIFilter.blendWithAlphaMask()
+
+    func render(_ input: CIImage, over target: CIImage, back paper: UIColor, time: CGFloat, angle: Double) -> UIImage? {
+        let extent = input.extent
+        let clear = CIImage(color: .clear).cropped(to: extent)
+        let solid = CIImage(color: .white).cropped(to: extent)
+        // El revés: papel más oscuro con el texto de la hoja, en espejo y casi invisible.
+        let mirrored = input
+            .transformed(by: CGAffineTransform(scaleX: -1, y: 1).translatedBy(x: -extent.width, y: 0))
+            // Colores premultiplicados: se atenúan los cuatro canales, no solo el alfa.
+            .applyingFilter("CIColorMatrix", parameters: [
+                "inputRVector": CIVector(x: Theme.Reader.curlShowThrough, y: 0, z: 0, w: 0),
+                "inputGVector": CIVector(x: 0, y: Theme.Reader.curlShowThrough, z: 0, w: 0),
+                "inputBVector": CIVector(x: 0, y: 0, z: Theme.Reader.curlShowThrough, w: 0),
+                "inputAVector": CIVector(x: 0, y: 0, z: 0, w: Theme.Reader.curlShowThrough),
+            ])
+        let back = mirrored.composited(over: CIImage(color: CIColor(color: paper)).cropped(to: extent))
+        let radius = Float(extent.width * Theme.Reader.curlRadius)
+
+        func curled(_ front: CIImage, _ below: CIImage, _ reverse: CIImage) -> CIImage? {
+            sheet.inputImage = front
+            sheet.targetImage = below
+            sheet.backsideImage = reverse
+            sheet.shadingImage = clear
+            sheet.extent = extent
+            sheet.time = Float(time)
+            sheet.angle = Float(angle)
+            sheet.radius = radius
+            return sheet.outputImage?.cropped(to: extent)
+        }
+        guard let matte = curled(input, target, back), let mask = curled(solid, clear, solid) else { return nil }
+
+        shadow.inputImage = input
+        shadow.targetImage = target
+        shadow.backsideImage = back
+        shadow.extent = extent
+        shadow.shadowExtent = extent
+        shadow.time = Float(time)
+        shadow.angle = Float(angle)
+        shadow.radius = radius
+        shadow.shadowAmount = Theme.Reader.curlShadow
+        shadow.shadowSize = Theme.Reader.curlShadow
+        blend.inputImage = matte
+        blend.backgroundImage = shadow.outputImage?.cropped(to: extent)
+        blend.maskImage = mask
+        guard let output = blend.outputImage?.cropped(to: extent),
+              let image = context.createCGImage(output, from: extent) else { return nil }
+        return UIImage(cgImage: image)
+    }
+}
+
+/// Una hoja: el papel, encima el lector y, hasta arriba, el lomo.
 final class ReaderPage: UIViewController {
-    var forward = true
     let spineShade = SpineShade()
 
     var paper: UIColor = .systemBackground {

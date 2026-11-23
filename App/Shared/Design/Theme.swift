@@ -126,6 +126,8 @@ enum Theme {
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa».
         static let appearanceSheet: CGFloat = 664
+        /// En páginas, con los estilos de la hoja.
+        static let appearanceSheetPaged: CGFloat = 744
         /// El globo para elegir qué dice el pie de la página.
         static let footerPicker: CGFloat = 280
         /// Barra de etapas de una sesión.
@@ -211,8 +213,28 @@ enum Theme {
         /// Folio sin controles: margen lateral del capítulo y su aire arriba.
         static let folioInset: CGFloat = 60
         static let folioTop: CGFloat = 14
-        /// La página nueva aparece debajo de la hoja que se dobla (segundos).
-        static let pageReveal: TimeInterval = 0.12
+        /// Pasar la hoja: lo que tarda una vuelta completa (segundos); si ya va a
+        /// medias, solo lo que falta. Nunca menos de `turnMinimum`.
+        static let turnDuration: TimeInterval = 0.42
+        /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
+        static let highlightLines = 4
+        static let turnMinimum: TimeInterval = 0.14
+        /// Con el dedo: pasa si soltaste después de esta fracción del ancho…
+        static let turnCommit = 0.3
+        /// …o si la aventaste más rápido que esto (puntos por segundo).
+        static let turnFling: CGFloat = 450
+        /// Hoja mate: el radio del doblez (fracción del ancho), la inclinación de
+        /// la esquina (radianes), la fuerza de la sombra y lo que se transparenta
+        /// del texto en el revés.
+        static let curlRadius: CGFloat = 0.16
+        static let curlTilt = 0.1
+        static let curlShadow: Float = 0.55
+        static let curlShowThrough: CGFloat = 0.05
+        /// Resolución del dibujo de la hoja mientras se dobla (2×: fluido y nítido).
+        static let curlScale: CGFloat = 2
+        /// Deslizar: la sombra de la hoja que se mueve.
+        static let slideShadow: Float = 0.18
+        static let slideShadowRadius: CGFloat = 14
         /// El revés de la hoja que se dobla: el mismo papel con esta fracción de su
         /// luz (más oscuro, como papel a contraluz; UIKit le suma su propio brillo).
         static let pageBack: CGFloat = 0.82

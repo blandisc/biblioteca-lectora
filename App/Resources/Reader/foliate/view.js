@@ -239,7 +239,7 @@ export class View extends HTMLElement {
 
         if (book.splitTOCHref && book.getTOCFragment) {
             const ids = book.sections.map(s => s.id)
-            this.#sectionProgress = new SectionProgress(book.sections, 1500, 1600)
+            this.#sectionProgress = new SectionProgress(book.sections, 2400, 1600) // Gabinete: una página del libro ≈ una de bolsillo (~1,800 letras)
             const splitHref = book.splitTOCHref.bind(book)
             const getFragment = book.getTOCFragment.bind(book)
             this.#tocProgress = new TOCProgress()

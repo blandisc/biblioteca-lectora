@@ -120,6 +120,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     weak var pages: ReaderPagesController? { didSet { updateCurl() } }
     /// Color del papel, para la hoja que da vuelta.
     var pageBackground: UIColor = .systemBackground { didSet { pages?.paper = pageBackground } }
+    /// Cómo se pasa la hoja en páginas (se elige en «Aa»).
+    var turnStyle: ReaderTurnStyle = .matte { didSet { updateCurl() } }
     #endif
     /// En páginas (no en continuo) se pasa como una hoja que da vuelta.
     private var isScrolled = false
@@ -132,7 +134,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
 
     private func updateCurl() {
         #if os(iOS)
-        pages?.curls = !isScrolled && !isSelecting && !UIAccessibility.isReduceMotionEnabled
+        pages?.drags = !isScrolled && !isSelecting
+        // Con «reducir movimiento», la hoja no se mueve: se funde (o cambia al instante).
+        let calm: ReaderTurnStyle = turnStyle == .none ? .none : .fade
+        pages?.style = UIAccessibility.isReduceMotionEnabled ? calm : turnStyle
         pages?.paper = pageBackground
         pages?.spine = !isScrolled
         #endif
@@ -140,7 +145,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
 
     private func turn(forward: Bool) {
         #if os(iOS)
-        if !isScrolled, !UIAccessibility.isReduceMotionEnabled, let pages {
+        if !isScrolled, let pages {
             pages.turn(forward: forward)
             return
         }
@@ -264,6 +269,12 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         guard !trimmed.isEmpty else { return }
         annotation.note = trimmed
         try? AnnotationStore.shared.save(annotation)
+    }
+
+    /// El subrayado que tocaste, para la tarjeta con sus acciones.
+    var tappedAnnotation: Annotation? {
+        guard let bookID, let cfi = tappedHighlight else { return nil }
+        return AnnotationStore.shared.annotations(forBook: bookID).first { $0.cfi == cfi }
     }
 
     /// «Llevar a una nota» desde un subrayado que ya existe.

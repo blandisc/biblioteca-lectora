@@ -30,6 +30,7 @@ struct ReaderView: View {
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
     @AppStorage(ReaderKeys.flow) private var flow: ReaderFlow = .paged
     @AppStorage(ReaderKeys.footer) private var footer: ReaderFooter = .chapterTime
+    @AppStorage(ReaderKeys.turn) private var turnStyle: ReaderTurnStyle = .matte
     @ObservedObject private var sessions = SessionStore.shared
 
     private var palette: ReaderPalette {
@@ -99,19 +100,26 @@ struct ReaderView: View {
         .onDisappear { controller.session?.finish() }
         .sheet(isPresented: $showsAppearance) {
             ReaderAppearanceSheet()
-                .presentationDetents([.height(Theme.Size.appearanceSheet)])
-                .presentationDragIndicator(.visible)
         }
-        .confirmationDialog("Subrayado", isPresented: Binding(
-            get: { controller.tappedHighlight != nil },
-            set: { if !$0 { controller.tappedHighlight = nil } }
-        )) {
-            Button("Llevar a una nota") {
-                if let cfi = controller.tappedHighlight { controller.sendToNote(cfi: cfi) }
+        .overlay(alignment: .bottom) {
+            if let annotation = controller.tappedAnnotation {
+                ZStack(alignment: .bottom) {
+                    // Tocar fuera cierra la tarjeta.
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { controller.tappedHighlight = nil }
+                        .accessibilityHidden(true)
+                    HighlightCard(annotation: annotation) { action in
+                        act(on: annotation, action)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
-            Button("Borrar subrayado", role: .destructive) {
-                if let cfi = controller.tappedHighlight { controller.removeHighlight(cfi: cfi) }
-            }
+        }
+        .animation(Theme.Motion.standard, value: controller.tappedHighlight)
+        // La tarjeta del subrayado va sola: sin los controles encima.
+        .onChange(of: controller.tappedHighlight) { _, cfi in
+            if cfi != nil { showsChrome = false }
         }
         .sheet(item: $controller.noteLinkTarget) { annotation in
             NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
@@ -193,6 +201,7 @@ struct ReaderView: View {
         .onChange(of: font) { _, _ in applyStyle() }
         .onChange(of: scale) { _, _ in applyStyle() }
         .onChange(of: flow) { _, _ in applyStyle() }
+        .onChange(of: turnStyle) { _, _ in applyStyle() }
     }
 
     /// Controles de vidrio al tocar el centro (los dos estilos). Sin controles,
@@ -288,12 +297,36 @@ struct ReaderView: View {
         }
     }
 
+    private func act(on annotation: Annotation, _ action: HighlightCard.Action) {
+        controller.tappedHighlight = nil
+        guard let cfi = annotation.cfi else { return }
+        switch action {
+        case .note:
+            noteText = annotation.note ?? ""
+            controller.noteTarget = annotation
+        case .toNote:
+            controller.sendToNote(cfi: cfi)
+        case .copy:
+            #if os(iOS)
+            UIPasteboard.general.string = annotation.quote
+            #else
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(annotation.quote, forType: .string)
+            #endif
+        case .delete:
+            controller.removeHighlight(cfi: cfi)
+        case .close:
+            break
+        }
+    }
+
     private func applyStyle() {
         controller.setColors(text: palette.text, link: palette.link)
         controller.setFont(family: font.css, scale: scale)
         controller.setScrolled(flow == .scrolled)
         #if os(iOS)
         controller.pageBackground = UIColor(palette.background)
+        controller.turnStyle = turnStyle
         #endif
     }
 }
@@ -430,6 +463,50 @@ private struct SessionCounter: View {
             }
         }
         .padding(.leading, Theme.Reader.chromeInset)
+    }
+}
+
+/// Al tocar un subrayado: una tarjeta de vidrio con la cita y cuatro acciones
+/// (nota, llevar a una nota, copiar, borrar), en lugar del menú del sistema.
+private struct HighlightCard: View {
+    enum Action { case note, toNote, copy, delete, close }
+    let annotation: Annotation
+    let perform: (Action) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
+            HStack(alignment: .top, spacing: Theme.Space.m) {
+                QuoteBlock(text: annotation.quote, note: annotation.note, italic: true)
+                    .lineLimit(Theme.Reader.highlightLines)
+                Spacer(minLength: 0)
+                Button { perform(.close) } label: {
+                    Image(systemName: "xmark")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.secondaryInk)
+                        .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Cerrar")
+            }
+            HStack(spacing: Theme.Space.s) {
+                action(.note, annotation.note == nil ? "Nota" : "Editar nota", "square.and.pencil")
+                action(.toNote, "A una nota", "note.text.badge.plus")
+                action(.copy, "Copiar", "doc.on.doc")
+                action(.delete, "Borrar", "trash")
+            }
+        }
+        .padding(Theme.Space.l)
+        .glassPanel(cornerRadius: Theme.Radius.panel)
+        .padding(.horizontal, Theme.Reader.chromeInset)
+        .padding(.bottom, Theme.Reader.chromeInset)
+    }
+
+    private func action(_ kind: Action, _ title: String, _ symbol: String) -> some View {
+        Button { perform(kind) } label: {
+            IconTile(symbol: symbol, title: title)
+        }
+        .buttonStyle(PressableStyle())
     }
 }
 

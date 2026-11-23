@@ -126,6 +126,32 @@ struct SectionLabel: View {
 
 // MARK: - Botones
 
+/// Mosaico chico de una acción u opción: ícono arriba (todos del mismo alto) y
+/// nombre abajo; elegido, con borde de tinta. Estilo de la hoja y acciones de un subrayado.
+struct IconTile: View {
+    let symbol: String
+    let title: String
+    var selected = false
+
+    var body: some View {
+        VStack(spacing: Theme.Space.inline) {
+            Image(systemName: symbol).font(.body).frame(height: Theme.Space.xl)
+            Text(title)
+                .font(.caption.weight(.medium))
+                .lineLimit(1)
+                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+        }
+        .foregroundStyle(Theme.ink)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Theme.Space.m)
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                .strokeBorder(selected ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
+        }
+    }
+}
+
 /// Respuesta al toque: se hunde un poco, sin cambiar de color.
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

@@ -11,6 +11,39 @@ enum ReaderKeys {
     static let footer = "reader.footer"
     /// Una vibración muy ligera al pasar a la página siguiente.
     static let haptics = "reader.haptics"
+    /// Cómo se pasa la hoja en páginas.
+    static let turn = "reader.turn"
+}
+
+/// Cómo se pasa la hoja en páginas (se elige en «Aa»).
+enum ReaderTurnStyle: String, CaseIterable, Identifiable {
+    /// La hoja se dobla con el dedo, papel mate, sin brillo.
+    case matte
+    /// La hoja se desliza de lado, como papel sobre la mesa.
+    case slide
+    /// El texto se desvanece y aparece el de la página nueva.
+    case fade
+    /// Cambia al instante.
+    case none
+    var id: Self { self }
+
+    var name: String {
+        switch self {
+        case .matte: "Hoja"
+        case .slide: "Deslizar"
+        case .fade: "Fundido"
+        case .none: "Sin animación"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .matte: "book.pages"
+        case .slide: "rectangle.portrait.and.arrow.forward"
+        case .fade: "circle.lefthalf.filled"
+        case .none: "bolt"
+        }
+    }
 }
 
 /// Lo que dice abajo, en el pie de la página, mientras lees.
@@ -162,6 +195,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.autoNight) private var autoNight = true
     @AppStorage(ReaderKeys.flow) private var flow: ReaderFlow = .paged
     @AppStorage(ReaderKeys.haptics) private var haptics = true
+    @AppStorage(ReaderKeys.turn) private var turnStyle: ReaderTurnStyle = .matte
     /// El modo de la app: con «Automático», el tema sigue al claro u oscuro de iOS.
     @Environment(\.colorScheme) private var appScheme
 
@@ -181,6 +215,34 @@ struct ReaderAppearanceSheet: View {
             .sensoryFeedback(.selection, trigger: scale)
             .sensoryFeedback(.selection, trigger: theme)
             .sensoryFeedback(.selection, trigger: font)
+            .sensoryFeedback(.selection, trigger: turnStyle)
+            // En páginas aparece el estilo de la hoja: la hoja crece para mostrarlo.
+            .presentationDetents([.height(showsTurns ? Theme.Size.appearanceSheetPaged : Theme.Size.appearanceSheet)])
+            .presentationDragIndicator(.visible)
+            .animation(Theme.Motion.standard, value: flow)
+    }
+
+    private var showsTurns: Bool {
+        #if os(iOS)
+        flow == .paged
+        #else
+        false
+        #endif
+    }
+
+    /// Cómo se pasa la hoja: cuatro mosaicos chicos, ícono arriba y nombre abajo.
+    private var turnPicker: some View {
+        HStack(spacing: Theme.Space.s) {
+            ForEach(ReaderTurnStyle.allCases) { item in
+                Button { turnStyle = item } label: {
+                    IconTile(symbol: item.symbol, title: item.name, selected: item == turnStyle)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Pasar la hoja: \(item.name)")
+                .accessibilityAddTraits(item == turnStyle ? .isSelected : [])
+            }
+        }
+        .transition(.opacity)
     }
 
     private var content: some View {
@@ -230,6 +292,8 @@ struct ReaderAppearanceSheet: View {
                     .accessibilityAddTraits(item == flow ? .isSelected : [])
                 }
             }
+
+            if showsTurns { turnPicker }
 
             HStack(spacing: Theme.Space.m) {
                 Button { scale = max(Self.scales.lowerBound, scale - Self.scaleStep) } label: { Text("A").font(.footnote) }

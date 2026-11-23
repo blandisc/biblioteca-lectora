@@ -50,9 +50,11 @@ const pageMarkCSS = ({ flow, textColor }) => {
     }`
 }
 
-// Página del libro en que empieza cada párrafo (la misma cuenta de foliate:
-// 1,500 caracteres del archivo por página) y la marca en el primero de cada una.
-const sizePerPage = 1500
+// Página del libro en que empieza cada párrafo (la misma cuenta que foliate en
+// view.js: 2,400 bytes del archivo por página, unas 1,800 letras, como una página
+// de un libro de bolsillo; con 1,500 salía más corta que una pantalla) y la marca
+// en el primero de cada una.
+const sizePerPage = 2400
 const markPages = (doc, index) => {
     const sections = view?.book?.sections ?? []
     const sizes = sections.map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
