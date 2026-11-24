@@ -243,6 +243,8 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   Fundido y Sin animación. Una vuelta dura `Reader.turnDuration` (0,42 s; lo que falta si ya va
   a medias, nunca menos de `Reader.turnMinimum`); con el dedo pasa después de
   `Reader.turnCommit` (30 % del ancho) o al aventarla más rápido que `Reader.turnFling`.
+  Antes de animar se espera a que WebKit pinte la página nueva. Al cambiar entre páginas y continuo,
+  la página de antes se desvanece encima (`Reader.flowDissolve`) tras acomodarse debajo (`Reader.flowSettle`).
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y

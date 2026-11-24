@@ -194,6 +194,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
     /// Páginas o continuo. Se guarda para mandarlo cuando el lector esté listo.
     func setScrolled(_ scrolled: Bool) {
+        let changed = isReady && flowScript != nil && scrolled != isScrolled
         isScrolled = scrolled
         updateCurl()
         #if os(iOS)
@@ -204,7 +205,12 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl), "
             + "margin: \(Int(Theme.Reader.pageMarginTop)), marginBottom: \(Int(Theme.Reader.pageMarginBottom)) })"
         flowScript = script
-        if isReady { evaluate(script) }
+        guard isReady else { return }
+        #if os(iOS)
+        // Cambiar de forma con la página de antes desvaneciéndose encima, sin brinco.
+        if changed, let pages { pages.dissolve { [weak self] in self?.evaluate(script) }; return }
+        #endif
+        evaluate(script)
     }
 
     /// Colores del texto según el tema (hex CSS, p. ej. "#1C1B19").

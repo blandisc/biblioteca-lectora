@@ -240,7 +240,6 @@ struct ReaderAppearanceSheet: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .presentationDetents([.height(contentHeight)])
             .presentationDragIndicator(.visible)
-            .animation(Theme.Motion.standard, value: flow)
     }
 
     private var showsTurns: Bool {

@@ -94,6 +94,29 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         settle(true)
     }
 
+    // MARK: Páginas ↔ continuo
+
+    /// Cambia la forma del libro sin brinco: una foto de la página de ahora queda
+    /// encima, el lector se acomoda debajo y, ya pintado, la foto se desvanece.
+    func dissolve(_ change: @escaping () -> Void) {
+        guard isViewLoaded, view.window != nil, turning == nil,
+              !UIAccessibility.isReduceMotionEnabled,
+              let cover = page.view.snapshotView(afterScreenUpdates: false) else { change(); return }
+        cover.frame = page.view.frame
+        cover.isUserInteractionEnabled = false
+        view.addSubview(cover)
+        change()
+        DispatchQueue.main.asyncAfter(deadline: .now() + Theme.Reader.flowSettle) { [weak self] in
+            guard let self else { cover.removeFromSuperview(); return }
+            self.webView.takeSnapshot(with: nil) { _, _ in
+                UIView.animate(withDuration: Theme.Reader.flowDissolve, delay: 0,
+                               options: [.curveEaseInOut, .allowUserInteraction]) {
+                    cover.alpha = 0
+                } completion: { _ in cover.removeFromSuperview() }
+            }
+        }
+    }
+
     // MARK: La vuelta
 
     private func begin(forward: Bool, fromTop: Bool, fromDrag: Bool) {
@@ -111,8 +134,11 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         reader?.turnInstantly(forward: forward) { [weak self] moved in
             guard let self, self.turning === turn else { return }
             guard moved else { self.clear(); return }
-            // Un respiro para que el lector pinte la página nueva antes de fotografiarla.
-            DispatchQueue.main.async { self.prepare(turn) }
+            // Que WebKit pinte de verdad la página nueva antes de fotografiarla: sin
+            // esto la hoja se doblaba sobre la misma página y la nueva saltaba al final.
+            self.webView.takeSnapshot(with: nil) { _, _ in
+                DispatchQueue.main.async { self.prepare(turn) }
+            }
         }
     }
 

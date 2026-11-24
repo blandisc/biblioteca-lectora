@@ -236,6 +236,11 @@ enum Theme {
         static let turnMinimum: TimeInterval = 0.14
         /// Fundido: un poco más lento que la hoja, y el texto se corre estos puntos.
         static let fadeDuration: TimeInterval = 0.5
+        /// Al cambiar entre páginas y continuo: la página de antes se desvanece encima
+        /// mientras la nueva ya está acomodada debajo.
+        static let flowDissolve: TimeInterval = 0.55
+        /// Lo que tarda el lector en volver a acomodar el libro al cambiar de forma.
+        static let flowSettle: TimeInterval = 0.35
         static let fadeDrift: CGFloat = 14
         /// La hoja de muestra en «Aa»: pausa entre vueltas (s), cuánto se desliza (fracción de su ancho) y sus renglones.
         static let previewPause: TimeInterval = 0.7
