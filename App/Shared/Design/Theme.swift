@@ -140,6 +140,8 @@ enum Theme {
         static let footerPreview: CGFloat = 64
         /// Renglón fantasma de esa muestra.
         static let ghostLine: CGFloat = 3
+        /// Ancho del ícono de esa muestra: todos iguales, aunque el símbolo sea angosto.
+        static let previewIcon: CGFloat = 16
         /// Alto de una fila de la gráfica de etapas, y de su marca.
         static let stageRow: CGFloat = 26
         static let stageMark: CGFloat = 16
@@ -308,6 +310,8 @@ enum Theme {
     enum Motion {
         static let standard = Animation.snappy(duration: 0.25)
         static let press = Animation.easeOut(duration: 0.15)
+        /// Elegir una opción: un resorte corto, con un rebote apenas visible.
+        static let select = Animation.spring(response: 0.35, dampingFraction: 0.7)
         /// Una hoja que cambia de alto: despacio y sin rebote.
         static let sheet = Animation.smooth(duration: 0.35)
         /// La hoja de muestra de «Aa»: una vuelta, o un cambio en seco.

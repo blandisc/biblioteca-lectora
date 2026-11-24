@@ -77,7 +77,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
-stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · previewIcon 16 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
@@ -120,7 +120,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 
 ### Movimiento (`Theme.Motion`)
 
-`standard` (snappy 0.25 s) para cambios de estado; `press` (0.15 s) al tocar;
+`standard` (snappy 0.25 s) para cambios de estado; `press` (0.15 s) al tocar; `select` (resorte corto) al elegir una opción;
 `equalizer(alto)` para las barras de audio sonando (cada una a su ritmo).
 
 ## Componentes (`Design/Components.swift`)

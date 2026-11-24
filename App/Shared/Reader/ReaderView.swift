@@ -326,7 +326,9 @@ struct ReaderView: View {
             guard let parts = footerParts(kind) else {
                 return FooterOption(kind: kind, text: "Calculando \(kind.name.lowercased())", available: false)
             }
-            return FooterOption(kind: kind, text: kind == .percent ? parts.value : "\(parts.value) \(parts.caption)",
+            // En la muestra, la versión corta del pie: cabe entera en medio panel.
+            let short = parts.caption.replacingOccurrences(of: "para terminar", with: "para")
+            return FooterOption(kind: kind, text: kind == .percent ? parts.value : "\(parts.value) \(short)",
                                 available: true)
         }
     }
@@ -533,7 +535,7 @@ private struct BottomPanel: View {
                     LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                         ForEach(options) { option in
                             Button { footer = option.kind } label: {
-                                FooterPreview(text: option.text, paper: paper, ink: ink,
+                                FooterPreview(symbol: option.kind.symbol, text: option.text, paper: paper, ink: ink,
                                               available: option.available, selected: option.kind == footer)
                             }
                             .buttonStyle(PressableStyle())
@@ -562,6 +564,10 @@ private struct BottomPanel: View {
         .padding(.horizontal, Theme.Space.l)
         .padding(.bottom, Theme.Space.m)
         .glassPanel(cornerRadius: Theme.Radius.panel)
+        // Todo el panel es suyo: un toque en su aire no llega a la página de abajo
+        // (que lo tomaría como «ocultar controles»).
+        .contentShape(RoundedRectangle(cornerRadius: Theme.Radius.panel, style: .continuous))
+        .onTapGesture {}
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Space.s)
         .sensoryFeedback(.selection, trigger: footer)

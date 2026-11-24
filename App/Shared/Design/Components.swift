@@ -1234,6 +1234,7 @@ struct SessionLine: View {
 /// y la tinta del libro, dos renglones insinuados y el pie tal como se leerá.
 /// La elegida lleva un filo y un punto verdes.
 struct FooterPreview: View {
+    let symbol: String
     let text: String
     let paper: Color
     let ink: Color
@@ -1243,17 +1244,23 @@ struct FooterPreview: View {
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.Radius.inset, style: .continuous) }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            shape.fill(paper)
-            VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                // El primero deja sitio al punto de elegido; el segundo cierra el párrafo.
-                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
-                    .padding(.trailing, Theme.Space.l)
-                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
-                    .padding(.trailing, Theme.Space.xxxl)
-                Spacer(minLength: 0)
+        // Todo a la misma orilla (12, el radio de la esquina): nada se come la curva.
+        VStack(spacing: 0) {
+            HStack(spacing: Theme.Space.inline) {
+                Image(systemName: symbol)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(selected ? Theme.accent : ink.opacity(Theme.Emphasis.folio))
+                    .symbolEffect(.bounce, value: selected)
+                    // Mismo ancho para todos: los renglones empiezan en el mismo punto.
+                    .frame(width: Theme.Size.previewIcon)
+                // Dos renglones insinuados: el segundo cierra el párrafo.
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                    Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                        .padding(.trailing, Theme.Space.xxl)
+                }
             }
-            .padding(Theme.Space.m)
+            Spacer(minLength: 0)
             Text(text)
                 .font(.caption.weight(.medium))
                 .italic(!available)
@@ -1261,24 +1268,20 @@ struct FooterPreview: View {
                 .lineLimit(1)
                 .minimumScaleFactor(Theme.Emphasis.labelMinScale)
                 .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
-                .padding(.horizontal, Theme.Space.s)
-                .padding(.bottom, Theme.Space.m)
+                .frame(maxWidth: .infinity)
                 .contentTransition(.numericText())
         }
+        .padding(Theme.Space.m)
+        .frame(maxWidth: .infinity)
         .frame(height: Theme.Size.footerPreview)
+        .background(paper, in: shape)
         .overlay {
             shape.strokeBorder(selected ? Theme.accent : ink.opacity(Theme.Emphasis.ghost),
                                lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
         }
-        .overlay(alignment: .topTrailing) {
-            if selected {
-                Circle().fill(Theme.accent)
-                    .frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
-                    .padding(Theme.Space.s)
-                    .transition(.scale.combined(with: .opacity))
-            }
-        }
-        .animation(Theme.Motion.press, value: selected)
+        // Al elegir: el filo se enciende con un resorte corto y el ícono salta.
+        // Al presionar, se hunde (PressableStyle); todos miden siempre lo mismo.
+        .animation(Theme.Motion.select, value: selected)
     }
 }
 
