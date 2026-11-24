@@ -152,6 +152,41 @@ struct IconTile: View {
     }
 }
 
+/// Mosaico con un dato: ícono chico arriba, el valor en grande y su leyenda
+/// («Página 10» · «de 842»). Lo usa el globo del pie del lector.
+struct ValueTile: View {
+    let symbol: String
+    let value: String
+    let caption: String
+    var selected = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+            Image(systemName: symbol)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(selected ? Theme.accent : Theme.secondaryInk)
+                .padding(.bottom, Theme.Space.xxs)
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+                .foregroundStyle(Theme.ink)
+            Text(caption)
+                .font(.caption2)
+                .foregroundStyle(Theme.secondaryInk)
+                .lineLimit(2, reservesSpace: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Theme.Space.s)
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                .strokeBorder(selected ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
+        }
+    }
+}
+
 /// Respuesta al toque: se hunde un poco, sin cambiar de color.
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {

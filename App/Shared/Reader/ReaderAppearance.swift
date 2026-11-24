@@ -39,7 +39,7 @@ enum ReaderTurnStyle: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .matte: "book.pages"
-        case .slide: "rectangle.portrait.and.arrow.forward"
+        case .slide: "rectangle.portrait.on.rectangle.portrait"
         case .fade: "circle.lefthalf.filled"
         case .none: "bolt"
         }
@@ -58,6 +58,15 @@ enum ReaderFooter: String, CaseIterable, Identifiable {
         case .bookTime: "Tiempo del libro"
         case .page: "Página"
         case .percent: "Porcentaje"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .chapterTime: "clock"
+        case .bookTime: "hourglass"
+        case .page: "doc.text"
+        case .percent: "percent"
         }
     }
 }
@@ -247,8 +256,6 @@ struct ReaderAppearanceSheet: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            ReaderSample(font: font, scale: scale, palette: palette)
-
             LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                 ForEach(ReaderFont.allCases) { item in
                     Button { font = item } label: {
@@ -372,38 +379,5 @@ struct ReaderAppearanceSheet: View {
                         .foregroundStyle(palette.textColor)
                 }
         }
-    }
-}
-
-/// Un párrafo de muestra arriba de los ajustes: cambia en vivo con la letra,
-/// el tamaño y el tema, como se verá en el libro.
-private struct ReaderSample: View {
-    let font: ReaderFont
-    let scale: Double
-    let palette: ReaderPalette
-
-    var body: some View {
-        Text("En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor.")
-            .font(font.preview(size: Theme.Reader.sampleSize * scale))
-            .lineSpacing(Theme.Reader.sampleLeading)
-            .foregroundStyle(palette.textColor)
-            // El párrafo sigue de largo y se desvanece abajo, sin «…».
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(Theme.Space.l)
-            .frame(height: Theme.Reader.sampleHeight, alignment: .top)
-            .clipped()
-            .mask {
-                LinearGradient(stops: [.init(color: .black, location: 0),
-                                       .init(color: .black, location: Theme.Reader.sampleFadeStart),
-                                       .init(color: .clear, location: 1)],
-                               startPoint: .top, endPoint: .bottom)
-            }
-            .background(palette.background, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
-                    .strokeBorder(Theme.track, lineWidth: Theme.Size.hairline)
-            }
-            .accessibilityLabel("Muestra del texto")
     }
 }

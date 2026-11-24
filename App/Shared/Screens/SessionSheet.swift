@@ -1,44 +1,63 @@
 import LectoraCore
 import SwiftUI
 
-/// «Sesión actual»: al tocar el contador del lector. Palabras, tiempo, ritmo y
-/// las etapas hasta ahora; «Escribir sobre ella» deja una nota en el Cuaderno.
-struct SessionSheet: View {
+/// «Esta sesión»: al tocar el contador del lector, una tarjeta de vidrio abajo
+/// (no una hoja completa): los tres números, la barra de etapas con su leyenda y
+/// «Escribir sobre ella». Todo a la vista, sin aire de sobra.
+struct SessionCard: View {
     @ObservedObject var tracker: SessionTracker
     let bookTitle: String
-    let fraction: Double
-    @Environment(\.dismiss) private var dismiss
+    let close: () -> Void
     @State private var notice: String?
 
     var body: some View {
-        NavigationStack {
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                ScrollView {
-                    if let session = tracker.snapshot(at: context.date) {
-                        SessionDetail(session: session, bookTitle: bookTitle, fraction: fraction, live: true) {
-                            notice = SessionNote.write(session, bookTitle: bookTitle)
-                        }
-                        .screenContent()
-                    } else {
-                        EmptyState(title: "Tu sesión empieza al pasar la página",
-                                   message: "Gabinete cuenta las páginas que lees, cuánto tiempo y a qué ritmo. Nada sale de tus dispositivos.")
-                            .screenContent()
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let session = tracker.snapshot(at: context.date)
+            VStack(alignment: .leading, spacing: Theme.Space.m) {
+                HStack {
+                    SectionLabel(text: "Esta sesión")
+                    Spacer()
+                    Button(action: close) {
+                        Image(systemName: "xmark")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Theme.secondaryInk)
+                            .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Cerrar")
                 }
-            }
-            .pushedScreen("Sesión actual")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") { dismiss() }
+                .padding(.vertical, -Theme.Space.s)
+                if let session {
+                    StatTrio(items: [
+                        .init(value: ReadingFormat.words(session.words), label: "palabras"),
+                        .init(value: ReadingFormat.clock(session.elapsed), label: "minutos"),
+                        .init(value: session.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
+                    ])
+                    VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                        StageBar(segments: session.segments)
+                        StageLegend { session.seconds(in: $0) }
+                    }
+                    SecondaryButton(title: "Escribir sobre ella", systemImage: "square.and.pencil") {
+                        notice = SessionNote.write(session, bookTitle: bookTitle)
+                    }
+                } else {
+                    Text("Empieza al pasar la página: cuenta palabras, tiempo y ritmo. Nada sale de tus dispositivos.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryInk)
                 }
-            }
-            .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(notice ?? "")
             }
         }
-        .presentationDetents([.large])
+        .foregroundStyle(Theme.ink)
+        .padding(Theme.Space.l)
+        .glassPanel(cornerRadius: Theme.Radius.panel)
+        .padding(.horizontal, Theme.Reader.chromeInset)
+        .padding(.bottom, Theme.Reader.chromeInset)
+        .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(notice ?? "")
+        }
     }
 }
 

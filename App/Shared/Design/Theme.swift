@@ -125,11 +125,11 @@ enum Theme {
         /// Cinta del marcador en el lector.
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa».
-        static let appearanceSheet: CGFloat = 664
+        static let appearanceSheet: CGFloat = 536
         /// En páginas, con los estilos de la hoja.
-        static let appearanceSheetPaged: CGFloat = 744
+        static let appearanceSheetPaged: CGFloat = 616
         /// El globo para elegir qué dice el pie de la página.
-        static let footerPicker: CGFloat = 280
+        static let footerPicker: CGFloat = 300
         /// Barra de etapas de una sesión.
         static let stageBar: CGFloat = 8
         /// Alto de una fila de la gráfica de etapas, y de su marca.
@@ -210,9 +210,8 @@ enum Theme {
         static let edgeZone = 0.28
         /// Margen de los controles de vidrio, igual arriba y abajo, izquierda y derecha.
         static let chromeInset: CGFloat = 16
-        /// Folio sin controles: margen lateral del capítulo y su aire arriba.
+        /// Folio sin controles: margen lateral del capítulo.
         static let folioInset: CGFloat = 60
-        static let folioTop: CGFloat = 14
         /// Pasar la hoja: lo que tarda una vuelta completa (segundos); si ya va a
         /// medias, solo lo que falta. Nunca menos de `turnMinimum`.
         static let turnDuration: TimeInterval = 0.42
@@ -241,14 +240,9 @@ enum Theme {
         /// La vibración al pasar a la página siguiente: muy ligera (0 a 1).
         static let turnHaptic: CGFloat = 0.45
         /// Aire arriba y abajo del texto en páginas: deja el capítulo y el pie
-        /// sobre papel limpio (con 48 el último renglón chocaba con el pie).
-        static let pageMargin: CGFloat = 76
-        /// Muestra de «Aa»: tamaño de la letra a escala 1, su interlineado y su alto.
-        static let sampleSize: CGFloat = 17
-        static let sampleLeading: CGFloat = 5
-        /// Dónde empieza a desvanecerse la muestra (fracción de su alto).
-        static let sampleFadeStart = 0.7
-        static let sampleHeight: CGFloat = 104
+        /// sobre papel limpio. El capítulo y el pie van centrados en él y el texto
+        /// respeta la orilla de abajo (antes 76, con mucho hueco arriba).
+        static let pageMargin: CGFloat = 52
         /// En continuo, el papel bajo el folio se desvanece en este alto.
         static let folioFade: CGFloat = 24
         /// Cuánto sobresale la franja de papel del folio hacia el texto (en continuo):

@@ -78,7 +78,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-textEditor 120 · ribbon 12×64 · appearanceSheet 664 (744 en páginas) · footerPicker 280 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
+textEditor 120 · ribbon 12×64 · appearanceSheet 536 (616 en páginas) · footerPicker 300 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir);
@@ -141,6 +141,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `CoverCell` + `CoverGrid` | Celda y cuadrícula de 3 columnas | Biblioteca, Mesa |
 | `BookRow` | Portada pequeña + título serif + detalle + extra | Lista, serie, Buscar, Cuaderno |
 | `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota | «Donde lo dejaste», subrayados |
+| `ValueTile` | Mosaico con dato: ícono chico, valor grande, leyenda; borde si está elegido | Globo del pie del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido | Estilo de la hoja, tarjeta de un subrayado |
 | `FactRow` | Etiqueta / valor con línea fina | Ficha del libro |
 | `EmptyState` | Título, explicación y acción opcional | Toda lista vacía |
@@ -218,16 +219,17 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   el título del sistema, 35 pt más abajo y con 16–20 pt de margen).
 - Lector: los controles de vidrio tienen el mismo margen (`Reader.chromeInset`, 16 pt)
   arriba y abajo; las zonas de toque izquierda y derecha son franjas iguales
-  (`Reader.edgeZone`, 28 %). Sin controles, el folio deja `Reader.folioInset` (60) a los lados
-  y `Reader.folioTop` (14) arriba. El revés de la hoja es el mismo papel con `Reader.pageBack` (82 %) de su luz. El lomo del libro es
+  (`Reader.edgeZone`, 28 %). Sin controles, el folio deja `Reader.folioInset` (60) a los lados. El revés de la hoja es el mismo papel con `Reader.pageBack` (82 %) de su luz. El lomo del libro es
   una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
   (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
   siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
-  En páginas, el texto deja `Reader.pageMargin` (76 pt) arriba y abajo para que el título del
-  capítulo y el pie queden sobre papel limpio; en continuo, una franja de papel sólido
+  En páginas, el texto deja `Reader.pageMargin` (52 pt) arriba y abajo, (abajo hasta la orilla de la pantalla);
+  el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
+  renglón que el pie; en continuo, una franja de papel sólido
   sobresale `Reader.folioBand` (40 pt) y se desvanece en `Reader.folioFade` (24 pt). El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el pie se abre un globo
-  (`Size.footerPicker`) con cada opción y su dato de ahora.
+  (`Size.footerPicker`) con cuatro `ValueTile` (ícono, dato de ahora y leyenda). Tocando el
+  contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra
   `Reader.curlShadow`, el texto se transparenta en el revés `Reader.curlShowThrough` 5 %, dibujada a
@@ -237,9 +239,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   `Reader.turnCommit` (30 % del ancho) o al aventarla más rápido que `Reader.turnFling`.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y
   cuatro acciones en mosaicos: Nota, A una nota, Copiar, Borrar.
-- Ajustes del lector («Aa»): arriba, un párrafo de muestra que cambia en vivo
-  (`Reader.sampleSize` 17 pt por el tamaño elegido, `Reader.sampleLeading` 5, alto
-  `Reader.sampleHeight` 104, se desvanece desde `Reader.sampleFadeStart` 70 %). Toda la hoja
+- Ajustes del lector («Aa»): sin muestra; la página de atrás ya cambia en vivo. Toda la hoja
   toma el tema elegido. La barra del tamaño tiene nueve niveles con su marca y un toque
   de vibración en cada uno.
 - Cuadrículas: columnas iguales (`GridItem(.flexible())` ×3) con 16 pt entre columnas

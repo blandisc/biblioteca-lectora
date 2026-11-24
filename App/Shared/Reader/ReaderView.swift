@@ -89,11 +89,23 @@ struct ReaderView: View {
         .sheet(item: $tools) { part in
             ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
         }
-        .sheet(isPresented: $showsSession) {
-            if let session = controller.session {
-                SessionSheet(tracker: session, bookTitle: catalogTitle, fraction: controller.location?.fraction ?? 0)
+        .overlay(alignment: .bottom) {
+            if showsSession, let session = controller.session {
+                ZStack(alignment: .bottom) {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { showsSession = false }
+                        .accessibilityHidden(true)
+                    SessionCard(tracker: session, bookTitle: catalogTitle) { showsSession = false }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
         }
+        .animation(Theme.Motion.standard, value: showsSession)
+        #if os(iOS)
+        // Solo el botón de arriba cierra el libro: deslizar de la orilla pasa la hoja.
+        .interactiveDismissDisabled()
+        #endif
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { controller.session?.resume() } else { controller.session?.pause() }
         }
@@ -212,12 +224,12 @@ struct ReaderView: View {
             if !showsChrome {
                 ReadingFolio(title: title, location: controller.location, footerText: footerText,
                              options: footerOptions, footer: $footer, color: palette.textColor,
-                             paper: flow == .scrolled ? palette.background : nil)
-                    .transition(.opacity)
-                if showsCounter, let session = controller.session {
-                    SessionCounter(tracker: session) { showsSession = true }
-                        .transition(.opacity)
+                             paper: flow == .scrolled ? palette.background : nil) {
+                    if showsCounter, let session = controller.session, !showsSession {
+                        SessionCounter(tracker: session) { showsSession = true }
+                    }
                 }
+                .transition(.opacity)
             }
             VStack(spacing: 0) {
                 if showsChrome {
@@ -392,6 +404,18 @@ private struct BottomPanel: View {
 
     private var fraction: Double { dragValue ?? location?.fraction ?? 0 }
 
+    /// La página a la que apunta la barra (la de ahora o la del arrastre).
+    private var page: Int? {
+        guard let count = location?.pageCount, count > 0 else { return nil }
+        guard let dragValue else { return location?.page }
+        return min(count, max(1, Int((dragValue * Double(count)).rounded(.up))))
+    }
+
+    private var position: String {
+        guard let page, let count = location?.pageCount else { return fraction.percentText }
+        return dragValue == nil ? "\(page) de \(count)" : "Pág. \(page) · \(fraction.percentText)"
+    }
+
     var body: some View {
         VStack(spacing: Theme.Space.rowY) {
             HStack(alignment: .firstTextBaseline) {
@@ -403,11 +427,14 @@ private struct BottomPanel: View {
                     .font(.subheadline.weight(.semibold))
                 }
                 .accessibilityLabel("Índice")
-                Spacer()
-                Text((fraction).percentText)
-                    .font(.footnote)
+                Spacer(minLength: Theme.Space.m)
+                // Quieto: la página. Arrastrando: a qué página y porcentaje vas.
+                Text(position)
+                    .font(.footnote.weight(dragValue == nil ? .regular : .semibold))
                     .monospacedDigit()
-                    .foregroundStyle(Theme.secondaryInk)
+                    .foregroundStyle(dragValue == nil ? Theme.secondaryInk : Theme.ink)
+                    .contentTransition(.numericText())
+                    .animation(Theme.Motion.press, value: position)
             }
             Slider(
                 value: Binding(get: { fraction }, set: { dragValue = $0 }),
@@ -419,18 +446,9 @@ private struct BottomPanel: View {
                     }
                 }
             )
+            .tint(Theme.ink)
             .disabled(location == nil)
-            if let page = location?.page, let count = location?.pageCount, count > 0 {
-                HStack {
-                    Text("Pág. \(page)")
-                    Spacer()
-                    Text("de \(count)")
-                }
-                .font(.caption)
-                .monospacedDigit()
-                .foregroundStyle(Theme.secondaryInk)
-                .padding(.top, -Theme.Space.inline)
-            }
+            .sensoryFeedback(.selection, trigger: fraction.percentText)
             if Features.audiobook {
                 HStack(spacing: Theme.Space.s) {
                     ReaderPillButton(title: "Guiada", systemImage: "text.viewfinder") {}
@@ -449,20 +467,13 @@ private struct BottomPanel: View {
     }
 }
 
-/// Contador de la sesión, abajo a la izquierda, a la altura del porcentaje.
+/// Contador de la sesión: en el renglón del pie, a la izquierda y a su misma altura.
 private struct SessionCounter: View {
     @ObservedObject var tracker: SessionTracker
     let action: () -> Void
 
     var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                WordCounter(words: tracker.words, action: action)
-                Spacer()
-            }
-        }
-        .padding(.leading, Theme.Reader.chromeInset)
+        WordCounter(words: tracker.words, action: action)
     }
 }
 
@@ -524,7 +535,7 @@ struct FooterOption: Identifiable {
 /// En páginas, el texto deja aire arriba y abajo (`Reader.pageMargin`): el folio
 /// queda sobre papel limpio. En continuo, el texto pasa por debajo: una franja
 /// de papel sólido tapa lo que queda detrás y solo su orilla se desvanece.
-private struct ReadingFolio: View {
+private struct ReadingFolio<Counter: View>: View {
     let title: String
     let location: ReaderController.Location?
     let footerText: String
@@ -535,39 +546,49 @@ private struct ReadingFolio: View {
     let color: Color
     /// En continuo, el papel: va detrás del folio para que el texto no se cruce.
     var paper: Color? = nil
+    /// El contador de palabras, en el mismo renglón que el pie.
+    @ViewBuilder var counter: Counter
     @State private var choosing = false
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            // Capítulo y pie, cada uno centrado en el margen del texto: ni más
+            // arriba ni más abajo, sin huecos.
             Text(location?.chapter ?? title)
                 .lineLimit(1)
                 .padding(.horizontal, Theme.Reader.folioInset)
-                .padding(.top, Theme.Reader.folioTop)
-                .padding(.bottom, Theme.Space.s)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, minHeight: Theme.Reader.pageMargin)
                 .background { band(.top) }
                 .allowsHitTesting(false)
             Spacer()
-            Button { choosing = true } label: {
-                Text(footerText)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .padding(.horizontal, Theme.Space.m)
-                    .padding(.top, Theme.Space.s)
-                    .padding(.bottom, Theme.Space.inline)
-                    .contentShape(Rectangle())
+            ZStack {
+                Button { choosing = true } label: {
+                    Text(footerText)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .padding(.horizontal, Theme.Space.m)
+                        .frame(minHeight: Theme.Size.tapTarget)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Pie de página")
+                .accessibilityValue(footerText)
+                .accessibilityHint("Elige qué dice")
+                .popover(isPresented: $choosing, arrowEdge: .bottom) {
+                    FooterPicker(options: options, selection: $footer) { choosing = false }
+                        .presentationCompactAdaptation(.popover)
+                }
+                HStack {
+                    counter
+                    Spacer()
+                }
+                .padding(.leading, Theme.Reader.chromeInset)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Pie de página")
-            .accessibilityValue(footerText)
-            .accessibilityHint("Elige qué dice")
-            .popover(isPresented: $choosing, arrowEdge: .bottom) {
-                FooterPicker(options: options, selection: $footer) { choosing = false }
-                    .presentationCompactAdaptation(.popover)
-            }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: Theme.Reader.pageMargin)
             .background { band(.bottom) }
         }
+        // La hoja llega hasta abajo: el pie va en su margen, hasta la orilla.
+        .ignoresSafeArea(.container, edges: .bottom)
         .font(.caption.weight(.medium))
         .foregroundStyle(color.opacity(Theme.Emphasis.folio))
     }
@@ -595,54 +616,34 @@ private struct ReadingFolio: View {
     }
 }
 
-/// El globo del pie: cada opción muestra lo que diría ahora, en grande, con su
-/// leyenda debajo; la elegida lleva la palomita.
+/// El globo del pie: cuatro mosaicos, dos por renglón. Cada uno dice lo que
+/// mostraría ahora, en grande, con su ícono y su leyenda; el elegido va
+/// marcado con tinta, como los mosaicos de «Aa».
 private struct FooterPicker: View {
     let options: [FooterOption]
     @Binding var selection: ReaderFooter
     let done: () -> Void
 
+    private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Abajo de la página")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Theme.secondaryInk)
-                .padding(.horizontal, Theme.Space.l)
-                .padding(.top, Theme.Space.m)
-                .padding(.bottom, Theme.Space.s)
-            ForEach(options) { option in
-                Button {
-                    selection = option.kind
-                    done()
-                } label: {
-                    HStack(spacing: Theme.Space.m) {
-                        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                            Text(option.value)
-                                .font(.rowTitle)
-                                .monospacedDigit()
-                                .foregroundStyle(Theme.ink)
-                            Text(option.caption)
-                                .font(.caption)
-                                .foregroundStyle(Theme.secondaryInk)
-                        }
-                        Spacer(minLength: 0)
-                        Image(systemName: "checkmark")
-                            .font(.body.weight(.semibold))
-                            // La palomita guarda su lugar aunque no se vea: las filas no brincan.
-                            .foregroundStyle(option.kind == selection ? Theme.accent : .clear)
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            SectionLabel(text: "Abajo de la página")
+            LazyVGrid(columns: columns, spacing: Theme.Space.s) {
+                ForEach(options) { option in
+                    Button {
+                        selection = option.kind
+                        done()
+                    } label: {
+                        ValueTile(symbol: option.kind.symbol, value: option.value, caption: option.caption,
+                                  selected: option.kind == selection)
                     }
-                    .padding(.horizontal, Theme.Space.l)
-                    .padding(.vertical, Theme.Space.s)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(option.kind == selection ? .isSelected : [])
-                if option.id != options.last?.id {
-                    Divider().padding(.leading, Theme.Space.l)
+                    .buttonStyle(PressableStyle())
+                    .accessibilityAddTraits(option.kind == selection ? .isSelected : [])
                 }
             }
         }
-        .padding(.bottom, Theme.Space.s)
+        .padding(Theme.Space.m)
         .frame(width: Theme.Size.footerPicker)
         .sensoryFeedback(.selection, trigger: selection)
     }
