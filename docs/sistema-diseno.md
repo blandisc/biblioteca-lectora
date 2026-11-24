@@ -121,6 +121,8 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 ### Movimiento (`Theme.Motion`)
 
 `standard` (snappy 0.25 s) para cambios de estado; `press` (0.15 s) al tocar; `select` (resorte corto) al elegir una opción;
+`sheet` (0.35 s) cuando una hoja cambia de alto; `exit` (0.12 s): lo que se va, se va rápido y antes de que lo demás
+se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada (`stagger`), y queda quieto en `enterSettle`;
 `equalizer(alto)` para las barras de audio sonando (cada una a su ritmo).
 
 ## Componentes (`Design/Components.swift`)
@@ -141,7 +143,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `CoverCell` + `CoverGrid` | Celda y cuadrícula de 3 columnas | Biblioteca, Mesa |
 | `BookRow` | Portada pequeña + título serif + detalle + extra | Lista, serie, Buscar, Cuaderno |
 | `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota | «Donde lo dejaste», subrayados |
-| `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle (`Reader.previewPause`, `previewFold`, `previewSlide`, `previewLines`) | Estilos de la hoja en «Aa» |
+| `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle y la misma curva que la real (`TurnMotion`); las dos hojas se turnan, sin salto (`Reader.previewPause`, `previewLead`, `previewTurn`, `previewFold`, `previewCast`, `previewLines`) | Estilos de la hoja en «Aa» |
 | `SegmentedChoice` | Opciones lado a lado; la elegida en papel sobre el carril (`Radius.segment`), la marca se desliza | Páginas o Continuo en «Aa» |
 | `Grabber` | Rayita de un panel que se sube | Panel del lector |
 | `QuietIconLabelStyle` | Ícono gris y texto con poco aire | Tira del lector |
@@ -240,11 +242,15 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra
   `Reader.curlShadow`, el texto se transparenta en el revés `Reader.curlShowThrough` 5 %, dibujada a
   `Reader.curlScale` 2×), Deslizar (sombra `Reader.slideShadow` y `Reader.slideShadowRadius`),
-  Fundido y Sin animación. Una vuelta dura `Reader.turnDuration` (0,42 s; lo que falta si ya va
-  a medias, nunca menos de `Reader.turnMinimum`); con el dedo pasa después de
+  Fundido y Sin animación. La hoja se mueve con un resorte sin rebote (`TurnMotion`, fuerza
+  `Reader.turnSpring`, unos 0,45 s desde quieta; el fundido, `Reader.fadeSpring`): al soltar sigue
+  con la velocidad del dedo (hasta `Reader.turnSpeedLimit`); con el dedo pasa después de
   `Reader.turnCommit` (30 % del ancho) o al aventarla más rápido que `Reader.turnFling`.
+  Nunca se leen dos textos encimados: al deslizar, la hoja es opaca y la de abajo sale de la
+  sombra (`Reader.slideDim`); el fundido es un relevo (el texto de antes se va en la primera
+  `Reader.fadeSpan` y el nuevo llega en la última, corridos `Reader.fadeDrift`).
   Antes de animar se espera a que WebKit pinte la página nueva. Al cambiar entre páginas y continuo,
-  la página de antes se desvanece encima (`Reader.flowDissolve`) tras acomodarse debajo (`Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
+  la página de antes se desvanece encima (`Reader.flowDissolve`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y

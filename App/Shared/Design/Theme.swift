@@ -232,35 +232,44 @@ enum Theme {
         static let chromeInset: CGFloat = 16
         /// Folio sin controles: margen lateral del capítulo.
         static let folioInset: CGFloat = 60
-        /// Pasar la hoja: lo que tarda una vuelta completa (segundos); si ya va a
-        /// medias, solo lo que falta. Nunca menos de `turnMinimum`.
-        static let turnDuration: TimeInterval = 0.42
+        /// Pasar la hoja: la fuerza del resorte (`TurnMotion`) que la lleva hasta el
+        /// final o de regreso; con 20, una vuelta desde quieta tarda unos 0,45 s y,
+        /// al soltar, sigue con la velocidad del dedo (nunca más de `turnSpeedLimit`
+        /// anchos por segundo). Se da por terminada a `turnRest` del final.
+        static let turnSpring = 20.0
+        static let turnSpeedLimit: CGFloat = 6
+        static let turnRest: CGFloat = 0.004
         /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
         static let highlightLines = 4
-        static let turnMinimum: TimeInterval = 0.14
-        /// Fundido: un poco más lento que la hoja, y el texto se corre estos puntos.
-        static let fadeDuration: TimeInterval = 0.5
+        /// Fundido: un resorte más suave que la hoja. Es un relevo: el texto de antes
+        /// se va en la primera `fadeSpan` de la vuelta y el nuevo llega en la última,
+        /// cada uno corrido `fadeDrift` puntos hacia donde vas.
+        static let fadeSpring = 15.0
+        static let fadeSpan = 0.6
         /// Al cambiar entre páginas y continuo: la página de antes se desvanece encima
-        /// mientras la nueva ya está acomodada debajo.
-        static let flowDissolve: TimeInterval = 0.55
-        /// Lo que tarda el lector en volver a acomodar el libro al cambiar de forma.
-        static let flowSettle: TimeInterval = 0.35
-        static let fadeDrift: CGFloat = 14
-        /// La hoja de muestra en «Aa»: pausa entre vueltas (s), cuánto se desliza (fracción de su ancho) y sus renglones.
-        static let previewPause: TimeInterval = 0.7
-        static let previewReturn: TimeInterval = 0.35
-        /// Lo que tarda la hojita de la muestra en pasar (un poco más que la real: se ve chica).
+        /// cuando la nueva ya está acomodada debajo.
+        static let flowDissolve: TimeInterval = 0.4
+        /// Lo más que se espera a que el lector acomode el libro al cambiar de forma
+        /// (si avisa antes, no se espera de más).
+        static let flowSettle: TimeInterval = 0.7
+        static let fadeDrift: CGFloat = 12
+        /// La hoja de muestra en «Aa»: pausa entre vueltas (s) y sus renglones. La
+        /// primera vuelta se adelanta `previewLead` (sale a 0,15 s de elegirla).
+        static let previewPause: TimeInterval = 1.1
+        static let previewLead: TimeInterval = 0.95
+        /// El tiempo de la vuelta de la muestra: le cabe el resorte de la real entero.
         static let previewTurn: TimeInterval = 0.6
         /// Las primeras veces que sale el panel se asoma hacia arriba: hay más.
         static let panelHints = 3
         static let panelHintDelay: TimeInterval = 0.45
         static let panelHintHold: TimeInterval = 0.3
-        static let previewSlide: CGFloat = 1.2
         static let previewLines = 5
         static let previewLastLine = 4
-        /// El revés doblado de la hoja de muestra (fracción de lo que ya pasó) y su sombra.
+        /// El revés doblado de la hoja de muestra (fracción de lo que ya pasó), su
+        /// sombra y lo ancho de la sombra que deja sobre la de abajo.
         static let previewFold: CGFloat = 0.5
         static let previewShadow = 0.35
+        static let previewCast: CGFloat = 4
         /// Con el dedo: pasa si soltaste después de esta fracción del ancho…
         static let turnCommit = 0.3
         /// …o si la aventaste más rápido que esto (puntos por segundo).
@@ -277,6 +286,9 @@ enum Theme {
         /// Deslizar: la sombra de la hoja que se mueve.
         static let slideShadow: Float = 0.18
         static let slideShadowRadius: CGFloat = 14
+        /// La página de abajo empieza con esta sombra y se aclara mientras la de
+        /// arriba se va (la hoja es opaca: nunca se leen dos textos a la vez).
+        static let slideDim = 0.08
         /// El revés de la hoja que se dobla: el mismo papel con esta fracción de su
         /// luz (más oscuro, como papel a contraluz; UIKit le suma su propio brillo).
         static let pageBack: CGFloat = 0.82
@@ -338,6 +350,13 @@ enum Theme {
         static let stagger: Double = 0.04
         /// Una hoja que cambia de alto: despacio y sin rebote.
         static let sheet = Animation.smooth(duration: 0.35)
+        /// Lo que se va: rápido y antes de que lo demás se acomode, para que nada
+        /// se cruce con algo que todavía se está desvaneciendo.
+        static let exit = Animation.easeOut(duration: 0.12)
+        /// Lo que entra espera a que se abra su lugar, y queda quieto en `enterSettle`
+        /// (lo que sigue, como la muestra de la hoja, empieza a moverse después).
+        static let enterDelay: Double = 0.1
+        static let enterSettle: Double = 0.55
         /// Barras de audio sonando: cada una a su ritmo según su alto.
         static func equalizer(_ height: Double) -> Animation {
             .easeInOut(duration: 0.45 + height * 0.2)

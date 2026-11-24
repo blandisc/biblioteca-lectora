@@ -80,7 +80,9 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
             let speed = gesture.velocity(in: view).x * (turning.forward ? -1 : 1)
             let passes = gesture.state == .ended
                 && (turning.progress > Theme.Reader.turnCommit || speed > Theme.Reader.turnFling)
-            settle(passes)
+            // La hoja sigue con la velocidad del dedo: sin frenón ni arrancón al soltar.
+            let limit = Theme.Reader.turnSpeedLimit
+            settle(passes, velocity: gesture.state == .ended ? min(max(speed / width, -limit), limit) : 0)
         default:
             break
         }
@@ -98,15 +100,15 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
 
     /// Cambia la forma del libro sin brinco: una foto de la página de ahora queda
     /// encima, el lector se acomoda debajo y, ya pintado, la foto se desvanece.
-    func dissolve(_ change: @escaping () -> Void) {
+    /// `change` avisa cuando el lector ya acomodó el libro (o se cansó de esperar).
+    func dissolve(_ change: @escaping (@escaping () -> Void) -> Void) {
         guard isViewLoaded, view.window != nil, turning == nil,
               !UIAccessibility.isReduceMotionEnabled,
-              let cover = page.view.snapshotView(afterScreenUpdates: false) else { change(); return }
+              let cover = page.view.snapshotView(afterScreenUpdates: false) else { change {}; return }
         cover.frame = page.view.frame
         cover.isUserInteractionEnabled = false
         view.addSubview(cover)
-        change()
-        DispatchQueue.main.asyncAfter(deadline: .now() + Theme.Reader.flowSettle) { [weak self] in
+        change { [weak self] in
             guard let self else { cover.removeFromSuperview(); return }
             self.webView.takeSnapshot(with: nil) { _, _ in
                 UIView.animate(withDuration: Theme.Reader.flowDissolve, delay: 0,
@@ -147,16 +149,22 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         guard turning === turn else { return }
         switch turn.style {
         case .slide where !turn.forward:
-            // Atrás, la hoja anterior entra desde la izquierda encima de la de ahora.
+            // Atrás, la hoja anterior entra desde la izquierda encima de la de ahora,
+            // que se va quedando a la sombra.
             if let incoming = page.view.snapshotView(afterScreenUpdates: true) {
                 incoming.frame = page.view.frame
                 incoming.isUserInteractionEnabled = false
                 shade(incoming)
+                turn.dim = dim(below: nil)
                 view.addSubview(incoming)
                 turn.incoming = incoming
             }
         case .slide:
-            if let cover = turn.cover { shade(cover) }
+            // Adelante, la página nueva sale de la sombra de la que se va.
+            if let cover = turn.cover {
+                shade(cover)
+                turn.dim = dim(below: cover)
+            }
         case .matte:
             turn.to = image(of: page.view, afterUpdates: true)
             let canvas = UIImageView(frame: page.view.frame)
@@ -168,19 +176,17 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         }
         turn.ready = true
         render()
-        if let passes = turn.pendingSettle { settle(passes) }
+        if let passes = turn.pendingSettle { settle(passes, velocity: turn.pendingVelocity) }
     }
 
-    /// Lleva la vuelta hasta el final (pasa) o de regreso (se queda), animada.
-    private func settle(_ passes: Bool) {
+    /// Lleva la vuelta hasta el final (pasa) o de regreso (se queda) con un resorte
+    /// sin rebote que arranca con `velocity` (fracción del ancho por segundo).
+    private func settle(_ passes: Bool, velocity: CGFloat = 0) {
         guard let turn = turning else { return }
-        guard turn.ready else { turn.pendingSettle = passes; return }
+        guard turn.ready else { turn.pendingSettle = passes; turn.pendingVelocity = velocity; return }
         let target: CGFloat = passes ? 1 : 0
-        let remaining = abs(target - turn.progress)
-        guard turn.style != .none, remaining > 0 else { finish(passes); return }
-        turn.animation = (from: turn.progress, to: target, start: CACurrentMediaTime(),
-                          duration: max((turn.style == .fade ? Theme.Reader.fadeDuration : Theme.Reader.turnDuration) * remaining,
-                                        Theme.Reader.turnMinimum))
+        guard turn.style != .none, turn.progress != target else { finish(passes); return }
+        turn.animation = (to: target, velocity: velocity, time: CACurrentMediaTime())
         let link = CADisplayLink(target: self, selector: #selector(step))
         link.add(to: .main, forMode: .common)
         self.link = link
@@ -188,12 +194,17 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
 
     @objc private func step() {
         guard let turn = turning, let animation = turn.animation else { link?.invalidate(); link = nil; return }
-        let elapsed = (CACurrentMediaTime() - animation.start) / animation.duration
-        let t = min(max(elapsed, 0), 1)
-        let eased = 1 - pow(1 - t, 3)
-        turn.progress = animation.from + (animation.to - animation.from) * eased
+        let now = CACurrentMediaTime()
+        let stiffness = turn.style == .fade ? Theme.Reader.fadeSpring : Theme.Reader.turnSpring
+        let (offset, velocity) = TurnMotion.step(offset: turn.progress - animation.to, velocity: animation.velocity,
+                                                 stiffness: stiffness, dt: now - animation.time)
+        turn.animation = (to: animation.to, velocity: velocity, time: now)
+        // Nunca más allá del final ni de regreso: una hoja no rebota.
+        turn.progress = min(max(animation.to + offset, 0), 1)
+        let done = abs(turn.progress - animation.to) < Theme.Reader.turnRest
+        if done { turn.progress = animation.to }
         render()
-        if t >= 1 {
+        if done {
             link?.invalidate()
             link = nil
             finish(animation.to == 1)
@@ -208,20 +219,24 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         case .none:
             break
         case .fade:
-            // Fundido suave: el texto se va despacio al principio y al final
-            // (curva en S) y se corre apenas hacia donde vas, sin brincar.
-            let soft = p * p * (3 - 2 * p)
-            let drift = Theme.Reader.fadeDrift * (turn.forward ? -soft : soft)
-            turn.cover?.alpha = 1 - soft
-            turn.cover?.transform = CGAffineTransform(translationX: drift, y: 0)
+            // Relevo: el texto de antes se va corriéndose hacia donde vas y, ya ido,
+            // llega el nuevo desde el otro lado. Nunca se leen los dos encimados.
+            let gone = TurnMotion.fadeOut(p), here = TurnMotion.fadeIn(p)
+            // Con «reducir movimiento» solo se funde, sin correrse.
+            let drift = UIAccessibility.isReduceMotionEnabled ? 0 : Theme.Reader.fadeDrift * (turn.forward ? -1 : 1)
+            turn.cover?.alpha = 1 - gone
+            turn.cover?.transform = CGAffineTransform(translationX: drift * gone, y: 0)
+            webView.alpha = here
+            webView.transform = CGAffineTransform(translationX: -drift * (1 - here), y: 0)
         case .slide:
-            // La hoja de arriba se va de lado y a la vez se desvanece.
+            // La hoja de arriba se va de lado, opaca como papel; la de abajo sale de
+            // la sombra (atrás, la de ahora se va quedando a la sombra).
             if turn.forward {
                 turn.cover?.transform = CGAffineTransform(translationX: -p * width, y: 0)
-                turn.cover?.alpha = 1 - p
+                turn.dim?.alpha = Theme.Reader.slideDim * (1 - p)
             } else {
                 turn.incoming?.transform = CGAffineTransform(translationX: -(1 - p) * width, y: 0)
-                turn.incoming?.alpha = p
+                turn.dim?.alpha = Theme.Reader.slideDim * p
             }
         case .matte:
             guard let from = turn.from, let to = turn.to else { return }
@@ -251,6 +266,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         turn.cover?.transform = .identity
         turn.incoming?.removeFromSuperview()
         turn.canvas?.removeFromSuperview()
+        turn.dim?.removeFromSuperview()
         reader?.turnInstantly(forward: !turn.forward) { [weak self] _ in
             DispatchQueue.main.async { self?.clear() }
         }
@@ -263,6 +279,9 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         turn.cover?.removeFromSuperview()
         turn.incoming?.removeFromSuperview()
         turn.canvas?.removeFromSuperview()
+        turn.dim?.removeFromSuperview()
+        webView.alpha = 1
+        webView.transform = .identity
         turning = nil
     }
 
@@ -275,6 +294,17 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         sheet.layer.shadowRadius = Theme.Reader.slideShadowRadius
         sheet.layer.shadowOffset = .zero
         sheet.layer.shadowPath = UIBezierPath(rect: sheet.bounds).cgPath
+    }
+
+    /// Una sombra pareja sobre la página de abajo: justo debajo de `sheet` o, sin
+    /// ella, encima de todo (lo que entre después queda sobre la sombra).
+    private func dim(below sheet: UIView?) -> UIView {
+        let dim = UIView(frame: page.view.frame)
+        dim.backgroundColor = .black
+        dim.alpha = 0
+        dim.isUserInteractionEnabled = false
+        if let sheet, sheet.superview === view { view.insertSubview(dim, belowSubview: sheet) } else { view.addSubview(dim) }
+        return dim
     }
 
     private func image(of source: UIView, afterUpdates: Bool) -> CIImage? {
@@ -307,11 +337,15 @@ private final class PageTurn {
     /// Ya está la página nueva debajo y las piezas armadas.
     var ready = false
     var pendingSettle: Bool?
-    var animation: (from: CGFloat, to: CGFloat, start: CFTimeInterval, duration: TimeInterval)?
+    var pendingVelocity: CGFloat = 0
+    /// El resorte en curso: hacia dónde va, su velocidad y la hora del último cuadro.
+    var animation: (to: CGFloat, velocity: CGFloat, time: CFTimeInterval)?
     /// La foto de la página de antes.
     var cover: UIView?
     /// Deslizar atrás: la foto de la página que entra.
     var incoming: UIView?
+    /// Deslizar: la sombra sobre la página de abajo.
+    var dim: UIView?
     /// Hoja mate: las dos páginas y el dibujo de la hoja doblada.
     var from: CIImage?
     var to: CIImage?

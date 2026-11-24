@@ -330,6 +330,29 @@ final class DesignRulesTests: XCTestCase {
         XCTAssertTrue(reader.contains("collapse(pageCFI, true)"), "reader.js debe comparar el marcador con el final de la página")
     }
 
+    /// 24 nov 2026: al deslizar, la hoja se volvía transparente mientras se iba y en el
+    /// fundido los dos textos se mezclaban: a media vuelta se leían dos páginas encimadas.
+    /// Al pasar de página nunca se leen dos textos a la vez: deslizar mueve papel opaco
+    /// (solo se aclara la sombra de abajo) y el fundido es un relevo (`TurnMotion`).
+    func testPagesNeverShowTwoTextsAtOnce() {
+        let curl = Self.sources("App/Shared/Reader").first { $0.path.hasSuffix("PageCurl.swift") }?.text ?? ""
+        let components = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }?.text ?? ""
+        func branch(_ text: String, _ start: String, _ end: String) -> String {
+            guard let from = text.range(of: start), let to = text.range(of: end, range: from.upperBound..<text.endIndex) else { return "" }
+            return String(text[from.upperBound..<to.lowerBound])
+        }
+        let slide = branch(curl, "case .slide:\n            // La hoja de arriba", "case .matte:")
+        XCTAssertFalse(slide.isEmpty, "No encontré cómo se desliza la hoja en PageCurl.swift")
+        XCTAssertFalse(slide.contains("cover?.alpha") || slide.contains("incoming?.alpha"),
+                       "Deslizar: la hoja que se mueve es opaca; aclara la sombra de abajo (turn.dim), no la hoja")
+        let fade = branch(curl, "case .fade:\n            // Relevo", "case .slide:")
+        XCTAssertTrue(fade.contains("TurnMotion.fadeOut") && fade.contains("TurnMotion.fadeIn"),
+                      "Fundido: relevo con TurnMotion.fadeOut y fadeIn, no los dos textos a la vez")
+        let preview = branch(components, "case .slide:\n            // Opaca", "case .none:")
+        XCTAssertTrue(preview.contains("TurnMotion.fadeOut") && !preview.contains("opacity(Theme.Emphasis.rest - p)\n"),
+                      "La muestra de «Aa» se mueve igual que la hoja de verdad (TurnMotion)")
+    }
+
     /// 30 oct 2026: Cinzel solo para la marca y los rótulos (BrandMark, SectionLabel).
     func testRomanCapsOnlyForMarkAndLabels() {
         check(hits(#"\.brandMark|\.sectionLabel"#, in: Self.screens), "Cinzel solo a través de BrandMark y SectionLabel")

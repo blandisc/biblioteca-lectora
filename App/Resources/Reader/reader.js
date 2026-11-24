@@ -497,6 +497,16 @@ window.lectora = {
         ])
         return pageCFI !== before
     },
+    // Después de cambiar de forma (páginas ↔ continuo): espera a que el libro se
+    // acomode y quede pintado, o hasta `ms` si no avisa.
+    async settled(ms) {
+        if (!view) return
+        await new Promise(resolve => {
+            view.addEventListener('relocate', resolve, { once: true })
+            setTimeout(resolve, ms)
+        })
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    },
     goTo: target => { navigation = 'jump'; return view?.goTo(target) },
     goToFraction: fraction => { navigation = 'jump'; return view?.goToFraction(fraction) },
     // Busca en todo el libro y manda los resultados (con su capítulo y el texto alrededor).

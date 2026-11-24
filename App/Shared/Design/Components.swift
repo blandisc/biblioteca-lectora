@@ -163,67 +163,123 @@ extension IconTile where Icon == AnyView {
     }
 }
 
-/// Una hoja chiquita que pasa con el estilo elegido, en bucle, como en el libro:
-/// la de abajo es la página siguiente (otros renglones, empieza con párrafo).
-/// Hoja: se dobla desde la orilla derecha y se ve el revés más oscuro.
-/// Deslizar: se va de lado. Fundido: una se desvanece mientras aparece la otra.
-/// Solo se mueve la elegida.
+/// Cómo se mueve una hoja que pasa: un resorte sin rebote (amortiguado justo). Sale
+/// de quieta sin tirón y, si la soltaste con el dedo, sigue con tu misma velocidad.
+/// Lo usan la hoja de verdad (`ReaderPagesController`) y su muestra en «Aa».
+enum TurnMotion {
+    /// Dónde va (0 → 1) a los `t` segundos, saliendo de quieta.
+    static func position(at t: Double, stiffness: Double) -> Double {
+        let (x, _) = step(offset: -1, velocity: 0, stiffness: stiffness, dt: t)
+        return 1 + x
+    }
+
+    /// Un paso del resorte: `offset` es cuánto falta (con signo) y `velocity` en
+    /// unidades por segundo. Exacto para cualquier `dt`: no se descompone si un cuadro tarda.
+    static func step(offset: Double, velocity: Double, stiffness: Double, dt: Double) -> (Double, Double) {
+        let w = stiffness, decay = exp(-w * dt), carry = velocity + w * offset
+        return ((offset + carry * dt) * decay, (velocity - w * carry * dt) * decay)
+    }
+
+    /// Fundido como relevo: el texto de antes se va en la primera parte…
+    static func fadeOut(_ p: Double) -> Double { smooth(p / Theme.Reader.fadeSpan) }
+    /// …y el nuevo llega en la última, sin que se lean los dos a la vez.
+    static func fadeIn(_ p: Double) -> Double { smooth(1 - (1 - p) / Theme.Reader.fadeSpan) }
+
+    private static func smooth(_ x: Double) -> Double {
+        let c = min(max(x, 0), 1)
+        return c * c * (3 - 2 * c)
+    }
+}
+
+/// Una hoja chiquita que pasa con el estilo elegido, en bucle, como en el libro y
+/// con la misma curva que la hoja de verdad (`TurnMotion`): la de abajo es la
+/// página siguiente (otros renglones, empieza con párrafo) y, al terminar, pasa a
+/// ser la de arriba: el bucle nunca salta de regreso.
+/// Hoja: se dobla desde la orilla derecha, con revés de papel y sombra en la de abajo.
+/// Deslizar: se va de lado, opaca, y la de abajo sale de la sombra. Fundido: relevo,
+/// el texto se va y llega el otro. Solo se mueve la elegida, y empieza en cuanto la eliges.
 struct TurnPreview: View {
     let style: ReaderTurnStyle
     let active: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let size = Theme.Size.turnPreview
-        TimelineView(.animation(paused: !active)) { timeline in
-            let p = active ? progress(at: timeline.date) : 0
+        let moving = active && !reduceMotion
+        TimelineView(.animation(paused: !moving)) { timeline in
+            let (p, odd) = moving ? progress(at: timeline.date) : (0, false)
             ZStack {
-                page(next: true)
-                turned(page(next: false), p, width: size.width)
+                page(next: !odd, lines: style == .fade ? TurnMotion.fadeIn(p) : Theme.Emphasis.rest)
+                    .overlay { if style == .slide { Theme.ink.opacity(Theme.Reader.slideDim * (Theme.Emphasis.rest - p)) } }
+                turned(page(next: odd), p, width: size.width)
             }
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous))
         }
         .frame(width: size.width, height: size.height)
         .accessibilityHidden(true)
     }
 
-    @State private var start = Date()
+    /// La primera vuelta sale casi en cuanto la eliges: no hay que esperar la pausa.
+    @State private var start = Date().addingTimeInterval(-Theme.Reader.previewLead)
 
-    /// La vuelta en bucle: quieta, pasa, se queda un momento y vuelve a empezar.
-    private func progress(at date: Date) -> Double {
-        let pause = Theme.Reader.previewPause, turn = Theme.Reader.previewTurn, hold = Theme.Reader.previewReturn
-        let t = date.timeIntervalSince(start).truncatingRemainder(dividingBy: pause + turn + hold)
-        if t < pause { return 0 }
-        if t >= pause + turn { return 1 }
-        if style == .none { return 1 }
-        let x = (t - pause) / turn
-        return x * x * (3 - 2 * x)
+    /// La vuelta en bucle: quieta, pasa y la de abajo queda arriba. `odd` dice qué
+    /// página va arriba en esta vuelta (se turnan).
+    private func progress(at date: Date) -> (Double, Bool) {
+        let pause = Theme.Reader.previewPause, period = pause + Theme.Reader.previewTurn
+        let elapsed = max(date.timeIntervalSince(start), 0)
+        let odd = Int(elapsed / period) % 2 == 1
+        let t = elapsed.truncatingRemainder(dividingBy: period) - pause
+        guard t > 0 else { return (0, odd) }
+        if style == .none { return (1, odd) }
+        return (TurnMotion.position(at: t, stiffness: style == .fade ? Theme.Reader.fadeSpring : Theme.Reader.turnSpring), odd)
     }
 
     @ViewBuilder
     private func turned(_ content: some View, _ p: Double, width: CGFloat) -> some View {
         switch style {
         case .matte:
-            // Lo que queda de la hoja, y su revés doblado encima de la orilla.
-            let left = width * (Theme.Emphasis.rest - p)
-            let fold = min(left, width * p) * Theme.Reader.previewFold
+            // El doblez corre de la orilla derecha a la izquierda; lo que ya pasó
+            // se ve encima como revés de papel, más oscuro junto al doblez.
+            let crease = width * (Theme.Emphasis.rest - p)
+            let fold = min(crease, width * p) * Theme.Reader.previewFold
             content
-                .mask(alignment: .leading) { Rectangle().frame(width: max(left, 0)) }
+                .mask(alignment: .leading) { Rectangle().frame(width: max(crease, 0)) }
+                .overlay(alignment: .leading) {
+                    // La sombra que la hoja levantada deja sobre la de abajo.
+                    LinearGradient(colors: [Theme.ink.opacity(Theme.Reader.previewShadow * (Theme.Emphasis.rest - p)), .clear],
+                                   startPoint: .leading, endPoint: .trailing)
+                        .frame(width: Theme.Reader.previewCast)
+                        .offset(x: crease)
+                }
                 .overlay(alignment: .leading) {
                     RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
-                        .fill(Theme.secondaryInk)
+                        .fill(Theme.paper)
+                        .overlay {
+                            LinearGradient(colors: [.clear, Theme.ink.opacity(Theme.Reader.previewShadow)],
+                                           startPoint: .leading, endPoint: .trailing)
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
+                                .strokeBorder(Theme.secondaryInk, lineWidth: Theme.Size.hairline)
+                        }
                         .frame(width: fold)
-                        .offset(x: max(left - fold, 0))
-                        .shadow(color: Theme.ink.opacity(Theme.Reader.previewShadow), radius: Theme.Size.hairline)
+                        .offset(x: max(crease - fold, 0))
+                        .opacity(fold > 0 ? Theme.Emphasis.rest : 0)
                 }
         case .slide:
-            content.offset(x: -p * width * Theme.Reader.previewSlide)
+            // Opaca, como papel: nunca se leen dos textos encimados.
+            content.offset(x: -p * width)
                 .shadow(color: Theme.ink.opacity(Theme.Reader.previewShadow), radius: Theme.Size.hairline)
-        case .fade, .none:
+        case .fade:
+            content.opacity(Theme.Emphasis.rest - TurnMotion.fadeOut(p))
+        case .none:
             content.opacity(Theme.Emphasis.rest - p)
         }
     }
 
     /// Una página con renglones; la siguiente empieza con sangría y termina corta.
-    private func page(next: Bool) -> some View {
+    /// `lines`: qué tanto se ven los renglones (en el fundido llegan después del papel).
+    private func page(next: Bool, lines: Double = 1) -> some View {
         RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
             .fill(Theme.paper)
             .overlay {
@@ -234,7 +290,7 @@ struct TurnPreview: View {
                 VStack(alignment: .trailing, spacing: 0) {
                     ForEach(0..<Theme.Reader.previewLines, id: \.self) { line in
                         let short = next ? line == 0 : line == Theme.Reader.previewLastLine
-                        Capsule().fill(Theme.secondaryInk)
+                        Capsule().fill(Theme.secondaryInk.opacity(lines))
                             .frame(height: Theme.Size.hairline)
                             .padding(next && line == 0 ? .leading : .trailing, short ? Theme.Space.xs : 0)
                             .frame(maxHeight: .infinity)

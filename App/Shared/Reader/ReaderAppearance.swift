@@ -217,6 +217,8 @@ struct ReaderAppearanceSheet: View {
     /// El modo de la app: con «Automático», el tema sigue al claro u oscuro de iOS.
     @Environment(\.colorScheme) private var appScheme
     @State private var contentHeight = Theme.Size.appearanceSheet
+    /// Ya se abrió la hoja: lo que aparezca de aquí en adelante entra animado.
+    @State private var opened = false
 
     private var palette: ReaderPalette {
         ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: appScheme == .dark)
@@ -233,6 +235,8 @@ struct ReaderAppearanceSheet: View {
             .sensoryFeedback(.selection, trigger: theme)
             .sensoryFeedback(.selection, trigger: font)
             .sensoryFeedback(.selection, trigger: turnStyle)
+            .sensoryFeedback(.selection, trigger: flow)
+            .onAppear { opened = true }
             // La hoja mide lo que mide su contenido: sin espacio muerto abajo.
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                 withAnimation(Theme.Motion.sheet) { contentHeight = height }
@@ -251,24 +255,6 @@ struct ReaderAppearanceSheet: View {
         #endif
     }
 
-    /// Cómo se pasa la hoja: cuatro mosaicos con una hoja chiquita; la elegida
-    /// pasa en bucle con su estilo, para verlo sin leer.
-    private var turnPicker: some View {
-        HStack(spacing: Theme.Space.s) {
-            ForEach(ReaderTurnStyle.allCases) { item in
-                Button { turnStyle = item } label: {
-                    IconTile(title: item.name, selected: item == turnStyle) {
-                        TurnPreview(style: item, active: item == turnStyle)
-                            .id(item == turnStyle) // al elegirla, empieza su vuelta desde cero
-                    }
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Pasar la hoja: \(item.name)")
-                .accessibilityAddTraits(item == turnStyle ? .isSelected : [])
-            }
-        }
-        .transition(.opacity.combined(with: .offset(y: -Theme.Space.s)))
-    }
 
     private let fontColumns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
@@ -306,16 +292,22 @@ struct ReaderAppearanceSheet: View {
                 sizeRow
             }
 
-            // Página: páginas o continuo y, en páginas, cómo se pasa la hoja. Al
-            // cambiar, la fila de la hoja se desvanece y la hoja «Aa» se acorta
-            // solo por abajo: nada de arriba se mueve.
+            // Página: páginas o continuo y, en páginas, cómo se pasa la hoja. La
+            // hoja «Aa» cambia de alto con la misma curva que se abre o cierra el
+            // hueco, así lo de abajo no se mueve en la pantalla. Al irse, la fila se
+            // desvanece rápido, antes de que el carril le pase encima; al volver,
+            // primero se abre su lugar y luego entran los mosaicos en cascada.
             VStack(alignment: .leading, spacing: Theme.Space.s) {
                 SectionLabel(text: "Página")
                 SegmentedChoice(options: ReaderFlow.allCases, selection: $flow) { item in
                     Label(item.name, systemImage: item.symbol)
                 }
                 VStack(spacing: 0) {
-                    if showsTurns { turnPicker }
+                    if showsTurns {
+                        TurnStylePicker(selection: $turnStyle, entering: opened)
+                            .transition(.asymmetric(insertion: .identity,
+                                                    removal: .opacity.animation(Theme.Motion.exit)))
+                    }
                 }
                 .animation(Theme.Motion.sheet, value: showsTurns)
             }
@@ -413,6 +405,51 @@ struct ReaderAppearanceSheet: View {
                     Text("Aa").font(.rowTitle.weight(.medium))
                         .foregroundStyle(palette.textColor)
                 }
+        }
+    }
+}
+
+/// Cómo se pasa la hoja: cuatro mosaicos con una hoja chiquita; la elegida pasa
+/// en bucle con su estilo, para verlo sin leer. Si la fila aparece con la hoja ya
+/// abierta (al volver a «Páginas»), los mosaicos suben un poco y aparecen uno tras
+/// otro, igual que los del pie, y la muestra elegida empieza a pasar cuando ya
+/// están quietos: nunca se mueven dos cosas a la vez en el mismo mosaico.
+private struct TurnStylePicker: View {
+    @Binding var selection: ReaderTurnStyle
+    @State private var appeared: Bool
+    @State private var settled: Bool
+
+    init(selection: Binding<ReaderTurnStyle>, entering: Bool) {
+        _selection = selection
+        _appeared = State(initialValue: !entering)
+        _settled = State(initialValue: !entering)
+    }
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            ForEach(Array(ReaderTurnStyle.allCases.enumerated()), id: \.element) { index, item in
+                Button { selection = item } label: {
+                    IconTile(title: item.name, selected: item == selection) {
+                        TurnPreview(style: item, active: item == selection && settled)
+                            // Al elegirla (o al quedar quieta), empieza su vuelta desde cero.
+                            .id([item == selection, settled])
+                    }
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel("Pasar la hoja: \(item.name)")
+                .accessibilityAddTraits(item == selection ? .isSelected : [])
+                .opacity(appeared ? Theme.Emphasis.rest : 0)
+                .offset(y: appeared ? 0 : Theme.Space.s)
+                .animation(Theme.Motion.sheet.delay(Theme.Motion.enterDelay + Theme.Motion.stagger * Double(index)),
+                           value: appeared)
+            }
+        }
+        .animation(Theme.Motion.select, value: selection)
+        .onAppear { appeared = true }
+        .task {
+            guard !settled else { return }
+            try? await Task.sleep(for: .seconds(Theme.Motion.enterSettle))
+            settled = true
         }
     }
 }

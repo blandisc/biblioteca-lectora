@@ -208,7 +208,17 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         guard isReady else { return }
         #if os(iOS)
         // Cambiar de forma con la página de antes desvaneciéndose encima, sin brinco.
-        if changed, let pages { pages.dissolve { [weak self] in self?.evaluate(script) }; return }
+        if changed, let pages {
+            pages.dissolve { [weak self] settled in
+                guard let self, let webView = self.webView else { settled(); return }
+                self.evaluate(script)
+                // La foto se va cuando el libro ya está acomodado, no a un tiempo fijo.
+                webView.callAsyncJavaScript("await window.lectora.settled(ms)",
+                                            arguments: ["ms": Int(Theme.Reader.flowSettle * 1000)],
+                                            in: nil, in: .page) { _ in settled() }
+            }
+            return
+        }
         #endif
         evaluate(script)
     }
