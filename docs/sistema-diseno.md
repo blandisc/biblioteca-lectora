@@ -227,20 +227,20 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   el título del sistema, 35 pt más abajo y con 16–20 pt de margen).
 - Lector: los controles de vidrio tienen el mismo margen (`Reader.chromeInset`, 16 pt)
   arriba y abajo; las zonas de toque izquierda y derecha son franjas iguales
-  (`Reader.edgeZone`, 28 %). Sin controles, el folio deja `Reader.folioInset` (60) a los lados. El revés de la hoja es el mismo papel con `Reader.pageBack` (82 %) de su luz. El lomo del libro es
+  (`Reader.edgeZone`, 28 %). Sin controles, el folio deja `Reader.folioInset` (60) a los lados. El revés de la hoja es el mismo papel con `Reader.pageBack` (93 %, papel y no cartón) de su luz. El lomo del libro es
   una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
   (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
   siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
   En páginas, el texto deja `Reader.pageMarginTop` (40 pt) arriba y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
-  sobresale `Reader.folioBand` (28 pt) y se desvanece en `Reader.folioFade` (56 pt) con una curva (`Reader.folioFadeSteps`): la letra se sigue leyendo mientras se va. En continuo el capítulo sube bajo la isla (`Reader.folioTop`, medido desde la orilla segura de cada iPhone). El folio
+  es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`): la letra se sigue leyendo mientras se va. En continuo el capítulo sube bajo la isla (`Reader.folioTop`, medido desde la orilla segura de cada iPhone). El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tira (`Grabber`, barra, capítulo y página con `QuietIconLabelStyle`);
   subiéndola, o tocando el pie, aparecen cuatro `FooterPreview` (qué dice el pie, como se leerá) y `SessionLine`. Tocando el
   contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra
-  `Reader.curlShadow`, el texto se transparenta en el revés `Reader.curlShowThrough` 5 %, dibujada a
+  `Reader.curlShadow`, el texto se transparenta en el revés como a contraluz, `Reader.curlShowThrough` 22 % y apenas suave (`Reader.curlShowThroughBlur`), dibujada a
   `Reader.curlScale` 2×), Deslizar (sombra `Reader.slideShadow` y `Reader.slideShadowRadius`),
   Fundido y Sin animación. La hoja se mueve con un resorte sin rebote (`TurnMotion`, fuerza
   `Reader.turnSpring`, unos 0,45 s desde quieta; el fundido, `Reader.fadeSpring`): al soltar sigue
@@ -250,7 +250,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   sombra (`Reader.slideDim`); el fundido es un relevo (el texto de antes se va en la primera
   `Reader.fadeSpan` y el nuevo llega en la última, corridos `Reader.fadeDrift`).
   Antes de animar se espera a que WebKit pinte la página nueva. Al cambiar entre páginas y continuo,
-  la página de antes se desvanece encima (`Reader.flowDissolve`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
+  relevo: la página de antes se va (`Reader.flowOut`) y la nueva llega subiendo apenas (`Reader.flowIn`, `Reader.flowRise`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y

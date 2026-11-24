@@ -15,6 +15,9 @@ enum LaunchOptions {
     /// del primer libro); en el Cuaderno, `note` (la primera nota), `highlights` o
     /// `settings` (Ajustes); en el lector, `contents`, `booksearch`, `marks` o `appearance` («Aa»).
     static var screen: String? { UserDefaults.standard.string(forKey: "screenshot.screen") }
+    /// Revisar animaciones en video: en el lector, `turns` pasa páginas solo
+    /// (adelante, adelante, atrás) y `flow` abre «Aa» y cambia Páginas↔Continuo.
+    static var demo: String? { UserDefaults.standard.string(forKey: "screenshot.demo") }
     /// Importar los libros de `Documents/Semilla` al arrancar (biblioteca vacía).
     static var seed: Bool { UserDefaults.standard.bool(forKey: "screenshot.seed") }
 }

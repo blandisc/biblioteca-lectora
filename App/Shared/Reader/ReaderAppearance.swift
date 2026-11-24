@@ -216,9 +216,16 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.turn) private var turnStyle: ReaderTurnStyle = .matte
     /// El modo de la app: con «Automático», el tema sigue al claro u oscuro de iOS.
     @Environment(\.colorScheme) private var appScheme
-    @State private var contentHeight = Theme.Size.appearanceSheet
+    /// El alto de la hoja «Aa»: el de su contenido. Para cambiarlo animado se pasa
+    /// de un alto al otro (como al arrastrarla); asignado directo, iOS lo cambia de golpe.
+    @State private var detent = PresentationDetent.height(Theme.Size.appearanceSheet)
+    @State private var detents: Set<PresentationDetent> = [.height(Theme.Size.appearanceSheet)]
+    @State private var measured = false
     /// Ya se abrió la hoja: lo que aparezca de aquí en adelante entra animado.
     @State private var opened = false
+    /// La fila de la hoja ocupa su lugar / ya se desvaneció (se va en dos tiempos).
+    @State private var turnsShown = ReaderFlow.current == .paged
+    @State private var turnsFaded = false
 
     private var palette: ReaderPalette {
         ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: appScheme == .dark)
@@ -238,13 +245,50 @@ struct ReaderAppearanceSheet: View {
             .sensoryFeedback(.selection, trigger: flow)
             .onAppear { opened = true }
             // La hoja mide lo que mide su contenido: sin espacio muerto abajo.
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
-                withAnimation(Theme.Motion.sheet) { contentHeight = height }
-            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { resize(to: $0) }
             // Pegado arriba: si la hoja aún es más alta, el sobrante queda abajo.
             .frame(maxHeight: .infinity, alignment: .top)
-            .presentationDetents([.height(contentHeight)])
+            .presentationDetents(detents, selection: $detent)
             .presentationDragIndicator(.visible)
+    }
+
+    private func resize(to height: CGFloat) {
+        let target = PresentationDetent.height(height)
+        guard target != detent else { return }
+        // Al abrir, sin animación: la hoja sale ya con su alto.
+        guard measured else { measured = true; detents = [target]; detent = target; return }
+        detents = [detent, target]
+        Task { @MainActor in
+            withAnimation(Theme.Motion.sheet) { detent = target }
+            try? await Task.sleep(for: .seconds(Theme.Motion.sheetSettle))
+            if detent == target { detents = [target] }
+        }
+    }
+
+    /// Dos tiempos, para que nada se cruce: al irse, la fila se desvanece en su
+    /// lugar y después se cierra el hueco (y la hoja «Aa» se acorta) con la misma
+    /// curva; al volver, se abre el hueco y los mosaicos entran solos en cascada.
+    private func moveTurns(_ shows: Bool) {
+        if shows {
+            turnsFaded = false
+            withAnimation(Theme.Motion.sheet) { turnsShown = true }
+            return
+        }
+        withAnimation(Theme.Motion.exit) { turnsFaded = true }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(Theme.Motion.exitDuration))
+            guard !showsTurns else { return }
+            withAnimation(Theme.Motion.sheet) { turnsShown = false }
+            turnsFaded = false
+        }
+    }
+
+    private var showsTurnsHere: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
     }
 
     private var showsTurns: Bool {
@@ -303,14 +347,14 @@ struct ReaderAppearanceSheet: View {
                     Label(item.name, systemImage: item.symbol)
                 }
                 VStack(spacing: 0) {
-                    if showsTurns {
+                    if turnsShown && showsTurnsHere {
                         TurnStylePicker(selection: $turnStyle, entering: opened)
-                            .transition(.asymmetric(insertion: .identity,
-                                                    removal: .opacity.animation(Theme.Motion.exit)))
+                            .opacity(turnsFaded ? 0 : Theme.Emphasis.rest)
+                            .transition(.identity)
                     }
                 }
-                .animation(Theme.Motion.sheet, value: showsTurns)
             }
+            .onChange(of: showsTurns) { _, shows in moveTurns(shows) }
 
             SectionLabel(text: "Fondo").padding(.bottom, -Theme.Space.s)
             HStack {

@@ -246,9 +246,11 @@ enum Theme {
         /// cada uno corrido `fadeDrift` puntos hacia donde vas.
         static let fadeSpring = 15.0
         static let fadeSpan = 0.6
-        /// Al cambiar entre páginas y continuo: la página de antes se desvanece encima
-        /// cuando la nueva ya está acomodada debajo.
-        static let flowDissolve: TimeInterval = 0.4
+        /// Al cambiar entre páginas y continuo, relevo: la página de antes se va en
+        /// `flowOut` y, ya acomodada, la nueva llega en `flowIn` subiendo `flowRise` puntos.
+        static let flowOut: TimeInterval = 0.14
+        static let flowIn: TimeInterval = 0.32
+        static let flowRise: CGFloat = 8
         /// Lo más que se espera a que el lector acomode el libro al cambiar de forma
         /// (si avisa antes, no se espera de más).
         static let flowSettle: TimeInterval = 0.7
@@ -280,7 +282,9 @@ enum Theme {
         static let curlRadius: CGFloat = 0.16
         static let curlTilt = 0.1
         static let curlShadow: Float = 0.55
-        static let curlShowThrough: CGFloat = 0.05
+        static let curlShowThrough: CGFloat = 0.22
+        /// Lo que se abre la tinta del revés (píxeles de la foto, a 2×).
+        static let curlShowThroughBlur = 0.9
         /// Resolución del dibujo de la hoja mientras se dobla (2×: fluido y nítido).
         static let curlScale: CGFloat = 2
         /// Deslizar: la sombra de la hoja que se mueve.
@@ -291,7 +295,7 @@ enum Theme {
         static let slideDim = 0.08
         /// El revés de la hoja que se dobla: el mismo papel con esta fracción de su
         /// luz (más oscuro, como papel a contraluz; UIKit le suma su propio brillo).
-        static let pageBack: CGFloat = 0.82
+        static let pageBack: CGFloat = 0.93
         /// La vibración al pasar a la página siguiente: muy ligera (0 a 1).
         static let turnHaptic: CGFloat = 0.45
         /// Aire arriba y abajo del texto en páginas: deja el capítulo y el pie
@@ -300,13 +304,11 @@ enum Theme {
         static let pageMarginTop: CGFloat = 40
         /// Abajo más aire: el pie y el contador van ahí, sobre la orilla del iPhone.
         static let pageMarginBottom: CGFloat = 68
-        /// En continuo, el papel bajo el folio se desvanece en este alto, con una
+        /// En continuo, el papel es sólido hasta la orilla del folio y después se
+        /// desvanece hacia el texto en este alto, con una
         /// curva de `folioFadeSteps` tramos (se aclara pronto: la letra se sigue viendo).
         static let folioFade: CGFloat = 56
         static let folioFadeSteps = 6
-        /// Cuánto sobresale la franja de papel del folio hacia el texto (en continuo):
-        /// la parte sólida es lo que sobra después del desvanecido.
-        static let folioBand: CGFloat = 28
         /// En continuo, el alto del renglón del capítulo bajo la orilla segura (en
         /// páginas es `pageMarginTop`): más chico, el capítulo sube hacia la isla.
         static let folioTop: CGFloat = 18
@@ -355,9 +357,12 @@ enum Theme {
         static let stagger: Double = 0.04
         /// Una hoja que cambia de alto: despacio y sin rebote.
         static let sheet = Animation.smooth(duration: 0.35)
+        /// Lo que se deja a una hoja para terminar de cambiar de alto.
+        static let sheetSettle: Double = 0.6
         /// Lo que se va: rápido y antes de que lo demás se acomode, para que nada
         /// se cruce con algo que todavía se está desvaneciendo.
-        static let exit = Animation.easeOut(duration: 0.12)
+        static let exit = Animation.easeOut(duration: exitDuration)
+        static let exitDuration: Double = 0.12
         /// Lo que entra espera a que se abra su lugar, y queda quieto en `enterSettle`
         /// (lo que sigue, como la muestra de la hoja, empieza a moverse después).
         static let enterDelay: Double = 0.1

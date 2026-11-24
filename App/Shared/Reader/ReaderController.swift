@@ -46,6 +46,11 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     @Published private(set) var searchProgress: Double?
     @Published private(set) var searchedQuery = ""
     @Published private(set) var location: Location?
+    /// Lo que dice el folio (capítulo y pie): mientras la hoja da vuelta se queda
+    /// la página de antes; cambia cuando la nueva ya está a la vista, no antes.
+    @Published private(set) var folioLocation: Location?
+    /// La hoja está dando vuelta (lo marca `ReaderPagesController`).
+    var isTurning = false { didSet { if !isTurning { folioLocation = location } } }
     /// CFI de los marcadores que caen en la página visible. Lo calcula reader.js
     /// comparando cada marcador con el principio y el final de la página, así
     /// la cinta sigue ahí aunque la página se vuelva a paginar (letra, controles).
@@ -415,6 +420,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 excerpt: body["excerpt"] as? String,
                 chapterWordsLeft: body["chapterLeft"] as? Int
             )
+            if !isTurning { folioLocation = location }
             session?.pageShown(words: body["words"] as? Int ?? 0,
                                fraction: fraction,
                                jumped: body["jumped"] as? Bool ?? false)

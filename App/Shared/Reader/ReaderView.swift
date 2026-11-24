@@ -24,6 +24,9 @@ struct ReaderView: View {
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @ObservedObject private var library = LibraryStore.shared
     @State private var showsAppearance = false
+    #if DEBUG
+    @State private var demoStarted = false
+    #endif
     @State private var noteText = ""
     @AppStorage(ReaderKeys.font) private var font: ReaderFont = .newYork
     @AppStorage(ReaderKeys.scale) private var scale = 1.0
@@ -230,6 +233,9 @@ struct ReaderView: View {
                 tools = .search
             default: break
             }
+            #if DEBUG
+            runDemo()
+            #endif
         }
         .onChange(of: bookmarkCFIs, initial: true) { _, cfis in controller.setBookmarks(cfis) }
         .onChange(of: palette) { _, _ in applyStyle() }
@@ -245,7 +251,7 @@ struct ReaderView: View {
     private var chrome: some View {
         ZStack {
             if !showsChrome {
-                ReadingFolio(title: title, location: controller.location, footerText: footerText,
+                ReadingFolio(title: title, location: controller.folioLocation, footerText: footerText,
                              color: palette.textColor,
                              paper: flow == .scrolled ? palette.background : nil,
                              onFooter: {
@@ -281,10 +287,10 @@ struct ReaderView: View {
     /// Lo que diría el pie con cada opción: el dato grande y su leyenda
     /// («9 min» · «para terminar el capítulo»). `nil` si aún no hay con qué calcularlo.
     private func footerParts(_ kind: ReaderFooter) -> (value: String, caption: String)? {
-        let fraction = controller.location?.fraction ?? 0
+        let fraction = controller.folioLocation?.fraction ?? 0
         switch kind {
         case .chapterTime:
-            guard let words = controller.location?.chapterWordsLeft else { return nil }
+            guard let words = controller.folioLocation?.chapterWordsLeft else { return nil }
             let perMinute = sessions.usualWordsPerMinute ?? SessionStore.defaultWordsPerMinute
             let seconds = Double(words) / perMinute * 60
             return (seconds < 60 ? "Menos de 1 min" : ReadingFormat.duration(seconds), "para terminar el capítulo")
@@ -292,7 +298,7 @@ struct ReaderView: View {
             guard let bookID, let seconds = sessions.remaining(forBook: bookID, progress: fraction) else { return nil }
             return (seconds < 60 ? "Menos de 1 min" : ReadingFormat.duration(seconds), "para terminar el libro")
         case .page:
-            guard let page = controller.location?.page, let count = controller.location?.pageCount, count > 0 else { return nil }
+            guard let page = controller.folioLocation?.page, let count = controller.folioLocation?.pageCount, count > 0 else { return nil }
             return ("Página \(page)", "de \(count)")
         case .percent:
             return (fraction.percentText, "del libro")
@@ -314,8 +320,8 @@ struct ReaderView: View {
 
     /// El pie según lo que elegiste; si no hay con qué calcularlo, el porcentaje.
     private var footerText: String {
-        if footer == .percent { return (controller.location?.fraction ?? 0).percentText }
-        guard let parts = footerParts(footer) else { return (controller.location?.fraction ?? 0).percentText }
+        if footer == .percent { return (controller.folioLocation?.fraction ?? 0).percentText }
+        guard let parts = footerParts(footer) else { return (controller.folioLocation?.fraction ?? 0).percentText }
         return "\(parts.value) \(parts.caption)"
     }
 
@@ -364,6 +370,33 @@ struct ReaderView: View {
             break
         }
     }
+
+    #if DEBUG
+    /// Para revisar animaciones en video (`-screenshot.demo turns|flow`): pasa
+    /// páginas o cambia de modo solo, sin tocar la pantalla. Solo en Debug.
+    private func runDemo() {
+        guard !demoStarted, let demo = LaunchOptions.demo else { return }
+        demoStarted = true
+        Task { @MainActor in
+            // Que el libro termine de pintarse antes de empezar.
+            try? await Task.sleep(for: .seconds(6))
+            switch demo {
+            case "turns":
+                for forward in [true, true, true, false, true, false] {
+                    forward ? controller.next() : controller.previous()
+                    try? await Task.sleep(for: .seconds(1.5))
+                }
+            case "flow":
+                showsAppearance = true
+                for _ in 0..<4 {
+                    try? await Task.sleep(for: .seconds(2.5))
+                    flow = flow == .paged ? .scrolled : .paged
+                }
+            default: break
+            }
+        }
+    }
+    #endif
 
     private func applyStyle() {
         controller.setColors(text: palette.text, link: palette.link)
@@ -697,6 +730,9 @@ private struct ReadingFolio<Counter: View>: View {
             // y la franja de papel se acorta con él: queda más texto a la vista.
             Text(location?.chapter ?? title)
                 .lineLimit(1)
+                // Al cambiar de capítulo, un fundido corto, no un salto de letras.
+                .contentTransition(.opacity)
+                .animation(Theme.Motion.standard, value: location?.chapter)
                 .padding(.horizontal, Theme.Reader.folioInset)
                 .frame(maxWidth: .infinity, minHeight: paper == nil ? Theme.Reader.pageMarginTop : Theme.Reader.folioTop)
                 .background { band(.top) }
@@ -742,7 +778,9 @@ private struct ReadingFolio<Counter: View>: View {
                 paper
                 if edge == .top { fadeEdge(paper, toward: .bottom) }
             }
-            .padding(edge == .top ? .bottom : .top, -Theme.Reader.folioBand)
+            // Sólido hasta la orilla del folio y el desvanecido ya fuera de él:
+            // el texto nunca se asoma detrás del capítulo ni del pie.
+            .padding(edge == .top ? .bottom : .top, -Theme.Reader.folioFade)
             .ignoresSafeArea()
             .allowsHitTesting(false)
         }

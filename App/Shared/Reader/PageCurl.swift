@@ -111,10 +111,23 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         change { [weak self] in
             guard let self else { cover.removeFromSuperview(); return }
             self.webView.takeSnapshot(with: nil) { _, _ in
-                UIView.animate(withDuration: Theme.Reader.flowDissolve, delay: 0,
-                               options: [.curveEaseInOut, .allowUserInteraction]) {
+                // Relevo, como el fundido: el libro cambia de lugar al cambiar de
+                // forma, así que la página de antes se va primero (queda el papel un
+                // instante) y luego llega la nueva, subiendo apenas. Nunca se leen
+                // dos textos corridos uno sobre otro.
+                let webView = self.webView
+                webView.alpha = 0
+                webView.transform = CGAffineTransform(translationX: 0, y: Theme.Reader.flowRise)
+                UIView.animate(withDuration: Theme.Reader.flowOut, delay: 0, options: [.curveEaseIn]) {
                     cover.alpha = 0
-                } completion: { _ in cover.removeFromSuperview() }
+                } completion: { _ in
+                    cover.removeFromSuperview()
+                    UIView.animate(withDuration: Theme.Reader.flowIn, delay: 0,
+                                   options: [.curveEaseOut, .allowUserInteraction]) {
+                        webView.alpha = 1
+                        webView.transform = .identity
+                    }
+                }
             }
         }
     }
@@ -124,6 +137,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
     private func begin(forward: Bool, fromTop: Bool, fromDrag: Bool) {
         let turn = PageTurn(forward: forward, style: style, fromTop: fromTop, fromDrag: fromDrag)
         turning = turn
+        reader?.isTurning = true
         // La foto de la página de ahora tapa al lector mientras pasa de página debajo.
         if let cover = page.view.snapshotView(afterScreenUpdates: false) {
             cover.frame = page.view.frame
@@ -283,6 +297,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         webView.alpha = 1
         webView.transform = .identity
         turning = nil
+        reader?.isTurning = false
     }
 
     // MARK: Piezas
@@ -375,9 +390,15 @@ private final class MatteCurl {
         let extent = input.extent
         let clear = CIImage(color: .clear).cropped(to: extent)
         let solid = CIImage(color: .white).cropped(to: extent)
-        // El revés: papel más oscuro con el texto de la hoja, en espejo y casi invisible.
+        // El revés: papel más oscuro con el texto de la hoja en espejo, como a
+        // contraluz: se lee que hay letra detrás, apenas suave (la tinta atraviesa
+        // el papel y se abre un poco), sin competir con la página de abajo. La foto
+        // va tal cual: el filtro ya la voltea al doblarla (volteada aquí también, la
+        // letra salía al derecho, imposible en papel de verdad).
         let mirrored = input
-            .transformed(by: CGAffineTransform(scaleX: -1, y: 1).translatedBy(x: -extent.width, y: 0))
+            .clampedToExtent()
+            .applyingGaussianBlur(sigma: Theme.Reader.curlShowThroughBlur)
+            .cropped(to: extent)
             // Colores premultiplicados: se atenúan los cuatro canales, no solo el alfa.
             .applyingFilter("CIColorMatrix", parameters: [
                 "inputRVector": CIVector(x: Theme.Reader.curlShowThrough, y: 0, z: 0, w: 0),

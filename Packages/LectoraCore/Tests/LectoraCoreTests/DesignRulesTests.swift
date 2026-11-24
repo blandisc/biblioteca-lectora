@@ -348,9 +348,23 @@ final class DesignRulesTests: XCTestCase {
         let fade = branch(curl, "case .fade:\n            // Relevo", "case .slide:")
         XCTAssertTrue(fade.contains("TurnMotion.fadeOut") && fade.contains("TurnMotion.fadeIn"),
                       "Fundido: relevo con TurnMotion.fadeOut y fadeIn, no los dos textos a la vez")
+        // Páginas ↔ continuo: el libro cambia de lugar; también es relevo, no fundido encimado.
+        let dissolve = branch(curl, "func dissolve(", "// MARK: La vuelta")
+        XCTAssertTrue(dissolve.contains("Theme.Reader.flowOut") && dissolve.contains("Theme.Reader.flowIn"),
+                      "Páginas ↔ continuo: la página de antes se va (flowOut) y luego llega la nueva (flowIn)")
         let preview = branch(components, "case .slide:\n            // Opaca", "case .none:")
         XCTAssertTrue(preview.contains("TurnMotion.fadeOut") && !preview.contains("opacity(Theme.Emphasis.rest - p)\n"),
                       "La muestra de «Aa» se mueve igual que la hoja de verdad (TurnMotion)")
+    }
+
+    /// 24 nov 2026: al subir el capítulo en continuo, el desvanecido quedó encima de él
+    /// y el primer renglón se leía detrás del título. El papel es sólido hasta la orilla
+    /// del folio y se desvanece ya fuera: la franja se alarga justo lo que mide el desvanecido.
+    func testTextNeverShowsBehindTheFolio() {
+        let reader = Self.sources("App/Shared/Reader").first { $0.path.hasSuffix("ReaderView.swift") }?.text ?? ""
+        XCTAssertTrue(reader.contains(".padding(edge == .top ? .bottom : .top, -Theme.Reader.folioFade)")
+                      && reader.contains(".frame(height: Theme.Reader.folioFade)"),
+                      "Continuo: la franja de papel del folio sobresale lo mismo que su desvanecido (folioFade)")
     }
 
     /// 30 oct 2026: Cinzel solo para la marca y los rótulos (BrandMark, SectionLabel).
