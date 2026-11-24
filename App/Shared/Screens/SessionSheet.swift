@@ -103,7 +103,7 @@ struct SessionCard: View {
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Reader.chromeInset)
         .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button("Volver a la sesión", role: .cancel) {}
         } message: {
             Text(notice ?? "")
         }
@@ -164,7 +164,7 @@ struct SessionSummarySheet: View {
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button("OK", role: .cancel) { dismiss() }
+            Button("Volver a la sesión", role: .cancel) { dismiss() }
         } message: {
             Text(notice ?? "")
         }

@@ -42,12 +42,12 @@ struct NoteLinkSheet: View {
             }
             .pushedScreen("Llevar a una nota")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cerrar") { dismiss() } }
             }
             .alert("No se pudo guardar", isPresented: Binding(
                 get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
             )) {
-                Button("OK", role: .cancel) {}
+                Button("Elegir otra nota", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }

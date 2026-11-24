@@ -529,7 +529,7 @@ struct CoverCell: View {
                     .multilineTextAlignment(.leading)
                 if let count = book.seriesCount, count > 1 {
                     Text("Serie · \(count) libros")
-                        .font(.caption2)
+                        .font(.caption)
                         .foregroundStyle(Theme.secondaryInk)
                 }
             }
@@ -700,7 +700,7 @@ struct LetterIndex: View {
         VStack(spacing: Theme.Space.hair) {
             ForEach(letters, id: \.self) { letter in
                 Button(letter) { onSelect(letter) }
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption2.weight(.semibold)) // ds-exception: índice A–Z
                     .foregroundStyle(Theme.accent)
                     .frame(width: Theme.Size.letterIndex)
             }
@@ -941,7 +941,7 @@ struct CoverChoiceCell: View {
                             .stroke(selected ? Theme.ink : .clear, lineWidth: Theme.Size.selection)
                     }
                 Text(label)
-                    .font(.caption2)
+                    .font(.caption)
                     .foregroundStyle(selected ? Theme.ink : Theme.tertiaryInk)
             }
         }
@@ -1575,7 +1575,7 @@ struct WeekBars: View {
                 ForEach(days) { day in
                     let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
                     Text(day.date.es(.dateTime.weekday(.narrow)).uppercased())
-                        .font(.caption2.weight(isToday ? .semibold : .regular))
+                        .font(.caption.weight(isToday ? .semibold : .regular))
                         .foregroundStyle(isToday ? Theme.ink : Theme.tertiaryInk)
                         .frame(maxWidth: .infinity)
                 }
@@ -1622,7 +1622,7 @@ struct MonthCalendar: View {
                 }
                 Text("Más tiempo")
             }
-            .font(.caption2)
+            .font(.caption)
             .foregroundStyle(Theme.secondaryInk)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -1653,7 +1653,7 @@ struct YearBars: View {
             HStack(spacing: Theme.Space.inline) {
                 ForEach(Array(Self.initials.enumerated()), id: \.offset) { index, letter in
                     Text(letter)
-                        .font(.caption2.weight(index == current ? .semibold : .regular))
+                        .font(.caption.weight(index == current ? .semibold : .regular))
                         .foregroundStyle(index == current ? Theme.ink : Theme.tertiaryInk)
                         .frame(maxWidth: .infinity)
                 }

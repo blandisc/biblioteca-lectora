@@ -144,7 +144,7 @@ struct SettingsScreen: View {
                     Button("Mover mi Gabinete ahí") { run { try await model.library.move(toCabinet: folder) } }
                 }
             }
-            Button("Cancelar", role: .cancel) {}
+            Button("Dejar el Gabinete donde está", role: .cancel) {}
         } message: {
             Text(dialogMessage)
         }
@@ -152,7 +152,7 @@ struct SettingsScreen: View {
             get: { tidyReport != nil },
             set: { if !$0 { tidyReport = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("Volver a Ajustes", role: .cancel) {}
         } message: {
             Text(tidyReport.map(describe) ?? "")
         }
@@ -160,7 +160,7 @@ struct SettingsScreen: View {
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("Volver a Ajustes", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
         }

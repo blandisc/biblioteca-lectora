@@ -285,6 +285,8 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testFormsUseThePaper` | Decisión del 19 nov 2026: todo `Form` lleva `.formScreen()` |
 | `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra |
 | `testTextColorsAreReadable` | Decisión del 19 nov 2026: sobre `paper`, tinta y secundario ≥ 4,5 : 1; terciario y verde ≥ 3 : 1, en claro y oscuro |
+| `testReadingNeverVibratesByItself` | Decisión del 24 nov 2026: leyendo, nada vibra porque la página avanzó; solo lo que haces tú (con «Vibrar al pasar de página» apagado, la barra de avance vibraba en cada hoja) |
+| `testNoTextUnderTwelve` | Sistema base de la casa (SB-3), 24 nov 2026: ninguna letra de menos de 12 pt; `.caption2` (11) solo en íconos |
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |
 
 Cuando se decide algo de diseño que no debe volver a romperse, se vuelve una prueba con
@@ -297,4 +299,5 @@ su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
 | control nativo de Form | Ajustes › Apariencia, Reglas | Dentro de un `Form` del sistema, el segmentado nativo es lo esperado; `FilterBar` es para el contenido de una pantalla |
 | portada dibujada | `CoverView` | La letra de la portada tipográfica es una fracción de su ancho (`Theme.CoverArt`), no un tamaño de la interfaz |
 | fuente del lector | Lector › «Aa» | La muestra de cada fuente es la fuente que vas a leer, al tamaño que elegiste |
+| índice A–Z | `LetterIndex` | Las 27 letras van en columna a la orilla, como el índice de Contactos: a 12 pt no caben en un iPhone chico |
 | paleta del lector | `ReaderPalette` | Los fondos del lector son sus propios tokens: el texto viaja como color CSS a la página |

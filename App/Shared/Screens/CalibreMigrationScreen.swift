@@ -46,7 +46,7 @@ struct CalibreMigrationScreen: View {
                 if case .success(let url) = result { read(url) }
             }
             .alert("No se pudo leer", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-                Button("OK", role: .cancel) {}
+                Button("Volver a la importación", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }

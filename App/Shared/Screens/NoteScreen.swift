@@ -75,7 +75,7 @@ struct NoteScreen: View {
             .alert("No se pudo guardar la nota", isPresented: Binding(
                 get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
             )) {
-                Button("OK", role: .cancel) {}
+                Button("Seguir editando", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }

@@ -308,7 +308,7 @@ struct CandidatePreview: View {
             .pushedScreen("Vista previa")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button("Cerrar la vista previa") { dismiss() }
                 }
             }
         }
@@ -328,7 +328,7 @@ struct CandidatePreview: View {
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("Volver a la vista previa", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
         }
@@ -394,7 +394,7 @@ struct OtherSearchSheet: View {
             .inlineTitle("Buscar con otros datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button("Cerrar la búsqueda") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Buscar") {
@@ -461,7 +461,7 @@ struct FilledScreen: View {
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("Volver a la revisión", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
         }

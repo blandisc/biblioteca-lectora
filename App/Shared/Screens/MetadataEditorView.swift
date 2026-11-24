@@ -119,7 +119,7 @@ struct MetadataEditorView: View {
             .inlineTitle("Editar datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button("Descartar cambios") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar", action: save)
@@ -139,7 +139,7 @@ struct MetadataEditorView: View {
                 get: { saveError != nil },
                 set: { if !$0 { saveError = nil } }
             )) {
-                Button("OK", role: .cancel) {}
+                Button("Seguir editando", role: .cancel) {}
             } message: {
                 Text(saveError ?? "")
             }

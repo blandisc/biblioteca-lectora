@@ -254,13 +254,13 @@ private struct PeriodStepper: View {
     var body: some View {
         HStack {
             Button(action: back) { Image(systemName: "chevron.left").frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget) }
-                .accessibilityLabel("Anterior")
+                .accessibilityLabel("Periodo anterior")
             Spacer()
             if roman { SectionLabel(text: title) } else { Text(title).font(.subheadline).foregroundStyle(Theme.secondaryInk) }
             Spacer()
             Button(action: forward) { Image(systemName: "chevron.right").frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget) }
                 .disabled(!canGoForward)
-                .accessibilityLabel("Siguiente")
+                .accessibilityLabel("Periodo siguiente")
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.secondaryInk)
@@ -330,7 +330,7 @@ struct SessionScreen: View {
         }
         .pushedScreen()
         .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button("Volver al diario", role: .cancel) {}
         } message: {
             Text(notice ?? "")
         }

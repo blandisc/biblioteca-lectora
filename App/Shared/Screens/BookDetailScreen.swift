@@ -218,7 +218,7 @@ struct CoverPickerSheet: View {
             .pushedScreen("Portada")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { dismiss() }
+                    Button("Dejar la portada") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(saving ? "Guardando…" : "Usar") { save() }
@@ -235,7 +235,7 @@ struct CoverPickerSheet: View {
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("Elegir otra portada", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
         }

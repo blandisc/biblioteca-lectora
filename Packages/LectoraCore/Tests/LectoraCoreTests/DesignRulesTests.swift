@@ -367,6 +367,30 @@ final class DesignRulesTests: XCTestCase {
                       "Continuo: la franja de papel del folio sobresale lo mismo que su desvanecido (folioFade)")
     }
 
+    /// 24 nov 2026: con «Vibrar al pasar de página» apagado, el iPhone seguía vibrando en cada
+    /// hoja: la barra de avance vibraba cada vez que cambiaba el porcentaje. Leyendo, nada
+    /// vibra porque la página se movió; solo lo que haces tú (arrastrar la barra, elegir algo).
+    func testReadingNeverVibratesByItself() {
+        check(hits(#"sensoryFeedback\(.*trigger: .*(fraction|location|percent|page)(?!.*\{ _, _ in)"#,
+                   in: Self.sources("App/Shared/Reader")),
+              "Una vibración que sigue al avance del libro necesita su condición ({ _, _ in … }): si no, vibra con cada página")
+    }
+
+    /// 24 nov 2026 (sistema base de la casa, SB-3): ninguna letra de menos de 12 pt.
+    /// `.caption2` mide 11: solo para íconos.
+    func testNoTextUnderTwelve() {
+        var problems: [String] = []
+        for file in Self.sources("App") {
+            for (index, line) in file.lines.enumerated() where line.contains(".caption2") && !line.contains("ds-exception:") {
+                let around = file.lines[max(0, index - 1)...index].joined()
+                if !around.contains("Image(") && !around.contains(".icon") {
+                    problems.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces))")
+                }
+            }
+        }
+        check(problems, "Letra de 11 pt (.caption2) en un texto: el mínimo es 12 (.caption)")
+    }
+
     /// 30 oct 2026: Cinzel solo para la marca y los rótulos (BrandMark, SectionLabel).
     func testRomanCapsOnlyForMarkAndLabels() {
         check(hits(#"\.brandMark|\.sectionLabel"#, in: Self.screens), "Cinzel solo a través de BrandMark y SectionLabel")

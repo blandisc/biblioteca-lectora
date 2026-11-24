@@ -170,12 +170,12 @@ struct ReaderView: View {
         )) {
             TextField("Escribe tu nota", text: $noteText)
             Button("Guardar") { controller.saveNote(noteText); noteText = "" }
-            Button("Cancelar", role: .cancel) { noteText = "" }
+            Button("Descartar la nota", role: .cancel) { noteText = "" }
         } message: {
             Text(controller.noteTarget.map { "«\($0.quote)»" } ?? "")
         }
         .alert("No se pudo abrir el libro", isPresented: .constant(controller.errorMessage != nil)) {
-            Button("OK", role: .cancel) { dismiss() }
+            Button("Volver a la biblioteca", role: .cancel) { dismiss() }
         } message: {
             Text(controller.errorMessage ?? "")
         }
@@ -183,7 +183,7 @@ struct ReaderView: View {
             get: { controller.notice != nil },
             set: { if !$0 { controller.notice = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("Seguir leyendo", role: .cancel) {}
         } message: {
             Text(controller.notice ?? "")
         }
@@ -266,6 +266,7 @@ struct ReaderView: View {
                     TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() },
                                 onSearch: { tools = .search },
                                 onAppearance: { showsAppearance = true })
+                        .padding(.top, -Theme.Reader.chromeLift)
                         .transition(.opacity)
                 }
                 Spacer(minLength: 0)
@@ -511,7 +512,7 @@ private struct BottomPanel: View {
                             if let value = dragValue { onSeek(value) }
                             dragValue = nil
                         })
-                .sensoryFeedback(.selection, trigger: fraction.percentText)
+                .sensoryFeedback(.selection, trigger: fraction.percentText) { _, _ in dragValue != nil }
                 .accessibilityLabel("Avance en el libro")
                 .accessibilityValue(position)
 

@@ -1,0 +1,32 @@
+{
+  "_": "Lo propio de Gabinete para el revisor común del sistema base (tools/sistema-base/, copia de ~/code/interoperabilidad/sistema-base). Como Cénit y Lux (X3-B), los espacios 2, 6 y 12 se quedan con trinquete: la cuenta solo baja. La guardia propia (scripts/lint-design.sh y DesignRulesTests) vigila además que todo salga de Theme.",
+  "fuentes": [
+    {
+      "tipo": "swift",
+      "rutas": [
+        "App",
+        "Packages/LectoraCore/Sources"
+      ]
+    }
+  ],
+  "excluir": [
+    "**/Tests/**",
+    "**/*Tests.swift"
+  ],
+  "tokens": [
+    {
+      "regla": "SB-2",
+      "archivo": "App/Shared/Design/Theme.swift",
+      "patron": "static let (?:xxs|xs|s|m|l|xl|xxl|xxxl|hair|inline): CGFloat = (-?\\d+(?:\\.\\d+)?)"
+    }
+  ],
+  "excepciones": [],
+  "heredado": {
+    "SB-1": {},
+    "SB-2": {
+      "App/Shared/Design/Theme.swift": 4
+    },
+    "SB-3": {},
+    "SB-4": {}
+  }
+}

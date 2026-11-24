@@ -245,12 +245,12 @@ struct ReaderAppearanceSheet: View {
             .sensoryFeedback(.selection, trigger: theme)
             .sensoryFeedback(.selection, trigger: font)
             .sensoryFeedback(.selection, trigger: turnStyle)
-            .sensoryFeedback(.selection, trigger: flow)
             .onAppear { opened = true }
             // La hoja mide lo que mide su contenido: sin espacio muerto abajo.
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { resize(to: $0) }
-            // Pegado arriba: si la hoja aún es más alta, el sobrante queda abajo.
-            .frame(maxHeight: .infinity, alignment: .top)
+            // Pegado arriba, aunque la hoja aún no tenga su alto nuevo: lo de arriba nunca
+            // baja; al crecer, la hoja sube y lo nuevo aparece desde abajo.
+            .frame(minHeight: 0, maxHeight: .infinity, alignment: .top)
             .presentationDetents(detents, selection: $detent)
             .presentationDragIndicator(.visible)
     }

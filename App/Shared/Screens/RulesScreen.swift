@@ -65,7 +65,7 @@ struct RulesScreen: View {
             get: { appliedMessage != nil },
             set: { if !$0 { appliedMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("Volver a Reglas", role: .cancel) {}
         } message: {
             Text(appliedMessage ?? "")
         }

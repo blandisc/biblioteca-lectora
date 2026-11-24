@@ -16,6 +16,8 @@ jobs:
         run: TZ=America/Mexico_City swift test --package-path Packages/LectoraCore
       - name: Sistema de diseño (sin valores sueltos en pantallas)
         run: ./scripts/lint-design.sh
+      - name: Sistema base de la casa (botones que dicen qué hacen, espacios, letra y toque mínimos)
+        run: python3 tools/sistema-base/revisar.py
 
   app:
     name: App (iPhone y Mac)

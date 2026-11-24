@@ -30,7 +30,7 @@ struct ConnectorScreen: View {
         .formScreen()
         .inlineTitle(connector.title)
         .alert("No se pudo conectar", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button("Volver a la conexión", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
         }

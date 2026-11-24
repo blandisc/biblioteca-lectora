@@ -69,7 +69,7 @@ struct RootView: View {
                 get: { model.importReport != nil },
                 set: { if !$0 { model.importReport = nil } }
             )) {
-                Button("OK", role: .cancel) {}
+                Button("Ver mis libros", role: .cancel) {}
             } message: {
                 Text(model.importReport ?? "")
             }

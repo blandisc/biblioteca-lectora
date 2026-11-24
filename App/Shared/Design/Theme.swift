@@ -230,14 +230,16 @@ enum Theme {
         static let edgeZone = 0.28
         /// Margen de los controles de vidrio, igual arriba y abajo, izquierda y derecha.
         static let chromeInset: CGFloat = 16
+        /// Los botones de arriba suben esto hacia la isla, sin tocarla.
+        static let chromeLift: CGFloat = 8
         /// Folio sin controles: margen lateral del capítulo.
         static let folioInset: CGFloat = 60
         /// Pasar la hoja: la fuerza del resorte (`TurnMotion`) que la lleva hasta el
-        /// final o de regreso; con 20, una vuelta desde quieta tarda unos 0,45 s y,
+        /// final o de regreso; con 15, una vuelta desde quieta tarda unos 0,55 s y,
         /// al soltar, sigue con la velocidad del dedo (nunca más de `turnSpeedLimit`
         /// anchos por segundo). Se da por terminada a `turnRest` del final.
-        static let turnSpring = 20.0
-        static let turnSpeedLimit: CGFloat = 6
+        static let turnSpring = 15.0
+        static let turnSpeedLimit: CGFloat = 4
         static let turnRest: CGFloat = 0.004
         /// Con el dedo, la vuelta completa es lo que hay del toque a la orilla contraria,
         /// pero nunca menos de esta fracción del ancho (si tocas cerca del lomo).
@@ -267,7 +269,7 @@ enum Theme {
         /// La muestra se mueve con la curva de la real pero más despacio (`previewPace`
         /// de su fuerza): en un mosaico chico, a la velocidad real no se alcanza a ver.
         /// `previewTurn` es el tiempo que le toca a cada vuelta.
-        static let previewPace = 0.45
+        static let previewPace = 0.6
         static let previewTurn: TimeInterval = 1.2
         /// Las primeras veces que sale el panel se asoma hacia arriba: hay más.
         static let panelHints = 3
@@ -286,7 +288,7 @@ enum Theme {
         /// del texto en el revés.
         static let curlRadius: CGFloat = 0.16
         static let curlTilt = 0.1
-        static let curlShadow: Float = 0.55
+        static let curlShadow: Float = 0.42
         static let curlShowThrough: CGFloat = 0.22
         /// Cuánto crece la máscara de la hoja doblada (píxeles): tapa el filo brillante.
         static let curlMaskGrow = 1.5

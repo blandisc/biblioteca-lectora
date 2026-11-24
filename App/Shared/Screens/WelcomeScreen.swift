@@ -74,7 +74,7 @@ struct WelcomeScreen: View {
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Saltar") { seen = true }.foregroundStyle(Theme.secondaryInk)
+                    Button("Ir a la biblioteca") { seen = true }.foregroundStyle(Theme.secondaryInk)
                 }
             }
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
@@ -85,7 +85,7 @@ struct WelcomeScreen: View {
                 NavigationStack { ConnectorScreen(connector: .readwise) }
             }
             .alert("No se pudo usar esa carpeta", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-                Button("OK", role: .cancel) {}
+                Button("Elegir otra carpeta", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }
