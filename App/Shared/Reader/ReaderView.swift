@@ -566,7 +566,7 @@ private struct BottomPanel: View {
         .glassPanel(cornerRadius: Theme.Radius.panel)
         // Todo el panel es suyo: un toque en su aire no llega a la página de abajo
         // (que lo tomaría como «ocultar controles»).
-        .contentShape(RoundedRectangle(cornerRadius: Theme.Radius.panel, style: .continuous))
+        .contentShape(Rectangle())
         .onTapGesture {}
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Space.s)
