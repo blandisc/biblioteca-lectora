@@ -142,6 +142,10 @@ enum Theme {
         static let ghostLine: CGFloat = 3
         /// Ancho del ícono de esa muestra: todos iguales, aunque el símbolo sea angosto.
         static let previewIcon: CGFloat = 16
+        /// Perilla de la barra de avance del lector.
+        static let scrubberKnob: CGFloat = 14
+        /// Alto de la barra de avance: la perilla cómoda de arrastrar sin dejar un hueco.
+        static let scrubberHeight: CGFloat = 32
         /// Alto de una fila de la gráfica de etapas, y de su marca.
         static let stageRow: CGFloat = 26
         static let stageMark: CGFloat = 16
@@ -301,6 +305,8 @@ enum Theme {
         static let ghost = 0.12
         /// El pie de una muestra que aún no tiene dato: más apagado que el folio.
         static let folioMuted = 0.55
+        /// La perilla de la barra de avance crece así al arrastrarla.
+        static let knobGrow = 1.4
         /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
         static let labelMinScale: CGFloat = 0.8
     }

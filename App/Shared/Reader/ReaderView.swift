@@ -324,7 +324,7 @@ struct ReaderView: View {
     private var footerOptions: [FooterOption] {
         ReaderFooter.allCases.map { kind in
             guard let parts = footerParts(kind) else {
-                return FooterOption(kind: kind, text: "Calculando \(kind.name.lowercased())", available: false)
+                return FooterOption(kind: kind, text: "Calculando…", available: false)
             }
             // En la muestra, la versión corta del pie: cabe entera en medio panel.
             let short = parts.caption.replacingOccurrences(of: "para terminar", with: "para")
@@ -490,21 +490,16 @@ private struct BottomPanel: View {
             .buttonStyle(.plain)
             .accessibilityLabel(expanded ? "Bajar el panel" : "Subir el panel")
 
-            Slider(
-                value: Binding(get: { fraction }, set: { dragValue = $0 }),
-                in: 0...1,
-                onEditingChanged: { editing in
-                    if !editing, let value = dragValue {
-                        onSeek(value)
-                        dragValue = nil
-                    }
-                }
-            )
-            .tint(Theme.ink)
-            .disabled(location == nil)
-            .sensoryFeedback(.selection, trigger: fraction.percentText)
-            .accessibilityLabel("Avance en el libro")
-            .accessibilityValue(position)
+            // Barra propia, fina y editorial: lo leído en tinta, una perilla chica.
+            ScrubberBar(value: fraction, enabled: location != nil,
+                        onChange: { dragValue = $0 },
+                        onEnd: {
+                            if let value = dragValue { onSeek(value) }
+                            dragValue = nil
+                        })
+                .sensoryFeedback(.selection, trigger: fraction.percentText)
+                .accessibilityLabel("Avance en el libro")
+                .accessibilityValue(position)
 
             HStack(spacing: Theme.Space.m) {
                 Button(action: onContents) {
@@ -517,21 +512,24 @@ private struct BottomPanel: View {
                 .accessibilityValue(location?.chapter ?? title)
                 Spacer(minLength: 0)
                 // Quieto: la página. Arrastrando: a qué página y porcentaje vas.
-                Label(position, systemImage: "book.pages")
+                // Con el panel subido la página ya está en su muestra: no se repite.
+                if !expanded || dragValue != nil {
+                Label(position, systemImage: "doc.text")
                     .monospacedDigit()
                     .foregroundStyle(dragValue == nil ? Theme.secondaryInk : Theme.ink)
                     .contentTransition(.numericText())
                     .animation(Theme.Motion.press, value: position)
                     .lineLimit(1)
                     .layoutPriority(1)
+                    .transition(.opacity)
+                }
             }
             .font(.footnote.weight(.medium))
             .labelStyle(QuietIconLabelStyle())
 
             if expanded {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
-                    SectionLabel(text: "Abajo de la página")
-                        .padding(.bottom, Theme.Space.s)
+                    SectionLabel(text: "Pie de página")
                     LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                         ForEach(options) { option in
                             Button { footer = option.kind } label: {
@@ -548,7 +546,8 @@ private struct BottomPanel: View {
                             .padding(.top, Theme.Space.s)
                     }
                 }
-                .padding(.top, Theme.Space.s)
+                // Aire de grupo arriba; el rótulo, pegado a sus muestras.
+                .padding(.top, Theme.Space.m)
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
             if Features.audiobook {

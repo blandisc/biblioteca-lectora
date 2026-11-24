@@ -1214,11 +1214,12 @@ struct SessionLine: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Theme.Space.s) {
-                Circle().fill(Theme.accent).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
-                Text("Esta sesión · \(ReadingFormat.words(tracker.words)) palabras")
+                // Sin punto: el verde solo en el dato, las palabras de esta sesión.
+                (Text("Esta sesión · ")
+                 + Text("\(ReadingFormat.words(tracker.words)) palabras").foregroundStyle(Theme.accent))
                     .lineLimit(1)
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+                Image(systemName: "chevron.right").font(.caption.weight(.medium))
             }
             .font(.footnote.weight(.medium))
             .foregroundStyle(Theme.secondaryInk)
@@ -1246,30 +1247,30 @@ struct FooterPreview: View {
     var body: some View {
         // Todo a la misma orilla (12, el radio de la esquina): nada se come la curva.
         VStack(spacing: 0) {
-            HStack(spacing: Theme.Space.inline) {
-                Image(systemName: symbol)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(selected ? Theme.accent : ink.opacity(Theme.Emphasis.folio))
-                    .symbolEffect(.bounce, value: selected)
-                    // Mismo ancho para todos: los renglones empiezan en el mismo punto.
-                    .frame(width: Theme.Size.previewIcon)
-                // Dos renglones insinuados: el segundo cierra el párrafo.
-                VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                    Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
-                    Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
-                        .padding(.trailing, Theme.Space.xxl)
-                }
+            // Dos renglones insinuados (el texto del libro, justificado).
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                    .padding(.trailing, Theme.Space.xxl)
             }
             Spacer(minLength: 0)
-            Text(text)
-                .font(.caption.weight(.medium))
-                .italic(!available)
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
-                .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
-                .frame(maxWidth: .infinity)
-                .contentTransition(.numericText())
+            // El pie, centrado como en la página, con su ícono. Elegido: el ícono
+            // se vuelve palomita (no solo el color dice cuál es).
+            HStack(spacing: Theme.Space.inline) {
+                Image(systemName: selected ? "checkmark" : symbol)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: Theme.Size.previewIcon)
+                Text(text)
+                    .font(.caption.weight(.medium))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+                    .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
+                    .contentTransition(.numericText())
+            }
+            .frame(maxWidth: .infinity)
         }
         .padding(Theme.Space.m)
         .frame(maxWidth: .infinity)
@@ -1279,9 +1280,57 @@ struct FooterPreview: View {
             shape.strokeBorder(selected ? Theme.accent : ink.opacity(Theme.Emphasis.ghost),
                                lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
         }
-        // Al elegir: el filo se enciende con un resorte corto y el ícono salta.
+        // Al elegir: el filo se enciende con un resorte corto y el ícono pasa a palomita.
         // Al presionar, se hunde (PressableStyle); todos miden siempre lo mismo.
         .animation(Theme.Motion.select, value: selected)
+    }
+}
+
+/// Barra de avance del lector: un riel fino, lo leído en tinta y una perilla
+/// chica. Se arrastra o se toca en cualquier punto; el área de toque es alta.
+struct ScrubberBar: View {
+    let value: Double
+    var enabled = true
+    let onChange: (Double) -> Void
+    let onEnd: () -> Void
+    @State private var dragging = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let clamped = min(max(value, 0), 1)
+            ZStack(alignment: .leading) {
+                Capsule().fill(Theme.track).frame(height: Theme.Size.stageBarThin)
+                Capsule().fill(Theme.ink).frame(width: max(width * clamped, Theme.Size.stageBarThin), height: Theme.Size.stageBarThin)
+                Circle().fill(Theme.ink)
+                    .frame(width: Theme.Size.scrubberKnob, height: Theme.Size.scrubberKnob)
+                    .scaleEffect(dragging ? Theme.Emphasis.knobGrow : Theme.Emphasis.rest)
+                    .offset(x: (width - Theme.Size.scrubberKnob) * clamped)
+                    .animation(Theme.Motion.select, value: dragging)
+            }
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { drag in
+                        guard enabled, width > 0 else { return }
+                        dragging = true
+                        onChange(min(max(drag.location.x / width, 0), 1))
+                    }
+                    .onEnded { _ in
+                        dragging = false
+                        onEnd()
+                    }
+            )
+        }
+        .frame(height: Theme.Size.scrubberHeight)
+        .opacity(enabled ? Theme.Emphasis.rest : Theme.Emphasis.pressed)
+        .accessibilityElement()
+        .accessibilityAdjustableAction { direction in
+            let step = 0.01
+            onChange(min(max(value + (direction == .increment ? step : -step), 0), 1))
+            onEnd()
+        }
     }
 }
 
@@ -1289,7 +1338,7 @@ struct FooterPreview: View {
 struct Grabber: View {
     var body: some View {
         Capsule()
-            .fill(Theme.track)
+            .fill(Theme.secondaryInk.opacity(Theme.Emphasis.folioMuted))
             .frame(width: Theme.Size.grabber.width, height: Theme.Size.grabber.height)
     }
 }
