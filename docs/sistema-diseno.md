@@ -234,7 +234,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   En páginas, el texto deja `Reader.pageMarginTop` (40 pt) arriba y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
-  sobresale `Reader.folioBand` (40 pt) y se desvanece en `Reader.folioFade` (56 pt). El folio
+  sobresale `Reader.folioBand` (28 pt) y se desvanece en `Reader.folioFade` (56 pt) con una curva (`Reader.folioFadeSteps`): la letra se sigue leyendo mientras se va. En continuo el capítulo sube bajo la isla (`Reader.folioTop`, medido desde la orilla segura de cada iPhone). El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tira (`Grabber`, barra, capítulo y página con `QuietIconLabelStyle`);
   subiéndola, o tocando el pie, aparecen cuatro `FooterPreview` (qué dice el pie, como se leerá) y `SessionLine`. Tocando el
   contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.

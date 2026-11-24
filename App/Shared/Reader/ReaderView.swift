@@ -691,11 +691,14 @@ private struct ReadingFolio<Counter: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             // Capítulo y pie, cada uno centrado en el margen del texto: ni más
-            // arriba ni más abajo, sin huecos.
+            // arriba ni más abajo, sin huecos. En continuo el capítulo sube, pegado
+            // bajo la isla: se mide desde la orilla segura, que en cada iPhone
+            // termina justo debajo de la isla (o de la muesca, o de la barra de estado),
+            // y la franja de papel se acorta con él: queda más texto a la vista.
             Text(location?.chapter ?? title)
                 .lineLimit(1)
                 .padding(.horizontal, Theme.Reader.folioInset)
-                .frame(maxWidth: .infinity, minHeight: Theme.Reader.pageMarginTop)
+                .frame(maxWidth: .infinity, minHeight: paper == nil ? Theme.Reader.pageMarginTop : Theme.Reader.folioTop)
                 .background { band(.top) }
                 .allowsHitTesting(false)
             Spacer()
@@ -745,9 +748,16 @@ private struct ReadingFolio<Counter: View>: View {
         }
     }
 
+    /// El papel se aclara pronto y luego despacio (curva, no recta): la letra
+    /// se sigue leyendo mientras se va, en vez de quedar medio tapada.
     private func fadeEdge(_ paper: Color, toward edge: VerticalEdge) -> some View {
-        LinearGradient(colors: [paper, paper.opacity(0)],
-                       startPoint: edge == .bottom ? .top : .bottom, endPoint: edge == .bottom ? .bottom : .top)
+        let steps = Theme.Reader.folioFadeSteps
+        let stops = (0...steps).map { step in
+            let at = Double(step) / Double(steps), left = 1 - at
+            return Gradient.Stop(color: paper.opacity(left * left), location: at)
+        }
+        return LinearGradient(stops: stops,
+                              startPoint: edge == .bottom ? .top : .bottom, endPoint: edge == .bottom ? .bottom : .top)
             .frame(height: Theme.Reader.folioFade)
     }
 }

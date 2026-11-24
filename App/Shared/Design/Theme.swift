@@ -300,11 +300,16 @@ enum Theme {
         static let pageMarginTop: CGFloat = 40
         /// Abajo más aire: el pie y el contador van ahí, sobre la orilla del iPhone.
         static let pageMarginBottom: CGFloat = 68
-        /// En continuo, el papel bajo el folio se desvanece en este alto.
+        /// En continuo, el papel bajo el folio se desvanece en este alto, con una
+        /// curva de `folioFadeSteps` tramos (se aclara pronto: la letra se sigue viendo).
         static let folioFade: CGFloat = 56
+        static let folioFadeSteps = 6
         /// Cuánto sobresale la franja de papel del folio hacia el texto (en continuo):
         /// la parte sólida es lo que sobra después del desvanecido.
-        static let folioBand: CGFloat = 40
+        static let folioBand: CGFloat = 28
+        /// En continuo, el alto del renglón del capítulo bajo la orilla segura (en
+        /// páginas es `pageMarginTop`): más chico, el capítulo sube hacia la isla.
+        static let folioTop: CGFloat = 18
         /// El lomo del libro: sombra en la orilla izquierda de la hoja, su ancho y
         /// qué tan oscura empieza en papel claro y en papel oscuro.
         static let spineWidth: CGFloat = 26
