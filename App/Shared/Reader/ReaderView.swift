@@ -128,6 +128,24 @@ struct ReaderView: View {
                 }
             }
         }
+        .overlay(alignment: .bottom) {
+            if controller.hasSelection && controller.tappedAnnotation == nil {
+                SelectionBar { action in
+                    switch action {
+                    case .underline: controller.highlightSelection()
+                    case .note: controller.highlightSelection(withNote: true)
+                    case .toNote: controller.highlightSelection(toNote: true)
+                    case .copy: controller.copySelection()
+                    }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Theme.Motion.standard, value: controller.hasSelection)
+        .sensoryFeedback(.selection, trigger: controller.hasSelection)
+        .onChange(of: controller.hasSelection) { _, selecting in
+            if selecting { showsChrome = false }
+        }
         .animation(Theme.Motion.standard, value: controller.tappedHighlight)
         // La tarjeta del subrayado va sola: sin los controles encima.
         .onChange(of: controller.tappedHighlight) { _, cfi in
@@ -485,8 +503,10 @@ private struct HighlightCard: View {
     let perform: (Action) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.l) {
-            HStack(alignment: .top, spacing: Theme.Space.m) {
+        VStack(alignment: .leading, spacing: Theme.Space.m) {
+            // La cita y la ✕ en un renglón, sin aire de sobra: la ✕ conserva su
+            // área de toque pero no empuja la tarjeta hacia abajo.
+            HStack(alignment: .center, spacing: Theme.Space.m) {
                 QuoteBlock(text: annotation.quote, note: annotation.note, italic: true)
                     .lineLimit(Theme.Reader.highlightLines)
                 Spacer(minLength: 0)
@@ -499,6 +519,7 @@ private struct HighlightCard: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Cerrar")
+                .padding(.vertical, -Theme.Space.s)
             }
             HStack(spacing: Theme.Space.s) {
                 action(.note, annotation.note == nil ? "Nota" : "Editar nota", "square.and.pencil")
@@ -521,6 +542,34 @@ private struct HighlightCard: View {
     }
 }
 
+/// Al seleccionar texto: una barra de vidrio abajo, en lugar del menú negro
+/// del sistema. «Subrayar», lo que más se usa, va primero y en tinta.
+private struct SelectionBar: View {
+    enum Action { case underline, note, toNote, copy }
+    let perform: (Action) -> Void
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            Button { perform(.underline) } label: {
+                IconTile(symbol: "pencil.line", title: "Subrayar", prominent: true)
+            }
+            .buttonStyle(PressableStyle())
+            item(.note, "Nota", "square.and.pencil")
+            item(.toNote, "A una nota", "note.text.badge.plus")
+            item(.copy, "Copiar", "doc.on.doc")
+        }
+        .padding(Theme.Space.s)
+        .glassPanel(cornerRadius: Theme.Radius.panel)
+        .padding(.horizontal, Theme.Reader.chromeInset)
+        .padding(.bottom, Theme.Reader.chromeInset)
+    }
+
+    private func item(_ kind: Action, _ title: String, _ symbol: String) -> some View {
+        Button { perform(kind) } label: { IconTile(symbol: symbol, title: title) }
+            .buttonStyle(PressableStyle())
+    }
+}
+
 /// Una opción del pie con lo que diría ahora («9 min» · «para terminar el capítulo»).
 struct FooterOption: Identifiable {
     let kind: ReaderFooter
@@ -532,7 +581,7 @@ struct FooterOption: Identifiable {
 /// Editorial sin controles: capítulo arriba y, abajo, el pie que elijas
 /// (tiempo para terminar el capítulo o el libro, página o porcentaje). Tocando
 /// el pie se abre un globo con las opciones, cada una con su dato de ahora.
-/// En páginas, el texto deja aire arriba y abajo (`Reader.pageMargin`): el folio
+/// En páginas, el texto deja aire arriba y abajo (`Reader.pageMarginTop` y `pageMarginBottom`): el folio
 /// queda sobre papel limpio. En continuo, el texto pasa por debajo: una franja
 /// de papel sólido tapa lo que queda detrás y solo su orilla se desvanece.
 private struct ReadingFolio<Counter: View>: View {
@@ -557,7 +606,7 @@ private struct ReadingFolio<Counter: View>: View {
             Text(location?.chapter ?? title)
                 .lineLimit(1)
                 .padding(.horizontal, Theme.Reader.folioInset)
-                .frame(maxWidth: .infinity, minHeight: Theme.Reader.pageMargin)
+                .frame(maxWidth: .infinity, minHeight: Theme.Reader.pageMarginTop)
                 .background { band(.top) }
                 .allowsHitTesting(false)
             Spacer()
@@ -584,7 +633,7 @@ private struct ReadingFolio<Counter: View>: View {
                 }
                 .padding(.leading, Theme.Reader.chromeInset)
             }
-            .frame(maxWidth: .infinity, minHeight: Theme.Reader.pageMargin)
+            .frame(maxWidth: .infinity, minHeight: Theme.Reader.pageMarginBottom)
             .background { band(.bottom) }
         }
         // La hoja llega hasta abajo: el pie va en su margen, hasta la orilla.

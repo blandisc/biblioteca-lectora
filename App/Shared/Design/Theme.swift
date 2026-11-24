@@ -254,7 +254,9 @@ enum Theme {
         /// Aire arriba y abajo del texto en páginas: deja el capítulo y el pie
         /// sobre papel limpio. El capítulo y el pie van centrados en él y el texto
         /// respeta la orilla de abajo (antes 76, con mucho hueco arriba).
-        static let pageMargin: CGFloat = 52
+        static let pageMarginTop: CGFloat = 40
+        /// Abajo más aire: el pie y el contador van ahí, sobre la orilla del iPhone.
+        static let pageMarginBottom: CGFloat = 68
         /// En continuo, el papel bajo el folio se desvanece en este alto.
         static let folioFade: CGFloat = 24
         /// Cuánto sobresale la franja de papel del folio hacia el texto (en continuo):

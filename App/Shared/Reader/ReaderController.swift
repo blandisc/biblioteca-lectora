@@ -55,6 +55,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     @Published var notice: String?
     /// Subrayado que se tocó (CFI), para ofrecer borrarlo.
     @Published var tappedHighlight: String?
+    /// Hay texto seleccionado: aparece la barra propia de la selección.
+    @Published var hasSelection = false
     /// Subrayado recién hecho al que se le está escribiendo una nota.
     @Published var noteTarget: Annotation?
     /// Subrayado que se lleva a una nota del Cuaderno.
@@ -200,7 +202,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let curl = "false"
         #endif
         let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl), "
-            + "margin: \(Int(Theme.Reader.pageMargin)) })"
+            + "margin: \(Int(Theme.Reader.pageMarginTop)), marginBottom: \(Int(Theme.Reader.pageMarginBottom)) })"
         flowScript = script
         if isReady { evaluate(script) }
     }
@@ -260,6 +262,26 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 }
             }
         }
+    }
+
+    /// Copia el texto seleccionado y suelta la selección.
+    func copySelection() {
+        webView?.evaluateJavaScript("window.lectora.takeSelection()") { result, _ in
+            MainActor.assumeIsolated {
+                guard let text = (result as? [String: Any])?["text"] as? String else { return }
+                #if os(iOS)
+                UIPasteboard.general.string = text
+                #else
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(text, forType: .string)
+                #endif
+            }
+        }
+    }
+
+    /// Suelta la selección sin hacer nada.
+    func clearSelection() {
+        evaluate("window.lectora.takeSelection()")
     }
 
     func saveNote(_ note: String) {
@@ -409,6 +431,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             if let x = body["x"] as? Double { onTap?(x) }
         case "selecting":
             isSelecting = body["active"] as? Bool ?? false
+            hasSelection = isSelecting
             updateCurl()
         case "annotation":
             tappedHighlight = body["cfi"] as? String
@@ -425,19 +448,20 @@ final class LectoraWebView: WKWebView {
     weak var controller: ReaderController?
 
     #if os(iOS)
+    /// Sin el menú negro del sistema: la barra de selección es de Gabinete
+    /// (Subrayar, Nota, A una nota, Copiar), abajo, como la del subrayado.
     override func buildMenu(with builder: any UIMenuBuilder) {
         super.buildMenu(with: builder)
         guard builder.system == UIMenuSystem.context else { return }
-        let underline = UIAction(title: "Subrayar", image: UIImage(systemName: "pencil.line")) { [weak self] _ in
-            MainActor.assumeIsolated { self?.controller?.highlightSelection() }
+        var menus: [UIMenu.Identifier] = [.standardEdit, .lookup, .learn, .share, .replace, .spelling,
+                                          .spellingPanel, .spellingOptions, .substitutions, .transformations,
+                                          .speech, .format, .textStyle, .autoFill]
+        for menu in menus { builder.remove(menu: menu) }
+        // Lo que WebKit agregue por su cuenta (traducir, etc.) también se va.
+        for child in builder.menu(for: .root)?.children ?? [] {
+            if let menu = child as? UIMenu { builder.remove(menu: menu.identifier) }
         }
-        let note = UIAction(title: "Nota", image: UIImage(systemName: "square.and.pencil")) { [weak self] _ in
-            MainActor.assumeIsolated { self?.controller?.highlightSelection(withNote: true) }
-        }
-        let toNote = UIAction(title: "A una nota", image: UIImage(systemName: "note.text.badge.plus")) { [weak self] _ in
-            MainActor.assumeIsolated { self?.controller?.highlightSelection(toNote: true) }
-        }
-        builder.insertChild(UIMenu(options: .displayInline, children: [underline, note, toNote]), atStartOfMenu: .root)
+        builder.replaceChildren(ofMenu: .root) { _ in [] }
     }
     #else
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {

@@ -131,6 +131,8 @@ struct SectionLabel: View {
 struct IconTile<Icon: View>: View {
     let title: String
     var selected = false
+    /// La acción principal: en tinta, letras claras («Subrayar»).
+    var prominent = false
     @ViewBuilder var icon: Icon
 
     var body: some View {
@@ -141,10 +143,10 @@ struct IconTile<Icon: View>: View {
                 .lineLimit(1)
                 .minimumScaleFactor(Theme.Emphasis.labelMinScale)
         }
-        .foregroundStyle(Theme.ink)
+        .foregroundStyle(prominent ? Theme.onInk : Theme.ink)
         .frame(maxWidth: .infinity)
         .padding(.vertical, Theme.Space.m)
-        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
+        .background(prominent ? Theme.ink : Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
                 .strokeBorder(selected ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
@@ -154,8 +156,8 @@ struct IconTile<Icon: View>: View {
 
 extension IconTile where Icon == AnyView {
     /// El mosaico con un símbolo de SF.
-    init(symbol: String, title: String, selected: Bool = false) {
-        self.init(title: title, selected: selected) { AnyView(Image(systemName: symbol).font(.body)) }
+    init(symbol: String, title: String, selected: Bool = false, prominent: Bool = false) {
+        self.init(title: title, selected: selected, prominent: prominent) { AnyView(Image(systemName: symbol).font(.body)) }
     }
 }
 

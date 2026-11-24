@@ -145,8 +145,11 @@ const applyStyle = () => {
     renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
     renderer.toggleAttribute('animated', !reducedMotion?.matches)
     renderer.toggleAttribute('no-drag', !!style.curl)
+    // Arriba poco (el capítulo es chico), abajo más (el pie y el contador).
     const margin = `${style.margin}px`
-    if (renderer.getAttribute('margin') !== margin) {
+    const bottom = `${style.marginBottom ?? style.margin}px`
+    if (renderer.getAttribute('margin') !== margin || renderer.style.getPropertyValue('--_margin-bottom') !== bottom) {
+        renderer.style.setProperty('--_margin-bottom', bottom)
         renderer.setAttribute('margin', margin)
         renderer.render?.()
     }

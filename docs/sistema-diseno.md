@@ -143,7 +143,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota | «Donde lo dejaste», subrayados |
 | `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle (`Reader.previewPause`, `previewFold`, `previewSlide`, `previewLines`) | Estilos de la hoja en «Aa» |
 | `ValueTile` | Mosaico con dato: ícono chico, valor grande, leyenda; borde si está elegido | Globo del pie del lector |
-| `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido | Estilo de la hoja, tarjeta de un subrayado |
+| `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido; en tinta si es la acción principal | Estilo de la hoja, tarjeta de un subrayado, barra de selección |
 | `FactRow` | Etiqueta / valor con línea fina | Ficha del libro |
 | `EmptyState` | Título, explicación y acción opcional | Toda lista vacía |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
@@ -224,7 +224,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
   (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
   siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
-  En páginas, el texto deja `Reader.pageMargin` (52 pt) arriba y abajo, (abajo hasta la orilla de la pantalla);
+  En páginas, el texto deja `Reader.pageMarginTop` (40 pt) arriba y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
   sobresale `Reader.folioBand` (40 pt) y se desvanece en `Reader.folioFade` (24 pt). El folio
@@ -238,6 +238,8 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   Fundido y Sin animación. Una vuelta dura `Reader.turnDuration` (0,42 s; lo que falta si ya va
   a medias, nunca menos de `Reader.turnMinimum`); con el dedo pasa después de
   `Reader.turnCommit` (30 % del ancho) o al aventarla más rápido que `Reader.turnFling`.
+- Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
+  menú negro del sistema.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y
   cuatro acciones en mosaicos: Nota, A una nota, Copiar, Borrar.
 - Ajustes del lector («Aa»): sin muestra; la página de atrás ya cambia en vivo. Toda la hoja
