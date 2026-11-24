@@ -82,7 +82,7 @@ textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; l
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,72) texto callado sobre el vidrio del lector; `scrubberTrack` (0,25) riel de la barra de avance;
-`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar; `chromeBand` (0,94) la franja de papel translúcido detrás de los botones del lector.
+`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles no hay franja ni niebla detrás de los botones de arriba: el vidrio basta.
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -244,7 +244,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   a medias, nunca menos de `Reader.turnMinimum`); con el dedo pasa después de
   `Reader.turnCommit` (30 % del ancho) o al aventarla más rápido que `Reader.turnFling`.
   Antes de animar se espera a que WebKit pinte la página nueva. Al cambiar entre páginas y continuo,
-  la página de antes se desvanece encima (`Reader.flowDissolve`) tras acomodarse debajo (`Reader.flowSettle`).
+  la página de antes se desvanece encima (`Reader.flowDissolve`) tras acomodarse debajo (`Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y

@@ -260,24 +260,6 @@ struct ReaderView: View {
                     TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() },
                                 onSearch: { tools = .search },
                                 onAppearance: { showsAppearance = true })
-                        // Franja de papel detrás de los botones: el texto pasa por
-                        // debajo y los botones siempre se leen.
-                        .background(alignment: .bottom) {
-                            // Papel sólido hasta abajo de los botones y una orilla que se
-                            // desvanece hacia el texto.
-                            // Papel translúcido: el texto se adivina detrás sin
-                            // competir con los botones.
-                            VStack(spacing: 0) {
-                                palette.background
-                                LinearGradient(colors: [palette.background, palette.background.opacity(0)],
-                                               startPoint: .top, endPoint: .bottom)
-                                    .frame(height: Theme.Reader.folioFade)
-                            }
-                            .opacity(Theme.Emphasis.chromeBand)
-                            .padding(.bottom, -Theme.Reader.folioFade)
-                            .ignoresSafeArea(edges: .top)
-                            .allowsHitTesting(false)
-                        }
                         .transition(.opacity)
                 }
                 Spacer(minLength: 0)
@@ -460,9 +442,11 @@ private struct BottomPanel: View {
     let onContents: () -> Void
     let onSeek: (Double) -> Void
     @State private var dragValue: Double?
+    /// Cuántas veces ya se asomó el panel para decir que se sube (solo las primeras).
+    @AppStorage(ReaderKeys.panelHints) private var hints = 0
+    @State private var peek: CGFloat = 0
 
     private var fraction: Double { dragValue ?? location?.fraction ?? 0 }
-    private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
     /// La página a la que apunta la barra (la de ahora o la del arrastre).
     private var page: Int? {
@@ -536,14 +520,21 @@ private struct BottomPanel: View {
             if expanded {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
                     SectionLabel(text: "Pie de página", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
-                    LazyVGrid(columns: columns, spacing: Theme.Space.s) {
-                        ForEach(options) { option in
+                    Grid(horizontalSpacing: Theme.Space.s, verticalSpacing: Theme.Space.s) {
+                        ForEach(Array(stride(from: 0, to: options.count, by: 2)), id: \.self) { row in
+                            GridRow {
+                                ForEach(Array(options[row..<min(row + 2, options.count)].enumerated()), id: \.element.id) { offset, option in
                             Button { footer = option.kind } label: {
                                 FooterPreview(symbol: option.kind.symbol, text: option.text, paper: paper, ink: ink,
                                               available: option.available, selected: option.kind == footer)
                             }
                             .buttonStyle(PressableStyle())
                             .accessibilityAddTraits(option.kind == footer ? .isSelected : [])
+                            // Los cuatro entran igual: suben un poco y aparecen, uno tras otro.
+                            .transition(.opacity.combined(with: .offset(y: Theme.Space.s))
+                                .animation(Theme.Motion.sheet.delay(Theme.Motion.stagger * Double(row + offset))))
+                                }
+                            }
                         }
                     }
                 }
@@ -568,8 +559,17 @@ private struct BottomPanel: View {
         // (que lo tomaría como «ocultar controles»).
         .contentShape(Rectangle())
         .onTapGesture {}
+        .offset(y: peek)
+        .task {
+            // Las primeras veces se asoma hacia arriba y regresa: hay más abajo de la barra.
+            guard !expanded, hints < Theme.Reader.panelHints else { return }
+            hints += 1
+            try? await Task.sleep(for: .seconds(Theme.Reader.panelHintDelay))
+            withAnimation(Theme.Motion.select) { peek = -Theme.Space.l }
+            try? await Task.sleep(for: .seconds(Theme.Reader.panelHintHold))
+            withAnimation(Theme.Motion.select) { peek = 0 }
+        }
         .padding(.horizontal, Theme.Reader.chromeInset)
-        .padding(.bottom, Theme.Space.s)
         .sensoryFeedback(.selection, trigger: footer)
         .sensoryFeedback(.impact(weight: .light), trigger: expanded)
         // Subir o bajar con el dedo, desde cualquier parte del panel menos la barra.

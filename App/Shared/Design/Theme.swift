@@ -251,6 +251,10 @@ enum Theme {
         static let previewReturn: TimeInterval = 0.35
         /// Lo que tarda la hojita de la muestra en pasar (un poco más que la real: se ve chica).
         static let previewTurn: TimeInterval = 0.6
+        /// Las primeras veces que sale el panel se asoma hacia arriba: hay más.
+        static let panelHints = 3
+        static let panelHintDelay: TimeInterval = 0.45
+        static let panelHintHold: TimeInterval = 0.3
         static let previewSlide: CGFloat = 1.2
         static let previewLines = 5
         static let previewLastLine = 4
@@ -313,9 +317,6 @@ enum Theme {
         /// Folio del lector (capítulo y porcentaje): el color del texto del libro,
         /// un poco apagado, para que se lea sobre cualquier fondo sin competir.
         static let folio = 0.74
-        /// Franja de papel detrás de los botones de arriba del lector: casi
-        /// opaca, para que el texto se adivine detrás.
-        static let chromeBand = 0.94
         /// Renglones insinuados y filo de la muestra del pie: la tinta del libro, casi invisible.
         static let ghost = 0.12
         /// El pie de una muestra que aún no tiene dato: más apagado que el folio.
@@ -333,6 +334,8 @@ enum Theme {
         static let press = Animation.easeOut(duration: 0.15)
         /// Elegir una opción: un resorte corto, con un rebote apenas visible.
         static let select = Animation.spring(response: 0.35, dampingFraction: 0.7)
+        /// Entre un elemento y el siguiente cuando entran en cascada (los mosaicos del pie).
+        static let stagger: Double = 0.04
         /// Una hoja que cambia de alto: despacio y sin rebote.
         static let sheet = Animation.smooth(duration: 0.35)
         /// Barras de audio sonando: cada una a su ritmo según su alto.

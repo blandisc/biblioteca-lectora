@@ -13,6 +13,7 @@ enum ReaderKeys {
     static let haptics = "reader.haptics"
     /// Cómo se pasa la hoja en páginas.
     static let turn = "reader.turn"
+    static let panelHints = "reader.panelHints"
 }
 
 /// Cómo se pasa la hoja en páginas (se elige en «Aa»).
@@ -266,7 +267,7 @@ struct ReaderAppearanceSheet: View {
                 .accessibilityAddTraits(item == turnStyle ? .isSelected : [])
             }
         }
-        .transition(.opacity.animation(Theme.Motion.press))
+        .transition(.opacity.combined(with: .offset(y: -Theme.Space.s)))
     }
 
     private let fontColumns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
@@ -313,7 +314,10 @@ struct ReaderAppearanceSheet: View {
                 SegmentedChoice(options: ReaderFlow.allCases, selection: $flow) { item in
                     Label(item.name, systemImage: item.symbol)
                 }
-                if showsTurns { turnPicker }
+                VStack(spacing: 0) {
+                    if showsTurns { turnPicker }
+                }
+                .animation(Theme.Motion.sheet, value: showsTurns)
             }
 
             SectionLabel(text: "Fondo").padding(.bottom, -Theme.Space.s)
