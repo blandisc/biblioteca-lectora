@@ -174,18 +174,28 @@ struct TurnPreview: View {
 
     var body: some View {
         let size = Theme.Size.turnPreview
-        ZStack {
-            page(next: true)
-            page(next: false)
-                .phaseAnimator(active ? [0.0, 1.0] : [0.0]) { content, p in
-                    turned(content, p, width: size.width)
-                } animation: { p in
-                    let pause = p == 0 ? Theme.Reader.previewPause : Theme.Reader.previewReturn
-                    return style == .none ? Theme.Motion.instant.delay(pause) : Theme.Motion.pageTurn.delay(pause)
-                }
+        TimelineView(.animation(paused: !active)) { timeline in
+            let p = active ? progress(at: timeline.date) : 0
+            ZStack {
+                page(next: true)
+                turned(page(next: false), p, width: size.width)
+            }
         }
         .frame(width: size.width, height: size.height)
         .accessibilityHidden(true)
+    }
+
+    @State private var start = Date()
+
+    /// La vuelta en bucle: quieta, pasa, se queda un momento y vuelve a empezar.
+    private func progress(at date: Date) -> Double {
+        let pause = Theme.Reader.previewPause, turn = Theme.Reader.previewTurn, hold = Theme.Reader.previewReturn
+        let t = date.timeIntervalSince(start).truncatingRemainder(dividingBy: pause + turn + hold)
+        if t < pause { return 0 }
+        if t >= pause + turn { return 1 }
+        if style == .none { return 1 }
+        let x = (t - pause) / turn
+        return x * x * (3 - 2 * x)
     }
 
     @ViewBuilder
@@ -1211,16 +1221,18 @@ struct QuietIconLabelStyle: LabelStyle {
 /// La sesión en una línea dentro del panel; tocándola, su tarjeta.
 struct SessionLine: View {
     @ObservedObject var tracker: SessionTracker
+    /// En la fila del capítulo: solo las palabras y la flecha.
+    var compact = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: Theme.Space.s) {
                 // Sin punto: el verde solo en el dato, las palabras de esta sesión.
-                (Text("Esta sesión · ")
+                (Text(compact ? "" : "Esta sesión · ")
                  + Text("\(ReadingFormat.words(tracker.words)) palabras").foregroundStyle(Theme.accent))
                     .lineLimit(1)
-                Spacer(minLength: 0)
+                if !compact { Spacer(minLength: 0) }
                 Image(systemName: "chevron.right").font(.caption.weight(.medium))
             }
             .font(.footnote.weight(.medium))
@@ -1246,6 +1258,9 @@ struct FooterPreview: View {
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.Radius.inset, style: .continuous) }
 
+    /// Cada vez que la eligen, su ícono rebota (solo el suyo).
+    @State private var bounces = 0
+
     var body: some View {
         // Todo a la misma orilla (12, el radio de la esquina): nada se come la curva.
         VStack(spacing: 0) {
@@ -1259,10 +1274,10 @@ struct FooterPreview: View {
             // El pie, centrado como en la página, con su ícono. Elegido: el ícono
             // se vuelve palomita (no solo el color dice cuál es).
             HStack(spacing: Theme.Space.inline) {
-                Image(systemName: selected ? "checkmark" : symbol)
+                Image(systemName: symbol)
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
-                    .contentTransition(.symbolEffect(.replace))
+                    .symbolEffect(.bounce, value: bounces)
                     .frame(width: Theme.Size.previewIcon)
                 Text(text)
                     .font(.caption.weight(.medium))
@@ -1284,6 +1299,7 @@ struct FooterPreview: View {
         }
         // Al elegir: el filo se enciende con un resorte corto y el ícono pasa a palomita.
         // Al presionar, se hunde (PressableStyle); todos miden siempre lo mismo.
+        .onChange(of: selected) { _, now in if now { bounces += 1 } }
         .animation(Theme.Motion.select, value: selected)
     }
 }
@@ -1296,6 +1312,7 @@ struct ScrubberBar: View {
     let onChange: (Double) -> Void
     let onEnd: () -> Void
     @State private var dragging = false
+    @State private var vertical = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -1315,12 +1332,21 @@ struct ScrubberBar: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { drag in
-                        guard enabled, width > 0 else { return }
-                        dragging = true
+                        guard enabled, width > 0, !vertical else { return }
+                        let dx = abs(drag.translation.width), dy = abs(drag.translation.height)
+                        if !dragging {
+                            // Hasta saber hacia dónde va el dedo no se mueve nada: subir
+                            // el panel por encima de la barra ya no la arrastra.
+                            guard max(dx, dy) > Theme.Size.dragSlop else { return }
+                            guard dx >= dy else { vertical = true; return }
+                            dragging = true
+                        }
                         onChange(min(max(drag.location.x / width, 0), 1))
                     }
-                    .onEnded { _ in
-                        dragging = false
+                    .onEnded { drag in
+                        defer { dragging = false; vertical = false }
+                        guard enabled, width > 0, !vertical else { return }
+                        if !dragging { onChange(min(max(drag.location.x / width, 0), 1)) }
                         onEnd()
                     }
             )

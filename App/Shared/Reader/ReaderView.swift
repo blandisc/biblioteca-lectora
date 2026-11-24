@@ -15,7 +15,6 @@ struct ReaderView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage(SessionKeys.counter) private var showsCounter = true
     @State private var showsSession = false
     /// El panel de abajo subido (con el pie y la sesión) o solo la tira.
     @State private var panelExpanded = false
@@ -34,6 +33,8 @@ struct ReaderView: View {
     @AppStorage(ReaderKeys.footer) private var footer: ReaderFooter = .chapterTime
     @AppStorage(ReaderKeys.turn) private var turnStyle: ReaderTurnStyle = .matte
     @ObservedObject private var sessions = SessionStore.shared
+    /// Ajustes: mostrar las palabras de la sesión en el panel del lector.
+    @AppStorage(SessionKeys.counter) private var showsCounter = true
 
     private var palette: ReaderPalette {
         ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: colorScheme == .dark)
@@ -251,11 +252,7 @@ struct ReaderView: View {
                                  // Tocar el pie abre el panel ya subido: ahí se elige qué dice.
                                  panelExpanded = true
                                  withAnimation(Theme.Motion.standard) { showsChrome = true }
-                             }) {
-                    if showsCounter, let session = controller.session, !showsSession {
-                        SessionCounter(tracker: session) { showsSession = true }
-                    }
-                }
+                             }) { EmptyView() }
                 .transition(.opacity)
             }
             VStack(spacing: 0) {
@@ -281,7 +278,7 @@ struct ReaderView: View {
                             .ignoresSafeArea(edges: .top)
                             .allowsHitTesting(false)
                         }
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .transition(.opacity)
                 }
                 Spacer(minLength: 0)
                 if showsChrome {
@@ -289,7 +286,7 @@ struct ReaderView: View {
                                 expanded: $panelExpanded,
                                 options: footerOptions, footer: $footer,
                                 paper: palette.background, ink: palette.textColor,
-                                session: controller.session,
+                                session: showsCounter ? controller.session : nil,
                                 onSession: { withAnimation(Theme.Motion.standard) { showsChrome = false }; showsSession = true },
                                 onContents: { tools = .contents },
                                 onSeek: { controller.goTo(fraction: $0) })
@@ -484,7 +481,7 @@ private struct BottomPanel: View {
             // La rayita: dice que se sube; tocarla también la sube o la baja.
             Button { withAnimation(Theme.Motion.sheet) { expanded.toggle() } } label: {
                 Grabber()
-                    .frame(maxWidth: .infinity, minHeight: Theme.Space.l)
+                    .frame(maxWidth: .infinity, minHeight: Theme.Space.xl)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -518,8 +515,11 @@ private struct BottomPanel: View {
                 .accessibilityValue(location?.chapter ?? title)
                 Spacer(minLength: 0)
                 // Quieto: la página. Arrastrando: a qué página y porcentaje vas.
-                // Con el panel subido la página ya está en su muestra: no se repite.
-                if !expanded || dragValue != nil {
+                // Quieta, la sesión (la página ya está en el pie del libro): tocarla abre su tarjeta.
+                if dragValue == nil, let session {
+                    SessionLine(tracker: session, compact: true, action: onSession)
+                        .transition(.opacity)
+                } else if dragValue != nil || !expanded {
                 Label(position, systemImage: "doc.text")
                     .monospacedDigit()
                     .foregroundStyle(dragValue == nil ? Theme.secondaryInk : Theme.ink)
@@ -545,10 +545,6 @@ private struct BottomPanel: View {
                             .buttonStyle(PressableStyle())
                             .accessibilityAddTraits(option.kind == footer ? .isSelected : [])
                         }
-                    }
-                    if let session {
-                        // Grupo aparte: su alto táctil ya da el aire entre grupos (unos 20 pt, como los demás).
-                        SessionLine(tracker: session, action: onSession)
                     }
                 }
                 // Aire de grupo arriba; el rótulo, pegado a sus muestras.
@@ -578,22 +574,12 @@ private struct BottomPanel: View {
         .sensoryFeedback(.impact(weight: .light), trigger: expanded)
         // Subir o bajar con el dedo, desde cualquier parte del panel menos la barra.
         .simultaneousGesture(
-            DragGesture(minimumDistance: Theme.Space.m)
+            DragGesture(minimumDistance: Theme.Size.panelSwipe)
                 .onEnded { value in
                     guard dragValue == nil, abs(value.translation.height) > abs(value.translation.width) else { return }
                     withAnimation(Theme.Motion.sheet) { expanded = value.translation.height < 0 }
                 }
         )
-    }
-}
-
-/// Contador de la sesión: en el renglón del pie, a la izquierda y a su misma altura.
-private struct SessionCounter: View {
-    @ObservedObject var tracker: SessionTracker
-    let action: () -> Void
-
-    var body: some View {
-        WordCounter(words: tracker.words, action: action)
     }
 }
 

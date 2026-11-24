@@ -77,12 +77,12 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
-stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · previewIcon 16 · scrubberKnob 14 · scrubberHeight 32 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · previewIcon 16 · scrubberKnob 14 · scrubberHeight 32 · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,72) texto callado sobre el vidrio del lector; `scrubberTrack` (0,25) riel de la barra de avance;
-`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar; `chromeBand` (0,82) la franja de papel translúcido detrás de los botones del lector.
+`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar; `chromeBand` (0,94) la franja de papel translúcido detrás de los botones del lector.
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -232,7 +232,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   En páginas, el texto deja `Reader.pageMarginTop` (40 pt) arriba y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
-  sobresale `Reader.folioBand` (40 pt) y se desvanece en `Reader.folioFade` (24 pt). El folio
+  sobresale `Reader.folioBand` (40 pt) y se desvanece en `Reader.folioFade` (56 pt). El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tira (`Grabber`, barra, capítulo y página con `QuietIconLabelStyle`);
   subiéndola, o tocando el pie, aparecen cuatro `FooterPreview` (qué dice el pie, como se leerá) y `SessionLine`. Tocando el
   contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.

@@ -66,7 +66,7 @@ enum ReaderFooter: String, CaseIterable, Identifiable {
         case .chapterTime: "clock"
         case .bookTime: "hourglass"
         case .page: "doc.text"
-        case .percent: "chart.pie"
+        case .percent: "chart.line.uptrend.xyaxis"
         }
     }
 }
