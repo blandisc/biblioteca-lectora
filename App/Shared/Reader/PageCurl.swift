@@ -153,7 +153,8 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         let remaining = abs(target - turn.progress)
         guard turn.style != .none, remaining > 0 else { finish(passes); return }
         turn.animation = (from: turn.progress, to: target, start: CACurrentMediaTime(),
-                          duration: max(Theme.Reader.turnDuration * remaining, Theme.Reader.turnMinimum))
+                          duration: max((turn.style == .fade ? Theme.Reader.fadeDuration : Theme.Reader.turnDuration) * remaining,
+                                        Theme.Reader.turnMinimum))
         let link = CADisplayLink(target: self, selector: #selector(step))
         link.add(to: .main, forMode: .common)
         self.link = link
@@ -181,7 +182,12 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         case .none:
             break
         case .fade:
-            turn.cover?.alpha = 1 - p
+            // Fundido suave: el texto se va despacio al principio y al final
+            // (curva en S) y se corre apenas hacia donde vas, sin brincar.
+            let soft = p * p * (3 - 2 * p)
+            let drift = Theme.Reader.fadeDrift * (turn.forward ? -soft : soft)
+            turn.cover?.alpha = 1 - soft
+            turn.cover?.transform = CGAffineTransform(translationX: drift, y: 0)
         case .slide:
             if turn.forward {
                 turn.cover?.transform = CGAffineTransform(translationX: -p * width, y: 0)

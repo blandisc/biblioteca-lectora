@@ -124,12 +124,12 @@ enum Theme {
         static let selection: CGFloat = 2
         /// Cinta del marcador en el lector.
         static let ribbon = CGSize(width: 12, height: 64)
-        /// Alto de la hoja «Aa».
-        static let appearanceSheet: CGFloat = 536
-        /// En páginas, con los estilos de la hoja.
-        static let appearanceSheetPaged: CGFloat = 616
+        /// Alto de la hoja «Aa» mientras se mide (luego mide lo que su contenido).
+        static let appearanceSheet: CGFloat = 584
         /// El globo para elegir qué dice el pie de la página.
         static let footerPicker: CGFloat = 300
+        /// La hoja chiquita que enseña cada estilo de pasar la hoja en «Aa».
+        static let turnPreview = CGSize(width: 18, height: 24)
         /// Barra de etapas de una sesión.
         static let stageBar: CGFloat = 8
         /// Alto de una fila de la gráfica de etapas, y de su marca.
@@ -218,6 +218,18 @@ enum Theme {
         /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
         static let highlightLines = 4
         static let turnMinimum: TimeInterval = 0.14
+        /// Fundido: un poco más lento que la hoja, y el texto se corre estos puntos.
+        static let fadeDuration: TimeInterval = 0.5
+        static let fadeDrift: CGFloat = 14
+        /// La hoja de muestra en «Aa»: pausa entre vueltas (s), cuánto se desliza (fracción de su ancho) y sus renglones.
+        static let previewPause: TimeInterval = 0.7
+        static let previewReturn: TimeInterval = 0.35
+        static let previewSlide: CGFloat = 1.2
+        static let previewLines = 5
+        static let previewLastLine = 4
+        /// El revés doblado de la hoja de muestra (fracción de lo que ya pasó) y su sombra.
+        static let previewFold: CGFloat = 0.5
+        static let previewShadow = 0.35
         /// Con el dedo: pasa si soltaste después de esta fracción del ancho…
         static let turnCommit = 0.3
         /// …o si la aventaste más rápido que esto (puntos por segundo).
@@ -277,6 +289,9 @@ enum Theme {
     enum Motion {
         static let standard = Animation.snappy(duration: 0.25)
         static let press = Animation.easeOut(duration: 0.15)
+        /// La hoja de muestra de «Aa»: una vuelta, o un cambio en seco.
+        static let pageTurn = Animation.easeInOut(duration: Reader.turnDuration)
+        static let instant = Animation.linear(duration: 0)
         /// Barras de audio sonando: cada una a su ritmo según su alto.
         static func equalizer(_ height: Double) -> Animation {
             .easeInOut(duration: 0.45 + height * 0.2)

@@ -128,14 +128,14 @@ struct SectionLabel: View {
 
 /// Mosaico chico de una acción u opción: ícono arriba (todos del mismo alto) y
 /// nombre abajo; elegido, con borde de tinta. Estilo de la hoja y acciones de un subrayado.
-struct IconTile: View {
-    let symbol: String
+struct IconTile<Icon: View>: View {
     let title: String
     var selected = false
+    @ViewBuilder var icon: Icon
 
     var body: some View {
         VStack(spacing: Theme.Space.inline) {
-            Image(systemName: symbol).font(.body).frame(height: Theme.Space.xl)
+            icon.frame(height: Theme.Space.xl)
             Text(title)
                 .font(.caption.weight(.medium))
                 .lineLimit(1)
@@ -149,6 +149,86 @@ struct IconTile: View {
             RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
                 .strokeBorder(selected ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
         }
+    }
+}
+
+extension IconTile where Icon == AnyView {
+    /// El mosaico con un símbolo de SF.
+    init(symbol: String, title: String, selected: Bool = false) {
+        self.init(title: title, selected: selected) { AnyView(Image(systemName: symbol).font(.body)) }
+    }
+}
+
+/// Una hoja chiquita que pasa con el estilo elegido, en bucle, como en el libro:
+/// la de abajo es la página siguiente (otros renglones, empieza con párrafo).
+/// Hoja: se dobla desde la orilla derecha y se ve el revés más oscuro.
+/// Deslizar: se va de lado. Fundido: una se desvanece mientras aparece la otra.
+/// Solo se mueve la elegida.
+struct TurnPreview: View {
+    let style: ReaderTurnStyle
+    let active: Bool
+
+    var body: some View {
+        let size = Theme.Size.turnPreview
+        ZStack {
+            page(next: true)
+            page(next: false)
+                .phaseAnimator(active ? [0.0, 1.0] : [0.0]) { content, p in
+                    turned(content, p, width: size.width)
+                } animation: { p in
+                    let pause = p == 0 ? Theme.Reader.previewPause : Theme.Reader.previewReturn
+                    return style == .none ? Theme.Motion.instant.delay(pause) : Theme.Motion.pageTurn.delay(pause)
+                }
+        }
+        .frame(width: size.width, height: size.height)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private func turned(_ content: some View, _ p: Double, width: CGFloat) -> some View {
+        switch style {
+        case .matte:
+            // Lo que queda de la hoja, y su revés doblado encima de la orilla.
+            let left = width * (Theme.Emphasis.rest - p)
+            let fold = min(left, width * p) * Theme.Reader.previewFold
+            content
+                .mask(alignment: .leading) { Rectangle().frame(width: max(left, 0)) }
+                .overlay(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
+                        .fill(Theme.secondaryInk)
+                        .frame(width: fold)
+                        .offset(x: max(left - fold, 0))
+                        .shadow(color: Theme.ink.opacity(Theme.Reader.previewShadow), radius: Theme.Size.hairline)
+                }
+        case .slide:
+            content.offset(x: -p * width * Theme.Reader.previewSlide)
+                .shadow(color: Theme.ink.opacity(Theme.Reader.previewShadow), radius: Theme.Size.hairline)
+        case .fade, .none:
+            content.opacity(Theme.Emphasis.rest - p)
+        }
+    }
+
+    /// Una página con renglones; la siguiente empieza con sangría y termina corta.
+    private func page(next: Bool) -> some View {
+        RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
+            .fill(Theme.paper)
+            .overlay {
+                RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
+                    .strokeBorder(Theme.secondaryInk, lineWidth: Theme.Size.hairline)
+            }
+            .overlay {
+                VStack(alignment: .trailing, spacing: 0) {
+                    ForEach(0..<Theme.Reader.previewLines, id: \.self) { line in
+                        let short = next ? line == 0 : line == Theme.Reader.previewLastLine
+                        Capsule().fill(Theme.secondaryInk)
+                            .frame(height: Theme.Size.hairline)
+                            .padding(next && line == 0 ? .leading : .trailing, short ? Theme.Space.xs : 0)
+                            .frame(maxHeight: .infinity)
+                    }
+                }
+                .padding(Theme.Space.xxs)
+            }
+            .compositingGroup()
     }
 }
 

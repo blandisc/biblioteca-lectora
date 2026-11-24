@@ -118,6 +118,14 @@ enum ReaderFont: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Nombre corto para el mosaico.
+    var short: String {
+        switch self {
+        case .sans: "SF"
+        default: name
+        }
+    }
+
     var detail: String {
         switch self {
         case .newYork: "La serif de Apple"
@@ -207,8 +215,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.turn) private var turnStyle: ReaderTurnStyle = .matte
     /// El modo de la app: con «Automático», el tema sigue al claro u oscuro de iOS.
     @Environment(\.colorScheme) private var appScheme
-
-    private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
+    @State private var contentHeight = Theme.Size.appearanceSheet
 
     private var palette: ReaderPalette {
         ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: appScheme == .dark)
@@ -225,8 +232,9 @@ struct ReaderAppearanceSheet: View {
             .sensoryFeedback(.selection, trigger: theme)
             .sensoryFeedback(.selection, trigger: font)
             .sensoryFeedback(.selection, trigger: turnStyle)
-            // En páginas aparece el estilo de la hoja: la hoja crece para mostrarlo.
-            .presentationDetents([.height(showsTurns ? Theme.Size.appearanceSheetPaged : Theme.Size.appearanceSheet)])
+            // La hoja mide lo que mide su contenido: sin espacio muerto abajo.
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+            .presentationDetents([.height(contentHeight)])
             .presentationDragIndicator(.visible)
             .animation(Theme.Motion.standard, value: flow)
     }
@@ -239,12 +247,16 @@ struct ReaderAppearanceSheet: View {
         #endif
     }
 
-    /// Cómo se pasa la hoja: cuatro mosaicos chicos, ícono arriba y nombre abajo.
+    /// Cómo se pasa la hoja: cuatro mosaicos con una hoja chiquita; la elegida
+    /// pasa en bucle con su estilo, para verlo sin leer.
     private var turnPicker: some View {
         HStack(spacing: Theme.Space.s) {
             ForEach(ReaderTurnStyle.allCases) { item in
                 Button { turnStyle = item } label: {
-                    IconTile(symbol: item.symbol, title: item.name, selected: item == turnStyle)
+                    IconTile(title: item.name, selected: item == turnStyle) {
+                        TurnPreview(style: item, active: item == turnStyle)
+                            .id(item == turnStyle) // al elegirla, empieza su vuelta desde cero
+                    }
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Pasar la hoja: \(item.name)")
@@ -256,27 +268,23 @@ struct ReaderAppearanceSheet: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            LazyVGrid(columns: columns, spacing: Theme.Space.s) {
+            // Letra: las cuatro en un renglón (cada «Aa» en su fuente) y el tamaño.
+            SectionLabel(text: "Letra").padding(.bottom, -Theme.Space.s)
+            HStack(spacing: Theme.Space.s) {
                 ForEach(ReaderFont.allCases) { item in
                     Button { font = item } label: {
-                        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                        IconTile(title: item.short, selected: item == font) {
                             Text("Aa").font(item.preview(size: Theme.Space.xl))
-                            Text(item.name).font(.subheadline.weight(.medium))
-                            Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(Theme.Space.m)
-                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
-                                .strokeBorder(item == font ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
                         }
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(item.name)
                     .accessibilityAddTraits(item == font ? .isSelected : [])
                 }
             }
+            sizeRow
 
+            SectionLabel(text: "Página").padding(.top, Theme.Space.s).padding(.bottom, -Theme.Space.s)
             HStack(spacing: Theme.Space.s) {
                 ForEach(ReaderFlow.allCases) { item in
                     Button { flow = item } label: {
@@ -302,16 +310,7 @@ struct ReaderAppearanceSheet: View {
 
             if showsTurns { turnPicker }
 
-            HStack(spacing: Theme.Space.m) {
-                Button { scale = max(Self.scales.lowerBound, scale - Self.scaleStep) } label: { Text("A").font(.footnote) }
-                    .accessibilityLabel("Letra más chica")
-                sizeSlider
-                    .accessibilityLabel("Tamaño de letra")
-                Button { scale = min(Self.scales.upperBound, scale + Self.scaleStep) } label: { Text("A").font(.title2) }
-                    .accessibilityLabel("Letra más grande")
-            }
-            .buttonStyle(.plain)
-
+            SectionLabel(text: "Fondo").padding(.top, Theme.Space.s).padding(.bottom, -Theme.Space.s)
             HStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
@@ -342,7 +341,20 @@ struct ReaderAppearanceSheet: View {
             #endif
         }
         .foregroundStyle(Theme.ink)
-        .padding(Theme.Space.xl)
+        // Abajo ya hay la orilla del iPhone: sin margen extra, sin espacio muerto.
+        .padding([.horizontal, .top], Theme.Space.xl)
+    }
+
+    private var sizeRow: some View {
+            HStack(spacing: Theme.Space.m) {
+                Button { scale = max(Self.scales.lowerBound, scale - Self.scaleStep) } label: { Text("A").font(.footnote) }
+                    .accessibilityLabel("Letra más chica")
+                sizeSlider
+                    .accessibilityLabel("Tamaño de letra")
+                Button { scale = min(Self.scales.upperBound, scale + Self.scaleStep) } label: { Text("A").font(.title2) }
+                    .accessibilityLabel("Letra más grande")
+            }
+            .buttonStyle(.plain)
     }
 
     /// Los tamaños de letra: nueve niveles, cada uno con su marca en la barra.
@@ -368,9 +380,18 @@ struct ReaderAppearanceSheet: View {
     private func swatch(for item: ReaderTheme) -> some View {
         switch item {
         case .auto:
-            Circle().fill(LinearGradient(colors: [ReaderPalette.paper.background, ReaderPalette.darkPaper.background],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-                .overlay { Text("A").font(.rowTitle.weight(.medium)).foregroundStyle(Theme.secondaryInk) }
+            // Mitad papel de día, mitad papel de noche, con su «Aa» en cada tinta:
+            // dice que sigue al claro u oscuro de iOS.
+            let day = ReaderPalette.paper, night = ReaderPalette.darkPaper
+            ZStack {
+                Circle().fill(day.background)
+                Text("Aa").font(.rowTitle.weight(.medium)).foregroundStyle(day.textColor)
+                ZStack {
+                    Circle().fill(night.background)
+                    Text("Aa").font(.rowTitle.weight(.medium)).foregroundStyle(night.textColor)
+                }
+                .mask { HStack(spacing: 0) { Spacer(minLength: 0).frame(maxWidth: .infinity); Rectangle() } }
+            }
         default:
             let palette = ReaderPalette.resolve(item, autoNight: false, appIsDark: false)
             Circle().fill(palette.background)

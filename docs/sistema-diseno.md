@@ -78,7 +78,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-textEditor 120 · ribbon 12×64 · appearanceSheet 536 (616 en páginas) · footerPicker 300 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
+textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · footerPicker 300 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir);
@@ -141,6 +141,7 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `CoverCell` + `CoverGrid` | Celda y cuadrícula de 3 columnas | Biblioteca, Mesa |
 | `BookRow` | Portada pequeña + título serif + detalle + extra | Lista, serie, Buscar, Cuaderno |
 | `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota | «Donde lo dejaste», subrayados |
+| `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle (`Reader.previewPause`, `previewFold`, `previewSlide`, `previewLines`) | Estilos de la hoja en «Aa» |
 | `ValueTile` | Mosaico con dato: ícono chico, valor grande, leyenda; borde si está elegido | Globo del pie del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido | Estilo de la hoja, tarjeta de un subrayado |
 | `FactRow` | Etiqueta / valor con línea fina | Ficha del libro |
