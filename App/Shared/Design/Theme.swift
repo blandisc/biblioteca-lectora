@@ -93,6 +93,8 @@ enum Theme {
         static let segment: CGFloat = 10
         /// Paneles de vidrio del lector.
         static let panel: CGFloat = 28
+        /// Lo que va dentro de un panel a su orilla (16): el radio del panel menos esa orilla, para que las esquinas se vean concéntricas.
+        static let inset: CGFloat = 12
         /// Cápsula de controles de 44 pt de alto.
         static let capsule: CGFloat = 22
         /// Muestra de color de una leyenda.
@@ -134,6 +136,10 @@ enum Theme {
         static let stageBar: CGFloat = 8
         /// La barra de etapas fina, en la tarjeta de la sesión del lector: del grueso de una línea, no de un bloque.
         static let stageBarThin: CGFloat = 4
+        /// Muestra del pie en el panel del lector: un recorte de la parte de abajo de la página.
+        static let footerPreview: CGFloat = 64
+        /// Renglón fantasma de esa muestra.
+        static let ghostLine: CGFloat = 3
         /// Alto de una fila de la gráfica de etapas, y de su marca.
         static let stageRow: CGFloat = 26
         static let stageMark: CGFloat = 16
@@ -289,6 +295,10 @@ enum Theme {
         /// Franja de papel detrás de los botones de arriba del lector: casi
         /// opaca, para que el texto se adivine detrás.
         static let chromeBand = 0.82
+        /// Renglones insinuados y filo de la muestra del pie: la tinta del libro, casi invisible.
+        static let ghost = 0.12
+        /// El pie de una muestra que aún no tiene dato: más apagado que el folio.
+        static let folioMuted = 0.55
         /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
         static let labelMinScale: CGFloat = 0.8
     }

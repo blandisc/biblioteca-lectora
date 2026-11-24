@@ -234,41 +234,6 @@ struct TurnPreview: View {
     }
 }
 
-/// Mosaico con un dato: ícono chico arriba, el valor en grande y su leyenda
-/// («Página 10» · «de 842»). Lo usa el globo del pie del lector.
-struct ValueTile: View {
-    let symbol: String
-    let value: String
-    let caption: String
-    var selected = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-            Image(systemName: symbol)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(selected ? Theme.accent : Theme.secondaryInk)
-                .padding(.bottom, Theme.Space.xxs)
-            Text(value)
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
-                .foregroundStyle(Theme.ink)
-            Text(caption)
-                .font(.caption2)
-                .foregroundStyle(Theme.secondaryInk)
-                .lineLimit(2, reservesSpace: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Theme.Space.s)
-        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
-                .strokeBorder(selected ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
-        }
-    }
-}
-
 /// Dos o más opciones lado a lado, una elegida (fondo de papel sobre el carril).
 /// La marca se desliza de una a otra.
 struct SegmentedChoice<Option: Hashable & Identifiable, Label: View>: View {
@@ -1262,6 +1227,58 @@ struct SessionLine: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Ver la sesión")
+    }
+}
+
+/// Muestra del pie: un recorte de la parte de abajo de la página, con el papel
+/// y la tinta del libro, dos renglones insinuados y el pie tal como se leerá.
+/// La elegida lleva un filo y un punto verdes.
+struct FooterPreview: View {
+    let text: String
+    let paper: Color
+    let ink: Color
+    var available = true
+    var selected = false
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.Radius.inset, style: .continuous) }
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            shape.fill(paper)
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                // El primero deja sitio al punto de elegido; el segundo cierra el párrafo.
+                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                    .padding(.trailing, Theme.Space.l)
+                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                    .padding(.trailing, Theme.Space.xxxl)
+                Spacer(minLength: 0)
+            }
+            .padding(Theme.Space.m)
+            Text(text)
+                .font(.caption.weight(.medium))
+                .italic(!available)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+                .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
+                .padding(.horizontal, Theme.Space.s)
+                .padding(.bottom, Theme.Space.m)
+                .contentTransition(.numericText())
+        }
+        .frame(height: Theme.Size.footerPreview)
+        .overlay {
+            shape.strokeBorder(selected ? Theme.accent : ink.opacity(Theme.Emphasis.ghost),
+                               lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
+        }
+        .overlay(alignment: .topTrailing) {
+            if selected {
+                Circle().fill(Theme.accent)
+                    .frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
+                    .padding(Theme.Space.s)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .animation(Theme.Motion.press, value: selected)
     }
 }
 

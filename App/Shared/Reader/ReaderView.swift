@@ -288,6 +288,7 @@ struct ReaderView: View {
                     BottomPanel(title: title, location: controller.location,
                                 expanded: $panelExpanded,
                                 options: footerOptions, footer: $footer,
+                                paper: palette.background, ink: palette.textColor,
                                 session: controller.session,
                                 onSession: { withAnimation(Theme.Motion.standard) { showsChrome = false }; showsSession = true },
                                 onContents: { tools = .contents },
@@ -322,9 +323,11 @@ struct ReaderView: View {
     /// Las opciones del pie, cada una con lo que diría ahora mismo.
     private var footerOptions: [FooterOption] {
         ReaderFooter.allCases.map { kind in
-            let parts = footerParts(kind)
-            return FooterOption(kind: kind, value: parts?.value ?? kind.name,
-                                caption: parts?.caption ?? "en unos minutos")
+            guard let parts = footerParts(kind) else {
+                return FooterOption(kind: kind, text: "Calculando \(kind.name.lowercased())", available: false)
+            }
+            return FooterOption(kind: kind, text: kind == .percent ? parts.value : "\(parts.value) \(parts.caption)",
+                                available: true)
         }
     }
 
@@ -450,6 +453,9 @@ private struct BottomPanel: View {
     @Binding var expanded: Bool
     let options: [FooterOption]
     @Binding var footer: ReaderFooter
+    /// El papel y la tinta del libro: las muestras del pie se ven como la página.
+    let paper: Color
+    let ink: Color
     let session: SessionTracker?
     let onSession: () -> Void
     let onContents: () -> Void
@@ -523,11 +529,12 @@ private struct BottomPanel: View {
             if expanded {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
                     SectionLabel(text: "Abajo de la página")
+                        .padding(.bottom, Theme.Space.s)
                     LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                         ForEach(options) { option in
                             Button { footer = option.kind } label: {
-                                ValueTile(symbol: option.kind.symbol, value: option.value, caption: option.caption,
-                                          selected: option.kind == footer)
+                                FooterPreview(text: option.text, paper: paper, ink: ink,
+                                              available: option.available, selected: option.kind == footer)
                             }
                             .buttonStyle(PressableStyle())
                             .accessibilityAddTraits(option.kind == footer ? .isSelected : [])
@@ -658,8 +665,10 @@ private struct SelectionBar: View {
 /// Una opción del pie con lo que diría ahora («9 min» · «para terminar el capítulo»).
 struct FooterOption: Identifiable {
     let kind: ReaderFooter
-    let value: String
-    let caption: String
+    /// El pie tal como se leerá en la página.
+    let text: String
+    /// Falso mientras no hay con qué calcularlo (tiempo del libro al empezar).
+    let available: Bool
     var id: ReaderFooter { kind }
 }
 
@@ -704,6 +713,8 @@ private struct ReadingFolio<Counter: View>: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .animation(Theme.Motion.standard, value: footerText)
+                .contentTransition(.opacity)
                 .accessibilityLabel("Pie de página")
                 .accessibilityValue(footerText)
                 .accessibilityHint("Elige qué dice")
