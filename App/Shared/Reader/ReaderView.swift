@@ -503,8 +503,14 @@ private struct BottomPanel: View {
 
             HStack(spacing: Theme.Space.m) {
                 Button(action: onContents) {
-                    Label(location?.chapter ?? title, systemImage: "list.bullet")
-                        .lineLimit(1)
+                    HStack(spacing: Theme.Space.xs) {
+                        Label(location?.chapter ?? title, systemImage: "list.bullet")
+                            .lineLimit(1)
+                        // La flecha dice que se toca, igual que en la línea de la sesión.
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(Theme.ink.opacity(Theme.Emphasis.glassText))
+                    }
                         .frame(minHeight: Theme.Size.tapTarget)
                         .contentShape(Rectangle())
                 }
@@ -529,7 +535,7 @@ private struct BottomPanel: View {
 
             if expanded {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
-                    SectionLabel(text: "Pie de página")
+                    SectionLabel(text: "Pie de página", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
                     LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                         ForEach(options) { option in
                             Button { footer = option.kind } label: {
@@ -541,13 +547,12 @@ private struct BottomPanel: View {
                         }
                     }
                     if let session {
-                        // Grupo aparte: el aire de la escala entre grupos.
+                        // Grupo aparte: su alto táctil ya da el aire entre grupos (unos 20 pt, como los demás).
                         SessionLine(tracker: session, action: onSession)
-                            .padding(.top, Theme.Space.s)
                     }
                 }
                 // Aire de grupo arriba; el rótulo, pegado a sus muestras.
-                .padding(.top, Theme.Space.m)
+                .padding(.top, Theme.Space.s)
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
             if Features.audiobook {

@@ -290,6 +290,10 @@ enum Theme {
     enum Emphasis {
         /// Texto secundario sobre la marca (tarjeta para compartir).
         static let secondary = 0.75
+        /// Texto callado sobre el vidrio del lector: el gris fijo se pierde ahí.
+        static let glassText = 0.72
+        /// Riel de la barra de avance: tinta tenue que sí se ve sobre el vidrio.
+        static let scrubberTrack = 0.25
         /// Al tocar: se hunde un poco y se apaga apenas, sin cambiar de color.
         static let pressedScale = 0.97
         /// En reposo: tamaño y opacidad completos.

@@ -114,12 +114,14 @@ struct BrandMark: View {
 /// Rótulo de sección en mayúsculas romanas pequeñas («EN LA MESA»).
 struct SectionLabel: View {
     let text: String
+    /// Sobre el vidrio del lector va en tinta tenue; en las pantallas, el gris de siempre.
+    var tone: Color = Theme.secondaryInk
 
     var body: some View {
         Text(text.uppercased())
             .font(.sectionLabel)
             .tracking(Theme.Tracking.sectionLabel)
-            .foregroundStyle(Theme.secondaryInk)
+            .foregroundStyle(tone)
             .accessibilityAddTraits(.isHeader)
     }
 }
@@ -1222,7 +1224,7 @@ struct SessionLine: View {
                 Image(systemName: "chevron.right").font(.caption.weight(.medium))
             }
             .font(.footnote.weight(.medium))
-            .foregroundStyle(Theme.secondaryInk)
+            .foregroundStyle(Theme.ink.opacity(Theme.Emphasis.glassText))
             .frame(minHeight: Theme.Size.tapTarget)
             .contentShape(Rectangle())
         }
@@ -1300,7 +1302,7 @@ struct ScrubberBar: View {
             let width = geometry.size.width
             let clamped = min(max(value, 0), 1)
             ZStack(alignment: .leading) {
-                Capsule().fill(Theme.track).frame(height: Theme.Size.stageBarThin)
+                Capsule().fill(Theme.ink.opacity(Theme.Emphasis.scrubberTrack)).frame(height: Theme.Size.stageBarThin)
                 Capsule().fill(Theme.ink).frame(width: max(width * clamped, Theme.Size.stageBarThin), height: Theme.Size.stageBarThin)
                 Circle().fill(Theme.ink)
                     .frame(width: Theme.Size.scrubberKnob, height: Theme.Size.scrubberKnob)

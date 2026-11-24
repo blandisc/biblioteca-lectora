@@ -81,7 +81,7 @@ stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · previewIcon 1
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
-`Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir);
+`Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,72) texto callado sobre el vidrio del lector; `scrubberTrack` (0,25) riel de la barra de avance;
 `pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar; `chromeBand` (0,82) la franja de papel translúcido detrás de los botones del lector.
 
 ### Portada tipográfica (`Theme.CoverArt`)
