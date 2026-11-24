@@ -10,10 +10,24 @@ struct SessionCard: View {
     let close: () -> Void
     @State private var notice: String?
 
+    /// Las palabras, o «Acabas de empezar» mientras no haya ninguna.
+    private func words(_ session: ReadingSession) -> String {
+        session.words > 0 ? "\(ReadingFormat.words(session.words)) palabras" : "Acabas de empezar"
+    }
+
+    /// El tramo más largo, solo si dice algo que la leyenda no dice ya: con una
+    /// sola etapa, su tiempo y el tramo son el mismo número.
+    private func streak(_ session: ReadingSession) -> String? {
+        let seconds = session.longestStreak
+        let stages = ReadingStage.allCases.filter { session.seconds(in: $0) >= 30 }
+        guard seconds >= 60, stages.count > 1 else { return nil }
+        return "Tu tramo más largo sin interrupciones: \(ReadingFormat.duration(seconds))."
+    }
+
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let session = tracker.snapshot(at: context.date)
-            VStack(alignment: .leading, spacing: Theme.Space.m) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 HStack {
                     SectionLabel(text: "Esta sesión")
                     Spacer()
@@ -27,20 +41,55 @@ struct SessionCard: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Cerrar")
                 }
-                .padding(.vertical, -Theme.Space.s)
+                // El botón conserva su área de toque, pero no empuja lo de abajo.
+                .padding(.vertical, -Theme.Space.m)
                 if let session {
-                    StatTrio(items: [
-                        .init(value: ReadingFormat.words(session.words), label: "palabras"),
-                        .init(value: ReadingFormat.clock(session.elapsed), label: "minutos"),
-                        .init(value: session.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
-                    ])
-                    VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                        StageBar(segments: session.segments)
+                    // Editorial: el tiempo en grande y, en la misma línea, el ritmo.
+                    HStack(alignment: .lastTextBaseline) {
+                        Text(ReadingFormat.clock(session.elapsed))
+                            .font(.bookTitle)
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                        Spacer(minLength: Theme.Space.m)
+                        VStack(alignment: .trailing, spacing: Theme.Space.xxs) {
+                            Text(words(session))
+                            if let perMinute = session.wordsPerMinute, session.words > 0 {
+                                Text("\(perMinute) por minuto")
+                            }
+                        }
+                        .font(.footnote)
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.secondaryInk)
+                    }
+                    VStack(alignment: .leading, spacing: Theme.Space.s) {
+                        StageBar(segments: session.segments, height: Theme.Size.stageBarThin)
                         StageLegend { session.seconds(in: $0) }
+                        if let streak = streak(session) {
+                            Text(streak)
+                                .font(.caption)
+                                .foregroundStyle(Theme.secondaryInk)
+                        }
                     }
-                    SecondaryButton(title: "Escribir sobre ella", systemImage: "square.and.pencil") {
-                        notice = SessionNote.write(session, bookTitle: bookTitle)
+                    // Escribir es lo menos frecuente: un renglón discreto, no un botón.
+                    VStack(spacing: 0) {
+                        Divider()
+                        Button {
+                            notice = SessionNote.write(session, bookTitle: bookTitle)
+                        } label: {
+                            HStack(spacing: Theme.Space.s) {
+                                Label("Escribir sobre ella", systemImage: "square.and.pencil")
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Theme.secondaryInk)
+                            }
+                            .font(.subheadline.weight(.medium))
+                            .frame(minHeight: Theme.Size.tapTarget)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
+                    .padding(.bottom, -Theme.Space.s)
                 } else {
                     Text("Empieza al pasar la página: cuenta palabras, tiempo y ritmo. Nada sale de tus dispositivos.")
                         .font(.subheadline)

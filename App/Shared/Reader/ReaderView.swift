@@ -17,6 +17,8 @@ struct ReaderView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SessionKeys.counter) private var showsCounter = true
     @State private var showsSession = false
+    /// El panel de abajo subido (con el pie y la sesión) o solo la tira.
+    @State private var panelExpanded = false
     /// Hoja de herramientas abierta (índice, buscar o subrayados).
     @State private var tools: ReaderToolsSheet.Part?
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
@@ -82,6 +84,8 @@ struct ReaderView: View {
             }
         }
         .overlay { chrome }
+        // Al esconder los controles, la próxima vez el panel sale como tira.
+        .onChange(of: showsChrome) { _, shown in if !shown { panelExpanded = false } }
         #if os(iOS)
         .statusBarHidden(!showsChrome)
         #endif
@@ -241,8 +245,13 @@ struct ReaderView: View {
         ZStack {
             if !showsChrome {
                 ReadingFolio(title: title, location: controller.location, footerText: footerText,
-                             options: footerOptions, footer: $footer, color: palette.textColor,
-                             paper: flow == .scrolled ? palette.background : nil) {
+                             color: palette.textColor,
+                             paper: flow == .scrolled ? palette.background : nil,
+                             onFooter: {
+                                 // Tocar el pie abre el panel ya subido: ahí se elige qué dice.
+                                 panelExpanded = true
+                                 withAnimation(Theme.Motion.standard) { showsChrome = true }
+                             }) {
                     if showsCounter, let session = controller.session, !showsSession {
                         SessionCounter(tracker: session) { showsSession = true }
                     }
@@ -254,11 +263,33 @@ struct ReaderView: View {
                     TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() },
                                 onSearch: { tools = .search },
                                 onAppearance: { showsAppearance = true })
+                        // Franja de papel detrás de los botones: el texto pasa por
+                        // debajo y los botones siempre se leen.
+                        .background(alignment: .bottom) {
+                            // Papel sólido hasta abajo de los botones y una orilla que se
+                            // desvanece hacia el texto.
+                            // Papel translúcido: el texto se adivina detrás sin
+                            // competir con los botones.
+                            VStack(spacing: 0) {
+                                palette.background
+                                LinearGradient(colors: [palette.background, palette.background.opacity(0)],
+                                               startPoint: .top, endPoint: .bottom)
+                                    .frame(height: Theme.Reader.folioFade)
+                            }
+                            .opacity(Theme.Emphasis.chromeBand)
+                            .padding(.bottom, -Theme.Reader.folioFade)
+                            .ignoresSafeArea(edges: .top)
+                            .allowsHitTesting(false)
+                        }
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 Spacer(minLength: 0)
                 if showsChrome {
                     BottomPanel(title: title, location: controller.location,
+                                expanded: $panelExpanded,
+                                options: footerOptions, footer: $footer,
+                                session: controller.session,
+                                onSession: { withAnimation(Theme.Motion.standard) { showsChrome = false }; showsSession = true },
                                 onContents: { tools = .contents },
                                 onSeek: { controller.goTo(fraction: $0) })
                         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -293,7 +324,7 @@ struct ReaderView: View {
         ReaderFooter.allCases.map { kind in
             let parts = footerParts(kind)
             return FooterOption(kind: kind, value: parts?.value ?? kind.name,
-                                caption: parts?.caption ?? "Lee unos minutos y aparece")
+                                caption: parts?.caption ?? "en unos minutos")
         }
     }
 
@@ -407,20 +438,26 @@ private struct TopControls: View {
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
         .padding(.horizontal, Theme.Reader.chromeInset)
-        .padding(.top, Theme.Space.s)
     }
 }
 
-/// Panel inferior: el capítulo es el botón del índice y páginas en vez de
-/// porcentaje. Guiada y Escuchar aparecen cuando llegue el audiolibro.
+/// Panel de abajo al tocar el centro. Primero una tira mínima: la barra para
+/// saltar y, debajo, el capítulo (abre el índice) y la página. Subiéndola con
+/// el dedo (o tocando su rayita) aparece lo demás: qué dice el pie y la sesión.
 private struct BottomPanel: View {
     let title: String
     let location: ReaderController.Location?
+    @Binding var expanded: Bool
+    let options: [FooterOption]
+    @Binding var footer: ReaderFooter
+    let session: SessionTracker?
+    let onSession: () -> Void
     let onContents: () -> Void
     let onSeek: (Double) -> Void
     @State private var dragValue: Double?
 
     private var fraction: Double { dragValue ?? location?.fraction ?? 0 }
+    private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
     /// La página a la que apunta la barra (la de ahora o la del arrastre).
     private var page: Int? {
@@ -435,25 +472,16 @@ private struct BottomPanel: View {
     }
 
     var body: some View {
-        VStack(spacing: Theme.Space.rowY) {
-            HStack(alignment: .firstTextBaseline) {
-                Button(action: onContents) {
-                    HStack(spacing: Theme.Space.xxs) {
-                        Text(location?.chapter ?? title).lineLimit(1)
-                        Image(systemName: "chevron.right").font(.caption.weight(.bold))
-                    }
-                    .font(.subheadline.weight(.semibold))
-                }
-                .accessibilityLabel("Índice")
-                Spacer(minLength: Theme.Space.m)
-                // Quieto: la página. Arrastrando: a qué página y porcentaje vas.
-                Text(position)
-                    .font(.footnote.weight(dragValue == nil ? .regular : .semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(dragValue == nil ? Theme.secondaryInk : Theme.ink)
-                    .contentTransition(.numericText())
-                    .animation(Theme.Motion.press, value: position)
+        VStack(spacing: 0) {
+            // La rayita: dice que se sube; tocarla también la sube o la baja.
+            Button { withAnimation(Theme.Motion.sheet) { expanded.toggle() } } label: {
+                Grabber()
+                    .frame(maxWidth: .infinity, minHeight: Theme.Space.l)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(expanded ? "Bajar el panel" : "Subir el panel")
+
             Slider(
                 value: Binding(get: { fraction }, set: { dragValue = $0 }),
                 in: 0...1,
@@ -467,21 +495,78 @@ private struct BottomPanel: View {
             .tint(Theme.ink)
             .disabled(location == nil)
             .sensoryFeedback(.selection, trigger: fraction.percentText)
+            .accessibilityLabel("Avance en el libro")
+            .accessibilityValue(position)
+
+            HStack(spacing: Theme.Space.m) {
+                Button(action: onContents) {
+                    Label(location?.chapter ?? title, systemImage: "list.bullet")
+                        .lineLimit(1)
+                        .frame(minHeight: Theme.Size.tapTarget)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Índice")
+                .accessibilityValue(location?.chapter ?? title)
+                Spacer(minLength: 0)
+                // Quieto: la página. Arrastrando: a qué página y porcentaje vas.
+                Label(position, systemImage: "book.pages")
+                    .monospacedDigit()
+                    .foregroundStyle(dragValue == nil ? Theme.secondaryInk : Theme.ink)
+                    .contentTransition(.numericText())
+                    .animation(Theme.Motion.press, value: position)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+            }
+            .font(.footnote.weight(.medium))
+            .labelStyle(QuietIconLabelStyle())
+
+            if expanded {
+                VStack(alignment: .leading, spacing: Theme.Space.s) {
+                    SectionLabel(text: "Abajo de la página")
+                    LazyVGrid(columns: columns, spacing: Theme.Space.s) {
+                        ForEach(options) { option in
+                            Button { footer = option.kind } label: {
+                                ValueTile(symbol: option.kind.symbol, value: option.value, caption: option.caption,
+                                          selected: option.kind == footer)
+                            }
+                            .buttonStyle(PressableStyle())
+                            .accessibilityAddTraits(option.kind == footer ? .isSelected : [])
+                        }
+                    }
+                    if let session {
+                        // Grupo aparte: el aire de la escala entre grupos.
+                        SessionLine(tracker: session, action: onSession)
+                            .padding(.top, Theme.Space.s)
+                    }
+                }
+                .padding(.top, Theme.Space.s)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
             if Features.audiobook {
                 HStack(spacing: Theme.Space.s) {
                     ReaderPillButton(title: "Guiada", systemImage: "text.viewfinder") {}
                     ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
                 }
+                .padding(.top, Theme.Space.s)
             }
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
         .padding(.horizontal, Theme.Space.l)
-        .padding(.top, Theme.Space.rowGap)
         .padding(.bottom, Theme.Space.m)
         .glassPanel(cornerRadius: Theme.Radius.panel)
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Space.s)
+        .sensoryFeedback(.selection, trigger: footer)
+        .sensoryFeedback(.impact(weight: .light), trigger: expanded)
+        // Subir o bajar con el dedo, desde cualquier parte del panel menos la barra.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: Theme.Space.m)
+                .onEnded { value in
+                    guard dragValue == nil, abs(value.translation.height) > abs(value.translation.width) else { return }
+                    withAnimation(Theme.Motion.sheet) { expanded = value.translation.height < 0 }
+                }
+        )
     }
 }
 
@@ -588,16 +673,15 @@ private struct ReadingFolio<Counter: View>: View {
     let title: String
     let location: ReaderController.Location?
     let footerText: String
-    let options: [FooterOption]
-    @Binding var footer: ReaderFooter
     /// El color del texto del libro: el folio se lee sobre cualquier fondo
     /// (papel, noche cálida, negro), no con el gris de la app.
     let color: Color
     /// En continuo, el papel: va detrás del folio para que el texto no se cruce.
     var paper: Color? = nil
+    /// Tocar el pie: abre el panel con sus opciones.
+    let onFooter: () -> Void
     /// El contador de palabras, en el mismo renglón que el pie.
     @ViewBuilder var counter: Counter
-    @State private var choosing = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -611,7 +695,7 @@ private struct ReadingFolio<Counter: View>: View {
                 .allowsHitTesting(false)
             Spacer()
             ZStack {
-                Button { choosing = true } label: {
+                Button(action: onFooter) {
                     Text(footerText)
                         .monospacedDigit()
                         .lineLimit(1)
@@ -623,10 +707,6 @@ private struct ReadingFolio<Counter: View>: View {
                 .accessibilityLabel("Pie de página")
                 .accessibilityValue(footerText)
                 .accessibilityHint("Elige qué dice")
-                .popover(isPresented: $choosing, arrowEdge: .bottom) {
-                    FooterPicker(options: options, selection: $footer) { choosing = false }
-                        .presentationCompactAdaptation(.popover)
-                }
                 HStack {
                     counter
                     Spacer()
@@ -662,39 +742,6 @@ private struct ReadingFolio<Counter: View>: View {
         LinearGradient(colors: [paper, paper.opacity(0)],
                        startPoint: edge == .bottom ? .top : .bottom, endPoint: edge == .bottom ? .bottom : .top)
             .frame(height: Theme.Reader.folioFade)
-    }
-}
-
-/// El globo del pie: cuatro mosaicos, dos por renglón. Cada uno dice lo que
-/// mostraría ahora, en grande, con su ícono y su leyenda; el elegido va
-/// marcado con tinta, como los mosaicos de «Aa».
-private struct FooterPicker: View {
-    let options: [FooterOption]
-    @Binding var selection: ReaderFooter
-    let done: () -> Void
-
-    private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionLabel(text: "Abajo de la página")
-            LazyVGrid(columns: columns, spacing: Theme.Space.s) {
-                ForEach(options) { option in
-                    Button {
-                        selection = option.kind
-                        done()
-                    } label: {
-                        ValueTile(symbol: option.kind.symbol, value: option.value, caption: option.caption,
-                                  selected: option.kind == selection)
-                    }
-                    .buttonStyle(PressableStyle())
-                    .accessibilityAddTraits(option.kind == selection ? .isSelected : [])
-                }
-            }
-        }
-        .padding(Theme.Space.m)
-        .frame(width: Theme.Size.footerPicker)
-        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 

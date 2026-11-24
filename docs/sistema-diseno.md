@@ -77,12 +77,12 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
-stageBar 8 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · footerPicker 300 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
+stageBar 8 · stageBarThin 4 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir);
-`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta.
+`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `chromeBand` (0,82) la franja de papel translúcido detrás de los botones del lector.
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -142,6 +142,10 @@ largo). Cinzel (OFL) va en `App/Resources/Fonts`.
 | `BookRow` | Portada pequeña + título serif + detalle + extra | Lista, serie, Buscar, Cuaderno |
 | `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota | «Donde lo dejaste», subrayados |
 | `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle (`Reader.previewPause`, `previewFold`, `previewSlide`, `previewLines`) | Estilos de la hoja en «Aa» |
+| `SegmentedChoice` | Opciones lado a lado; la elegida en papel sobre el carril (`Radius.segment`), la marca se desliza | Páginas o Continuo en «Aa» |
+| `Grabber` | Rayita de un panel que se sube | Panel del lector |
+| `QuietIconLabelStyle` | Ícono gris y texto con poco aire | Tira del lector |
+| `SessionLine` | La sesión en una línea verde que abre su tarjeta | Panel del lector |
 | `ValueTile` | Mosaico con dato: ícono chico, valor grande, leyenda; borde si está elegido | Globo del pie del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido; en tinta si es la acción principal | Estilo de la hoja, tarjeta de un subrayado, barra de selección |
 | `FactRow` | Etiqueta / valor con línea fina | Ficha del libro |
@@ -228,8 +232,8 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
   sobresale `Reader.folioBand` (40 pt) y se desvanece en `Reader.folioFade` (24 pt). El folio
-  usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el pie se abre un globo
-  (`Size.footerPicker`) con cuatro `ValueTile` (ícono, dato de ahora y leyenda). Tocando el
+  usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tira (`Grabber`, barra, capítulo y página con `QuietIconLabelStyle`);
+  subiéndola, o tocando el pie, aparecen cuatro `ValueTile` (qué dice el pie) y `SessionLine`. Tocando el
   contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra

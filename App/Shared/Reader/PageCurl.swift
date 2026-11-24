@@ -189,10 +189,13 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
             turn.cover?.alpha = 1 - soft
             turn.cover?.transform = CGAffineTransform(translationX: drift, y: 0)
         case .slide:
+            // La hoja de arriba se va de lado y a la vez se desvanece.
             if turn.forward {
                 turn.cover?.transform = CGAffineTransform(translationX: -p * width, y: 0)
+                turn.cover?.alpha = 1 - p
             } else {
                 turn.incoming?.transform = CGAffineTransform(translationX: -(1 - p) * width, y: 0)
+                turn.incoming?.alpha = p
             }
         case .matte:
             guard let from = turn.from, let to = turn.to else { return }
@@ -322,7 +325,9 @@ private final class MatteCurl {
                 "inputBVector": CIVector(x: 0, y: 0, z: Theme.Reader.curlShowThrough, w: 0),
                 "inputAVector": CIVector(x: 0, y: 0, z: 0, w: Theme.Reader.curlShowThrough),
             ])
-        let back = mirrored.composited(over: CIImage(color: CIColor(color: paper)).cropped(to: extent))
+        // El revés sin recortar: con la esquina inclinada, el doblez toma papel de
+        // fuera del cuadro; recortado salía una cuña negra.
+        let back = mirrored.composited(over: CIImage(color: CIColor(color: paper)))
         let radius = Float(extent.width * Theme.Reader.curlRadius)
 
         func curled(_ front: CIImage, _ below: CIImage, _ reverse: CIImage) -> CIImage? {
@@ -336,7 +341,7 @@ private final class MatteCurl {
             sheet.radius = radius
             return sheet.outputImage?.cropped(to: extent)
         }
-        guard let matte = curled(input, target, back), let mask = curled(solid, clear, solid) else { return nil }
+        guard let matte = curled(input, target, back), let mask = curled(solid, clear, CIImage(color: .white)) else { return nil }
 
         shadow.inputImage = input
         shadow.targetImage = target

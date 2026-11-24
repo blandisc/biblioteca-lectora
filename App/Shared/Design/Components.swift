@@ -269,6 +269,41 @@ struct ValueTile: View {
     }
 }
 
+/// Dos o más opciones lado a lado, una elegida (fondo de papel sobre el carril).
+/// La marca se desliza de una a otra.
+struct SegmentedChoice<Option: Hashable & Identifiable, Label: View>: View {
+    let options: [Option]
+    @Binding var selection: Option
+    @ViewBuilder var label: (Option) -> Label
+    @Namespace private var mark
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(options) { option in
+                Button { selection = option } label: {
+                    label(option)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(option == selection ? Theme.ink : Theme.secondaryInk)
+                        .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget)
+                        .background {
+                            if option == selection {
+                                RoundedRectangle(cornerRadius: Theme.Radius.segment, style: .continuous)
+                                    .fill(Theme.paper)
+                                    .matchedGeometryEffect(id: "marca", in: mark)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(option == selection ? .isSelected : [])
+            }
+        }
+        .padding(Theme.Space.xxs)
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
+        .animation(Theme.Motion.standard, value: selection)
+    }
+}
+
 /// Respuesta al toque: se hunde un poco, sin cambiar de color.
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -1083,6 +1118,7 @@ struct StatTrio: View {
 /// La sesión como una barra partida en sus etapas.
 struct StageBar: View {
     let segments: [StageSegment]
+    var height = Theme.Size.stageBar
 
     var body: some View {
         GeometryReader { geometry in
@@ -1095,7 +1131,7 @@ struct StageBar: View {
                 }
             }
         }
-        .frame(height: Theme.Size.stageBar)
+        .frame(height: height)
         .clipShape(Capsule())
         .accessibilityHidden(true)
     }
@@ -1192,6 +1228,52 @@ struct WordCounter: View {
 }
 
 // MARK: - Lector y audio
+
+/// Ícono y texto con poco aire entre ellos, el ícono en gris.
+struct QuietIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: Theme.Space.inline) {
+            configuration.icon
+                .foregroundStyle(Theme.secondaryInk)
+                .font(.caption.weight(.semibold))
+            configuration.title
+        }
+    }
+}
+
+/// La sesión en una línea dentro del panel; tocándola, su tarjeta.
+struct SessionLine: View {
+    @ObservedObject var tracker: SessionTracker
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: Theme.Space.s) {
+                Circle().fill(Theme.accent).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
+                Text("Esta sesión · \(ReadingFormat.words(tracker.words)) palabras")
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+            }
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(Theme.secondaryInk)
+            .frame(minHeight: Theme.Size.tapTarget)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Ver la sesión")
+    }
+}
+
+/// La rayita de un panel que se sube con el dedo.
+struct Grabber: View {
+    var body: some View {
+        Capsule()
+            .fill(Theme.track)
+            .frame(width: Theme.Size.grabber.width, height: Theme.Size.grabber.height)
+    }
+}
+
 
 /// Botón en cápsula del panel del lector («Guiada», «Escuchar»). El destacado va en tinta.
 struct ReaderPillButton: View {

@@ -131,7 +131,7 @@ enum ReaderFont: String, CaseIterable, Identifiable {
         case .newYork: "La serif de Apple"
         case .charter: "Clásica y compacta"
         case .iowan: "Cálida, de libro"
-        case .sans: "Sin serifas, muy legible"
+        case .sans: "Sin serifas, nítida"
         }
     }
 
@@ -233,7 +233,11 @@ struct ReaderAppearanceSheet: View {
             .sensoryFeedback(.selection, trigger: font)
             .sensoryFeedback(.selection, trigger: turnStyle)
             // La hoja mide lo que mide su contenido: sin espacio muerto abajo.
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                withAnimation(Theme.Motion.sheet) { contentHeight = height }
+            }
+            // Pegado arriba: si la hoja aún es más alta, el sobrante queda abajo.
+            .frame(maxHeight: .infinity, alignment: .top)
             .presentationDetents([.height(contentHeight)])
             .presentationDragIndicator(.visible)
             .animation(Theme.Motion.standard, value: flow)
@@ -263,54 +267,57 @@ struct ReaderAppearanceSheet: View {
                 .accessibilityAddTraits(item == turnStyle ? .isSelected : [])
             }
         }
-        .transition(.opacity)
+        .transition(.opacity.animation(Theme.Motion.press))
     }
+
+    private let fontColumns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
     private var content: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            // Letra: las cuatro en un renglón (cada «Aa» en su fuente) y el tamaño.
-            SectionLabel(text: "Letra").padding(.bottom, -Theme.Space.s)
-            HStack(spacing: Theme.Space.s) {
-                ForEach(ReaderFont.allCases) { item in
-                    Button { font = item } label: {
-                        IconTile(title: item.short, selected: item == font) {
-                            Text("Aa").font(item.preview(size: Theme.Space.xl))
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(item.name)
-                    .accessibilityAddTraits(item == font ? .isSelected : [])
-                }
-            }
-            sizeRow
-
-            SectionLabel(text: "Página").padding(.top, Theme.Space.s).padding(.bottom, -Theme.Space.s)
-            HStack(spacing: Theme.Space.s) {
-                ForEach(ReaderFlow.allCases) { item in
-                    Button { flow = item } label: {
-                        HStack(spacing: Theme.Space.s) {
-                            Image(systemName: item.symbol).font(.body)
-                            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                                Text(item.name).font(.subheadline.weight(.medium))
-                                Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk)
+            // Letra: cuatro mosaicos 2×2 con su «Aa», su nombre y qué la hace distinta.
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                SectionLabel(text: "Letra")
+                LazyVGrid(columns: fontColumns, spacing: Theme.Space.s) {
+                    ForEach(ReaderFont.allCases) { item in
+                        Button { font = item } label: {
+                            HStack(spacing: Theme.Space.s) {
+                                Text("Aa")
+                                    .font(item.preview(size: Theme.Space.xl))
+                                    .fixedSize()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(item.name).font(.subheadline.weight(.medium)).lineLimit(1)
+                                    Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk).lineLimit(1)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, Theme.Space.m)
+                            .padding(.vertical, Theme.Space.s)
+                            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                                    .strokeBorder(item == font ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(Theme.Space.m)
-                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
-                                .strokeBorder(item == flow ? Theme.ink : .clear, lineWidth: Theme.Size.quoteRule)
-                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(item.name)
+                        .accessibilityAddTraits(item == font ? .isSelected : [])
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(item == flow ? .isSelected : [])
                 }
+                sizeRow
             }
 
-            if showsTurns { turnPicker }
+            // Página: páginas o continuo y, en páginas, cómo se pasa la hoja. Al
+            // cambiar, la fila de la hoja se desvanece y la hoja «Aa» se acorta
+            // solo por abajo: nada de arriba se mueve.
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                SectionLabel(text: "Página")
+                SegmentedChoice(options: ReaderFlow.allCases, selection: $flow) { item in
+                    Label(item.name, systemImage: item.symbol)
+                }
+                if showsTurns { turnPicker }
+            }
 
-            SectionLabel(text: "Fondo").padding(.top, Theme.Space.s).padding(.bottom, -Theme.Space.s)
+            SectionLabel(text: "Fondo").padding(.bottom, -Theme.Space.s)
             HStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
@@ -336,8 +343,12 @@ struct ReaderAppearanceSheet: View {
 
             Toggle("Noche cálida al atardecer", isOn: $autoNight)
                 .disabled(theme != .auto)
+                .font(.subheadline)
+                .tint(Theme.accent)
             #if os(iOS)
             Toggle("Vibrar al pasar de página", isOn: $haptics)
+                .font(.subheadline)
+                .tint(Theme.accent)
             #endif
         }
         .foregroundStyle(Theme.ink)

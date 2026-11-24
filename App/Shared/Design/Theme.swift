@@ -89,6 +89,8 @@ enum Theme {
         static let control: CGFloat = 10
         /// Tarjetas pequeñas (opciones de la hoja «Aa»).
         static let tile: CGFloat = 14
+        /// La marca de la opción elegida dentro de un selector (el mosaico menos su borde).
+        static let segment: CGFloat = 10
         /// Paneles de vidrio del lector.
         static let panel: CGFloat = 28
         /// Cápsula de controles de 44 pt de alto.
@@ -126,17 +128,19 @@ enum Theme {
         static let ribbon = CGSize(width: 12, height: 64)
         /// Alto de la hoja «Aa» mientras se mide (luego mide lo que su contenido).
         static let appearanceSheet: CGFloat = 584
-        /// El globo para elegir qué dice el pie de la página.
-        static let footerPicker: CGFloat = 300
         /// La hoja chiquita que enseña cada estilo de pasar la hoja en «Aa».
         static let turnPreview = CGSize(width: 18, height: 24)
         /// Barra de etapas de una sesión.
         static let stageBar: CGFloat = 8
+        /// La barra de etapas fina, en la tarjeta de la sesión del lector: del grueso de una línea, no de un bloque.
+        static let stageBarThin: CGFloat = 4
         /// Alto de una fila de la gráfica de etapas, y de su marca.
         static let stageRow: CGFloat = 26
         static let stageMark: CGFloat = 16
         /// Muestra de color en la leyenda de etapas.
         static let legendSwatch: CGFloat = 8
+        /// La rayita del panel del lector que dice «se sube».
+        static let grabber = CGSize(width: 36, height: 5)
         /// Separación entre las etapas de la barra.
         static let stageGap: CGFloat = 1
         /// Botón de reproducir del mini reproductor, con su anillo de avance.
@@ -282,6 +286,9 @@ enum Theme {
         /// Folio del lector (capítulo y porcentaje): el color del texto del libro,
         /// un poco apagado, para que se lea sobre cualquier fondo sin competir.
         static let folio = 0.74
+        /// Franja de papel detrás de los botones de arriba del lector: casi
+        /// opaca, para que el texto se adivine detrás.
+        static let chromeBand = 0.82
         /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
         static let labelMinScale: CGFloat = 0.8
     }
@@ -291,6 +298,8 @@ enum Theme {
     enum Motion {
         static let standard = Animation.snappy(duration: 0.25)
         static let press = Animation.easeOut(duration: 0.15)
+        /// Una hoja que cambia de alto: despacio y sin rebote.
+        static let sheet = Animation.smooth(duration: 0.35)
         /// La hoja de muestra de «Aa»: una vuelta, o un cambio en seco.
         static let pageTurn = Animation.easeInOut(duration: Reader.turnDuration)
         static let instant = Animation.linear(duration: 0)
