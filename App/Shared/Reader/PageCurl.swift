@@ -70,10 +70,16 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         case .began:
             begin(forward: gesture.velocity(in: view).x < 0,
                   fromTop: gesture.location(in: view).y < view.bounds.midY, fromDrag: true)
+            // Desde donde tocaste (no desde donde el sistema reconoció el arrastre) y
+            // hasta la orilla contraria: la hoja va bajo el dedo desde el primer momento.
+            turning?.touchX = gesture.location(in: view).x - gesture.translation(in: view).x
+            fallthrough
         case .changed:
             guard let turning, link == nil else { return }
-            let distance = gesture.translation(in: view).x * (turning.forward ? -1 : 1)
-            turning.progress = min(max(distance / width, 0), 1)
+            let x = gesture.location(in: view).x, start = turning.touchX
+            let room = max(turning.forward ? start : width - start, width * Theme.Reader.turnReach)
+            let distance = (x - start) * (turning.forward ? -1 : 1)
+            turning.progress = min(max(distance / room, 0), 1)
             render()
         case .ended, .cancelled, .failed:
             guard let turning else { return }
@@ -118,15 +124,15 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
                 let webView = self.webView
                 webView.alpha = 0
                 webView.transform = CGAffineTransform(translationX: 0, y: Theme.Reader.flowRise)
-                UIView.animate(withDuration: Theme.Reader.flowOut, delay: 0, options: [.curveEaseIn]) {
+                // La nueva empieza a llegar cuando la de antes ya casi se fue: un
+                // traslape corto, sin corte seco y sin dos textos legibles a la vez.
+                UIView.animate(withDuration: Theme.Reader.flowOut, delay: 0, options: [.curveEaseInOut]) {
                     cover.alpha = 0
-                } completion: { _ in
-                    cover.removeFromSuperview()
-                    UIView.animate(withDuration: Theme.Reader.flowIn, delay: 0,
-                                   options: [.curveEaseOut, .allowUserInteraction]) {
-                        webView.alpha = 1
-                        webView.transform = .identity
-                    }
+                } completion: { _ in cover.removeFromSuperview() }
+                UIView.animate(withDuration: Theme.Reader.flowIn, delay: Theme.Reader.flowHandoff,
+                               options: [.curveEaseOut, .allowUserInteraction]) {
+                    webView.alpha = 1
+                    webView.transform = .identity
                 }
             }
         }
@@ -146,6 +152,14 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
             turn.cover = cover
         }
         if style == .matte { turn.from = image(of: page.view, afterUpdates: false) }
+        // Adelante la hoja se mueve desde el primer toque, sin esperar al libro: debajo
+        // va papel liso y la página nueva aparece en cuanto el lector la pinta.
+        // (Atrás hace falta la foto de la página anterior: ahí sí se espera.)
+        if forward && style != .none {
+            turn.blank = blankPage(below: turn.cover)
+            arm(turn)
+            turn.live = true
+        }
         if forward && !fromDrag { reader?.turnedForward() }
         reader?.turnInstantly(forward: forward) { [weak self] moved in
             guard let self, self.turning === turn else { return }
@@ -158,9 +172,28 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         }
     }
 
-    /// Arma las piezas del estilo ya con la página nueva debajo.
+    /// Ya está la página nueva debajo: si la hoja ya se movía, se cambia el papel
+    /// liso por la página de verdad; si no, se arman las piezas.
     private func prepare(_ turn: PageTurn) {
         guard turning === turn else { return }
+        if turn.live {
+            if turn.style == .matte { turn.to = image(of: page.view, afterUpdates: true) }
+            turn.blank?.removeFromSuperview()
+            turn.blank = nil
+        } else {
+            arm(turn)
+        }
+        turn.ready = true
+        render()
+        if let passed = turn.pendingFinish {
+            finish(passed)
+        } else if let passes = turn.pendingSettle, turn.animation == nil {
+            settle(passes, velocity: turn.pendingVelocity)
+        }
+    }
+
+    /// Las piezas del estilo (si la página nueva aún no está, la hoja mate se dobla sobre papel liso).
+    private func arm(_ turn: PageTurn) {
         switch turn.style {
         case .slide where !turn.forward:
             // Atrás, la hoja anterior entra desde la izquierda encima de la de ahora,
@@ -180,7 +213,11 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
                 turn.dim = dim(below: cover)
             }
         case .matte:
-            turn.to = image(of: page.view, afterUpdates: true)
+            if turn.live || turn.blank == nil {
+                turn.to = image(of: page.view, afterUpdates: true)
+            } else if let from = turn.from {
+                turn.to = CIImage(color: CIColor(color: paper)).cropped(to: from.extent)
+            }
             let canvas = UIImageView(frame: page.view.frame)
             canvas.isUserInteractionEnabled = false
             view.addSubview(canvas)
@@ -188,16 +225,13 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         case .fade, .none:
             break
         }
-        turn.ready = true
-        render()
-        if let passes = turn.pendingSettle { settle(passes, velocity: turn.pendingVelocity) }
     }
 
     /// Lleva la vuelta hasta el final (pasa) o de regreso (se queda) con un resorte
     /// sin rebote que arranca con `velocity` (fracción del ancho por segundo).
     private func settle(_ passes: Bool, velocity: CGFloat = 0) {
         guard let turn = turning else { return }
-        guard turn.ready else { turn.pendingSettle = passes; turn.pendingVelocity = velocity; return }
+        guard turn.ready || turn.live else { turn.pendingSettle = passes; turn.pendingVelocity = velocity; return }
         let target: CGFloat = passes ? 1 : 0
         guard turn.style != .none, turn.progress != target else { finish(passes); return }
         turn.animation = (to: target, velocity: velocity, time: CACurrentMediaTime())
@@ -226,7 +260,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
     }
 
     private func render() {
-        guard let turn = turning, turn.ready else { return }
+        guard let turn = turning, turn.ready || turn.live else { return }
         let width = view.bounds.width
         let p = turn.progress
         switch turn.style {
@@ -268,6 +302,8 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
 
     private func finish(_ passed: Bool) {
         guard let turn = turning else { return }
+        // La hoja llegó antes que la página nueva: se queda así un instante y termina al llegar.
+        guard turn.ready else { turn.pendingFinish = passed; return }
         if passed {
             if turn.forward && turn.fromDrag { reader?.turnedForward() }
             clear()
@@ -281,6 +317,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         turn.incoming?.removeFromSuperview()
         turn.canvas?.removeFromSuperview()
         turn.dim?.removeFromSuperview()
+        turn.blank?.removeFromSuperview()
         reader?.turnInstantly(forward: !turn.forward) { [weak self] _ in
             DispatchQueue.main.async { self?.clear() }
         }
@@ -294,6 +331,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         turn.incoming?.removeFromSuperview()
         turn.canvas?.removeFromSuperview()
         turn.dim?.removeFromSuperview()
+        turn.blank?.removeFromSuperview()
         webView.alpha = 1
         webView.transform = .identity
         turning = nil
@@ -309,6 +347,19 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         sheet.layer.shadowRadius = Theme.Reader.slideShadowRadius
         sheet.layer.shadowOffset = .zero
         sheet.layer.shadowPath = UIBezierPath(rect: sheet.bounds).cgPath
+    }
+
+    /// Papel liso con su lomo, en lugar de la página nueva mientras el lector la pinta.
+    private func blankPage(below sheet: UIView?) -> UIView {
+        let blank = UIView(frame: page.view.frame)
+        blank.backgroundColor = paper
+        blank.isUserInteractionEnabled = false
+        let spine = SpineShade(frame: page.spineShade.frame)
+        spine.paper = paper
+        spine.isHidden = !self.spine
+        blank.addSubview(spine)
+        if let sheet, sheet.superview === view { view.insertSubview(blank, belowSubview: sheet) } else { view.addSubview(blank) }
+        return blank
     }
 
     /// Una sombra pareja sobre la página de abajo: justo debajo de `sheet` o, sin
@@ -352,6 +403,12 @@ private final class PageTurn {
     /// Ya está la página nueva debajo y las piezas armadas.
     var ready = false
     var pendingSettle: Bool?
+    /// Adelante, la hoja ya se mueve aunque la página nueva no esté (`blank` la suple).
+    var live = false
+    var blank: UIView?
+    var pendingFinish: Bool?
+    /// Dónde tocó el dedo al empezar a arrastrar.
+    var touchX: CGFloat = 0
     var pendingVelocity: CGFloat = 0
     /// El resorte en curso: hacia dónde va, su velocidad y la hora del último cuadro.
     var animation: (to: CGFloat, velocity: CGFloat, time: CFTimeInterval)?
@@ -422,7 +479,12 @@ private final class MatteCurl {
             sheet.radius = radius
             return sheet.outputImage?.cropped(to: extent)
         }
-        guard let matte = curled(input, target, back), let mask = curled(solid, clear, CIImage(color: .white)) else { return nil }
+        // La máscara crece un poco: en su orilla suavizada se colaba el revés brillante
+        // de la otra versión y dibujaba una línea blanca en el filo de la hoja.
+        guard let matte = curled(input, target, back),
+              let mask = curled(solid, clear, CIImage(color: .white))?
+                .applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: Theme.Reader.curlMaskGrow])
+                .cropped(to: extent) else { return nil }
 
         shadow.inputImage = input
         shadow.targetImage = target

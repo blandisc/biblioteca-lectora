@@ -239,6 +239,9 @@ enum Theme {
         static let turnSpring = 20.0
         static let turnSpeedLimit: CGFloat = 6
         static let turnRest: CGFloat = 0.004
+        /// Con el dedo, la vuelta completa es lo que hay del toque a la orilla contraria,
+        /// pero nunca menos de esta fracción del ancho (si tocas cerca del lomo).
+        static let turnReach: CGFloat = 0.5
         /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
         static let highlightLines = 4
         /// Fundido: un resorte más suave que la hoja. Es un relevo: el texto de antes
@@ -248,30 +251,32 @@ enum Theme {
         static let fadeSpan = 0.6
         /// Al cambiar entre páginas y continuo, relevo: la página de antes se va en
         /// `flowOut` y, ya acomodada, la nueva llega en `flowIn` subiendo `flowRise` puntos.
-        static let flowOut: TimeInterval = 0.14
-        static let flowIn: TimeInterval = 0.32
-        static let flowRise: CGFloat = 8
+        static let flowOut: TimeInterval = 0.24
+        static let flowIn: TimeInterval = 0.45
+        static let flowRise: CGFloat = 6
+        /// La nueva empieza a llegar a este tiempo, cuando la de antes ya casi se fue.
+        static let flowHandoff: TimeInterval = 0.16
         /// Lo más que se espera a que el lector acomode el libro al cambiar de forma
         /// (si avisa antes, no se espera de más).
         static let flowSettle: TimeInterval = 0.7
         static let fadeDrift: CGFloat = 12
         /// La hoja de muestra en «Aa»: pausa entre vueltas (s) y sus renglones. La
         /// primera vuelta se adelanta `previewLead` (sale a 0,15 s de elegirla).
-        static let previewPause: TimeInterval = 1.1
-        static let previewLead: TimeInterval = 0.95
-        /// El tiempo de la vuelta de la muestra: le cabe el resorte de la real entero.
-        static let previewTurn: TimeInterval = 0.6
+        static let previewPause: TimeInterval = 1
+        static let previewLead: TimeInterval = 0.85
+        /// La muestra se mueve con la curva de la real pero más despacio (`previewPace`
+        /// de su fuerza): en un mosaico chico, a la velocidad real no se alcanza a ver.
+        /// `previewTurn` es el tiempo que le toca a cada vuelta.
+        static let previewPace = 0.45
+        static let previewTurn: TimeInterval = 1.2
         /// Las primeras veces que sale el panel se asoma hacia arriba: hay más.
         static let panelHints = 3
         static let panelHintDelay: TimeInterval = 0.45
         static let panelHintHold: TimeInterval = 0.3
         static let previewLines = 5
         static let previewLastLine = 4
-        /// El revés doblado de la hoja de muestra (fracción de lo que ya pasó), su
-        /// sombra y lo ancho de la sombra que deja sobre la de abajo.
-        static let previewFold: CGFloat = 0.5
+        /// La sombra de la hoja de muestra (la doblada y la que se desliza).
         static let previewShadow = 0.35
-        static let previewCast: CGFloat = 4
         /// Con el dedo: pasa si soltaste después de esta fracción del ancho…
         static let turnCommit = 0.3
         /// …o si la aventaste más rápido que esto (puntos por segundo).
@@ -283,6 +288,8 @@ enum Theme {
         static let curlTilt = 0.1
         static let curlShadow: Float = 0.55
         static let curlShowThrough: CGFloat = 0.22
+        /// Cuánto crece la máscara de la hoja doblada (píxeles): tapa el filo brillante.
+        static let curlMaskGrow = 1.5
         /// Lo que se abre la tinta del revés (píxeles de la foto, a 2×).
         static let curlShowThroughBlur = 0.9
         /// Resolución del dibujo de la hoja mientras se dobla (2×: fluido y nítido).

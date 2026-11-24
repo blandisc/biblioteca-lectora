@@ -143,7 +143,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `CoverCell` + `CoverGrid` | Celda y cuadrícula de 3 columnas | Biblioteca, Mesa |
 | `BookRow` | Portada pequeña + título serif + detalle + extra | Lista, serie, Buscar, Cuaderno |
 | `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota | «Donde lo dejaste», subrayados |
-| `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle y la misma curva que la real (`TurnMotion`); las dos hojas se turnan, sin salto (`Reader.previewPause`, `previewLead`, `previewTurn`, `previewFold`, `previewCast`, `previewLines`) | Estilos de la hoja en «Aa» |
+| `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle y la misma curva que la real (`TurnMotion`); las dos hojas se turnan, sin salto más despacio que la real (`Reader.previewPace`); la Hoja es una esquina que se dobla (`Reader.previewPause`, `previewLead`, `previewTurn`, `previewShadow`, `previewLines`) | Estilos de la hoja en «Aa» |
 | `SegmentedChoice` | Opciones lado a lado; la elegida en papel sobre el carril (`Radius.segment`), la marca se desliza | Páginas o Continuo en «Aa» |
 | `Grabber` | Rayita de un panel que se sube | Panel del lector |
 | `QuietIconLabelStyle` | Ícono gris y texto con poco aire | Tira del lector |
@@ -240,17 +240,17 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra
-  `Reader.curlShadow`, el texto se transparenta en el revés como a contraluz, `Reader.curlShowThrough` 22 % y apenas suave (`Reader.curlShowThroughBlur`), dibujada a
+  `Reader.curlShadow`, el texto se transparenta en el revés como a contraluz, `Reader.curlShowThrough` 22 % y apenas suave (`Reader.curlShowThroughBlur`); sin filo blanco (`Reader.curlMaskGrow`), dibujada a
   `Reader.curlScale` 2×), Deslizar (sombra `Reader.slideShadow` y `Reader.slideShadowRadius`),
   Fundido y Sin animación. La hoja se mueve con un resorte sin rebote (`TurnMotion`, fuerza
   `Reader.turnSpring`, unos 0,45 s desde quieta; el fundido, `Reader.fadeSpring`): al soltar sigue
   con la velocidad del dedo (hasta `Reader.turnSpeedLimit`); con el dedo pasa después de
-  `Reader.turnCommit` (30 % del ancho) o al aventarla más rápido que `Reader.turnFling`.
+  `Reader.turnCommit` (30 % de lo que hay del toque a la orilla, al menos `Reader.turnReach` del ancho; la hoja va bajo el dedo desde que tocas y, hacia adelante, no espera a que el lector pinte la página nueva) o al aventarla más rápido que `Reader.turnFling`.
   Nunca se leen dos textos encimados: al deslizar, la hoja es opaca y la de abajo sale de la
   sombra (`Reader.slideDim`); el fundido es un relevo (el texto de antes se va en la primera
   `Reader.fadeSpan` y el nuevo llega en la última, corridos `Reader.fadeDrift`).
   Antes de animar se espera a que WebKit pinte la página nueva. Al cambiar entre páginas y continuo,
-  relevo: la página de antes se va (`Reader.flowOut`) y la nueva llega subiendo apenas (`Reader.flowIn`, `Reader.flowRise`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
+  relevo: la página de antes se va (`Reader.flowOut`) y la nueva llega subiendo apenas (`Reader.flowIn`, `Reader.flowRise`), con un traslape corto (`Reader.flowHandoff`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y

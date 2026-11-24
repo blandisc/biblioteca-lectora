@@ -233,6 +233,9 @@ struct ReaderAppearanceSheet: View {
 
     var body: some View {
         content
+            // Nunca se aprieta: mientras la hoja cambia de alto, los textos que se
+            // encogen para caber (los de «Fondo») se achicaban y volvían a crecer.
+            .fixedSize(horizontal: false, vertical: true)
             // Toda la hoja toma el tema que eliges: papel, tinta y mosaicos.
             .environment(\.colorScheme, palette.scheme ?? appScheme)
             .presentationBackground(palette.background)

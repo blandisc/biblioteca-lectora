@@ -191,11 +191,41 @@ enum TurnMotion {
     }
 }
 
+/// La esquina de abajo a la derecha de una hoja, doblada por la recta x + y = `line`:
+/// lo que queda de la hoja o, con `flap`, la parte doblada (en espejo sobre la recta).
+private struct PageCorner: Shape {
+    var line: CGFloat
+    var flap = false
+
+    func path(in rect: CGRect) -> Path {
+        let corners = [CGPoint(x: 0, y: 0), CGPoint(x: rect.width, y: 0),
+                       CGPoint(x: rect.width, y: rect.height), CGPoint(x: 0, y: rect.height)]
+        // Qué tan adentro de la parte buscada está un punto (recorte de un polígono por una recta).
+        func inside(_ point: CGPoint) -> CGFloat { (point.x + point.y - line) * (flap ? 1 : -1) }
+        var kept: [CGPoint] = []
+        for (index, a) in corners.enumerated() {
+            let b = corners[(index + 1) % corners.count]
+            let sa = inside(a), sb = inside(b)
+            if sa >= 0 { kept.append(a) }
+            if (sa >= 0) != (sb >= 0) {
+                let t = sa / (sa - sb)
+                kept.append(CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t))
+            }
+        }
+        if flap { kept = kept.map { CGPoint(x: line - $0.y, y: line - $0.x) } }
+        var path = Path()
+        guard kept.count > 2 else { return path }
+        path.addLines(kept.map { CGPoint(x: $0.x + rect.minX, y: $0.y + rect.minY) })
+        path.closeSubpath()
+        return path
+    }
+}
+
 /// Una hoja chiquita que pasa con el estilo elegido, en bucle, como en el libro y
 /// con la misma curva que la hoja de verdad (`TurnMotion`): la de abajo es la
 /// página siguiente (otros renglones, empieza con párrafo) y, al terminar, pasa a
 /// ser la de arriba: el bucle nunca salta de regreso.
-/// Hoja: se dobla desde la orilla derecha, con revés de papel y sombra en la de abajo.
+/// Hoja: la esquina se levanta y se dobla, con revés de papel y su sombra.
 /// Deslizar: se va de lado, opaca, y la de abajo sale de la sombra. Fundido: relevo,
 /// el texto se va y llega el otro. Solo se mueve la elegida, y empieza en cuanto la eliges.
 struct TurnPreview: View {
@@ -231,40 +261,30 @@ struct TurnPreview: View {
         let t = elapsed.truncatingRemainder(dividingBy: period) - pause
         guard t > 0 else { return (0, odd) }
         if style == .none { return (1, odd) }
-        return (TurnMotion.position(at: t, stiffness: style == .fade ? Theme.Reader.fadeSpring : Theme.Reader.turnSpring), odd)
+        let stiffness = style == .fade ? Theme.Reader.fadeSpring : Theme.Reader.turnSpring
+        return (TurnMotion.position(at: t, stiffness: stiffness * Theme.Reader.previewPace), odd)
     }
 
     @ViewBuilder
     private func turned(_ content: some View, _ p: Double, width: CGFloat) -> some View {
         switch style {
         case .matte:
-            // El doblez corre de la orilla derecha a la izquierda; lo que ya pasó
-            // se ve encima como revés de papel, más oscuro junto al doblez.
-            let crease = width * (Theme.Emphasis.rest - p)
-            let fold = min(crease, width * p) * Theme.Reader.previewFold
+            // La esquina de abajo se levanta y se dobla hacia el lomo, como al pasar
+            // una hoja con el dedo: el revés es papel, más oscuro junto al doblez,
+            // y deja su sombra sobre la página de abajo.
+            let size = Theme.Size.turnPreview
+            let line = (size.width + size.height) * (1 - p)
+            let flap = PageCorner(line: line, flap: true)
             content
-                .mask(alignment: .leading) { Rectangle().frame(width: max(crease, 0)) }
-                .overlay(alignment: .leading) {
-                    // La sombra que la hoja levantada deja sobre la de abajo.
-                    LinearGradient(colors: [Theme.ink.opacity(Theme.Reader.previewShadow * (Theme.Emphasis.rest - p)), .clear],
-                                   startPoint: .leading, endPoint: .trailing)
-                        .frame(width: Theme.Reader.previewCast)
-                        .offset(x: crease)
-                }
-                .overlay(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
-                        .fill(Theme.paper)
+                .mask { PageCorner(line: line) }
+                .overlay {
+                    flap.fill(Theme.paper)
                         .overlay {
-                            LinearGradient(colors: [.clear, Theme.ink.opacity(Theme.Reader.previewShadow)],
-                                           startPoint: .leading, endPoint: .trailing)
+                            flap.fill(LinearGradient(colors: [.clear, Theme.ink.opacity(Theme.Reader.previewShadow)],
+                                                     startPoint: .topLeading, endPoint: .bottomTrailing))
                         }
-                        .overlay {
-                            RoundedRectangle(cornerRadius: Theme.Radius.swatch, style: .continuous)
-                                .strokeBorder(Theme.secondaryInk, lineWidth: Theme.Size.hairline)
-                        }
-                        .frame(width: fold)
-                        .offset(x: max(crease - fold, 0))
-                        .opacity(fold > 0 ? Theme.Emphasis.rest : 0)
+                        .overlay { flap.stroke(Theme.secondaryInk, lineWidth: Theme.Size.hairline) }
+                        .shadow(color: Theme.ink.opacity(Theme.Reader.previewShadow), radius: Theme.Size.hairline)
                 }
         case .slide:
             // Opaca, como papel: nunca se leen dos textos encimados.
