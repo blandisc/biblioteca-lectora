@@ -144,6 +144,8 @@ enum Theme {
         static let scrubberKnob: CGFloat = 14
         /// Alto de la barra de avance: la perilla cómoda de arrastrar sin dejar un hueco.
         static let scrubberHeight: CGFloat = 32
+        /// Lo que el área de toque de la barra sobresale de su alto (32 + 2 × 6 = 44).
+        static let scrubberReach: CGFloat = 6
         /// Lo que se mueve el dedo antes de saber si arrastra la barra (de lado) o sube el panel.
         static let dragSlop: CGFloat = 6
         /// Lo que hay que subir o bajar el dedo sobre el panel para abrirlo o cerrarlo.
@@ -239,12 +241,24 @@ enum Theme {
         static let turnSpring = 15.0
         static let turnSpeedLimit: CGFloat = 4
         static let turnRest: CGFloat = 0.004
+        /// Si un cuadro llega tarde, el resorte avanza a lo más esto: la hoja sigue
+        /// desde donde iba, sin brincar al final.
+        static let turnFrameCap: TimeInterval = 0.034
+        /// Deslizar: un resorte con más fuerza que la hoja; sin ella, los últimos
+        /// milímetros llegaban casi quietos. Igual en las dos direcciones.
+        static let slideSpring = 19.0
         /// Con el dedo, la vuelta completa es lo que hay del toque a la orilla contraria,
         /// pero nunca menos de esta fracción del ancho (si tocas cerca del lomo).
         static let turnReach: CGFloat = 0.5
+        /// Al abrir, el libro se da por acomodado cuando lleva esto sin cambiar de página.
+        static let openSettle: TimeInterval = 0.25
+        /// La tarjeta de abajo, al arrastrarla hacia donde no puede ir (o hacia arriba
+        /// antes de crecer), se mueve esta fracción de lo que mueves el dedo.
+        static let panelResistance: CGFloat = 0.35
         /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
         static let highlightLines = 4
-        /// Fundido: un resorte más suave que la hoja. Es un relevo: el texto de antes
+        /// Fundido: el mismo resorte que la hoja (con menos fuerza duraría más el
+        /// momento sin texto a mitad del relevo). Es un relevo: el texto de antes
         /// se va en la primera `fadeSpan` de la vuelta y el nuevo llega en la última,
         /// cada uno corrido `fadeDrift` puntos hacia donde vas.
         static let fadeSpring = 15.0
@@ -450,6 +464,17 @@ extension View {
 
     /// Superficie de vidrio con esquinas redondeadas para barras flotantes.
     @ViewBuilder
+    /// `clipped`: lo de adentro se recorta a la forma del vidrio (un panel que crece
+    /// no deja ver su contenido nuevo fuera de él mientras se anima).
+    @ViewBuilder
+    func glassPanel(cornerRadius: CGFloat, clipped: Bool) -> some View {
+        if clipped {
+            clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)).glassPanel(cornerRadius: cornerRadius)
+        } else {
+            glassPanel(cornerRadius: cornerRadius)
+        }
+    }
+
     func glassPanel(cornerRadius: CGFloat) -> some View {
         #if compiler(>=6.2)
         if #available(iOS 26.0, macOS 26.0, *) {

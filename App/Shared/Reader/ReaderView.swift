@@ -59,10 +59,12 @@ struct ReaderView: View {
     var body: some View {
         ZStack {
             palette.background.ignoresSafeArea()
+            // Tu página entra con un fundido corto cuando el libro ya se acomodó.
             ReaderWebView(controller: controller)
                 .ignoresSafeArea(edges: .bottom)
+                .opacity(controller.isSettled ? Theme.Emphasis.rest : 0)
             // Hasta que aparece la primera página: que se note que está trabajando.
-            if controller.location == nil && controller.errorMessage == nil {
+            if !controller.isSettled && controller.errorMessage == nil {
                 VStack(spacing: Theme.Space.s) {
                     ProgressView()
                     Text("Abriendo el libro…").font(.footnote)
@@ -73,11 +75,11 @@ struct ReaderView: View {
                 .accessibilityElement(children: .combine)
             }
         }
-        .animation(Theme.Motion.standard, value: controller.location == nil)
+        .animation(Theme.Motion.standard, value: controller.isSettled)
         .overlay(alignment: .topTrailing) {
             // Con los controles a la vista, la barra de estado ocupa el borde y la cinta
             // tapaba la batería: ahí lo dice el ícono relleno del marcador.
-            if currentBookmark != nil && !showsChrome {
+            if currentBookmark != nil && !showsChrome && controller.isSettled {
                 Ribbon()
                     .fill(Theme.accent)
                     .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
@@ -87,7 +89,11 @@ struct ReaderView: View {
                     .accessibilityHidden(true)
             }
         }
-        .overlay { chrome }
+        // Ni botones ni números hasta que el libro sabe en qué página estás.
+        .overlay {
+            if controller.isSettled { chrome.transition(.opacity) }
+        }
+        .animation(Theme.Motion.standard, value: controller.isSettled)
         // Al esconder los controles, la próxima vez el panel sale como tira.
         .onChange(of: showsChrome) { _, shown in if !shown { panelExpanded = false } }
         #if os(iOS)
@@ -278,7 +284,10 @@ struct ReaderView: View {
                                 session: showsCounter ? controller.session : nil,
                                 onSession: { withAnimation(Theme.Motion.standard) { showsChrome = false }; showsSession = true },
                                 onContents: { tools = .contents },
-                                onSeek: { controller.goTo(fraction: $0) })
+                                onSeek: { controller.goTo(fraction: $0) },
+                                onReturn: { origin in
+                                    if let cfi = origin.cfi { controller.goTo(target: cfi) } else { controller.goTo(fraction: origin.fraction) }
+                                })
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
@@ -481,10 +490,15 @@ private struct BottomPanel: View {
     let onSession: () -> Void
     let onContents: () -> Void
     let onSeek: (Double) -> Void
+    let onReturn: (ReaderController.Location) -> Void
     @State private var dragValue: Double?
+    /// Dónde estabas antes de saltar con la barra: un toque de más ya no te pierde.
+    @State private var origin: ReaderController.Location?
     /// Cuántas veces ya se asomó el panel para decir que se sube (solo las primeras).
     @AppStorage(ReaderKeys.panelHints) private var hints = 0
     @State private var peek: CGFloat = 0
+    /// Lo que la tarjeta va siguiendo al dedo mientras la subes o la bajas.
+    @State private var pull: CGFloat = 0
 
     private var fraction: Double { dragValue ?? location?.fraction ?? 0 }
 
@@ -498,6 +512,11 @@ private struct BottomPanel: View {
     private var position: String {
         guard let page, let count = location?.pageCount else { return fraction.percentText }
         return dragValue == nil ? "Pág. \(page) de \(count)" : "Pág. \(page) · \(fraction.percentText)"
+    }
+
+    private func returnTitle(_ origin: ReaderController.Location) -> String {
+        if let page = origin.page { return "Volver a la pág. \(page)" }
+        return "Volver al \(origin.fraction.percentText)"
     }
 
     /// «1. Ulcinj, Albania…» → «Capítulo 1» encima y «Ulcinj, Albania…» como título.
@@ -532,7 +551,7 @@ private struct BottomPanel: View {
                         .multilineTextAlignment(.leading)
                         .contentTransition(.opacity)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget, alignment: .leading)
                 .contentShape(Rectangle())
             }
             .accessibilityLabel("Índice")
@@ -542,9 +561,13 @@ private struct BottomPanel: View {
             ScrubberBar(value: fraction, enabled: location != nil,
                         onChange: { dragValue = $0 },
                         onEnd: {
-                            if let value = dragValue { onSeek(value) }
+                            if let value = dragValue {
+                                if origin == nil { origin = location }
+                                onSeek(value)
+                            }
                             dragValue = nil
                         })
+                .zIndex(1)
                 .sensoryFeedback(.selection, trigger: fraction.percentText) { _, _ in dragValue != nil }
                 .accessibilityLabel("Avance en el libro")
                 .accessibilityValue(position)
@@ -559,10 +582,23 @@ private struct BottomPanel: View {
                     .animation(Theme.Motion.press, value: position)
                     .lineLimit(1)
                 Spacer(minLength: 0)
-                if let session {
+                // Tras saltar con la barra, volver a donde ibas (como en Libros de Apple).
+                if let origin, dragValue == nil {
+                    Button {
+                        onReturn(origin)
+                        withAnimation(Theme.Motion.standard) { self.origin = nil }
+                    } label: {
+                        Label(returnTitle(origin), systemImage: "arrow.uturn.backward")
+                            .lineLimit(1)
+                            .frame(minHeight: Theme.Size.tapTarget)
+                            .contentShape(Rectangle())
+                    }
+                    .transition(.opacity)
+                } else if let session {
                     SessionLine(tracker: session, compact: true, action: onSession)
                 }
             }
+            .animation(Theme.Motion.standard, value: origin == nil)
             .font(.footnote)
             .frame(minHeight: Theme.Size.tapTarget)
 
@@ -605,12 +641,13 @@ private struct BottomPanel: View {
         .foregroundStyle(Theme.ink)
         .padding(.horizontal, Theme.Space.l)
         .padding(.bottom, Theme.Space.m)
-        .glassPanel(cornerRadius: Theme.Radius.panel)
+        // Lo de adentro no se asoma fuera del vidrio mientras la tarjeta crece.
+        .glassPanel(cornerRadius: Theme.Radius.panel, clipped: true)
         // Todo el panel es suyo: un toque en su aire no llega a la página de abajo
         // (que lo tomaría como «ocultar controles»).
         .contentShape(Rectangle())
         .onTapGesture {}
-        .offset(y: peek)
+        .offset(y: peek + pull)
         .task {
             // Las primeras veces se asoma hacia arriba y regresa: hay más abajo de la barra.
             guard !expanded, hints < Theme.Reader.panelHints else { return }
@@ -626,9 +663,22 @@ private struct BottomPanel: View {
         // Subir o bajar con el dedo, desde cualquier parte del panel menos la barra.
         .simultaneousGesture(
             DragGesture(minimumDistance: Theme.Size.panelSwipe)
-                .onEnded { value in
+                .onChanged { value in
                     guard dragValue == nil, abs(value.translation.height) > abs(value.translation.width) else { return }
-                    withAnimation(Theme.Motion.sheet) { expanded = value.translation.height < 0 }
+                    // Hacia donde puede ir, la tarjeta va bajo el dedo; hacia donde no,
+                    // cede con resistencia, como en Libros de Apple.
+                    let toward = expanded ? value.translation.height > 0 : value.translation.height < 0
+                    pull = value.translation.height * (toward ? 1 : Theme.Reader.panelResistance)
+                    if !expanded && toward { pull *= Theme.Reader.panelResistance }
+                }
+                .onEnded { value in
+                    let vertical = abs(value.translation.height) > abs(value.translation.width)
+                    withAnimation(Theme.Motion.sheet) {
+                        if dragValue == nil && vertical {
+                            expanded = value.predictedEndTranslation.height < 0
+                        }
+                        pull = 0
+                    }
                 }
         )
     }

@@ -1399,7 +1399,8 @@ struct ScrubberBar: View {
                     .animation(Theme.Motion.select, value: dragging)
             }
             .frame(maxHeight: .infinity)
-            .contentShape(Rectangle())
+            // Se toca en 44 pt de alto aunque se vea fina: el área crece fuera de su lugar.
+            .contentShape(Rectangle().inset(by: -Theme.Size.scrubberReach))
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { drag in

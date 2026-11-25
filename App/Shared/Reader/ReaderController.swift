@@ -46,6 +46,11 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     @Published private(set) var searchProgress: Double?
     @Published private(set) var searchedQuery = ""
     @Published private(set) var location: Location?
+    /// El libro ya sabe en qué página estás: al abrir, foliate acomoda el libro y
+    /// avisa varias páginas seguidas («Página 23», luego «Página 27»). Hasta que deja
+    /// de moverse no se ve ni la página ni un número.
+    @Published private(set) var isSettled = false
+    private var openSettle: Task<Void, Never>?
     /// Lo que dice el folio (capítulo y pie): mientras la hoja da vuelta se queda
     /// la página de antes; cambia cuando la nueva ya está a la vista, no antes.
     @Published private(set) var folioLocation: Location?
@@ -111,6 +116,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// Abre un libro (copia local) y, si existe, vuelve a la última posición.
     func open(bookFile: URL, bookID: UUID? = nil, lastCFI: String? = nil) {
         schemeHandler.bookFile = bookFile
+        isSettled = false
         self.bookID = bookID ?? AnnotationStore.bookID(for: bookFile)
         // Solo los libros del catálogo tienen sesiones (para el diario y la ficha).
         session = bookID.map { SessionTracker(bookID: $0) }
@@ -421,6 +427,14 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 chapterWordsLeft: body["chapterLeft"] as? Int
             )
             if !isTurning { folioLocation = location }
+            if !isSettled {
+                openSettle?.cancel()
+                openSettle = Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(Theme.Reader.openSettle))
+                    guard !Task.isCancelled else { return }
+                    self?.isSettled = true
+                }
+            }
             session?.pageShown(words: body["words"] as? Int ?? 0,
                                fraction: fraction,
                                jumped: body["jumped"] as? Bool ?? false)

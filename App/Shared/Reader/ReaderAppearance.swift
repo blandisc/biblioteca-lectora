@@ -391,11 +391,11 @@ struct ReaderAppearanceSheet: View {
 
     private var sizeRow: some View {
             HStack(spacing: Theme.Space.m) {
-                Button { scale = max(Self.scales.lowerBound, scale - Self.scaleStep) } label: { Text("A").font(.footnote) }
+                Button { scale = max(Self.scales.lowerBound, scale - Self.scaleStep) } label: { Text("A").font(.footnote).sizeTarget() }
                     .accessibilityLabel("Letra más chica")
                 sizeSlider
                     .accessibilityLabel("Tamaño de letra")
-                Button { scale = min(Self.scales.upperBound, scale + Self.scaleStep) } label: { Text("A").font(.title2) }
+                Button { scale = min(Self.scales.upperBound, scale + Self.scaleStep) } label: { Text("A").font(.title2).sizeTarget() }
                     .accessibilityLabel("Letra más grande")
             }
             .buttonStyle(.plain)
@@ -489,5 +489,12 @@ private struct TurnStylePicker: View {
             try? await Task.sleep(for: .seconds(Theme.Motion.enterSettle))
             settled = true
         }
+    }
+}
+
+private extension View {
+    /// Las dos «A» del tamaño se ven chicas pero se tocan en 44 pt.
+    func sizeTarget() -> some View {
+        frame(minWidth: Theme.Size.tapTarget, minHeight: Theme.Size.tapTarget).contentShape(Rectangle())
     }
 }

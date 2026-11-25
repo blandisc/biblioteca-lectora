@@ -77,7 +77,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
-stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
@@ -147,7 +147,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `SegmentedChoice` | Opciones lado a lado; la elegida en papel sobre el carril (`Radius.segment`), la marca se desliza | Páginas o Continuo en «Aa» |
 | `Grabber` | Rayita de un panel que se sube | Panel del lector |
 | `SessionLine` | La sesión en una línea verde que abre su tarjeta | Panel del lector |
-| `ScrubberBar` | Barra de avance del lector: riel fino, lo leído en tinta, perilla chica que crece al arrastrar | Panel del lector |
+| `ScrubberBar` | Barra de avance del lector: riel fino, lo leído en tinta, perilla chica que crece al arrastrar; se toca en 44 pt de alto | Panel del lector |
 | `FooterPreview` | Muestra del pie: recorte de la página (papel, tres renglones fantasma y el pie tal cual, con su letra) y su nombre debajo; filo de tinta y palomita si está elegido | Tarjeta del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido; en tinta si es la acción principal | Estilo de la hoja, tarjeta de un subrayado, barra de selección |
 | `FactRow` | Etiqueta / valor con línea fina | Ficha del libro |
@@ -234,7 +234,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
   es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`): la letra se sigue leyendo mientras se va. En continuo el capítulo sube bajo la isla (`Reader.folioTop`, medido desde la orilla segura de cada iPhone). El folio
-  usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tarjeta (`Grabber`; el capítulo completo con su número encima en `SectionLabel`, que abre el índice; la barra; la página y las palabras en gris, sin íconos);
+  usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tarjeta (`Grabber`; el capítulo completo con su número encima en `SectionLabel`, que abre el índice; la barra, que se toca en 44 pt de alto aunque se vea fina (`Size.scrubberReach`); la página y las palabras en gris, sin íconos; tras saltar con la barra, en lugar de las palabras, «Volver a la pág. N» para regresar a donde ibas);
   subiéndola, o tocando el pie, aparece «El pie dice» con cuatro `FooterPreview` (como se leerá). Tocando el
   contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
@@ -242,14 +242,14 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   `Reader.curlShadow`, el texto se transparenta en el revés como a contraluz, `Reader.curlShowThrough` 22 % y apenas suave (`Reader.curlShowThroughBlur`); sin filo blanco (`Reader.curlMaskGrow`), dibujada a
   `Reader.curlScale` 2×), Deslizar (sombra `Reader.slideShadow` y `Reader.slideShadowRadius`),
   Fundido y Sin animación. La hoja se mueve con un resorte sin rebote (`TurnMotion`, fuerza
-  `Reader.turnSpring`, unos 0,45 s desde quieta; el fundido, `Reader.fadeSpring`): al soltar sigue
+  `Reader.turnSpring`, unos 0,45 s desde quieta; el fundido, `Reader.fadeSpring`; deslizar, `Reader.slideSpring`, más firme, igual en las dos direcciones; un cuadro tarde avanza a lo más `Reader.turnFrameCap`, sin brinco): al soltar sigue
   con la velocidad del dedo (hasta `Reader.turnSpeedLimit`); con el dedo pasa después de
-  `Reader.turnCommit` (30 % de lo que hay del toque a la orilla, al menos `Reader.turnReach` del ancho; la hoja va bajo el dedo desde que tocas y, hacia adelante, no espera a que el lector pinte la página nueva) o al aventarla más rápido que `Reader.turnFling`.
+  `Reader.turnCommit` (30 % de lo que hay del toque a la orilla, al menos `Reader.turnReach` del ancho; la hoja va bajo el dedo desde que tocas, en las dos direcciones, y no espera a que el lector pinte la página; con un toque sí la espera, para no destapar papel liso) o al aventarla más rápido que `Reader.turnFling`.
   Nunca se leen dos textos encimados: al deslizar, la hoja es opaca y la de abajo sale de la
   sombra (`Reader.slideDim`); el fundido es un relevo (el texto de antes se va en la primera
   `Reader.fadeSpan` y el nuevo llega en la última, corridos `Reader.fadeDrift`).
   Antes de animar se espera a que WebKit pinte la página nueva. Al cambiar entre páginas y continuo,
-  relevo: la página de antes se va (`Reader.flowOut`) y la nueva llega subiendo apenas (`Reader.flowIn`, `Reader.flowRise`), con un traslape corto (`Reader.flowHandoff`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); los mosaicos del pie entran en cascada (`Motion.stagger`).
+  relevo: la página de antes se va (`Reader.flowOut`) y la nueva llega subiendo apenas (`Reader.flowIn`, `Reader.flowRise`), con un traslape corto (`Reader.flowHandoff`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Al abrir un libro no se ven la página, los controles ni un número hasta que el libro deja de acomodarse (`Reader.openSettle` sin cambiar de página); luego la página entra con un fundido corto. Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); al arrastrarlo, el panel va bajo el dedo hacia donde puede ir y cede con resistencia (`Reader.panelResistance`) hacia donde no; lo de adentro se recorta a su vidrio; los mosaicos del pie entran en cascada (`Motion.stagger`).
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y
@@ -284,6 +284,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testFormsUseThePaper` | Decisión del 19 nov 2026: todo `Form` lleva `.formScreen()` |
 | `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra |
 | `testTextColorsAreReadable` | Decisión del 19 nov 2026: sobre `paper`, tinta y secundario ≥ 4,5 : 1; terciario y verde ≥ 3 : 1, en claro y oscuro |
+| `testPageTurnNeverFreezesOrJumps` | Auditoría del 24 nov 2026: al pasar la hoja, nada se queda quieto a media vuelta ni brinca al final (la vuelta usa la foto que ya dio WebKit; un cuadro tarde avanza a lo más `Reader.turnFrameCap`) |
 | `testReadingNeverVibratesByItself` | Decisión del 24 nov 2026: leyendo, nada vibra porque la página avanzó; solo lo que haces tú (con «Vibrar al pasar de página» apagado, la barra de avance vibraba en cada hoja) |
 | `testNoTextUnderTwelve` | Sistema base de la casa (SB-3), 24 nov 2026: ninguna letra de menos de 12 pt; `.caption2` (11) solo en íconos |
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |

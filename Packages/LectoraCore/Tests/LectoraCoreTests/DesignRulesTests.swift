@@ -357,6 +357,17 @@ final class DesignRulesTests: XCTestCase {
                       "La muestra de «Aa» se mueve igual que la hoja de verdad (TurnMotion)")
     }
 
+    /// 24 nov 2026 (auditoría, T1): la Hoja se quedaba quieta ~120 ms a media vuelta y
+    /// brincaba al final. Se fotografiaba otra vez toda la vista (lento) tirando la foto
+    /// que WebKit ya había dado, y el resorte recuperaba el tiempo perdido de un salto.
+    func testPageTurnNeverFreezesOrJumps() {
+        let curl = Self.sources("App/Shared/Reader").first { $0.path.hasSuffix("PageCurl.swift") }?.text ?? ""
+        XCTAssertFalse(curl.contains("takeSnapshot(with: nil) { _, _ in\n                DispatchQueue.main.async { self.prepare"),
+                       "La vuelta se arma con la foto que entrega WebKit, no tirándola y fotografiando otra vez")
+        XCTAssertTrue(curl.contains("Theme.Reader.turnFrameCap"),
+                      "Un cuadro tarde no hace brincar la hoja: el resorte avanza a lo más turnFrameCap")
+    }
+
     /// 24 nov 2026: al subir el capítulo en continuo, el desvanecido quedó encima de él
     /// y el primer renglón se leía detrás del título. El papel es sólido hasta la orilla
     /// del folio y se desvanece ya fuera: la franja se alarga justo lo que mide el desvanecido.
