@@ -373,7 +373,7 @@ struct ReaderView: View {
     }
 
     #if DEBUG
-    /// Para revisar animaciones en video (`-screenshot.demo turns|flow`): pasa
+    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|panel`): pasa
     /// páginas o cambia de modo solo, sin tocar la pantalla. Solo en Debug.
     private func runDemo() {
         guard !demoStarted, let demo = LaunchOptions.demo else { return }
@@ -387,6 +387,8 @@ struct ReaderView: View {
                     forward ? controller.next() : controller.previous()
                     try? await Task.sleep(for: .seconds(1.5))
                 }
+            case "panel":
+                withAnimation(Theme.Motion.sheet) { panelExpanded = true }
             case "flow":
                 showsAppearance = true
                 for _ in 0..<4 {
