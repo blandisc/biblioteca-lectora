@@ -940,6 +940,8 @@ private struct ReadingFolio<Counter: View>: View {
             // Sólido hasta la orilla del folio y el desvanecido ya fuera de él:
             // el texto nunca se asoma detrás del capítulo ni del pie.
             .padding(edge == .top ? .bottom : .top, -Theme.Reader.folioFade)
+            // Abajo, el desvanecido baja un poco más: el sólido acaba justo arriba del pie.
+            .padding(.top, edge == .bottom ? Theme.Reader.folioFadeDrop : 0)
             .ignoresSafeArea()
             .allowsHitTesting(false)
         }

@@ -348,6 +348,9 @@ enum Theme {
         /// curva de `folioFadeSteps` tramos (se aclara pronto: la letra se sigue viendo).
         static let folioFade: CGFloat = 56
         static let folioFadeSteps = 6
+        /// En continuo, cuánto más abajo empieza el desvanecido del pie: el papel sólido
+        /// llega justo arriba del pie y deja más texto a la vista (25 nov 2026).
+        static let folioFadeDrop: CGFloat = 20
         /// En continuo el texto corre hasta la orilla de la pantalla y se desvanece
         /// desde ahí hasta esto por debajo de la orilla segura (la isla).
         static let topFade: CGFloat = 24
