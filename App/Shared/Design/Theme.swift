@@ -146,6 +146,8 @@ enum Theme {
         static let scrubberHeight: CGFloat = 32
         /// Lo que el área de toque de la barra sobresale de su alto (32 + 2 × 6 = 44).
         static let scrubberReach: CGFloat = 6
+        /// Al buscar en notas: letras de contexto antes y después de lo encontrado.
+        static let excerptReach = 60
         /// Lo que se mueve el dedo antes de saber si arrastra la barra (de lado) o sube el panel.
         static let dragSlop: CGFloat = 6
         /// Lo que hay que subir o bajar el dedo sobre el panel para abrirlo o cerrarlo.
@@ -255,6 +257,11 @@ enum Theme {
         static let searchMinLetters = 3
         /// Cuántas búsquedas recientes se guardan por libro.
         static let recentSearches = 5
+        /// Pestaña Buscar: libros abiertos hace poco, subrayados antes de «Ver los N»,
+        /// y la pausa tras la que lo que escribiste queda entre las recientes.
+        static let recentBooks = 3
+        static let foundHighlights = 3
+        static let searchRemember: TimeInterval = 1.2
         /// El texto del libro a esta distancia de las orillas, en páginas y en continuo y
         /// en todo iPhone; el contenido de la tarjeta de abajo empieza en la misma línea
         /// (`chromeInset` + `Space.m`).

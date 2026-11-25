@@ -77,7 +77,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
-stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
@@ -257,6 +257,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
 - Buscar en el libro: empieza sola al dejar de escribir (`Reader.searchPause`, desde `Reader.searchMinLetters` letras); mientras busca dice cuánto lleva y los resultados aparecen abajo conforme llegan; van juntos por capítulo (`SearchChapterHeading`), cada uno con su página, y «Aquí vas» (`HereMark`) marca dónde lees; sin resultados, `EmptyState` explica que buscó sin importar acentos ni mayúsculas; al deslizar la lista se esconde el teclado. Antes de escribir, las últimas `Reader.recentSearches` búsquedas de ese libro (`RecentSearchRow`), guardadas solo en el dispositivo. Al ir a un resultado queda sobre la página `SearchStepper`: anterior, siguiente, el centro reabre la lista y la ✕ termina la búsqueda; se esconde mientras están los controles.
+- Pestaña Buscar: busca en títulos, autores y series, en tus subrayados y en tus notas, en secciones (Libros, Tus subrayados, Tus notas; de subrayados, los primeros `Reader.foundHighlights` y «Ver los N»); lo buscado va en verde y negritas (`Found`, `QuoteBlock(match:)`, `NoteRow(match:)`). Vacía, tus búsquedas recientes y los `Reader.recentBooks` libros que abriste hace poco; el teclado no se abre solo. Lo escrito queda entre las recientes tras `Reader.searchRemember` sin escribir.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y
   cuatro acciones en mosaicos: Nota, A una nota, Copiar, Borrar.
 - Ajustes del lector («Aa»): sin muestra; la página de atrás ya cambia en vivo. Toda la hoja

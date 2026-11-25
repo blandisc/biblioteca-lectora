@@ -301,7 +301,8 @@ struct ReaderToolsSheet: View {
     }
 }
 
-/// Las últimas búsquedas en cada libro, guardadas solo en este dispositivo.
+/// Las últimas búsquedas en cada libro (y, sin libro, las de la pestaña Buscar),
+/// guardadas solo en este dispositivo.
 enum RecentSearches {
     struct Item: Codable, Identifiable, Equatable {
         let text: String
@@ -309,7 +310,7 @@ enum RecentSearches {
         var id: String { text }
     }
 
-    private static func key(_ bookID: UUID?) -> String? { bookID.map { "reader.searches.\($0.uuidString)" } }
+    private static func key(_ bookID: UUID?) -> String? { bookID.map { "reader.searches.\($0.uuidString)" } ?? "search.recent.library" }
 
     static func load(_ bookID: UUID?) -> [Item] {
         guard let key = key(bookID), let data = UserDefaults.standard.data(forKey: key) else { return [] }

@@ -616,6 +616,8 @@ struct QuoteBlock: View {
     let text: String
     var note: String? = nil
     var italic = false
+    /// Lo que se buscó: va en verde y negritas dentro de la cita.
+    var match: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.xs) {
@@ -624,7 +626,7 @@ struct QuoteBlock: View {
                     .font(.caption)
                     .foregroundStyle(Theme.secondaryInk)
             }
-            Text(italic ? "«\(text)»" : text)
+            Text(Found.marked(italic ? "«\(text)»" : text, match))
                 .font(italic ? .quote : .rowTitle)
                 .lineSpacing(Theme.Space.xs)
             if let note {
@@ -981,15 +983,22 @@ struct NoteRow: View {
     let note: Note
     /// Detalle en lugar de los libros enlazados («1 cita»).
     var detail: String? = nil
+    /// Al buscar: el pasaje de la nota donde aparece, con lo buscado en verde.
+    var match: String? = nil
+
+    private var preview: String {
+        guard let match, !note.title.localizedStandardContains(match) else { return note.preview }
+        return Found.excerpt(note.text, around: match) ?? note.preview
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-            Text(note.title)
+            Text(Found.marked(note.title, match))
                 .font(.rowTitle)
                 .foregroundStyle(Theme.ink)
                 .lineLimit(1)
-            if !note.preview.isEmpty {
-                Text(note.preview)
+            if !preview.isEmpty {
+                Text(Found.marked(preview, match))
                     .font(.subheadline)
                     .foregroundStyle(Theme.secondaryInk)
                     .lineLimit(2)
@@ -2035,5 +2044,37 @@ struct SearchStepper: View {
         .disabled(!enabled)
         .opacity(enabled ? Theme.Emphasis.rest : Theme.Emphasis.folioMuted)
         .accessibilityLabel(label)
+    }
+}
+
+/// Lo encontrado al buscar: marcarlo en un texto y recortar el pasaje donde aparece.
+/// Sin distinguir mayúsculas ni acentos, como el buscador del libro.
+enum Found {
+    private static let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive]
+
+    /// El texto con cada vez que aparece `match` en verde y negritas (no solo color).
+    static func marked(_ text: String, _ match: String?) -> AttributedString {
+        var result = AttributedString(text)
+        guard let match = match?.trimmingCharacters(in: .whitespaces), !match.isEmpty else { return result }
+        var from = text.startIndex
+        while let range = text.range(of: match, options: options, range: from..<text.endIndex) {
+            if let lower = AttributedString.Index(range.lowerBound, within: result),
+               let upper = AttributedString.Index(range.upperBound, within: result) {
+                result[lower..<upper].foregroundColor = Theme.accent
+                result[lower..<upper].inlinePresentationIntent = .stronglyEmphasized
+            }
+            from = range.upperBound
+        }
+        return result
+    }
+
+    /// Unas palabras antes y después de la primera vez que aparece `match`, en un renglón.
+    static func excerpt(_ text: String, around match: String) -> String? {
+        let flat = text.split(whereSeparator: \.isNewline).joined(separator: " ")
+        guard let range = flat.range(of: match, options: options) else { return nil }
+        let start = flat.index(range.lowerBound, offsetBy: -Theme.Size.excerptReach, limitedBy: flat.startIndex) ?? flat.startIndex
+        let end = flat.index(range.upperBound, offsetBy: Theme.Size.excerptReach, limitedBy: flat.endIndex) ?? flat.endIndex
+        return (start > flat.startIndex ? "…" : "") + flat[start..<end].trimmingCharacters(in: .whitespaces)
+            + (end < flat.endIndex ? "…" : "")
     }
 }

@@ -481,7 +481,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             guard (body["query"] as? String) == searchedQuery else { break }
             searchResults = Self.searchResults(body["results"] as? [[String: Any]] ?? [], from: 0)
             // Al terminar, queda entre las búsquedas recientes de este libro.
-            if searchedQuery.count >= 2 { _ = RecentSearches.add(searchedQuery, count: searchResults.count, for: bookID) }
+            if searchedQuery.count >= 2, let bookID { _ = RecentSearches.add(searchedQuery, count: searchResults.count, for: bookID) }
             searchProgress = nil
         case "anchored":
             guard let id = (body["id"] as? String).flatMap(UUID.init(uuidString:)), let cfi = body["cfi"] as? String,
