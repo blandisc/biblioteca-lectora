@@ -462,8 +462,6 @@ extension View {
         #endif
     }
 
-    /// Superficie de vidrio con esquinas redondeadas para barras flotantes.
-    @ViewBuilder
     /// `clipped`: lo de adentro se recorta a la forma del vidrio (un panel que crece
     /// no deja ver su contenido nuevo fuera de él mientras se anima).
     @ViewBuilder
@@ -475,6 +473,8 @@ extension View {
         }
     }
 
+    /// Superficie de vidrio con esquinas redondeadas para barras flotantes.
+    @ViewBuilder
     func glassPanel(cornerRadius: CGFloat) -> some View {
         #if compiler(>=6.2)
         if #available(iOS 26.0, macOS 26.0, *) {
