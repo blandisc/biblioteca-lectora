@@ -413,16 +413,92 @@ const drawingPencil = (rects, options) => {
     return g
 }
 
-const onDrawAnnotation = ({ detail: { draw, annotation } }) => {
+// Marcador en continuo (MC-E1): un hilo en el aire entre renglones que nace casi
+// invisible en la orilla del texto y se vuelve verde hasta el margen, donde se
+// dobla en una cinta chica junto al renglón marcado. Va en la capa de los
+// subrayados: se mueve con el texto. En páginas no se dibuja (allí la cinta de la
+// esquina marca la hoja).
+let freshBookmark = null
+let threadCount = 0
+const drawnBookmarks = new Set()
+const threadAndTab = (doc, range) => (rects, { color, animated }) => {
+    const g = document.createElementNS(SVG_NS, 'g')
+    const r = rects[0]
+    if (!r) return g
+    const block = (range.startContainer.nodeType === 3 ? range.startContainer.parentElement : range.startContainer) ?? doc.body
+    const lineHeight = parseFloat(doc.defaultView.getComputedStyle(block).lineHeight) || r.height * 1.45
+    // La orilla de arriba del renglón: justo en medio del aire con el de antes.
+    const y = r.top - (lineHeight - r.height) / 2
+    const body = doc.body.getBoundingClientRect()
+    const width = doc.documentElement.clientWidth
+    const tab = 10, x = (body.right + width) / 2, h = lineHeight * 1.25
+    const id = `lectora-thread-${++threadCount}`
+    const defs = document.createElementNS(SVG_NS, 'defs')
+    const gradient = document.createElementNS(SVG_NS, 'linearGradient')
+    gradient.id = id
+    for (const [offset, opacity] of [[0, 0], [0.7, 0.55], [1, 1]]) {
+        const stop = document.createElementNS(SVG_NS, 'stop')
+        stop.setAttribute('offset', String(offset))
+        stop.setAttribute('stop-color', color)
+        stop.setAttribute('stop-opacity', String(opacity))
+        gradient.append(stop)
+    }
+    defs.append(gradient)
+    const thread = document.createElementNS(SVG_NS, 'rect')
+    thread.setAttribute('x', String(body.left))
+    thread.setAttribute('y', String(y - 0.5))
+    thread.setAttribute('width', String(Math.max(0, x - body.left)))
+    thread.setAttribute('height', '1')
+    thread.setAttribute('fill', `url(#${id})`)
+    const ribbon = document.createElementNS(SVG_NS, 'path')
+    ribbon.setAttribute('d', `M${x - tab / 2} ${y} H${x + tab / 2} V${y + h} L${x} ${y + h * 0.84} L${x - tab / 2} ${y + h} Z`)
+    ribbon.setAttribute('fill', color)
+    g.append(defs, thread, ribbon)
+    if (animated) {
+        // La cinta cae con un rebote corto y el hilo se dibuja hacia la izquierda.
+        for (const el of [thread, ribbon]) el.style.transformBox = 'fill-box'
+        thread.style.transformOrigin = 'right center'
+        ribbon.style.transformOrigin = 'center top'
+        ribbon.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }],
+            { duration: 360, easing: 'cubic-bezier(0.3, 1.4, 0.5, 1)', fill: 'both' })
+        thread.animate([{ transform: 'scaleX(0)', opacity: 0 }, { transform: 'scaleX(1)', opacity: 1 }],
+            { duration: 420, delay: 120, easing: 'cubic-bezier(0.33, 1, 0.68, 1)', fill: 'both' })
+    }
+    return g
+}
+const syncBookmarkMarks = () => {
+    if (!view) return
+    const wanted = new Set(style.flow === 'scrolled' ? bookmarkCFIs : [])
+    for (const value of [...drawnBookmarks]) {
+        if (wanted.has(value)) continue
+        drawnBookmarks.delete(value)
+        view.deleteAnnotation({ value }).catch?.(() => {})
+    }
+    for (const value of wanted) {
+        if (drawnBookmarks.has(value)) continue
+        drawnBookmarks.add(value)
+        view.addAnnotation({ value }).catch?.(() => {})
+    }
+}
+
+const onDrawAnnotation = ({ detail: { draw, annotation, doc, range } }) => {
+    if (drawnBookmarks.has(annotation?.value)) {
+        const animated = freshBookmark === annotation.value && !reducedMotion?.matches
+        if (animated) freshBookmark = null
+        draw(threadAndTab(doc, range), { color: style.linkColor ?? '#3D6B55', animated })
+        return
+    }
     const animated = freshHighlights.delete(annotation?.value) && !reducedMotion?.matches
     draw(animated ? drawingPencil : pencil, { color: style.linkColor ?? '#3D6B55' })
 }
 
 const onCreateOverlay = () => {
     for (const value of highlights) view.addAnnotation({ value })
+    for (const value of drawnBookmarks) view.addAnnotation({ value }).catch?.(() => {})
 }
 
 const onShowAnnotation = ({ detail: { value } }) => {
+    if (drawnBookmarks.has(value)) return
     annotationTapped = true
     post('annotation', { cfi: value })
 }
@@ -483,6 +559,40 @@ window.lectora = {
     setBookmarks(cfis) {
         bookmarkCFIs = cfis ?? []
         postMarks()
+        syncBookmarkMarks()
+    },
+    // En continuo: el primer renglón que se lee entero bajo `y` (puntos desde arriba
+    // de la pantalla). Devuelve su CFI (su primera letra) y el texto que sigue, para
+    // la lista de marcadores. La próxima vez que se dibuje, el marcador entra animado.
+    readingLine(y) {
+        const renderer = view?.renderer
+        if (!renderer?.scrolled) return null
+        for (const { doc, index } of renderer.getContents()) {
+            const frame = doc?.defaultView?.frameElement
+            if (!frame || !doc.caretRangeFromPoint) continue
+            const top = y - frame.getBoundingClientRect().top
+            const body = doc.body.getBoundingClientRect()
+            const step = (parseFloat(doc.defaultView.getComputedStyle(doc.body).lineHeight) || 24) / 4
+            for (let dy = 0; dy < step * 24; dy += step) {
+                const caret = doc.caretRangeFromPoint(body.left + 2, top + dy)
+                const node = caret?.startContainer
+                if (!node || node.nodeType !== 3 || !node.length || !node.textContent.trim()) continue
+                const offset = Math.min(caret.startOffset, node.length - 1)
+                const range = doc.createRange()
+                range.setStart(node, offset)
+                range.setEnd(node, offset + 1)
+                const rect = range.getClientRects()[0]
+                if (!rect || rect.top < top - 2) continue
+                const block = node.parentElement?.closest('p, li, blockquote, dd, div, h1, h2, h3, h4, h5, h6') ?? doc.body
+                const rest = doc.createRange()
+                rest.setStart(node, offset)
+                rest.setEndAfter(block.lastChild ?? block)
+                const cfi = view.getCFI(index, range)
+                freshBookmark = cfi
+                return { cfi, excerpt: rest.toString().replace(/\s+/g, ' ').trim().slice(0, 160) }
+            }
+        }
+        return null
     },
 
     async open(url, lastLocation) {
@@ -611,9 +721,11 @@ window.lectora = {
         }
     },
     setStyle(partial) {
+        const flowChanged = partial.flow && partial.flow !== style.flow
         style = { ...style, ...partial }
         applyStyle()
-        if (partial.linkColor) for (const value of highlights) view?.addAnnotation({ value })
+        if (partial.linkColor) for (const value of [...highlights, ...drawnBookmarks]) view?.addAnnotation({ value })
+        if (flowChanged) syncBookmarkMarks()
     },
     // Devuelve la selección actual ({ cfi, text, prefix, suffix }) y la limpia.
     takeSelection() {

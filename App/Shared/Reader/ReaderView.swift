@@ -82,7 +82,8 @@ struct ReaderView: View {
         .overlay(alignment: .topTrailing) {
             // Con los controles a la vista, la barra de estado ocupa el borde y la cinta
             // tapaba la batería: ahí lo dice el ícono relleno del marcador.
-            if currentBookmark != nil && !showsChrome && controller.isSettled {
+            // En continuo no: ahí el marcador es el hilo y la cinta junto a su renglón.
+            if currentBookmark != nil && !showsChrome && controller.isSettled && flow != .scrolled {
                 Ribbon()
                     .fill(Theme.accent)
                     .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
@@ -397,6 +398,12 @@ struct ReaderView: View {
         guard let bookID, let location = controller.location else { return }
         if let mark = currentBookmark {
             library.removeBookmark(id: mark.id)
+        } else if flow == .scrolled {
+            // En continuo se marca el renglón que lees arriba: ahí cuelgan el hilo y la cinta.
+            controller.readingLine { cfi, excerpt in
+                library.addBookmark(Bookmark(bookID: bookID, cfi: cfi, fraction: location.fraction,
+                                             excerpt: excerpt ?? location.excerpt))
+            }
         } else if let cfi = location.cfi {
             library.addBookmark(Bookmark(bookID: bookID, cfi: cfi, fraction: location.fraction, excerpt: location.excerpt))
         }
@@ -444,6 +451,9 @@ struct ReaderView: View {
                 showsAppearance = true
             case "contents":
                 tools = .contents
+            case "bookmark":
+                // Marca el renglón de arriba (en continuo, hilo y cinta) y lo deja a la vista.
+                if currentBookmark == nil { toggleBookmark() }
             case "stepper":
                 // Busca, va al cuarto resultado (barrita en la página) y luego abre Buscar vacío (recientes).
                 withAnimation(Theme.Motion.standard) { showsChrome = false }
