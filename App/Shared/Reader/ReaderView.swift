@@ -292,11 +292,7 @@ struct ReaderView: View {
                              color: palette.textColor,
                              paper: flow == .scrolled ? palette.background : nil,
                              pagePaper: palette.background,
-                             onFooter: {
-                                 // Tocar el pie abre el panel ya subido: ahí se elige qué dice.
-                                 panelExpanded = true
-                                 withAnimation(Theme.Motion.standard) { showsChrome = true }
-                             }) { EmptyView() }
+                             options: footerOptions, footer: $footer) { EmptyView() }
                 .transition(.opacity)
             }
             VStack(spacing: 0) {
@@ -854,7 +850,7 @@ struct FooterOption: Identifiable {
 
 /// Editorial sin controles: arriba nada (el papel se desvanece) y, abajo, el pie que elijas
 /// (tiempo para terminar el capítulo o el libro, página o porcentaje). Tocando
-/// el pie se abre un globo con las opciones, cada una con su dato de ahora.
+/// el pie se abre un globo con las cuatro muestras, cada una como se leerá (no la tarjeta).
 /// En páginas, el texto deja aire arriba y abajo (`Reader.pageMarginTop` y `pageMarginBottom`): el folio
 /// queda sobre papel limpio. En continuo, el texto pasa por debajo: una franja
 /// de papel sólido tapa lo que queda detrás y solo su orilla se desvanece.
@@ -869,8 +865,10 @@ private struct ReadingFolio<Counter: View>: View {
     var paper: Color? = nil
     /// El papel del libro (en los dos modos): de él sale el desvanecido de arriba.
     let pagePaper: Color
-    /// Tocar el pie: abre el panel con sus opciones.
-    let onFooter: () -> Void
+    /// Tocar el pie abre un globo con sus opciones, sin la tarjeta: la página sigue a la vista.
+    let options: [FooterOption]
+    @Binding var footer: ReaderFooter
+    @State private var choosing = false
     /// El contador de palabras, en el mismo renglón que el pie.
     @ViewBuilder var counter: Counter
 
@@ -888,7 +886,7 @@ private struct ReadingFolio<Counter: View>: View {
                 .allowsHitTesting(false)
             Spacer()
             ZStack {
-                Button(action: onFooter) {
+                Button { choosing = true } label: {
                     Text(footerText)
                         .monospacedDigit()
                         .lineLimit(1)
@@ -902,6 +900,18 @@ private struct ReadingFolio<Counter: View>: View {
                 .accessibilityLabel("Pie de página")
                 .accessibilityValue(footerText)
                 .accessibilityHint("Elige qué dice")
+                #if DEBUG
+                .task {
+                    // Demo «footer»: abre el globo del pie para capturarlo sin tocar la pantalla.
+                    guard UserDefaults.standard.string(forKey: "screenshot.demo") == "footer" else { return }
+                    try? await Task.sleep(for: .seconds(4))
+                    choosing = true
+                }
+                #endif
+                .popover(isPresented: $choosing, arrowEdge: .bottom) {
+                    FooterPicker(options: options, selection: $footer, paper: pagePaper, ink: color) { choosing = false }
+                        .presentationCompactAdaptation(.popover)
+                }
                 HStack {
                     counter
                     Spacer()
@@ -935,6 +945,39 @@ private struct ReadingFolio<Counter: View>: View {
         }
     }
 
+}
+
+/// El globo del pie: las cuatro muestras, cada una como se leerá; tocar una la elige y cierra.
+private struct FooterPicker: View {
+    let options: [FooterOption]
+    @Binding var selection: ReaderFooter
+    let paper: Color
+    let ink: Color
+    let done: () -> Void
+
+    private let columns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            SectionLabel(text: "El pie dice", tone: Theme.secondaryInk)
+            LazyVGrid(columns: columns, spacing: Theme.Space.l) {
+                ForEach(options) { option in
+                    Button {
+                        selection = option.kind
+                        done()
+                    } label: {
+                        FooterPreview(name: option.kind.name, text: option.text, paper: paper, ink: ink,
+                                      available: option.available, selected: option.kind == selection)
+                    }
+                    .buttonStyle(PressableStyle())
+                    .accessibilityAddTraits(option.kind == selection ? .isSelected : [])
+                }
+            }
+        }
+        .padding(Theme.Space.m)
+        .frame(width: Theme.Size.footerPicker)
+        .sensoryFeedback(.selection, trigger: selection)
+    }
 }
 
 /// El papel se aclara pronto y luego despacio (curva, no recta): la letra

@@ -89,8 +89,12 @@ const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, s
     body { font-family: ${fontFamily} !important; }
     ${flow === 'scrolled' && scrollTop ? `body { padding-top: ${scrollTop}px !important; }` : ''}
     body *:not(code):not(pre):not(kbd):not(samp) { font-family: inherit !important; }
-    p, li, blockquote, dd {
+    /* El aire entre renglones es el nuestro aunque el libro ponga el suyo con
+       «!important» en sus clases (p.normal…): el #id de mentira le gana a cualquier clase. */
+    :root :is(p, li, blockquote, dd):not(#lectora-even) {
         line-height: ${lineHeight} !important;
+    }
+    p, li, blockquote, dd {
         text-align: ${justify ? 'justify' : 'start'};
         -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'};
         hyphens: ${hyphenate ? 'auto' : 'manual'};
@@ -347,6 +351,22 @@ const onRelocate = ({ detail }) => {
     postMarks()
 }
 
+// Renglones parejos: una letra con otra fuente (ć, ē), una llamada de nota subida o
+// unas versalitas no deben separar su renglón de los demás. Lo que va dentro de la
+// línea no aporta alto propio; el renglón lo da el párrafo. Se mide una vez por clase.
+const evenLines = doc => {
+    const seen = new Map()
+    for (const el of doc.body?.querySelectorAll('span, a, sup, sub, small, i, em, b, strong') ?? []) {
+        const key = `${el.localName}.${el.className}.${el.getAttribute('style') ?? ''}`
+        let inline = seen.get(key)
+        if (inline === undefined) {
+            inline = getComputedStyle(el).display === 'inline'
+            seen.set(key, inline)
+        }
+        if (inline) el.style.setProperty('line-height', '0', 'important')
+    }
+}
+
 const onLoad = ({ detail: { doc, index } }) => {
     // El idioma correcto activa la separación silábica en español o inglés.
     if (!doc.documentElement.lang && view.book?.metadata?.language) {
@@ -354,6 +374,7 @@ const onLoad = ({ detail: { doc, index } }) => {
         doc.documentElement.lang = Array.isArray(lang) ? lang[0] : lang
     }
     watchPull(doc)
+    evenLines(doc)
     markPages(doc, index)
     markChapter(doc)
     doc.addEventListener('selectionchange', () => {

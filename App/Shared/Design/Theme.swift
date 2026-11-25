@@ -138,6 +138,8 @@ enum Theme {
         static let stageBarThin: CGFloat = 4
         /// Muestra del pie en el panel del lector: un recorte de la parte de abajo de la página.
         static let footerPreview: CGFloat = 64
+        /// Ancho del globo que sale al tocar el pie: dos muestras por renglón.
+        static let footerPicker: CGFloat = 320
         /// Renglón fantasma de esa muestra.
         static let ghostLine: CGFloat = 3
         /// Perilla de la barra de avance del lector.

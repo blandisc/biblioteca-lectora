@@ -77,7 +77,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
-stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+stageBar 8 · stageBarThin 4 · footerPreview 64 · footerPicker 320 (el globo del pie) · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
@@ -234,12 +234,12 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
   (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
   siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
-  La letra del libro sigue el tamaño de texto de iOS (`Reader.textBase`) además de lo que elijas en «Aa»; los títulos de libro, filas, citas y textos del libro también lo siguen, y las muestras del pie crecen con él. El texto va a `Reader.textMargin` (28 pt) de las orillas en páginas y en continuo y en todo iPhone, con 1,45 de aire entre renglones que el estilo del libro no cambia (D1-B y D2-B, 24 nov 2026); el contenido de la tarjeta de abajo empieza en esa misma línea. En páginas, el texto deja `Reader.pageMarginTop` (12 pt) arriba, justo debajo de la isla, y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
+  La letra del libro sigue el tamaño de texto de iOS (`Reader.textBase`) además de lo que elijas en «Aa»; los títulos de libro, filas, citas y textos del libro también lo siguen, y las muestras del pie crecen con él. El texto va a `Reader.textMargin` (28 pt) de las orillas en páginas y en continuo y en todo iPhone, con 1,45 de aire entre renglones que el estilo del libro no cambia (D1-B y D2-B, 24 nov 2026): todos los renglones a la misma distancia, aunque el libro traiga su propio aire en sus clases, letras de otra fuente o llamadas de nota (25 nov 2026, `testLinesAreEvenlySpaced`); el contenido de la tarjeta de abajo empieza en esa misma línea. En páginas, el texto deja `Reader.pageMarginTop` (12 pt) arriba, justo debajo de la isla, y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
   es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`): la letra se sigue leyendo mientras se va. Arriba ya no va el capítulo (25 nov 2026): solo el papel que se desvanece desde la orilla de la pantalla; en continuo el texto corre hasta arriba y se va en ese desvanecido (hasta `Reader.topFade` bajo la isla), y el principio de cada capítulo empieza debajo de la isla. El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tarjeta (`Grabber`; el capítulo completo con su número encima en `SectionLabel`, que abre el índice; la barra, que se toca en 44 pt de alto aunque se vea fina (`Size.scrubberReach`); la página y las palabras en gris, sin íconos; tras saltar con la barra, en lugar de las palabras, «Volver a la pág. N» para regresar a donde ibas);
-  subiéndola, o tocando el pie, aparece «El pie dice» con cuatro `FooterPreview` (como se leerá). Tocando el
+  subiéndola aparece «El pie dice» con cuatro `FooterPreview` (como se leerá). Tocando el pie mientras lees sale solo un globo con esas cuatro muestras, sin la tarjeta (25 nov 2026). Tocando el
   contador, la tarjeta de abajo se desvanece en su lugar (`Motion.exit`) y, ya ida, «Esta sesión» crece apenas desde abajo (nunca dos tarjetas encimadas); sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra
@@ -291,6 +291,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra |
 | `testTextColorsAreReadable` | Decisión del 19 nov 2026: sobre `paper`, tinta y secundario ≥ 4,5 : 1; terciario y verde ≥ 3 : 1, en claro y oscuro |
 | `testPageTurnNeverFreezesOrJumps` | Auditoría del 24 nov 2026: al pasar la hoja, nada se queda quieto a media vuelta ni brinca al final (la vuelta usa la foto que ya dio WebKit; un cuadro tarde avanza a lo más `Reader.turnFrameCap`) |
+| `testLinesAreEvenlySpaced` | Decisión del 25 nov 2026: todos los renglones de un párrafo a la misma distancia, aunque el libro traiga su propio aire, letras de otra fuente o llamadas de nota |
 | `testReadingNeverVibratesByItself` | Decisión del 24 nov 2026: leyendo, nada vibra porque la página avanzó; solo lo que haces tú (con «Vibrar al pasar de página» apagado, la barra de avance vibraba en cada hoja) |
 | `testNoTextUnderTwelve` | Sistema base de la casa (SB-3), 24 nov 2026: ninguna letra de menos de 12 pt; `.caption2` (11) solo en íconos |
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |

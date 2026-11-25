@@ -378,6 +378,18 @@ final class DesignRulesTests: XCTestCase {
                       "Continuo: la franja de papel del folio sobresale lo mismo que su desvanecido (folioFade)")
     }
 
+    /// 25 nov 2026: en «Agentes del imperio» unos renglones quedaban más separados que otros:
+    /// las clases del libro (`p.normal { line-height: 1.3 !important }`) le ganaban a nuestro
+    /// aire, y una letra de otra fuente (ć) o una llamada de nota agrandaban su renglón.
+    /// Todos los renglones de un párrafo van a la misma distancia, traiga el libro lo que traiga.
+    func testLinesAreEvenlySpaced() {
+        let reader = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
+        XCTAssertTrue(reader.contains(":root :is(p, li, blockquote, dd):not(#lectora-even)"),
+                      "reader.js: el aire entre renglones debe ganarle a las clases del libro")
+        XCTAssertTrue(reader.contains("evenLines(doc)") && reader.contains("setProperty('line-height', '0', 'important')"),
+                      "reader.js: lo que va dentro del renglón (letras de otra fuente, notas) no debe agrandarlo")
+    }
+
     /// 24 nov 2026: con «Vibrar al pasar de página» apagado, el iPhone seguía vibrando en cada
     /// hoja: la barra de avance vibraba cada vez que cambiaba el porcentaje. Leyendo, nada
     /// vibra porque la página se movió; solo lo que haces tú (arrastrar la barra, elegir algo).
