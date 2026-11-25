@@ -1799,42 +1799,48 @@ struct ContentsRow: View {
 
 /// Un resultado de buscar en el libro: el capítulo y el texto alrededor, con lo buscado resaltado.
 struct SearchResultRow: View {
-    let chapter: String
     let before: String
     let match: String
     let after: String
+    /// «pág. 22» a la derecha (o el porcentaje si el libro no trae páginas).
+    let place: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-            if !chapter.isEmpty {
-                Text(chapter)
-                    .font(.caption)
-                    .foregroundStyle(Theme.tertiaryInk)
-                    .lineLimit(1)
-            }
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+            // Lo encontrado en verde y en negritas: no depende solo del color.
             (Text(Self.lead(before)) + Text(match).bold().foregroundStyle(Theme.accent) + Text(Self.tail(after)))
                 .font(.prose)
                 .foregroundStyle(Theme.ink)
                 .lineLimit(3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(place)
+                .font(.caption)
+                .monospacedDigit()
+                .foregroundStyle(Theme.secondaryInk)
         }
         .padding(.vertical, Theme.Space.rowY)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget, alignment: .leading)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
     }
 
     /// Lo que se quita de los bordes de un pasaje cortado: espacios y puntos suspensivos.
-    private static let cut = CharacterSet.whitespaces.union(CharacterSet(charactersIn: ".…"))
+    private static let cut = CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ".…"))
+
+    /// Un pasaje es un solo renglón corrido: los saltos de línea del libro se vuelven espacios.
+    private static func flat(_ text: String) -> String {
+        text.split(whereSeparator: \.isNewline).joined(separator: " ")
+    }
 
     /// El texto de foliate ya puede traer «...» o «…»: se quitan y se pone uno solo,
     /// y ninguno si el pasaje empieza o termina ahí.
     static func lead(_ text: String) -> String {
-        let core = text.trimmingCharacters(in: Self.cut)
+        let core = flat(text).trimmingCharacters(in: Self.cut)
         return core.isEmpty ? "" : "…" + core + (text.last?.isWhitespace == true ? " " : "")
     }
 
     static func tail(_ text: String) -> String {
-        let core = text.trimmingCharacters(in: Self.cut)
+        let core = flat(text).trimmingCharacters(in: Self.cut)
         return core.isEmpty ? "" : (text.first?.isWhitespace == true ? " " : "") + core + "…"
     }
 }
@@ -1904,5 +1910,48 @@ struct OptionRow: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Encabezado de un capítulo en los resultados de buscar: su nombre y cuántas veces
+/// aparece ahí.
+struct SearchChapterHeading: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+            Text(title.isEmpty ? "Sección sin título" : title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.ink)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text("\(count)")
+                .font(.footnote)
+                .monospacedDigit()
+                .foregroundStyle(Theme.secondaryInk)
+        }
+        .padding(.top, Theme.Space.l)
+        .padding(.bottom, Theme.Space.xs)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(count == 1 ? "1 resultado" : "\(count) resultados")")
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Raya verde «Aquí vas · pág. 18» entre resultados: lo de arriba ya lo leíste.
+struct HereMark: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            Text(text)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(Theme.accent)
+                .fixedSize()
+            Capsule().fill(Theme.accent).frame(height: Theme.Size.quoteRule)
+        }
+        .padding(.vertical, Theme.Space.s)
+        .accessibilityElement(children: .combine)
     }
 }

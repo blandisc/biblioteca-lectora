@@ -532,8 +532,18 @@ export class View extends HTMLElement {
         for (const [index, { createDocument }] of sections.entries()) {
             if (!createDocument) continue
             const doc = await createDocument()
-            const subitems = Array.from(matcher(doc, query), ({ range, excerpt }) =>
-                ({ cfi: this.getCFI(index, range), excerpt }))
+            // Gabinete: dónde cae cada resultado dentro de su sección (0 a 1), para su página.
+            const total = doc.body?.textContent?.length || 1
+            const subitems = Array.from(matcher(doc, query), ({ range, excerpt }) => {
+                let at = 0
+                try {
+                    const before = doc.createRange()
+                    before.setStart(doc.body, 0)
+                    before.setEnd(range.startContainer, range.startOffset)
+                    at = before.toString().length / total
+                } catch {}
+                return { cfi: this.getCFI(index, range), excerpt, at }
+            })
             const progress = (index + 1) / sections.length
             yield { progress }
             if (subitems.length) yield { index, subitems }
@@ -561,6 +571,7 @@ export class View extends HTMLElement {
                 this.#searchResults.set(result.index, list)
                 for (const item of list) this.addAnnotation(item)
                 yield {
+                    index: result.index,
                     label: this.#tocProgress.getProgress(result.index)?.label ?? '',
                     subitems: result.subitems,
                 }

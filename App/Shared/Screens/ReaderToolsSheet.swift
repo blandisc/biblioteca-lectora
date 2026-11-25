@@ -45,6 +45,8 @@ struct ReaderToolsSheet: View {
                 }
                 .screenContent()
             }
+            // Al deslizar la lista se esconde el teclado: caben más resultados.
+            .scrollDismissesKeyboard(.immediately)
             .pushedScreen(controller.title ?? "Libro")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -90,42 +92,110 @@ struct ReaderToolsSheet: View {
 
     // MARK: Buscar
 
+    /// Los resultados juntos por capítulo, en el orden del libro.
+    private struct ChapterGroup: Identifiable {
+        let chapter: String
+        var results: [ReaderController.SearchResult]
+        var id: Int { results.first?.id ?? 0 }
+    }
+
+    private var groups: [ChapterGroup] {
+        controller.searchResults.reduce(into: []) { groups, result in
+            if groups.last?.chapter == result.chapter {
+                groups[groups.count - 1].results.append(result)
+            } else {
+                groups.append(ChapterGroup(chapter: result.chapter, results: [result]))
+            }
+        }
+    }
+
+    /// El primer resultado que queda después de donde vas: ahí va «Aquí vas».
+    private var nextAhead: Int? {
+        guard let here = controller.location?.fraction else { return nil }
+        let results = controller.searchResults
+        guard let first = results.first, first.fraction <= here else { return nil }
+        return results.first { $0.fraction > here }?.id
+    }
+
+    private var searchIsEmpty: Bool {
+        !controller.searchedQuery.isEmpty && controller.searchProgress == nil && controller.searchResults.isEmpty
+    }
+
     private var search: some View {
         VStack(alignment: .leading, spacing: Theme.Space.m) {
             SearchField(prompt: "Buscar en el libro", text: $query, focused: $searchFocused,
                         onSubmit: { controller.search(query) },
                         onClear: { controller.clearSearch() })
             if let progress = controller.searchProgress {
+                // Cuánto lleva: los resultados van apareciendo abajo mientras busca.
                 HStack(spacing: Theme.Space.s) {
                     ThinProgress(value: progress)
-                    Text("Buscando…").font(.footnote).foregroundStyle(Theme.secondaryInk)
+                    Text("\(progress.percentText) del libro · \(foundText)")
+                        .font(.footnote)
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.secondaryInk)
+                        .fixedSize()
                 }
-            } else if !controller.searchedQuery.isEmpty {
+            } else if !controller.searchResults.isEmpty {
                 Text(resultsLine)
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             }
-            LazyVStack(spacing: 0) {
-                ForEach(controller.searchResults) { result in
-                    Button {
-                        controller.goTo(target: result.cfi)
-                        dismiss()
-                    } label: {
-                        SearchResultRow(chapter: result.chapter, before: result.before, match: result.match, after: result.after)
+            if searchIsEmpty && controller.searchedQuery.count >= 2 {
+                EmptyState(title: "No aparece «\(controller.searchedQuery)» en este libro",
+                           message: "Busqué en todo el libro, sin importar acentos ni mayúsculas. Revisa cómo se escribe o prueba con una sola palabra.")
+            }
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(groups) { group in
+                    SearchChapterHeading(title: group.chapter, count: group.results.count)
+                    ForEach(group.results) { result in
+                        if result.id == nextAhead, let page = controller.location?.page {
+                            HereMark(text: "Aquí vas · pág. \(page)")
+                        }
+                        Button {
+                            controller.goTo(target: result.cfi)
+                            dismiss()
+                        } label: {
+                            SearchResultRow(before: result.before, match: result.match, after: result.after,
+                                            place: place(of: result))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(accessibilityLabel(for: result))
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
+        // Busca sola al dejar de escribir (desde tres letras); la tecla «Buscar» también.
+        .task(id: query) {
+            let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard text.count >= Theme.Reader.searchMinLetters, text != controller.searchedQuery else { return }
+            try? await Task.sleep(for: .seconds(Theme.Reader.searchPause))
+            guard !Task.isCancelled else { return }
+            controller.search(text)
+        }
+    }
+
+    private func place(of result: ReaderController.SearchResult) -> String {
+        if let page = result.page { return "pág. \(page)" }
+        return result.fraction.percentText
+    }
+
+    private func accessibilityLabel(for result: ReaderController.SearchResult) -> String {
+        let number = (controller.searchResults.firstIndex(of: result) ?? 0) + 1
+        let page = result.page.map { ", página \($0)" } ?? ""
+        return "Resultado \(number) de \(controller.searchResults.count), \(result.chapter)\(page). "
+            + result.before + result.match + result.after
+    }
+
+    private var foundText: String {
+        controller.searchResults.count == 1 ? "1 encontrado" : "\(controller.searchResults.count) encontrados"
     }
 
     private var resultsLine: String {
-        switch controller.searchResults.count {
-        case 0: "Nada coincide con «\(controller.searchedQuery)»."
-        case 1: "1 resultado"
-        case 300...: "Más de 300 resultados: prueba con más palabras."
-        default: "\(controller.searchResults.count) resultados"
-        }
+        let count = controller.searchResults.count, chapters = groups.count
+        if count >= 300 { return "Los primeros 300 resultados: prueba con más palabras." }
+        let results = count == 1 ? "1 resultado" : "\(count) resultados"
+        return chapters <= 1 ? results : "\(results) en \(chapters) capítulos"
     }
 
     // MARK: Marcas

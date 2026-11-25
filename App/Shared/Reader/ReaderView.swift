@@ -247,7 +247,7 @@ struct ReaderView: View {
             case "marks": tools = .highlights
             case "appearance": showsAppearance = true
             case "booksearch":
-                controller.search("Mancha")
+                controller.search(UserDefaults.standard.string(forKey: "screenshot.query") ?? "Mancha")
                 tools = .search
             default: break
             }

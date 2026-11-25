@@ -177,7 +177,9 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `SessionRow` | Una sesión en una lista: cuándo, palabras, avance y duración | Diario, ficha › Lectura |
 | `OptionRow` | Opción para elegir: ícono, título, explicación; la elegida con borde y marca verdes | Bienvenida |
 | `ContentsRow` | Entrada del índice del libro, con sangría por nivel y punto verde donde vas | Lector › Índice |
-| `SearchResultRow` | Resultado de buscar en el libro: capítulo y texto alrededor, lo buscado en verde | Lector › Buscar |
+| `SearchResultRow` | Resultado de buscar en el libro: texto alrededor, lo buscado en verde y negritas, su página a la derecha | Lector › Buscar |
+| `SearchChapterHeading` | Capítulo en los resultados de buscar, con cuántas veces aparece | Lector › Buscar |
+| `HereMark` | Raya verde «Aquí vas · pág. N» entre resultados | Lector › Buscar |
 | `SearchField` | Campo de búsqueda sobre `field`, con lupa y borrar; nunca `.searchable` (en Buscar quedaba escondido) | Buscar, Lector › Buscar |
 | `ShareCard`, `ShareSessionButton` | Tarjeta verde fichero de una sesión, para compartir como imagen | Resumen al cerrar, una sesión pasada |
 | `CoverChoiceRow`, `CoverChoiceCell` | Portadas para elegir (fila o cuadrícula); la elegida con borde `selection` | Vista previa, ficha › Elegir portada |
@@ -252,6 +254,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   relevo: la página de antes se va (`Reader.flowOut`) y la nueva llega subiendo apenas (`Reader.flowIn`, `Reader.flowRise`), con un traslape corto (`Reader.flowHandoff`) cuando el lector avisa que ya acomodó el libro (o a lo más `Reader.flowSettle`). Al abrir un libro no se ven la página, los controles ni un número hasta que el libro deja de acomodarse (`Reader.openSettle` sin cambiar de página); luego la página entra con un fundido corto. Las primeras `Reader.panelHints` veces el panel se asoma hacia arriba (`panelHintDelay`, `panelHintHold`); al arrastrarlo, el panel va bajo el dedo hacia donde puede ir y cede con resistencia (`Reader.panelResistance`) hacia donde no; lo de adentro se recorta a su vidrio; los mosaicos del pie entran en cascada (`Motion.stagger`).
 - Al seleccionar texto: barra de vidrio abajo (Subrayar en tinta, Nota, A una nota, Copiar), sin el
   menú negro del sistema.
+- Buscar en el libro: empieza sola al dejar de escribir (`Reader.searchPause`, desde `Reader.searchMinLetters` letras); mientras busca dice cuánto lleva y los resultados aparecen abajo conforme llegan; van juntos por capítulo (`SearchChapterHeading`), cada uno con su página, y «Aquí vas» (`HereMark`) marca dónde lees; sin resultados, `EmptyState` explica que buscó sin importar acentos ni mayúsculas; al deslizar la lista se esconde el teclado.
 - Al tocar un subrayado: tarjeta de vidrio con la cita (hasta `Reader.highlightLines` líneas) y
   cuatro acciones en mosaicos: Nota, A una nota, Copiar, Borrar.
 - Ajustes del lector («Aa»): sin muestra; la página de atrás ya cambia en vivo. Toda la hoja

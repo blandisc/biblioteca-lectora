@@ -38,6 +38,19 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let before: String
         let match: String
         let after: String
+        /// La página del libro donde cae (como la cuenta el pie) y su lugar de 0 a 1.
+        let page: Int?
+        let fraction: Double
+    }
+
+    private static func searchResults(_ items: [[String: Any]], from start: Int) -> [SearchResult] {
+        items.enumerated().compactMap { index, item in
+            guard let cfi = item["cfi"] as? String else { return nil }
+            return SearchResult(id: start + index, cfi: cfi, chapter: item["chapter"] as? String ?? "",
+                                before: item["pre"] as? String ?? "", match: item["match"] as? String ?? "",
+                                after: item["post"] as? String ?? "", page: item["page"] as? Int,
+                                fraction: (item["fraction"] as? Double)?.readingFraction ?? 0)
+        }
     }
 
     @Published private(set) var contents: [ContentsEntry] = []
@@ -193,7 +206,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
         searchedQuery = text
         searchProgress = text.count >= 2 ? 0 : nil
-        if text.count < 2 { searchResults = [] }
+        searchResults = []
         evaluate("window.lectora.search(\(Self.js(text)))")
     }
 
@@ -449,15 +462,14 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             }
         case "searchProgress":
             if (body["query"] as? String) == searchedQuery { searchProgress = (body["progress"] as? Double)?.readingFraction }
+        case "searchFound":
+            // Lo que se va encontrando, capítulo por capítulo: siempre al final de la lista.
+            guard (body["query"] as? String) == searchedQuery else { break }
+            searchResults += Self.searchResults(body["results"] as? [[String: Any]] ?? [], from: searchResults.count)
         case "searchResults":
             guard (body["query"] as? String) == searchedQuery else { break }
             searchProgress = nil
-            searchResults = ((body["results"] as? [[String: Any]]) ?? []).enumerated().compactMap { index, item in
-                guard let cfi = item["cfi"] as? String else { return nil }
-                return SearchResult(id: index, cfi: cfi, chapter: item["chapter"] as? String ?? "",
-                                    before: item["pre"] as? String ?? "", match: item["match"] as? String ?? "",
-                                    after: item["post"] as? String ?? "")
-            }
+            searchResults = Self.searchResults(body["results"] as? [[String: Any]] ?? [], from: 0)
         case "anchored":
             guard let id = (body["id"] as? String).flatMap(UUID.init(uuidString:)), let cfi = body["cfi"] as? String,
                   var annotation = AnnotationStore.shared.annotation(id: id), annotation.cfi == nil else { break }

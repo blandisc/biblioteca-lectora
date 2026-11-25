@@ -531,17 +531,31 @@ window.lectora = {
         const text = (query ?? '').trim()
         if (!view || text.length < 2) { post('searchResults', { query: text, results: [] }); return }
         const results = []
+        // La página de cada resultado, contada como el pie del libro (sizePerPage letras).
+        const sizes = view.book.sections.map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
+        const sizeTotal = sizes.reduce((a, b) => a + b, 0) || 1
         try {
             for await (const result of view.search({ query: text })) {
                 if (token !== searchToken) return
                 if (result === 'done') break
-                if (result.progress != null) post('searchProgress', { query: text, progress: result.progress })
+                if (result.progress != null) {
+                    post('searchProgress', { query: text, progress: result.progress, count: results.length })
+                }
+                // Lo que se va encontrando llega a la app capítulo por capítulo, no hasta el final.
+                const found = []
                 for (const item of result.subitems ?? []) {
-                    results.push({
+                    if (results.length >= 300) break
+                    const before = sizes.slice(0, result.index ?? 0).reduce((a, b) => a + b, 0)
+                    const at = before + (item.at ?? 0) * (sizes[result.index ?? 0] ?? 0)
+                    const entry = {
                         cfi: item.cfi, chapter: result.label ?? '',
                         pre: item.excerpt?.pre ?? '', match: item.excerpt?.match ?? text, post: item.excerpt?.post ?? '',
-                    })
+                        page: Math.floor(at / sizePerPage) + 1, fraction: at / sizeTotal,
+                    }
+                    results.push(entry)
+                    found.push(entry)
                 }
+                if (found.length) post('searchFound', { query: text, results: found })
                 if (results.length >= 300) break
             }
         } catch (error) {
