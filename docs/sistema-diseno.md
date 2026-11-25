@@ -81,8 +81,8 @@ stageBar 8 · stageBarThin 4 · footerPreview 64 · ghostLine 3 · scrubberKnob 
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
-`Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,72) texto callado sobre el vidrio del lector; `scrubberTrack` (0,25) riel de la barra de avance;
-`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles no hay franja ni niebla detrás de los botones de arriba: el vidrio basta.
+`Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,8) texto callado sobre el vidrio del lector (subió de 0,72: en Noche cálida quedaba justo en el mínimo de contraste); `scrubberTrack` (0,25) riel de la barra de avance;
+`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles, en páginas no hay franja detrás de los botones de arriba (arriba hay papel liso y el vidrio basta); en continuo, donde el texto corre por debajo, va la misma franja de papel que se desvanece del capítulo (decisión D3-B, 24 nov 2026).
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -230,7 +230,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
   (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
   siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
-  En páginas, el texto deja `Reader.pageMarginTop` (40 pt) arriba y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
+  La letra del libro sigue el tamaño de texto de iOS (`Reader.textBase`) además de lo que elijas en «Aa»; los títulos de libro, filas, citas y textos del libro también lo siguen, y las muestras del pie crecen con él. El texto va a `Reader.textMargin` (28 pt) de las orillas en páginas y en continuo y en todo iPhone, con 1,45 de aire entre renglones que el estilo del libro no cambia (D1-B y D2-B, 24 nov 2026); el contenido de la tarjeta de abajo empieza en esa misma línea. En páginas, el texto deja `Reader.pageMarginTop` (40 pt) arriba y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
   es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`): la letra se sigue leyendo mientras se va. En continuo el capítulo sube bajo la isla (`Reader.folioTop`, medido desde la orilla segura de cada iPhone). El folio

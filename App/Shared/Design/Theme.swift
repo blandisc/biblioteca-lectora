@@ -250,6 +250,13 @@ enum Theme {
         /// Con el dedo, la vuelta completa es lo que hay del toque a la orilla contraria,
         /// pero nunca menos de esta fracción del ancho (si tocas cerca del lomo).
         static let turnReach: CGFloat = 0.5
+        /// El texto del libro a esta distancia de las orillas, en páginas y en continuo y
+        /// en todo iPhone; el contenido de la tarjeta de abajo empieza en la misma línea
+        /// (`chromeInset` + `Space.m`).
+        static let textMargin: CGFloat = 28
+        /// El texto normal de iOS con el tamaño de siempre: lo que crezca sobre esto
+        /// (Ajustes › Pantalla › Tamaño del texto) crece también la letra del libro.
+        static let textBase: CGFloat = 17
         /// Al abrir, el libro se da por acomodado cuando lleva esto sin cambiar de página.
         static let openSettle: TimeInterval = 0.25
         /// La tarjeta de abajo, al arrastrarla hacia donde no puede ir (o hacia arriba
@@ -346,7 +353,7 @@ enum Theme {
         /// Texto secundario sobre la marca (tarjeta para compartir).
         static let secondary = 0.75
         /// Texto callado sobre el vidrio del lector: el gris fijo se pierde ahí.
-        static let glassText = 0.72
+        static let glassText = 0.8
         /// Riel de la barra de avance: tinta tenue que sí se ve sobre el vidrio.
         static let scrubberTrack = 0.25
         /// Al tocar: se hunde un poco y se apaga apenas, sin cambiar de color.
@@ -401,14 +408,15 @@ enum Theme {
 extension Font {
     /// Título de pantalla («Biblioteca», «Cuaderno»).
     static let screenTitle = Font.system(size: 30, weight: .medium, design: .serif)
-    /// Título de un libro protagonista (Mesa, ficha).
-    static let bookTitle = Font.system(size: 28, weight: .medium, design: .serif)
+    /// Título de un libro protagonista (Mesa, ficha). Los de abajo siguen el
+    /// tamaño de texto de iOS (28, 17 y 16 pt con el tamaño de siempre).
+    static let bookTitle = Font.system(.title, design: .serif, weight: .medium)
     /// Título en filas y citas.
-    static let rowTitle = Font.system(size: 17, design: .serif)
+    static let rowTitle = Font.system(.body, design: .serif)
     /// Citas y «Donde lo dejaste».
-    static let quote = Font.system(size: 17, design: .serif).italic()
+    static let quote = Font.system(.body, design: .serif).italic()
     /// Sinopsis y textos largos del libro.
-    static let prose = Font.system(size: 16, design: .serif)
+    static let prose = Font.system(.callout, design: .serif)
     /// «GABINETE» arriba de la Mesa, como una inscripción.
     static let brandMark = Font.custom("Cinzel", size: 16, relativeTo: .footnote)
     /// Rótulo de sección en mayúsculas romanas («EN LA MESA»).

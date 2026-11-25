@@ -7,7 +7,8 @@ const post = (type, payload = {}) =>
     window.webkit?.messageHandlers?.lectora?.postMessage({ type, ...payload })
 
 const defaultStyle = {
-    lineHeight: 1.5,
+    // Aire entre renglones, igual en todos los libros: el estilo del libro no le gana.
+    lineHeight: 1.45,
     justify: true,
     hyphenate: true,
     fontFamily: 'Literata, Charter, Georgia, serif',
@@ -88,7 +89,7 @@ const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, .
     body { font-family: ${fontFamily} !important; }
     body *:not(code):not(pre):not(kbd):not(samp) { font-family: inherit !important; }
     p, li, blockquote, dd {
-        line-height: ${lineHeight};
+        line-height: ${lineHeight} !important;
         text-align: ${justify ? 'justify' : 'start'};
         -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'};
         hyphens: ${hyphenate ? 'auto' : 'manual'};
@@ -143,6 +144,18 @@ const applyStyle = () => {
     const renderer = view?.renderer
     if (!renderer) return
     renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
+    // Margen del texto fijo en puntos (no un porcentaje del ancho), igual en páginas y
+    // en continuo y en cualquier iPhone. foliate lo pide como fracción: en páginas el
+    // margen es la fracción del ancho; en continuo, fracción ÷ (1 − fracción).
+    if (style.textMargin) {
+        const m = style.textMargin / Math.max(window.innerWidth, 1)
+        const g = style.flow === 'scrolled' ? m / (1 + m) : m
+        const gap = `${(g * 100).toFixed(4)}%`
+        if (renderer.getAttribute('gap') !== gap) {
+            renderer.setAttribute('gap', gap)
+            renderer.render?.()
+        }
+    }
     renderer.toggleAttribute('animated', !reducedMotion?.matches)
     renderer.toggleAttribute('no-drag', !!style.curl)
     // Arriba poco (el capítulo es chico), abajo más (el pie y el contador).
@@ -158,6 +171,8 @@ const applyStyle = () => {
     renderer.setStyles?.(getCSS(style))
 }
 reducedMotion?.addEventListener?.('change', applyStyle)
+// El margen en puntos depende del ancho: al girar se recalcula.
+window.addEventListener('resize', applyStyle)
 
 // En continuo, foliate muestra un capítulo a la vez. Al llegar al final y seguir
 // jalando hacia arriba, pasa al siguiente; al principio y jalando hacia abajo, al

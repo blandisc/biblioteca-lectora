@@ -14,6 +14,8 @@ struct ReaderView: View {
     @StateObject private var controller = ReaderController()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    /// El tamaño de texto de iOS: la letra del libro lo sigue, sobre lo que elijas en «Aa».
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSession = false
     /// El panel de abajo subido (con el pie y la sesión) o solo la tira.
@@ -96,6 +98,10 @@ struct ReaderView: View {
         .animation(Theme.Motion.standard, value: controller.isSettled)
         // Al esconder los controles, la próxima vez el panel sale como tira.
         .onChange(of: showsChrome) { _, shown in if !shown { panelExpanded = false } }
+        // Con «Aa» abierta se ve la página como al leer: sin botones encima (ni otra «Aa»).
+        .onChange(of: showsAppearance) { _, shown in
+            if shown { withAnimation(Theme.Motion.standard) { showsChrome = false } }
+        }
         #if os(iOS)
         .statusBarHidden(!showsChrome)
         #endif
@@ -247,6 +253,7 @@ struct ReaderView: View {
         .onChange(of: palette) { _, _ in applyStyle() }
         .onChange(of: font) { _, _ in applyStyle() }
         .onChange(of: scale) { _, _ in applyStyle() }
+        .onChange(of: dynamicTypeSize) { _, _ in applyStyle() }
         .onChange(of: flow) { _, _ in applyStyle() }
         .onChange(of: turnStyle) { _, _ in applyStyle() }
     }
@@ -273,6 +280,19 @@ struct ReaderView: View {
                                 onSearch: { tools = .search },
                                 onAppearance: { showsAppearance = true })
                         .padding(.top, -Theme.Reader.chromeLift)
+                        // En continuo el texto corre bajo los botones: detrás va la misma
+                        // franja de papel que usa el capítulo al leer, y se desvanece.
+                        .background(alignment: .top) {
+                            if flow == .scrolled {
+                                VStack(spacing: 0) {
+                                    palette.background
+                                    paperFade(palette.background, toward: .bottom)
+                                }
+                                .padding(.bottom, -Theme.Reader.folioFade)
+                                .ignoresSafeArea(edges: .top)
+                                .allowsHitTesting(false)
+                            }
+                        }
                         .transition(.opacity)
                 }
                 Spacer(minLength: 0)
@@ -414,9 +434,19 @@ struct ReaderView: View {
     }
     #endif
 
+    /// Cuánto agranda iOS el texto normal (1 con el tamaño de siempre).
+    private static var systemTextScale: Double {
+        #if os(iOS)
+        let base = Theme.Reader.textBase
+        return UIFontMetrics(forTextStyle: .body).scaledValue(for: base) / base
+        #else
+        1
+        #endif
+    }
+
     private func applyStyle() {
         controller.setColors(text: palette.text, link: palette.link)
-        controller.setFont(family: font.css, scale: scale)
+        controller.setFont(family: font.css, scale: scale * Self.systemTextScale)
         controller.setScrolled(flow == .scrolled)
         #if os(iOS)
         controller.pageBackground = UIColor(palette.background)
@@ -601,13 +631,15 @@ private struct BottomPanel: View {
             .animation(Theme.Motion.standard, value: origin == nil)
             .font(.footnote)
             .frame(minHeight: Theme.Size.tapTarget)
+            // La página va pegada a su barra, no a media fila de ella.
+            .padding(.top, -Theme.Space.m)
 
             if expanded {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
                     Hairline()
                         .padding(.bottom, Theme.Space.s)
                     SectionLabel(text: "El pie dice", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
-                    Grid(horizontalSpacing: Theme.Space.s, verticalSpacing: Theme.Space.s) {
+                    Grid(horizontalSpacing: Theme.Space.s, verticalSpacing: Theme.Space.l) {
                         ForEach(Array(stride(from: 0, to: options.count, by: 2)), id: \.self) { row in
                             GridRow {
                                 ForEach(Array(options[row..<min(row + 2, options.count)].enumerated()), id: \.element.id) { offset, option in
@@ -639,7 +671,9 @@ private struct BottomPanel: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
-        .padding(.horizontal, Theme.Space.l)
+        // Vidrio a `chromeInset` de la orilla y lo de adentro a `Space.m` del vidrio:
+        // empieza en la misma línea que el texto del libro (`Reader.textMargin`).
+        .padding(.horizontal, Theme.Space.m)
         .padding(.bottom, Theme.Space.m)
         // Lo de adentro no se asoma fuera del vidrio mientras la tarjeta crece.
         .glassPanel(cornerRadius: Theme.Radius.panel, clipped: true)
@@ -842,9 +876,9 @@ private struct ReadingFolio<Counter: View>: View {
     private func band(_ edge: VerticalEdge) -> some View {
         if let paper {
             VStack(spacing: 0) {
-                if edge == .bottom { fadeEdge(paper, toward: .top) }
+                if edge == .bottom { paperFade(paper, toward: .top) }
                 paper
-                if edge == .top { fadeEdge(paper, toward: .bottom) }
+                if edge == .top { paperFade(paper, toward: .bottom) }
             }
             // Sólido hasta la orilla del folio y el desvanecido ya fuera de él:
             // el texto nunca se asoma detrás del capítulo ni del pie.
@@ -854,9 +888,11 @@ private struct ReadingFolio<Counter: View>: View {
         }
     }
 
-    /// El papel se aclara pronto y luego despacio (curva, no recta): la letra
-    /// se sigue leyendo mientras se va, en vez de quedar medio tapada.
-    private func fadeEdge(_ paper: Color, toward edge: VerticalEdge) -> some View {
+}
+
+/// El papel se aclara pronto y luego despacio (curva, no recta): la letra
+/// se sigue leyendo mientras se va, en vez de quedar medio tapada.
+private func paperFade(_ paper: Color, toward edge: VerticalEdge) -> some View {
         let steps = Theme.Reader.folioFadeSteps
         let stops = (0...steps).map { step in
             let at = Double(step) / Double(steps), left = 1 - at
@@ -865,7 +901,6 @@ private struct ReadingFolio<Counter: View>: View {
         return LinearGradient(stops: stops,
                               startPoint: edge == .bottom ? .top : .bottom, endPoint: edge == .bottom ? .bottom : .top)
             .frame(height: Theme.Reader.folioFade)
-    }
 }
 
 #if os(iOS)

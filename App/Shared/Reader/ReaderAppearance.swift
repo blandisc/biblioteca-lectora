@@ -297,7 +297,8 @@ struct ReaderAppearanceSheet: View {
     private let fontColumns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
 
     private var content: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.l) {
+        // Más aire entre secciones (Letra, Página, Fondo) que dentro de cada una.
+        VStack(alignment: .leading, spacing: Theme.Space.xl) {
             // Letra: cuatro mosaicos 2×2 con su «Aa», su nombre y qué la hace distinta.
             VStack(alignment: .leading, spacing: Theme.Space.s) {
                 SectionLabel(text: "Letra")
@@ -350,7 +351,8 @@ struct ReaderAppearanceSheet: View {
             }
             .onChange(of: showsTurns) { _, shows in moveTurns(shows) }
 
-            SectionLabel(text: "Fondo").padding(.bottom, -Theme.Space.s)
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+            SectionLabel(text: "Fondo")
             HStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
@@ -374,6 +376,9 @@ struct ReaderAppearanceSheet: View {
                 }
             }
 
+            }
+
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
             Toggle("Noche cálida al atardecer", isOn: $autoNight)
                 .disabled(theme != .auto)
                 .font(.subheadline)
@@ -383,6 +388,7 @@ struct ReaderAppearanceSheet: View {
                 .font(.subheadline)
                 .tint(Theme.accent)
             #endif
+            }
         }
         .foregroundStyle(Theme.ink)
         // Abajo ya hay la orilla del iPhone: sin margen extra, sin espacio muerto.

@@ -1344,7 +1344,8 @@ struct FooterPreview: View {
             }
             .padding(Theme.Space.m)
             .frame(maxWidth: .infinity)
-            .frame(height: Theme.Size.footerPreview)
+            // Crece con el tamaño de texto de iOS: el pie nunca se corta.
+            .frame(minHeight: Theme.Size.footerPreview)
             .background(paper, in: shape)
             .overlay {
                 shape.strokeBorder(selected ? ink : ink.opacity(Theme.Emphasis.ghost),
