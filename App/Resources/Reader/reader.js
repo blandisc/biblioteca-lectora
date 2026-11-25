@@ -421,8 +421,11 @@ const drawingPencil = (rects, options) => {
 let freshBookmark = null
 let threadCount = 0
 const drawnBookmarks = new Set()
-const threadAndTab = (doc, range) => (rects, { color, animated }) => {
+// Lo dibujado de cada marcador, para que al quitarlo se recoja en vez de desaparecer.
+const bookmarkElements = new Map()
+const threadAndTab = (doc, range) => (rects, { color, animated, value }) => {
     const g = document.createElementNS(SVG_NS, 'g')
+    bookmarkElements.set(value, g)
     const r = rects[0]
     if (!r) return g
     const block = (range.startContainer.nodeType === 3 ? range.startContainer.parentElement : range.startContainer) ?? doc.body
@@ -454,11 +457,11 @@ const threadAndTab = (doc, range) => (rects, { color, animated }) => {
     ribbon.setAttribute('d', `M${x - tab / 2} ${y} H${x + tab / 2} V${y + h} L${x} ${y + h * 0.84} L${x - tab / 2} ${y + h} Z`)
     ribbon.setAttribute('fill', color)
     g.append(defs, thread, ribbon)
+    for (const el of [thread, ribbon]) el.style.transformBox = 'fill-box'
+    thread.style.transformOrigin = 'right center'
+    ribbon.style.transformOrigin = 'center top'
     if (animated) {
         // La cinta cae con un rebote corto y el hilo se dibuja hacia la izquierda.
-        for (const el of [thread, ribbon]) el.style.transformBox = 'fill-box'
-        thread.style.transformOrigin = 'right center'
-        ribbon.style.transformOrigin = 'center top'
         ribbon.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }],
             { duration: 360, easing: 'cubic-bezier(0.3, 1.4, 0.5, 1)', fill: 'both' })
         thread.animate([{ transform: 'scaleX(0)', opacity: 0 }, { transform: 'scaleX(1)', opacity: 1 }],
@@ -472,7 +475,17 @@ const syncBookmarkMarks = () => {
     for (const value of [...drawnBookmarks]) {
         if (wanted.has(value)) continue
         drawnBookmarks.delete(value)
-        view.deleteAnnotation({ value }).catch?.(() => {})
+        const g = bookmarkElements.get(value)
+        bookmarkElements.delete(value)
+        const remove = () => { if (!drawnBookmarks.has(value)) view?.deleteAnnotation({ value }).catch?.(() => {}) }
+        const [, thread, ribbon] = g?.isConnected ? g.children : []
+        if (!thread || !ribbon || reducedMotion?.matches) { remove(); continue }
+        // Al quitarlo, al revés: el hilo se recoge hacia la cinta y la cinta sube.
+        thread.animate([{ transform: 'scaleX(1)', opacity: 1 }, { transform: 'scaleX(0)', opacity: 0 }],
+            { duration: 280, easing: 'cubic-bezier(0.32, 0, 0.67, 0)', fill: 'both' })
+        ribbon.animate([{ transform: 'scaleY(1)' }, { transform: 'scaleY(0)' }],
+            { duration: 240, delay: 160, easing: 'cubic-bezier(0.32, 0, 0.67, 0)', fill: 'both' })
+            .finished.then(remove, remove)
     }
     for (const value of wanted) {
         if (drawnBookmarks.has(value)) continue
@@ -485,7 +498,7 @@ const onDrawAnnotation = ({ detail: { draw, annotation, doc, range } }) => {
     if (drawnBookmarks.has(annotation?.value)) {
         const animated = freshBookmark === annotation.value && !reducedMotion?.matches
         if (animated) freshBookmark = null
-        draw(threadAndTab(doc, range), { color: style.linkColor ?? '#3D6B55', animated })
+        draw(threadAndTab(doc, range), { color: style.linkColor ?? '#3D6B55', animated, value: annotation.value })
         return
     }
     const animated = freshHighlights.delete(annotation?.value) && !reducedMotion?.matches
@@ -494,7 +507,11 @@ const onDrawAnnotation = ({ detail: { draw, annotation, doc, range } }) => {
 
 const onCreateOverlay = () => {
     for (const value of highlights) view.addAnnotation({ value })
-    for (const value of drawnBookmarks) view.addAnnotation({ value }).catch?.(() => {})
+    // Los marcadores de continuo también: al abrir el libro aún no había dónde dibujarlos.
+    for (const value of style.flow === 'scrolled' ? bookmarkCFIs : []) {
+        drawnBookmarks.add(value)
+        view.addAnnotation({ value }).catch?.(() => {})
+    }
 }
 
 const onShowAnnotation = ({ detail: { value } }) => {

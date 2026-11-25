@@ -454,6 +454,11 @@ struct ReaderView: View {
             case "bookmark":
                 // Marca el renglón de arriba (en continuo, hilo y cinta) y lo deja a la vista.
                 if currentBookmark == nil { toggleBookmark() }
+            case "bookmarkOff":
+                // Con el marcador ya puesto: lo quita a los tres segundos (para ver cómo se recoge).
+                while !controller.isSettled { try? await Task.sleep(for: .seconds(0.5)) }
+                try? await Task.sleep(for: .seconds(3))
+                if currentBookmark != nil { toggleBookmark() }
             case "stepper":
                 // Busca, va al cuarto resultado (barrita en la página) y luego abre Buscar vacío (recientes).
                 withAnimation(Theme.Motion.standard) { showsChrome = false }
