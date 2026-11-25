@@ -111,6 +111,23 @@ struct ReaderView: View {
         .sheet(item: $tools) { part in
             ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
         }
+        // Tras ir a un resultado: anterior y siguiente sin abrir otra vez la lista.
+        .overlay(alignment: .bottom) {
+            if let index = controller.searchIndex, !showsChrome, !showsSession, tools == nil,
+               !controller.searchResults.isEmpty {
+                let count = controller.searchResults.count
+                SearchStepper(position: "\(index + 1) de \(count)", query: controller.searchedQuery,
+                              canGoBack: index > 0, canGoForward: index < count - 1,
+                              onBack: { controller.goToResult(index - 1) },
+                              onForward: { controller.goToResult(index + 1) },
+                              onList: { tools = .search },
+                              onClose: { withAnimation(Theme.Motion.standard) { controller.clearSearch() } })
+                    .padding(.horizontal, Theme.Reader.chromeInset)
+                    .padding(.bottom, Theme.Reader.chromeInset)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(Theme.Motion.sheet, value: controller.searchIndex == nil)
         .overlay(alignment: .bottom) {
             if showsSession, let session = controller.session {
                 ZStack(alignment: .bottom) {
@@ -429,6 +446,15 @@ struct ReaderView: View {
                 showsAppearance = true
             case "contents":
                 tools = .contents
+            case "stepper":
+                // Busca, va al cuarto resultado (barrita en la página) y luego abre Buscar vacío (recientes).
+                withAnimation(Theme.Motion.standard) { showsChrome = false }
+                controller.search("imperio")
+                try? await Task.sleep(for: .seconds(8))
+                controller.goToResult(3)
+                try? await Task.sleep(for: .seconds(6))
+                controller.clearSearch()
+                tools = .search
             case "session":
                 withAnimation(Theme.Motion.standard) { showsChrome = true }
                 try? await Task.sleep(for: .seconds(1.5))

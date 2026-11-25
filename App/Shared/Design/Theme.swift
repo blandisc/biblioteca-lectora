@@ -253,6 +253,8 @@ enum Theme {
         /// Buscar en el libro: empieza sola cuando dejas de escribir esto, desde estas letras.
         static let searchPause: TimeInterval = 0.5
         static let searchMinLetters = 3
+        /// Cuántas búsquedas recientes se guardan por libro.
+        static let recentSearches = 5
         /// El texto del libro a esta distancia de las orillas, en páginas y en continuo y
         /// en todo iPhone; el contenido de la tarjeta de abajo empieza en la misma línea
         /// (`chromeInset` + `Space.m`).

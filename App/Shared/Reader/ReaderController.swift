@@ -58,6 +58,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// Búsqueda en curso (0 a 1), o `nil`.
     @Published private(set) var searchProgress: Double?
     @Published private(set) var searchedQuery = ""
+    /// El resultado al que fuiste desde la lista: la barrita de la página sigue desde ahí.
+    @Published var searchIndex: Int?
     @Published private(set) var location: Location?
     /// El libro ya sabe en qué página estás: al abrir, foliate acomoda el libro y
     /// avisa varias páginas seguidas («Página 23», luego «Página 27»). Hasta que deja
@@ -207,10 +209,19 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         searchedQuery = text
         searchProgress = text.count >= 2 ? 0 : nil
         searchResults = []
+        searchIndex = nil
         evaluate("window.lectora.search(\(Self.js(text)))")
     }
 
+    /// Ir a un resultado de la búsqueda (por su lugar en la lista).
+    func goToResult(_ index: Int) {
+        guard searchResults.indices.contains(index) else { return }
+        searchIndex = index
+        goTo(target: searchResults[index].cfi)
+    }
+
     func clearSearch() {
+        searchIndex = nil
         searchedQuery = ""
         searchResults = []
         searchProgress = nil
@@ -468,8 +479,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             searchResults += Self.searchResults(body["results"] as? [[String: Any]] ?? [], from: searchResults.count)
         case "searchResults":
             guard (body["query"] as? String) == searchedQuery else { break }
-            searchProgress = nil
             searchResults = Self.searchResults(body["results"] as? [[String: Any]] ?? [], from: 0)
+            // Al terminar, queda entre las búsquedas recientes de este libro.
+            if searchedQuery.count >= 2 { _ = RecentSearches.add(searchedQuery, count: searchResults.count, for: bookID) }
+            searchProgress = nil
         case "anchored":
             guard let id = (body["id"] as? String).flatMap(UUID.init(uuidString:)), let cfi = body["cfi"] as? String,
                   var annotation = AnnotationStore.shared.annotation(id: id), annotation.cfi == nil else { break }

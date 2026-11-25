@@ -1955,3 +1955,85 @@ struct HereMark: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+/// Una búsqueda reciente: tocarla la repite. A la derecha, cuántos resultados tuvo.
+struct RecentSearchRow: View {
+    let text: String
+    let count: Int
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: Theme.Space.m) {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+                Text(text)
+                    .font(.body)
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("\(count)")
+                    .font(.footnote)
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.secondaryInk)
+            }
+            .frame(minHeight: Theme.Size.tapTarget)
+            .contentShape(Rectangle())
+            .overlay(alignment: .bottom) { Hairline() }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Buscar otra vez «\(text)», \(count) resultados")
+    }
+}
+
+/// Barrita de vidrio sobre la página tras ir a un resultado: anterior y siguiente sin
+/// volver a abrir la lista; tocar el centro la reabre y la ✕ termina la búsqueda.
+struct SearchStepper: View {
+    let position: String
+    let query: String
+    let canGoBack: Bool
+    let canGoForward: Bool
+    let onBack: () -> Void
+    let onForward: () -> Void
+    let onList: () -> Void
+    let onClose: () -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            arrow("chevron.left", "Resultado anterior", enabled: canGoBack, action: onBack)
+            Button(action: onList) {
+                VStack(spacing: 0) {
+                    Text("\(position) · «\(query)»")
+                        .font(.subheadline.weight(.medium))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                    Text("Toca para ver la lista")
+                        .font(.caption)
+                        .foregroundStyle(Theme.ink.opacity(Theme.Emphasis.glassText))
+                }
+                .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel("\(position), «\(query)». Ver la lista")
+            arrow("chevron.right", "Resultado siguiente", enabled: canGoForward, action: onForward)
+            arrow("xmark", "Terminar la búsqueda", enabled: true, action: onClose)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.ink)
+        .padding(.horizontal, Theme.Space.xs)
+        .glassPanel(cornerRadius: Theme.Radius.panel)
+    }
+
+    private func arrow(_ symbol: String, _ label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.body.weight(.medium))
+                .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                .contentShape(Rectangle())
+        }
+        .disabled(!enabled)
+        .opacity(enabled ? Theme.Emphasis.rest : Theme.Emphasis.folioMuted)
+        .accessibilityLabel(label)
+    }
+}

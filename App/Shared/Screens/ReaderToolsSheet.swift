@@ -19,6 +19,7 @@ struct ReaderToolsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @FocusState private var searchFocused: Bool
+    @State private var recents: [RecentSearches.Item] = []
 
     private var highlights: [Annotation] {
         guard let bookID else { return [] }
@@ -55,8 +56,10 @@ struct ReaderToolsSheet: View {
             }
             .onAppear {
                 query = controller.searchedQuery
+                recents = RecentSearches.load(bookID)
                 if part == .search { searchFocused = true }
             }
+            .onChange(of: controller.searchProgress == nil) { _, _ in recents = RecentSearches.load(bookID) }
         }
         .presentationDetents([.large])
     }
@@ -145,6 +148,9 @@ struct ReaderToolsSheet: View {
                 EmptyState(title: "No aparece «\(controller.searchedQuery)» en este libro",
                            message: "Busqué en todo el libro, sin importar acentos ni mayúsculas. Revisa cómo se escribe o prueba con una sola palabra.")
             }
+            if controller.searchResults.isEmpty && controller.searchProgress == nil {
+                recentList
+            }
             LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(groups) { group in
                     SearchChapterHeading(title: group.chapter, count: group.results.count)
@@ -153,7 +159,9 @@ struct ReaderToolsSheet: View {
                             HereMark(text: "Aquí vas · pág. \(page)")
                         }
                         Button {
-                            controller.goTo(target: result.cfi)
+                            if let index = controller.searchResults.firstIndex(of: result) {
+                                controller.goToResult(index)
+                            }
                             dismiss()
                         } label: {
                             SearchResultRow(before: result.before, match: result.match, after: result.after,
@@ -172,6 +180,33 @@ struct ReaderToolsSheet: View {
             try? await Task.sleep(for: .seconds(Theme.Reader.searchPause))
             guard !Task.isCancelled else { return }
             controller.search(text)
+        }
+    }
+
+    /// Las búsquedas recientes de este libro (sin lo que se está buscando ahora).
+    @ViewBuilder
+    private var recentList: some View {
+        let shown = recents.filter { $0.text != controller.searchedQuery }
+        if !shown.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                SectionLabel(text: "Búsquedas recientes")
+                    .padding(.top, Theme.Space.l)
+                    .padding(.bottom, Theme.Space.xs)
+                ForEach(shown) { item in
+                    RecentSearchRow(text: item.text, count: item.count) {
+                        query = item.text
+                        controller.search(item.text)
+                    }
+                }
+                Button("Borrar recientes") {
+                    RecentSearches.clear(bookID)
+                    recents = []
+                }
+                .font(.footnote)
+                .foregroundStyle(Theme.secondaryInk)
+                .frame(minHeight: Theme.Size.tapTarget)
+                .buttonStyle(.plain)
+            }
         }
     }
 
@@ -263,5 +298,36 @@ struct ReaderToolsSheet: View {
         guard highlight.cfi == nil else { return day }
         let origin = highlight.source == "calibre" ? "de Calibre" : "de Readwise"
         return "\(day) · \(origin), sin lugar en este libro"
+    }
+}
+
+/// Las últimas búsquedas en cada libro, guardadas solo en este dispositivo.
+enum RecentSearches {
+    struct Item: Codable, Identifiable, Equatable {
+        let text: String
+        let count: Int
+        var id: String { text }
+    }
+
+    private static func key(_ bookID: UUID?) -> String? { bookID.map { "reader.searches.\($0.uuidString)" } }
+
+    static func load(_ bookID: UUID?) -> [Item] {
+        guard let key = key(bookID), let data = UserDefaults.standard.data(forKey: key) else { return [] }
+        return (try? JSONDecoder().decode([Item].self, from: data)) ?? []
+    }
+
+    /// La más nueva primero, sin repetir, hasta `Theme.Reader.recentSearches`.
+    static func add(_ text: String, count: Int, for bookID: UUID?) -> [Item] {
+        guard let key = key(bookID) else { return [] }
+        var items = load(bookID).filter { $0.text.localizedCaseInsensitiveCompare(text) != .orderedSame }
+        items.insert(Item(text: text, count: count), at: 0)
+        items = Array(items.prefix(Theme.Reader.recentSearches))
+        UserDefaults.standard.set(try? JSONEncoder().encode(items), forKey: key)
+        return items
+    }
+
+    static func clear(_ bookID: UUID?) {
+        guard let key = key(bookID) else { return }
+        UserDefaults.standard.removeObject(forKey: key)
     }
 }

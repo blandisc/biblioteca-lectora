@@ -535,7 +535,9 @@ window.lectora = {
         const sizes = view.book.sections.map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
         const sizeTotal = sizes.reduce((a, b) => a + b, 0) || 1
         try {
-            for await (const result of view.search({ query: text })) {
+            // Lo encontrado se recuadra en el verde de la app, no en el rojo de foliate.
+            const drawOptions = { color: style.linkColor ?? '#3D6B55', width: 1.5 }
+            for await (const result of view.search({ query: text, drawOptions })) {
                 if (token !== searchToken) return
                 if (result === 'done') break
                 if (result.progress != null) {
