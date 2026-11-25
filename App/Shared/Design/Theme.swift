@@ -95,8 +95,6 @@ enum Theme {
         static let panel: CGFloat = 28
         /// Lo que va dentro de un panel a su orilla (16): el radio del panel menos esa orilla, para que las esquinas se vean concéntricas.
         static let inset: CGFloat = 12
-        /// Cápsula de controles de 44 pt de alto.
-        static let capsule: CGFloat = 22
         /// Muestra de color de una leyenda.
         static let swatch: CGFloat = 2
     }
@@ -380,6 +378,8 @@ enum Theme {
         static let folio = 0.74
         /// Renglones insinuados y filo de la muestra del pie: la tinta del libro, casi invisible.
         static let ghost = 0.12
+        /// Fondo de un botón redondo dentro del vidrio (buscar y letra en la tarjeta del lector).
+        static let inGlass = 0.1
         /// El pie de una muestra que aún no tiene dato: más apagado que el folio.
         static let folioMuted = 0.55
         /// La perilla de la barra de avance crece así al arrastrarla.
@@ -470,6 +470,14 @@ extension Color {
 }
 
 extension View {
+    /// Botón redondo dentro del vidrio: ícono o «Aa» en un círculo apenas marcado, de 44 pt.
+    func roundInGlass() -> some View {
+        self.font(.body.weight(.semibold))
+            .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+            .background(Theme.ink.opacity(Theme.Emphasis.inGlass), in: Circle())
+            .contentShape(Circle())
+    }
+
     /// Botón redondo de vidrio: Liquid Glass en iOS/macOS 26, material en versiones anteriores.
     @ViewBuilder
     func glassCircle() -> some View {

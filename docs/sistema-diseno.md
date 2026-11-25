@@ -71,7 +71,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 ### Radio (`Theme.Radius`)
 
-`swatch 2 · cover 3 · chip 8 · control 10 · tile 14 · capsule 22 · panel 28 · inset 12` (inset: lo que va dentro de un panel, concéntrico)
+`swatch 2 · cover 3 · chip 8 · control 10 · tile 14 · panel 28 · inset 12` (inset: lo que va dentro de un panel, concéntrico)
 
 ### Tamaño (`Theme.Size`)
 
@@ -82,7 +82,7 @@ textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; l
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,8) texto callado sobre el vidrio del lector (subió de 0,72: en Noche cálida quedaba justo en el mínimo de contraste); `scrubberTrack` (0,25) riel de la barra de avance;
-`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles, en páginas no hay franja detrás de los botones de arriba (arriba hay papel liso y el vidrio basta); en continuo, donde el texto corre por debajo, va la misma franja de papel que se desvanece del capítulo (decisión D3-B, 24 nov 2026).
+`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `inGlass` (0,1) el círculo de un botón dentro del vidrio (`roundInGlass`: buscar y «Aa» en la tarjeta del lector); `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles, en páginas no hay franja detrás de los botones de arriba (arriba hay papel liso y el vidrio basta); en continuo, donde el texto corre por debajo, va la misma franja de papel que se desvanece del capítulo (decisión D3-B, 24 nov 2026).
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -238,7 +238,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
   es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`); abajo empieza `Reader.folioFadeDrop` (20 pt) más abajo, con el sólido justo arriba del pie (25 nov 2026): la letra se sigue leyendo mientras se va. Arriba ya no va el capítulo (25 nov 2026): solo el papel que se desvanece desde la orilla de la pantalla; en continuo el texto corre hasta arriba y se va en ese desvanecido (hasta `Reader.topFade` bajo la isla), y el principio de cada capítulo empieza debajo de la isla. El folio
-  usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tarjeta (`Grabber`; el capítulo completo con su número encima en `SectionLabel`, que abre el índice; la barra, que se toca en 44 pt de alto aunque se vea fina (`Size.scrubberReach`); la página y las palabras en gris, sin íconos; tras saltar con la barra, en lugar de las palabras, «Volver a la pág. N» para regresar a donde ibas);
+  usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro, arriba quedan solo cerrar y el marcador, cada uno en su círculo de vidrio, y abajo sale la tarjeta (`Grabber`; el capítulo completo con su número encima en `SectionLabel`, que abre el índice, y a su derecha buscar y «Aa» (BB-C, 25 nov 2026); la barra, que se toca en 44 pt de alto aunque se vea fina (`Size.scrubberReach`); la página y las palabras en gris, sin íconos; tras saltar con la barra, en lugar de las palabras, «Volver a la pág. N» para regresar a donde ibas);
   subiéndola aparece «El pie dice» con cuatro `FooterPreview` (como se leerá). Tocando el pie mientras lees sale solo un globo con esas cuatro muestras, sin la tarjeta (25 nov 2026). Tocando el
   contador, la tarjeta de abajo se desvanece en su lugar (`Motion.exit`) y, ya ida, «Esta sesión» crece apenas desde abajo (nunca dos tarjetas encimadas); sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio

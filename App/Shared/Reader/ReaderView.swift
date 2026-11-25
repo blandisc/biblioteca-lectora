@@ -297,9 +297,7 @@ struct ReaderView: View {
             }
             VStack(spacing: 0) {
                 if showsChrome {
-                    TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() },
-                                onSearch: { tools = .search },
-                                onAppearance: { showsAppearance = true })
+                    TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() })
                         .padding(.top, -Theme.Reader.chromeLift)
                         // En continuo el texto corre bajo los botones: detrás va la misma
                         // franja de papel que usa el capítulo al leer, y se desvanece.
@@ -325,6 +323,8 @@ struct ReaderView: View {
                                 session: showsCounter ? controller.session : nil,
                                 onSession: openSession,
                                 onContents: { tools = .contents },
+                                onSearch: { tools = .search },
+                                onAppearance: { showsAppearance = true },
                                 onSeek: { controller.goTo(fraction: $0) },
                                 onReturn: { origin in
                                     if let cfi = origin.cfi { controller.goTo(target: cfi) } else { controller.goTo(fraction: origin.fraction) }
@@ -504,10 +504,9 @@ private struct TopControls: View {
     let bookmarked: Bool
     let onBookmark: () -> Void
     let onClose: () -> Void
-    let onSearch: () -> Void
-    let onAppearance: () -> Void
 
     var body: some View {
+        // Arriba solo cerrar y el marcador; buscar y letra van en la tarjeta de abajo (BB-C, 25 nov 2026).
         HStack {
             Button(action: onClose) {
                 Image(systemName: "chevron.down")
@@ -517,31 +516,16 @@ private struct TopControls: View {
             }
             .accessibilityLabel("Cerrar libro")
             Spacer()
-            HStack(spacing: 0) {
-                Button(action: onSearch) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.body.weight(.semibold))
-                        .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
-                }
-                .accessibilityLabel("Buscar en el libro")
-                Button(action: onAppearance) {
-                    Text("Aa")
-                        .font(.body.weight(.semibold))
-                        .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
-                }
-                .accessibilityLabel("Apariencia")
-                Button {
-                    withAnimation(Theme.Motion.standard) { onBookmark() }
-                } label: {
-                    Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(bookmarked ? Theme.accent : Theme.ink)
-                        .frame(width: Theme.Size.control, height: Theme.Size.tapTarget)
-                }
-                .accessibilityLabel(bookmarked ? "Quitar marcador" : "Añadir marcador")
+            Button {
+                withAnimation(Theme.Motion.standard) { onBookmark() }
+            } label: {
+                Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(bookmarked ? Theme.accent : Theme.ink)
+                    .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                    .glassCircle()
             }
-            .padding(.horizontal, Theme.Space.xs)
-            .glassPanel(cornerRadius: Theme.Radius.capsule)
+            .accessibilityLabel(bookmarked ? "Quitar marcador" : "Añadir marcador")
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
@@ -564,6 +548,8 @@ private struct BottomPanel: View {
     let session: SessionTracker?
     let onSession: () -> Void
     let onContents: () -> Void
+    let onSearch: () -> Void
+    let onAppearance: () -> Void
     let onSeek: (Double) -> Void
     let onReturn: (ReaderController.Location) -> Void
     @State private var dragValue: Double?
@@ -617,6 +603,7 @@ private struct BottomPanel: View {
 
             // El capítulo, completo y con la letra del libro; encima, su número (o el
             // libro, si el capítulo no lo trae). Tocarlo abre el índice.
+            HStack(spacing: Theme.Space.s) {
             Button(action: onContents) {
                 VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                     SectionLabel(text: heading.eyebrow, tone: Theme.ink.opacity(Theme.Emphasis.glassText))
@@ -631,6 +618,20 @@ private struct BottomPanel: View {
             }
             .accessibilityLabel("Índice")
             .accessibilityValue(location?.chapter ?? title)
+
+                // Buscar y letra, junto al capítulo: al alcance del pulgar y sin hacer crecer la tarjeta.
+                HStack(spacing: Theme.Space.s) {
+                    Button(action: onSearch) {
+                        Image(systemName: "magnifyingglass")
+                            .roundInGlass()
+                    }
+                    .accessibilityLabel("Buscar en el libro")
+                    Button(action: onAppearance) {
+                        Text("Aa").roundInGlass()
+                    }
+                    .accessibilityLabel("Apariencia")
+                }
+            }
 
             // Barra propia, fina y editorial: lo leído en tinta, una perilla chica.
             ScrubberBar(value: fraction, enabled: location != nil,
