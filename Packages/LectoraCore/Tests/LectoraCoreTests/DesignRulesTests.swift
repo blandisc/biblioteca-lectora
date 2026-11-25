@@ -374,7 +374,7 @@ final class DesignRulesTests: XCTestCase {
     func testTextNeverShowsBehindTheFolio() {
         let reader = Self.sources("App/Shared/Reader").first { $0.path.hasSuffix("ReaderView.swift") }?.text ?? ""
         XCTAssertTrue(reader.contains(".padding(edge == .top ? .bottom : .top, -Theme.Reader.folioFade)")
-                      && reader.contains(".frame(height: Theme.Reader.folioFade)"),
+                      && reader.contains("height: CGFloat? = Theme.Reader.folioFade"),
                       "Continuo: la franja de papel del folio sobresale lo mismo que su desvanecido (folioFade)")
     }
 
