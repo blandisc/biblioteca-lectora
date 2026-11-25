@@ -62,8 +62,9 @@ struct ReaderView: View {
         ZStack {
             palette.background.ignoresSafeArea()
             // Tu página entra con un fundido corto cuando el libro ya se acomodó.
+            // En continuo el texto corre hasta la orilla de arriba de la pantalla.
             ReaderWebView(controller: controller)
-                .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea(edges: flow == .scrolled ? [.top, .bottom] : .bottom)
                 .opacity(controller.isSettled ? Theme.Emphasis.rest : 0)
             // Hasta que aparece la primera página: que se note que está trabajando.
             if !controller.isSettled && controller.errorMessage == nil {
@@ -290,6 +291,7 @@ struct ReaderView: View {
                 ReadingFolio(title: title, location: controller.folioLocation, footerText: footerText,
                              color: palette.textColor,
                              paper: flow == .scrolled ? palette.background : nil,
+                             pagePaper: palette.background,
                              onFooter: {
                                  // Tocar el pie abre el panel ya subido: ahí se elige qué dice.
                                  panelExpanded = true
@@ -449,9 +451,9 @@ struct ReaderView: View {
             case "stepper":
                 // Busca, va al cuarto resultado (barrita en la página) y luego abre Buscar vacío (recientes).
                 withAnimation(Theme.Motion.standard) { showsChrome = false }
-                controller.search("imperio")
+                controller.search(UserDefaults.standard.string(forKey: "screenshot.query") ?? "imperio")
                 try? await Task.sleep(for: .seconds(8))
-                controller.goToResult(3)
+                controller.goToResult(UserDefaults.standard.integer(forKey: "screenshot.result"))
                 try? await Task.sleep(for: .seconds(6))
                 controller.clearSearch()
                 tools = .search
@@ -850,7 +852,7 @@ struct FooterOption: Identifiable {
     var id: ReaderFooter { kind }
 }
 
-/// Editorial sin controles: capítulo arriba y, abajo, el pie que elijas
+/// Editorial sin controles: arriba nada (el papel se desvanece) y, abajo, el pie que elijas
 /// (tiempo para terminar el capítulo o el libro, página o porcentaje). Tocando
 /// el pie se abre un globo con las opciones, cada una con su dato de ahora.
 /// En páginas, el texto deja aire arriba y abajo (`Reader.pageMarginTop` y `pageMarginBottom`): el folio
@@ -865,6 +867,8 @@ private struct ReadingFolio<Counter: View>: View {
     let color: Color
     /// En continuo, el papel: va detrás del folio para que el texto no se cruce.
     var paper: Color? = nil
+    /// El papel del libro (en los dos modos): de él sale el desvanecido de arriba.
+    let pagePaper: Color
     /// Tocar el pie: abre el panel con sus opciones.
     let onFooter: () -> Void
     /// El contador de palabras, en el mismo renglón que el pie.
@@ -872,19 +876,15 @@ private struct ReadingFolio<Counter: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Capítulo y pie, cada uno centrado en el margen del texto: ni más
-            // arriba ni más abajo, sin huecos. En continuo el capítulo sube, pegado
-            // bajo la isla: se mide desde la orilla segura, que en cada iPhone
-            // termina justo debajo de la isla (o de la muesca, o de la barra de estado),
-            // y la franja de papel se acorta con él: queda más texto a la vista.
-            Text(location?.chapter ?? title)
-                .lineLimit(1)
-                // Al cambiar de capítulo, un fundido corto, no un salto de letras.
-                .contentTransition(.opacity)
-                .animation(Theme.Motion.standard, value: location?.chapter)
-                .padding(.horizontal, Theme.Reader.folioInset)
-                .frame(maxWidth: .infinity, minHeight: paper == nil ? Theme.Reader.pageMarginTop : Theme.Reader.folioTop)
-                .background { band(.top) }
+            // Arriba no hay capítulo: solo el papel que se desvanece desde la orilla de
+            // la pantalla. En continuo el texto llega hasta arriba y ahí se va; en
+            // páginas el texto empieza justo debajo de la isla.
+            Color.clear
+                .frame(height: paper == nil ? Theme.Reader.pageMarginTop : Theme.Reader.topFade)
+                .background {
+                    paperFade(paper ?? pagePaper, toward: .bottom, height: nil)
+                        .ignoresSafeArea(edges: .top)
+                }
                 .allowsHitTesting(false)
             Spacer()
             ZStack {
@@ -938,8 +938,9 @@ private struct ReadingFolio<Counter: View>: View {
 }
 
 /// El papel se aclara pronto y luego despacio (curva, no recta): la letra
-/// se sigue leyendo mientras se va, en vez de quedar medio tapada.
-private func paperFade(_ paper: Color, toward edge: VerticalEdge) -> some View {
+/// se sigue leyendo mientras se va, en vez de quedar medio tapada. Sin `height`,
+/// ocupa todo el alto que le den.
+private func paperFade(_ paper: Color, toward edge: VerticalEdge, height: CGFloat? = Theme.Reader.folioFade) -> some View {
         let steps = Theme.Reader.folioFadeSteps
         let stops = (0...steps).map { step in
             let at = Double(step) / Double(steps), left = 1 - at
@@ -947,7 +948,7 @@ private func paperFade(_ paper: Color, toward edge: VerticalEdge) -> some View {
         }
         return LinearGradient(stops: stops,
                               startPoint: edge == .bottom ? .top : .bottom, endPoint: edge == .bottom ? .bottom : .top)
-            .frame(height: Theme.Reader.folioFade)
+            .frame(height: height)
 }
 
 #if os(iOS)

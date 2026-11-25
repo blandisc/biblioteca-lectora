@@ -76,7 +76,7 @@ const markPages = (doc, index) => {
     })
 }
 
-const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, ...colors }) => `
+const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, scrollTop, ...colors }) => `
     html {
         color-scheme: light dark; font-size: ${Math.round(fontScale * 100)}% !important;
         /* Sin esto, WebKit en el iPhone agranda la letra en continuo (la página es
@@ -87,6 +87,7 @@ const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, .
     ${pageMarkCSS({ flow, textColor: colors.textColor })}
     ${chapterCSS(colors)}
     body { font-family: ${fontFamily} !important; }
+    ${flow === 'scrolled' && scrollTop ? `body { padding-top: ${scrollTop}px !important; }` : ''}
     body *:not(code):not(pre):not(kbd):not(samp) { font-family: inherit !important; }
     p, li, blockquote, dd {
         line-height: ${lineHeight} !important;

@@ -234,8 +234,6 @@ enum Theme {
         static let chromeInset: CGFloat = 16
         /// Los botones de arriba suben esto hacia la isla, sin tocarla.
         static let chromeLift: CGFloat = 8
-        /// Folio sin controles: margen lateral del capítulo.
-        static let folioInset: CGFloat = 60
         /// Pasar la hoja: la fuerza del resorte (`TurnMotion`) que la lleva hasta el
         /// final o de regreso; con 15, una vuelta desde quieta tarda unos 0,55 s y,
         /// al soltar, sigue con la velocidad del dedo (nunca más de `turnSpeedLimit`
@@ -338,10 +336,9 @@ enum Theme {
         static let pageBack: CGFloat = 0.93
         /// La vibración al pasar a la página siguiente: muy ligera (0 a 1).
         static let turnHaptic: CGFloat = 0.45
-        /// Aire arriba y abajo del texto en páginas: deja el capítulo y el pie
-        /// sobre papel limpio. El capítulo y el pie van centrados en él y el texto
-        /// respeta la orilla de abajo (antes 76, con mucho hueco arriba).
-        static let pageMarginTop: CGFloat = 40
+        /// Aire arriba del texto en páginas, bajo la orilla segura: arriba ya no va el
+        /// capítulo, así que el texto empieza justo debajo de la isla (antes 40).
+        static let pageMarginTop: CGFloat = 12
         /// Abajo más aire: el pie y el contador van ahí, sobre la orilla del iPhone.
         static let pageMarginBottom: CGFloat = 68
         /// En continuo, el papel es sólido hasta la orilla del folio y después se
@@ -349,9 +346,9 @@ enum Theme {
         /// curva de `folioFadeSteps` tramos (se aclara pronto: la letra se sigue viendo).
         static let folioFade: CGFloat = 56
         static let folioFadeSteps = 6
-        /// En continuo, el alto del renglón del capítulo bajo la orilla segura (en
-        /// páginas es `pageMarginTop`): más chico, el capítulo sube hacia la isla.
-        static let folioTop: CGFloat = 18
+        /// En continuo el texto corre hasta la orilla de la pantalla y se desvanece
+        /// desde ahí hasta esto por debajo de la orilla segura (la isla).
+        static let topFade: CGFloat = 24
         /// El lomo del libro: sombra en la orilla izquierda de la hoja, su ancho y
         /// qué tan oscura empieza en papel claro y en papel oscuro.
         static let spineWidth: CGFloat = 26

@@ -227,6 +227,16 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         searchProgress = nil
         evaluate("window.lectora.clearSearch()")
     }
+    /// Lo que ocupan arriba la isla y la barra de estado.
+    private static var safeTop: CGFloat {
+        #if os(iOS)
+        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
+        return (windows.first { $0.isKeyWindow } ?? windows.first)?.safeAreaInsets.top ?? 0
+        #else
+        0
+        #endif
+    }
+
     /// Páginas o continuo. Se guarda para mandarlo cuando el lector esté listo.
     func setScrolled(_ scrolled: Bool) {
         let changed = isReady && flowScript != nil && scrolled != isScrolled
@@ -237,9 +247,13 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         #else
         let curl = "false"
         #endif
+        // En continuo el texto llega hasta la orilla de la pantalla (sin margen arriba);
+        // el principio del capítulo sí empieza debajo de la isla.
+        let top = scrolled ? 0 : Int(Theme.Reader.pageMarginTop)
+        let scrollTop = Int(Self.safeTop + Theme.Reader.pageMarginTop)
         let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl), "
-            + "margin: \(Int(Theme.Reader.pageMarginTop)), marginBottom: \(Int(Theme.Reader.pageMarginBottom)), "
-            + "textMargin: \(Int(Theme.Reader.textMargin)) })"
+            + "margin: \(top), marginBottom: \(Int(Theme.Reader.pageMarginBottom)), "
+            + "scrollTop: \(scrollTop), textMargin: \(Int(Theme.Reader.textMargin)) })"
         flowScript = script
         guard isReady else { return }
         #if os(iOS)
