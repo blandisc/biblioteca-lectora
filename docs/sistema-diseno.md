@@ -236,7 +236,7 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`): la letra se sigue leyendo mientras se va. En continuo el capítulo sube bajo la isla (`Reader.folioTop`, medido desde la orilla segura de cada iPhone). El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). Tocando el centro sale la tarjeta (`Grabber`; el capítulo completo con su número encima en `SectionLabel`, que abre el índice; la barra, que se toca en 44 pt de alto aunque se vea fina (`Size.scrubberReach`); la página y las palabras en gris, sin íconos; tras saltar con la barra, en lugar de las palabras, «Volver a la pág. N» para regresar a donde ibas);
   subiéndola, o tocando el pie, aparece «El pie dice» con cuatro `FooterPreview` (como se leerá). Tocando el
-  contador sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
+  contador, la tarjeta de abajo se desvanece en su lugar (`Motion.exit`) y, ya ida, «Esta sesión» crece apenas desde abajo (nunca dos tarjetas encimadas); sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra
   `Reader.curlShadow`, el texto se transparenta en el revés como a contraluz, `Reader.curlShowThrough` 22 % y apenas suave (`Reader.curlShowThroughBlur`); sin filo blanco (`Reader.curlMaskGrow`), dibujada a

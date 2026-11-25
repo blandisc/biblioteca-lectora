@@ -97,7 +97,9 @@ struct ReaderView: View {
         }
         .animation(Theme.Motion.standard, value: controller.isSettled)
         // Al esconder los controles, la próxima vez el panel sale como tira.
-        .onChange(of: showsChrome) { _, shown in if !shown { panelExpanded = false } }
+        .onChange(of: showsChrome) { _, shown in
+            if !shown { panelExpanded = false }
+        }
         // Con «Aa» abierta se ve la página como al leer: sin botones encima (ni otra «Aa»).
         .onChange(of: showsAppearance) { _, shown in
             if shown { withAnimation(Theme.Motion.standard) { showsChrome = false } }
@@ -117,11 +119,15 @@ struct ReaderView: View {
                         .onTapGesture { showsSession = false }
                         .accessibilityHidden(true)
                     SessionCard(tracker: session, bookTitle: catalogTitle) { showsSession = false }
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        // Entra donde estaba la tarjeta, creciendo apenas desde abajo; se va bajando.
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .scale(scale: Theme.Emphasis.pressedScale, anchor: .bottom))
+                                .animation(Theme.Motion.sheet.delay(Theme.Motion.exitDuration)),
+                            removal: .move(edge: .bottom).combined(with: .opacity)))
                 }
             }
         }
-        .animation(Theme.Motion.standard, value: showsSession)
+        .animation(Theme.Motion.sheet, value: showsSession)
         #if os(iOS)
         // Solo el botón de arriba cierra el libro: deslizar de la orilla pasa la hoja.
         .interactiveDismissDisabled()
@@ -302,13 +308,16 @@ struct ReaderView: View {
                                 options: footerOptions, footer: $footer,
                                 paper: palette.background, ink: palette.textColor,
                                 session: showsCounter ? controller.session : nil,
-                                onSession: { withAnimation(Theme.Motion.standard) { showsChrome = false }; showsSession = true },
+                                onSession: openSession,
                                 onContents: { tools = .contents },
                                 onSeek: { controller.goTo(fraction: $0) },
                                 onReturn: { origin in
                                     if let cfi = origin.cfi { controller.goTo(target: cfi) } else { controller.goTo(fraction: origin.fraction) }
                                 })
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        // Sube al aparecer; al irse se desvanece rápido en su lugar: así, al
+                        // volverse «Esta sesión», nunca se leen las dos tarjetas encimadas.
+                        .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity),
+                                                removal: .opacity.animation(Theme.Motion.exit)))
                 }
             }
         }
@@ -420,7 +429,13 @@ struct ReaderView: View {
                 showsAppearance = true
             case "contents":
                 tools = .contents
-            case "panel":
+            case "session":
+                withAnimation(Theme.Motion.standard) { showsChrome = true }
+                try? await Task.sleep(for: .seconds(1.5))
+                openSession()
+                try? await Task.sleep(for: .seconds(2))
+                showsSession = false
+                        case "panel":
                 withAnimation(Theme.Motion.sheet) { panelExpanded = true }
             case "flow":
                 showsAppearance = true
@@ -442,6 +457,12 @@ struct ReaderView: View {
         #else
         1
         #endif
+    }
+
+    /// La tarjeta de abajo se vuelve «Esta sesión»: una se desvanece en su lugar y,
+    /// ya ida, la otra crece apenas desde abajo.
+    private func openSession() {
+        withAnimation(Theme.Motion.sheet) { showsChrome = false; showsSession = true }
     }
 
     private func applyStyle() {
