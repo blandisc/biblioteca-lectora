@@ -61,15 +61,6 @@ enum ReaderFooter: String, CaseIterable, Identifiable {
         case .percent: "Porcentaje"
         }
     }
-
-    var symbol: String {
-        switch self {
-        case .chapterTime: "clock"
-        case .bookTime: "hourglass"
-        case .page: "doc.text"
-        case .percent: "chart.line.uptrend.xyaxis"
-        }
-    }
 }
 
 /// Cómo se avanza en el libro: de página en página (deslizando de lado) o

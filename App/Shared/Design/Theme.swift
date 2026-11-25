@@ -140,8 +140,6 @@ enum Theme {
         static let footerPreview: CGFloat = 64
         /// Renglón fantasma de esa muestra.
         static let ghostLine: CGFloat = 3
-        /// Ancho del ícono de esa muestra: todos iguales, aunque el símbolo sea angosto.
-        static let previewIcon: CGFloat = 16
         /// Perilla de la barra de avance del lector.
         static let scrubberKnob: CGFloat = 14
         /// Alto de la barra de avance: la perilla cómoda de arrastrar sin dejar un hueco.

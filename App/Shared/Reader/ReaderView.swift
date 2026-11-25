@@ -493,11 +493,21 @@ private struct BottomPanel: View {
 
     private var position: String {
         guard let page, let count = location?.pageCount else { return fraction.percentText }
-        return dragValue == nil ? "\(page) de \(count)" : "Pág. \(page) · \(fraction.percentText)"
+        return dragValue == nil ? "Pág. \(page) de \(count)" : "Pág. \(page) · \(fraction.percentText)"
+    }
+
+    /// «1. Ulcinj, Albania…» → «Capítulo 1» encima y «Ulcinj, Albania…» como título.
+    /// Si el capítulo no trae número, encima va el libro.
+    private var heading: (eyebrow: String, title: String) {
+        guard let chapter = location?.chapter else { return ("", title) }
+        if let match = chapter.firstMatch(of: /^\s*(\d+|[IVXLCDM]+)[.:)]?\s+(.+)$/) {
+            return ("Capítulo \(match.1)", String(match.2))
+        }
+        return (title, chapter)
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             // La rayita: dice que se sube; tocarla también la sube o la baja.
             Button { withAnimation(Theme.Motion.sheet) { expanded.toggle() } } label: {
                 Grabber()
@@ -506,6 +516,23 @@ private struct BottomPanel: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(expanded ? "Bajar el panel" : "Subir el panel")
+
+            // El capítulo, completo y con la letra del libro; encima, su número (o el
+            // libro, si el capítulo no lo trae). Tocarlo abre el índice.
+            Button(action: onContents) {
+                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                    SectionLabel(text: heading.eyebrow, tone: Theme.ink.opacity(Theme.Emphasis.glassText))
+                    Text(heading.title)
+                        .font(.rowTitle)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .contentTransition(.opacity)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Índice")
+            .accessibilityValue(location?.chapter ?? title)
 
             // Barra propia, fina y editorial: lo leído en tinta, una perilla chica.
             ScrubberBar(value: fraction, enabled: location != nil,
@@ -518,50 +545,34 @@ private struct BottomPanel: View {
                 .accessibilityLabel("Avance en el libro")
                 .accessibilityValue(position)
 
+            // La página (arrastrando: a cuál vas) y, a la derecha, las palabras de la
+            // sesión. Todo en gris y sin íconos: lo que manda es el capítulo.
             HStack(spacing: Theme.Space.m) {
-                Button(action: onContents) {
-                    HStack(spacing: Theme.Space.xs) {
-                        Label(location?.chapter ?? title, systemImage: "list.bullet")
-                            .lineLimit(1)
-                        // La flecha dice que se toca, igual que en la línea de la sesión.
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(Theme.ink.opacity(Theme.Emphasis.glassText))
-                    }
-                        .frame(minHeight: Theme.Size.tapTarget)
-                        .contentShape(Rectangle())
-                }
-                .accessibilityLabel("Índice")
-                .accessibilityValue(location?.chapter ?? title)
-                Spacer(minLength: 0)
-                // Quieto: la página. Arrastrando: a qué página y porcentaje vas.
-                // Quieta, la sesión (la página ya está en el pie del libro): tocarla abre su tarjeta.
-                if dragValue == nil, let session {
-                    SessionLine(tracker: session, compact: true, action: onSession)
-                        .transition(.opacity)
-                } else if dragValue != nil || !expanded {
-                Label(position, systemImage: "doc.text")
+                Text(position)
                     .monospacedDigit()
-                    .foregroundStyle(dragValue == nil ? Theme.secondaryInk : Theme.ink)
+                    .foregroundStyle(dragValue == nil ? Theme.ink.opacity(Theme.Emphasis.glassText) : Theme.ink)
                     .contentTransition(.numericText())
                     .animation(Theme.Motion.press, value: position)
                     .lineLimit(1)
-                    .layoutPriority(1)
-                    .transition(.opacity)
+                Spacer(minLength: 0)
+                if let session {
+                    SessionLine(tracker: session, compact: true, action: onSession)
                 }
             }
-            .font(.footnote.weight(.medium))
-            .labelStyle(QuietIconLabelStyle())
+            .font(.footnote)
+            .frame(minHeight: Theme.Size.tapTarget)
 
             if expanded {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
-                    SectionLabel(text: "Pie de página", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
+                    Hairline()
+                        .padding(.bottom, Theme.Space.s)
+                    SectionLabel(text: "El pie dice", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
                     Grid(horizontalSpacing: Theme.Space.s, verticalSpacing: Theme.Space.s) {
                         ForEach(Array(stride(from: 0, to: options.count, by: 2)), id: \.self) { row in
                             GridRow {
                                 ForEach(Array(options[row..<min(row + 2, options.count)].enumerated()), id: \.element.id) { offset, option in
                             Button { footer = option.kind } label: {
-                                FooterPreview(symbol: option.kind.symbol, text: option.text, paper: paper, ink: ink,
+                                FooterPreview(name: option.kind.name, text: option.text, paper: paper, ink: ink,
                                               available: option.available, selected: option.kind == footer)
                             }
                             .buttonStyle(PressableStyle())

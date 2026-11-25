@@ -1282,18 +1282,6 @@ struct WordCounter: View {
 
 // MARK: - Lector y audio
 
-/// Ícono y texto con poco aire entre ellos, el ícono en gris.
-struct QuietIconLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: Theme.Space.inline) {
-            configuration.icon
-                .foregroundStyle(Theme.secondaryInk)
-                .font(.caption.weight(.semibold))
-            configuration.title
-        }
-    }
-}
-
 /// La sesión en una línea dentro del panel; tocándola, su tarjeta.
 struct SessionLine: View {
     @ObservedObject var tracker: SessionTracker
@@ -1305,13 +1293,15 @@ struct SessionLine: View {
         Button(action: action) {
             HStack(spacing: Theme.Space.s) {
                 // Sin punto: el verde solo en el dato, las palabras de esta sesión.
+                // En la tarjeta del lector, en gris como la página; en la hoja de la sesión, el dato en verde.
                 (Text(compact ? "" : "Esta sesión · ")
-                 + Text("\(ReadingFormat.words(tracker.words)) palabras").foregroundStyle(Theme.accent))
+                 + Text("\(ReadingFormat.words(tracker.words)) palabras").foregroundStyle(compact ? Theme.ink.opacity(Theme.Emphasis.glassText) : Theme.accent))
+                    .monospacedDigit()
                     .lineLimit(1)
                 if !compact { Spacer(minLength: 0) }
                 Image(systemName: "chevron.right").font(.caption.weight(.medium))
             }
-            .font(.footnote.weight(.medium))
+            .font(compact ? .footnote : .footnote.weight(.medium))
             .foregroundStyle(Theme.ink.opacity(Theme.Emphasis.glassText))
             .frame(minHeight: Theme.Size.tapTarget)
             .contentShape(Rectangle())
@@ -1321,11 +1311,12 @@ struct SessionLine: View {
     }
 }
 
-/// Muestra del pie: un recorte de la parte de abajo de la página, con el papel
-/// y la tinta del libro, dos renglones insinuados y el pie tal como se leerá.
-/// La elegida lleva un filo y un punto verdes.
+/// Muestra del pie: la parte de abajo de una página, con el papel y la tinta del
+/// libro, tres renglones insinuados (el último, fin de párrafo) y el pie tal como
+/// se leerá, con su misma letra. Debajo, su nombre. La elegida lleva filo de tinta
+/// y palomita: no solo el color dice cuál es.
 struct FooterPreview: View {
-    let symbol: String
+    let name: String
     let text: String
     let paper: Color
     let ink: Color
@@ -1334,27 +1325,15 @@ struct FooterPreview: View {
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.Radius.inset, style: .continuous) }
 
-    /// Cada vez que la eligen, su ícono rebota (solo el suyo).
-    @State private var bounces = 0
-
     var body: some View {
-        // Todo a la misma orilla (12, el radio de la esquina): nada se come la curva.
-        VStack(spacing: 0) {
-            // Dos renglones insinuados (el texto del libro, justificado).
-            VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
-                Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
-                    .padding(.trailing, Theme.Space.xxl)
-            }
-            Spacer(minLength: 0)
-            // El pie, centrado como en la página, con su ícono. Elegido: el ícono
-            // se vuelve palomita (no solo el color dice cuál es).
-            HStack(spacing: Theme.Space.inline) {
-                Image(systemName: symbol)
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
-                    .symbolEffect(.bounce, value: bounces)
-                    .frame(width: Theme.Size.previewIcon)
+        VStack(spacing: Theme.Space.xs) {
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    ghost
+                    ghost
+                    ghost.padding(.trailing, Theme.Space.xxl)
+                }
+                Spacer(minLength: 0)
                 Text(text)
                     .font(.caption.weight(.medium))
                     .monospacedDigit()
@@ -1363,20 +1342,36 @@ struct FooterPreview: View {
                     .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
                     .contentTransition(.numericText())
             }
+            .padding(Theme.Space.m)
             .frame(maxWidth: .infinity)
+            .frame(height: Theme.Size.footerPreview)
+            .background(paper, in: shape)
+            .overlay {
+                shape.strokeBorder(selected ? ink : ink.opacity(Theme.Emphasis.ghost),
+                                   lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
+            }
+            .overlay(alignment: .topTrailing) {
+                if selected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.footnote)
+                        .foregroundStyle(ink)
+                        .background(Circle().fill(paper))
+                        .padding(Theme.Space.xs)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            Text(name)
+                .font(.caption)
+                .foregroundStyle(Theme.ink.opacity(selected ? Theme.Emphasis.rest : Theme.Emphasis.glassText))
+                .lineLimit(1)
         }
-        .padding(Theme.Space.m)
-        .frame(maxWidth: .infinity)
-        .frame(height: Theme.Size.footerPreview)
-        .background(paper, in: shape)
-        .overlay {
-            shape.strokeBorder(selected ? Theme.accent : ink.opacity(Theme.Emphasis.ghost),
-                               lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
-        }
-        // Al elegir: el filo se enciende con un resorte corto y el ícono pasa a palomita.
-        // Al presionar, se hunde (PressableStyle); todos miden siempre lo mismo.
-        .onChange(of: selected) { _, now in if now { bounces += 1 } }
+        // Al elegir: el filo y la palomita llegan con un resorte corto. Al presionar,
+        // se hunde (PressableStyle); todas miden siempre lo mismo.
         .animation(Theme.Motion.select, value: selected)
+    }
+
+    private var ghost: some View {
+        Capsule().fill(ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
     }
 }
 
