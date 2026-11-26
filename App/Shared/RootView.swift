@@ -88,6 +88,10 @@ struct RootView: View {
 
     @ViewBuilder
     private var tabs: some View {
+        #if os(macOS)
+        // En la Mac, una app de Mac: barra lateral, tabla y ficha (MG-1).
+        MacLibraryWindow()
+        #else
         if #available(iOS 18.0, macOS 15.0, *) {
             TabView(selection: $place) {
                 Tab("Mesa", systemImage: "book", value: Place.desk) { MesaScreen() }
@@ -111,6 +115,7 @@ struct RootView: View {
                     .tag(Place.search)
             }
         }
+        #endif
     }
 }
 

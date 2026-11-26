@@ -1,0 +1,66 @@
+#if os(macOS)
+import LectoraCore
+import SwiftUI
+
+/// Un libro como renglón de la tabla de la Mac (MG-1): lo que se ve y la llave para ordenar
+/// cada columna (sin acentos ni mayúsculas, así «Ángel» va con la A).
+struct MacBookRow: Identifiable {
+    enum State: String, CaseIterable {
+        case toRead = "Por leer", reading = "Leyendo", finished = "Leído", abandoned = "Abandonado"
+    }
+
+    let book: Book
+    let shelf: ShelfBook
+    let state: State
+    let hasCover: Bool
+    let inReview: Bool
+
+    var id: UUID { book.id }
+    var title: String { book.title }
+    var author: String { shelf.author }
+    var seriesLabel: String {
+        guard let series = book.series else { return "" }
+        return book.seriesIndex.map { "\(series) · \(ShelfBook.number($0))" } ?? series
+    }
+    var tagsLabel: String { book.tags.joined(separator: ", ") }
+    var language: String { book.language ?? "" }
+    var format: String { ((book.filePath ?? "") as NSString).pathExtension.uppercased() }
+    var progress: Double { shelf.progress }
+    var progressLabel: String { progress > 0 ? progress.percentText : "" }
+    var rating: Double { book.rating ?? 0 }
+    var stars: String { String(repeating: "★", count: Int(rating.rounded())) }
+    var added: Date { book.addedAt ?? .distantPast }
+    var addedLabel: String { book.addedAt?.es(.dateTime.day().month(.abbreviated).year()) ?? "" }
+    var publisher: String { book.publisher ?? "" }
+    var published: String { book.published ?? "" }
+    var isbn: String { book.identifiers["isbn"] ?? "" }
+    var stateLabel: String { state.rawValue }
+
+    var titleKey: String { Self.fold(book.sortTitle) }
+    var authorKey: String { Self.fold(shelf.authorSort) }
+    /// La serie y luego su número: «el mediterraneo 0001.0».
+    var seriesKey: String {
+        guard let series = book.series else { return "\u{10FFFF}" }
+        return Self.fold(series) + String(format: " %08.2f", book.seriesIndex ?? 0)
+    }
+    /// Ordenar por la columna de la portada junta los que no tienen.
+    var coverKey: Int { hasCover ? 0 : 1 }
+    var tagsKey: String { Self.fold(tagsLabel) }
+    var publisherKey: String { Self.fold(publisher) }
+
+    init(book: Book, shelf: ShelfBook, hasCover: Bool, inReview: Bool) {
+        self.book = book
+        self.shelf = shelf
+        self.hasCover = hasCover
+        self.inReview = inReview
+        state = if book.readingStatus == .abandoned { .abandoned }
+            else if book.readingStatus == .finished || shelf.isFinished { .finished }
+            else if shelf.progress > 0 || book.readingStatus == .reading { .reading }
+            else { .toRead }
+    }
+
+    static func fold(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "es"))
+    }
+}
+#endif

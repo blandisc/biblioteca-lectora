@@ -68,6 +68,25 @@ enum Theme {
         }
     }
 
+    /// La Mac como mesa de trabajo (MG-1): medidas de la ventana nativa, su barra lateral,
+    /// la tabla y la ficha. Lo demás (letra, controles) es el de macOS.
+    enum Mac {
+        static let window = CGSize(width: 1100, height: 620)
+        /// Al abrirla por primera vez: cabe la tabla con sus columnas y la ficha.
+        static let defaultWindow = CGSize(width: 1360, height: 820)
+        static let sidebar: CGFloat = 220
+        static let sidebarMin: CGFloat = 180
+        static let inspector: CGFloat = 320
+        static let inspectorMin: CGFloat = 280
+        static let inspectorCover = CGSize(width: 84, height: 126)
+        static let rowCover = CGSize(width: 16, height: 24)
+        static let coverColumn: CGFloat = 24
+        static let titleColumn: CGFloat = 180
+        static let shortColumn: CGFloat = 72
+        static let column: CGFloat = 110
+        static let summary: CGFloat = 120
+    }
+
     // MARK: Espacio — la escala común de interoperabilidad (SB-2): 4 · 8 · 16 · 24 · 32 · 48.
     // Sin 12 ni 6 desde el 26 nov 2026 (SD-2): el trinquete de Gabinete quedó en cero.
 

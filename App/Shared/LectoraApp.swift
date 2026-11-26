@@ -18,5 +18,8 @@ struct LectoraApp: App {
             RootView()
                 .tint(Theme.accent)
         }
+        #if os(macOS)
+        .defaultSize(width: Theme.Mac.defaultWindow.width, height: Theme.Mac.defaultWindow.height)
+        #endif
     }
 }
