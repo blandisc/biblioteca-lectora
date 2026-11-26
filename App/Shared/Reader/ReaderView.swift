@@ -19,7 +19,6 @@ struct ReaderView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSession = false
     /// El panel de abajo subido (con el pie y la sesión) o solo la tira.
-    @State private var panelExpanded = false
     /// Hoja de herramientas abierta (índice, buscar o subrayados).
     @State private var tools: ReaderToolsSheet.Part?
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
@@ -96,10 +95,6 @@ struct ReaderView: View {
             if controller.isSettled { chrome.transition(.opacity) }
         }
         .animation(Theme.Motion.standard, value: controller.isSettled)
-        // Al esconder los controles, la próxima vez el panel sale como tira.
-        .onChange(of: showsChrome) { _, shown in
-            if !shown { panelExpanded = false }
-        }
         // Con «Aa» abierta se ve la página como al leer: sin botones encima (ni otra «Aa»).
         .onChange(of: showsAppearance) { _, shown in
             if shown { withAnimation(Theme.Motion.standard) { showsChrome = false } }
@@ -316,9 +311,6 @@ struct ReaderView: View {
                 Spacer(minLength: 0)
                 if showsChrome {
                     BottomPanel(title: title, location: controller.location,
-                                expanded: $panelExpanded,
-                                options: footerOptions, footer: $footer,
-                                paper: palette.background, ink: palette.textColor,
                                 session: showsCounter ? controller.session : nil,
                                 onSession: openSession,
                                 onContents: { tools = .contents },
@@ -431,7 +423,7 @@ struct ReaderView: View {
     }
 
     #if DEBUG
-    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|panel|aa|contents`): pasa
+    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|contents`): pasa
     /// páginas o cambia de modo solo, sin tocar la pantalla. Solo en Debug.
     private func runDemo() {
         guard !demoStarted, let demo = LaunchOptions.demo else { return }
@@ -472,8 +464,6 @@ struct ReaderView: View {
                 openSession()
                 try? await Task.sleep(for: .seconds(2))
                 showsSession = false
-                        case "panel":
-                withAnimation(Theme.Motion.sheet) { panelExpanded = true }
             case "flow":
                 showsAppearance = true
                 for _ in 0..<4 {
@@ -543,18 +533,12 @@ private struct TopControls: View {
     }
 }
 
-/// Panel de abajo al tocar el centro. Primero una tira mínima: la barra para
-/// saltar y, debajo, el capítulo (abre el índice) y la página. Subiéndola con
-/// el dedo (o tocando su rayita) aparece lo demás: qué dice el pie y la sesión.
+/// Panel de abajo al tocar el centro: el capítulo (abre el índice), buscar y «Aa»,
+/// la barra para saltar y la página con la sesión. No se sube: qué dice el pie se
+/// elige tocando el pie mientras lees (26 nov 2026).
 private struct BottomPanel: View {
     let title: String
     let location: ReaderController.Location?
-    @Binding var expanded: Bool
-    let options: [FooterOption]
-    @Binding var footer: ReaderFooter
-    /// El papel y la tinta del libro: las muestras del pie se ven como la página.
-    let paper: Color
-    let ink: Color
     let session: SessionTracker?
     let onSession: () -> Void
     let onContents: () -> Void
@@ -565,11 +549,7 @@ private struct BottomPanel: View {
     @State private var dragValue: Double?
     /// Dónde estabas antes de saltar con la barra: un toque de más ya no te pierde.
     @State private var origin: ReaderController.Location?
-    /// Cuántas veces ya se asomó el panel para decir que se sube (solo las primeras).
-    @AppStorage(ReaderKeys.panelHints) private var hints = 0
-    @State private var peek: CGFloat = 0
-    /// Lo que la tarjeta va siguiendo al dedo mientras la subes o la bajas.
-    @State private var pull: CGFloat = 0
+
 
     private var fraction: Double { dragValue ?? location?.fraction ?? 0 }
 
@@ -602,15 +582,6 @@ private struct BottomPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // La rayita: dice que se sube; tocarla también la sube o la baja.
-            Button { withAnimation(Theme.Motion.sheet) { expanded.toggle() } } label: {
-                Grabber()
-                    .frame(maxWidth: .infinity, minHeight: Theme.Space.xl)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(expanded ? "Bajar el panel" : "Subir el panel")
-
             // El capítulo, completo y con la letra del libro; encima, su número (o el
             // libro, si el capítulo no lo trae). Tocarlo abre el índice.
             HStack(spacing: Theme.Space.s) {
@@ -690,33 +661,6 @@ private struct BottomPanel: View {
             // La página va pegada a su barra, no a media fila de ella.
             .padding(.top, -Theme.Size.tapBleed)
 
-            if expanded {
-                VStack(alignment: .leading, spacing: Theme.Space.s) {
-                    Hairline()
-                        .padding(.bottom, Theme.Space.s)
-                    SectionLabel(text: "Abajo de la página", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
-                    Grid(horizontalSpacing: Theme.Space.s, verticalSpacing: Theme.Space.s) {
-                        ForEach(Array(stride(from: 0, to: options.count, by: 2)), id: \.self) { row in
-                            GridRow {
-                                ForEach(Array(options[row..<min(row + 2, options.count)].enumerated()), id: \.element.id) { offset, option in
-                            Button { footer = option.kind } label: {
-                                FooterPreview(name: option.kind.name, text: option.text, paper: paper, ink: ink,
-                                              available: option.available, selected: option.kind == footer)
-                            }
-                            .buttonStyle(PressableStyle())
-                            .accessibilityAddTraits(option.kind == footer ? .isSelected : [])
-                            // Los cuatro entran igual: suben un poco y aparecen, uno tras otro.
-                            .transition(.opacity.combined(with: .offset(y: Theme.Space.s))
-                                .animation(Theme.Motion.sheet.delay(Theme.Motion.stagger * Double(row + offset))))
-                                }
-                            }
-                        }
-                    }
-                }
-                // Aire de grupo arriba; el rótulo, pegado a sus muestras.
-                .padding(.top, Theme.Space.s)
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
-            }
             if Features.audiobook {
                 HStack(spacing: Theme.Space.s) {
                     ReaderPillButton(title: "Guiada", systemImage: "text.viewfinder") {}
@@ -730,47 +674,14 @@ private struct BottomPanel: View {
         // Vidrio a `chromeInset` de la orilla y lo de adentro a `Reader.panelInset` del vidrio:
         // empieza en la misma línea que el texto del libro (`Reader.textMargin`).
         .padding(.horizontal, Theme.Reader.panelInset)
-        .padding(.bottom, Theme.Reader.panelInset)
+        .padding(.vertical, Theme.Reader.panelInset)
         // Lo de adentro no se asoma fuera del vidrio mientras la tarjeta crece.
         .glassPanel(cornerRadius: Theme.Radius.panel, clipped: true)
         // Todo el panel es suyo: un toque en su aire no llega a la página de abajo
         // (que lo tomaría como «ocultar controles»).
         .contentShape(Rectangle())
         .onTapGesture {}
-        .offset(y: peek + pull)
-        .task {
-            // Las primeras veces se asoma hacia arriba y regresa: hay más abajo de la barra.
-            guard !expanded, hints < Theme.Reader.panelHints else { return }
-            hints += 1
-            try? await Task.sleep(for: .seconds(Theme.Reader.panelHintDelay))
-            withAnimation(Theme.Motion.select) { peek = -Theme.Space.l }
-            try? await Task.sleep(for: .seconds(Theme.Reader.panelHintHold))
-            withAnimation(Theme.Motion.select) { peek = 0 }
-        }
         .padding(.horizontal, Theme.Reader.chromeInset)
-        .sensoryFeedback(.selection, trigger: footer)
-        .sensoryFeedback(.impact(weight: .light), trigger: expanded)
-        // Subir o bajar con el dedo, desde cualquier parte del panel menos la barra.
-        .simultaneousGesture(
-            DragGesture(minimumDistance: Theme.Size.panelSwipe)
-                .onChanged { value in
-                    guard dragValue == nil, abs(value.translation.height) > abs(value.translation.width) else { return }
-                    // Hacia donde puede ir, la tarjeta va bajo el dedo; hacia donde no,
-                    // cede con resistencia, como en Libros de Apple.
-                    let toward = expanded ? value.translation.height > 0 : value.translation.height < 0
-                    pull = value.translation.height * (toward ? 1 : Theme.Reader.panelResistance)
-                    if !expanded && toward { pull *= Theme.Reader.panelResistance }
-                }
-                .onEnded { value in
-                    let vertical = abs(value.translation.height) > abs(value.translation.width)
-                    withAnimation(Theme.Motion.sheet) {
-                        if dragValue == nil && vertical {
-                            expanded = value.predictedEndTranslation.height < 0
-                        }
-                        pull = 0
-                    }
-                }
-        )
     }
 }
 

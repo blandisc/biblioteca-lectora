@@ -1868,16 +1868,6 @@ struct ScrubberBar: View {
     }
 }
 
-/// La rayita de un panel que se sube con el dedo.
-struct Grabber: View {
-    var body: some View {
-        Capsule()
-            .fill(Theme.secondaryInk.opacity(Theme.Emphasis.folioMuted))
-            .frame(width: Theme.Size.grabber.width, height: Theme.Size.grabber.height)
-    }
-}
-
-
 /// Botón en cápsula del panel del lector («Guiada», «Escuchar»). El destacado va en tinta.
 struct ReaderPillButton: View {
     let title: String

@@ -188,15 +188,11 @@ enum Theme {
         static let excerptReach = 60
         /// Lo que se mueve el dedo antes de saber si arrastra la barra (de lado) o sube el panel.
         static let dragSlop: CGFloat = 6
-        /// Lo que hay que subir o bajar el dedo sobre el panel para abrirlo o cerrarlo.
-        static let panelSwipe: CGFloat = 24
         /// Alto de una fila de la gráfica de etapas, y de su marca.
         static let stageRow: CGFloat = 26
         static let stageMark: CGFloat = 16
         /// Muestra de color en la leyenda de etapas.
         static let legendSwatch: CGFloat = 8
-        /// La rayita del panel del lector que dice «se sube».
-        static let grabber = CGSize(width: 36, height: 5)
         /// Separación entre las etapas de la barra.
         static let stageGap: CGFloat = 1
         /// Botón de reproducir del mini reproductor, con su anillo de avance.
@@ -316,9 +312,6 @@ enum Theme {
         static let textBase: CGFloat = 17
         /// Al abrir, el libro se da por acomodado cuando lleva esto sin cambiar de página.
         static let openSettle: TimeInterval = 0.25
-        /// La tarjeta de abajo, al arrastrarla hacia donde no puede ir (o hacia arriba
-        /// antes de crecer), se mueve esta fracción de lo que mueves el dedo.
-        static let panelResistance: CGFloat = 0.35
         /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
         static let highlightLines = 4
         /// Fundido: el mismo resorte que la hoja (con menos fuerza duraría más el
@@ -347,10 +340,6 @@ enum Theme {
         /// `previewTurn` es el tiempo que le toca a cada vuelta.
         static let previewPace = 0.6
         static let previewTurn: TimeInterval = 1.2
-        /// Las primeras veces que sale el panel se asoma hacia arriba: hay más.
-        static let panelHints = 3
-        static let panelHintDelay: TimeInterval = 0.45
-        static let panelHintHold: TimeInterval = 0.3
         static let previewLines = 5
         static let previewLastLine = 4
         /// La sombra de la hoja de muestra (la doblada y la que se desliza).

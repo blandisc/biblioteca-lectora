@@ -13,7 +13,6 @@ enum ReaderKeys {
     static let haptics = "reader.haptics"
     /// Cómo se pasa la hoja en páginas.
     static let turn = "reader.turn"
-    static let panelHints = "reader.panelHints"
 }
 
 /// Cómo se pasa la hoja en páginas (se elige en «Aa»).
