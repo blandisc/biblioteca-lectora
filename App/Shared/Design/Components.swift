@@ -101,13 +101,52 @@ extension ScreenHeading where Trailing == EmptyView {
 
 /// «GABINETE» en mayúsculas romanas, centrado arriba de la Mesa.
 struct BrandMark: View {
+    var alignment: Alignment = .center
+
     var body: some View {
         Text("GABINETE")
             .font(.brandMark)
             .tracking(Theme.Tracking.brandMark)
             .foregroundStyle(Theme.ink)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: alignment)
             .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Encabezado de la Mesa (MT-F, 25 nov 2026): el nombre a la izquierda, la fecha de hoy
+/// a la derecha y, debajo, una línea finísima que acaba en un trazo verde. El encabezado
+/// de una libreta fina, vuelto pantalla.
+struct DeskHeader: View {
+    var date = Date()
+
+    /// «MIÉ · 25 NOV».
+    private var dateLine: String {
+        let day = date.es(.dateTime.weekday(.abbreviated))
+        let month = date.es(.dateTime.day().month(.abbreviated))
+        return "\(day) · \(month)".replacingOccurrences(of: ".", with: "").uppercased()
+    }
+
+    var body: some View {
+        VStack(spacing: Theme.Space.s) {
+            HStack(alignment: .firstTextBaseline) {
+                BrandMark(alignment: .leading)
+                Text(dateLine)
+                    .font(.caption.weight(.medium))
+                    .tracking(Theme.Tracking.caps)
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.secondaryInk)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            Hairline()
+                .overlay(alignment: .trailing) {
+                    Capsule()
+                        .fill(Theme.accent)
+                        .frame(width: Theme.Size.deskMark.width, height: Theme.Size.deskMark.height)
+                }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -618,8 +657,41 @@ struct QuoteBlock: View {
     var italic = false
     /// Lo que se buscó: va en verde y negritas dentro de la cita.
     var match: String? = nil
+    /// Tipográfica (Mesa, ME-2): sin raya; el rótulo en versalitas con una línea fina
+    /// hasta la orilla y la comilla de apertura colgada fuera del texto, en verde.
+    var hanging = false
 
     var body: some View {
+        if hanging { hangingBody } else { ruledBody }
+    }
+
+    private var hangingBody: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            if let label {
+                HStack(spacing: Theme.Space.l) {
+                    Text(label.uppercased())
+                        .font(.caption.weight(.medium))
+                        .tracking(Theme.Tracking.caps)
+                        .foregroundStyle(Theme.secondaryInk)
+                        .fixedSize()
+                    Hairline()
+                }
+            }
+            Text(Found.marked("\(text)»", match))
+                .font(.quote)
+                .lineSpacing(Theme.Space.xs)
+                .foregroundStyle(Theme.ink)
+                .overlay(alignment: .topLeading) {
+                    Text("«")
+                        .font(.quote)
+                        .foregroundStyle(Theme.accent)
+                        .alignmentGuide(.leading) { $0[.trailing] }
+                        .accessibilityHidden(true)
+                }
+        }
+    }
+
+    private var ruledBody: some View {
         VStack(alignment: .leading, spacing: Theme.Space.xs) {
             if let label {
                 Text(label)

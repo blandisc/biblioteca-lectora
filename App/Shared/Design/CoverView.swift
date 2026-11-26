@@ -26,6 +26,8 @@ struct CoverView: View {
     var showsRibbon = false
     /// `cover.jpg` del libro; sin imagen, se dibuja la portada tipográfica.
     var image: URL? = nil
+    /// Portada nítida (la Mesa la pide para todo lo que muestra).
+    @Environment(\.crispCovers) private var crisp
 
     var body: some View {
         GeometryReader { proxy in
@@ -80,14 +82,19 @@ struct CoverView: View {
             }
             .clipShape(coverShape)
             .overlay {
-                if style.bordered {
+                if crisp {
+                    coverShape
+                        .strokeBorder(Theme.ink.opacity(Theme.CoverArt.crispEdge), lineWidth: Theme.Size.hairline)
+                } else if style.bordered {
                     coverShape
                         .strokeBorder(.black.opacity(Theme.CoverArt.edgeLine), lineWidth: Theme.Size.hairline)
                 }
             }
         }
         .aspectRatio(Theme.Size.coverAspect, contentMode: .fit)
-        .shadow(color: .black.opacity(Theme.CoverArt.shadow), radius: Theme.CoverArt.shadowRadius, x: 0, y: Theme.CoverArt.shadowY)
+        .shadow(color: .black.opacity(crisp ? Theme.CoverArt.crispShadow : Theme.CoverArt.shadow),
+                radius: crisp ? Theme.CoverArt.crispShadowRadius : Theme.CoverArt.shadowRadius,
+                x: 0, y: crisp ? Theme.CoverArt.crispShadowY : Theme.CoverArt.shadowY)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(title), de \(author)")
     }
@@ -151,5 +158,17 @@ struct Windmill: Shape {
         path.move(to: p(2, 100))
         path.addCurve(to: p(94, 99), control1: p(30, 97), control2: p(66, 102))
         return path
+    }
+}
+
+/// Portadas nítidas: filo fino y sombra larga y tenue en vez de la sombra de objeto (ME-1).
+private struct CrispCoversKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var crispCovers: Bool {
+        get { self[CrispCoversKey.self] }
+        set { self[CrispCoversKey.self] = newValue }
     }
 }

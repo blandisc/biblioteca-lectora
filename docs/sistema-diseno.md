@@ -77,7 +77,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 `tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
-stageBar 8 · stageBarThin 4 · footerPreview 64 · footerPicker 320 (el globo del pie) · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
+stageBar 8 · stageBarThin 4 · footerPreview 64 · footerPicker 320 (el globo del pie) · deskMark 16 × 4 (el trazo verde del encabezado de la Mesa) · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
@@ -90,6 +90,7 @@ La portada que se dibuja para un libro sin imagen se escala con su ancho: cada m
 es una fracción de ese ancho (`inset` 0,09 · `title` 0,14 · `author` 0,07 · `spine` 0,05 ·
 `ribbon` 0,065 …), así se ve igual en una fila de 40 pt y en la ficha de 168 pt. Sus
 esquinas (`spineRadius` 2, `edgeRadius` 4) imitan un libro: lomo casi recto, canto redondeado.
+En la Mesa las portadas son nítidas (`crispCovers`, ME-1): un filo de media línea (`crispEdge`) y una sombra larga y tenue (`crispShadow`, `crispShadowRadius`, `crispShadowY`) en vez de la sombra de objeto.
 
 ### Identidad
 
@@ -111,6 +112,7 @@ El modo oscuro se queda neutro; solo cambia el verde.
 | `.quote` | New York 17 itálica | «Donde lo dejaste» |
 | `.prose` | New York 16 | Sinopsis |
 | `.brandMark` | Cinzel 16, espaciado `Tracking.brandMark` | «GABINETE» en la Mesa |
+| `Tracking.caps` | 1,6 de espaciado en versalitas de texto | La fecha de la Mesa, «DONDE LO DEJASTE» |
 | `.sectionLabel` | Cinzel 12 medium, mayúsculas, `Tracking.sectionLabel` | Rótulos de sección |
 | Sistema | SF (`.body`, `.subheadline`, `.footnote`, `.caption`) | Toda la interfaz |
 
@@ -142,7 +144,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `SeriesStack` | Pila de portadas de una serie | Biblioteca |
 | `CoverCell` + `CoverGrid` | Celda y cuadrícula de 3 columnas | Biblioteca, Mesa |
 | `BookRow` | Portada pequeña + título serif + detalle + extra | Lista, serie, Buscar, Cuaderno |
-| `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota | «Donde lo dejaste», subrayados |
+| `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota; `hanging`: sin raya, rótulo en versalitas con línea fina y la comilla de apertura colgada en verde (ME-2) | «Donde lo dejaste» (hanging), subrayados |
 | `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle y la misma curva que la real (`TurnMotion`); las dos hojas se turnan, sin salto más despacio que la real (`Reader.previewPace`); la Hoja es una esquina que se dobla (`Reader.previewPause`, `previewLead`, `previewTurn`, `previewShadow`, `previewLines`) | Estilos de la hoja en «Aa» |
 | `SegmentedChoice` | Opciones lado a lado; la elegida en papel sobre el carril (`Radius.segment`), la marca se desliza | Páginas o Continuo en «Aa» |
 | `Grabber` | Rayita de un panel que se sube | Panel del lector |
@@ -154,7 +156,8 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `EmptyState` | Título, explicación y acción opcional | Toda lista vacía |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
-| `BrandMark` | «GABINETE» en Cinzel, centrado | Arriba de la Mesa |
+| `BrandMark` | «GABINETE» en Cinzel, centrado (o a la izquierda) | Bienvenida, dentro de `DeskHeader` |
+| `DeskHeader` | Encabezado de la Mesa: «GABINETE» a la izquierda, la fecha de hoy en versalitas a la derecha y una línea finísima que acaba en un trazo verde (`Size.deskMark`); MT-F, 25 nov 2026 | Arriba de la Mesa |
 | `SectionLabel` | Rótulo en mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`) | «EN LA MESA», «SE COMPLETARON SOLOS», «Nº 7» en la ficha |
 | `AccentIconButton` | Ícono de acción en `accent` (verde hoja, se distingue de la tinta), sin fondo: el único acento verde de una pantalla | «+» de la Biblioteca y del Cuaderno |
 | `SecondaryButton`, `LinkRow` | Acción secundaria a lo ancho; fila que lleva a otra pantalla | «Por revisar» |

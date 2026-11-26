@@ -136,6 +136,8 @@ enum Theme {
         static let stageBarThin: CGFloat = 4
         /// Muestra del pie en el panel del lector: un recorte de la parte de abajo de la página.
         static let footerPreview: CGFloat = 64
+        /// El trazo verde con que acaba la línea del encabezado de la Mesa.
+        static let deskMark = CGSize(width: 16, height: 4)
         /// Ancho del globo que sale al tocar el pie: dos muestras por renglón.
         static let footerPicker: CGFloat = 320
         /// Renglón fantasma de esa muestra.
@@ -216,6 +218,12 @@ enum Theme {
         static let shadow = 0.28
         static let shadowRadius: CGFloat = 7
         static let shadowY: CGFloat = 6
+        /// Portada nítida (Mesa, ME-1): un filo de media línea que la recorta del papel y una
+        /// sombra larga y tenue que apenas la despega, sin efecto de objeto.
+        static let crispEdge = 0.14
+        static let crispShadow = 0.16
+        static let crispShadowRadius: CGFloat = 16
+        static let crispShadowY: CGFloat = 14
         static let windmill = CGSize(width: 0.55, height: 0.6)
         static let circles = CGSize(width: 0.6, height: 0.3)
         static let circlesOverlap: CGFloat = 0.12
@@ -442,6 +450,8 @@ extension Theme {
     enum Tracking {
         static let brandMark: CGFloat = 6.7
         static let sectionLabel: CGFloat = 2.9
+        /// Versalitas de texto (la fecha de la Mesa, «DONDE LO DEJASTE»).
+        static let caps: CGFloat = 1.6
     }
 }
 

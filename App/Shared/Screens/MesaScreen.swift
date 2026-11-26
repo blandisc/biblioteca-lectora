@@ -13,7 +13,7 @@ struct MesaScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    BrandMark()
+                    DeskHeader()
                         .padding(.bottom, Theme.Space.xl)
                     Group {
                         if let book = model.currentBook {
@@ -30,6 +30,8 @@ struct MesaScreen: View {
                 }
                 .screenContent()
             }
+            // Portadas nítidas: filo fino y sombra larga y tenue (ME-1).
+            .environment(\.crispCovers, true)
             .screen()
             .navigationDestination(isPresented: $showsDiary) { DiaryScreen() }
         }
@@ -52,7 +54,7 @@ struct MesaScreen: View {
                 .padding(.top, Theme.Space.xs)
 
             if let sentence = book.lastSentence {
-                QuoteBlock(label: "Donde lo dejaste", text: sentence, italic: true)
+                QuoteBlock(label: "Donde lo dejaste", text: sentence, hanging: true)
                     .padding(.top, Theme.Space.l)
             }
 
