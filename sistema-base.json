@@ -23,9 +23,7 @@
   "excepciones": [],
   "heredado": {
     "SB-1": {},
-    "SB-2": {
-      "App/Shared/Design/Theme.swift": 4
-    },
+    "SB-2": {},
     "SB-3": {},
     "SB-4": {}
   }

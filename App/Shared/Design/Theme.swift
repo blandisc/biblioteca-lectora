@@ -28,9 +28,16 @@ enum Theme {
     static let tertiaryInk = Color(light: 0x837F78, dark: 0x7C7870)
     /// Pistas de progreso y separadores.
     static let track = Color(light: 0xE6E3DC, dark: 0x34322E)
-    /// Verde hoja: tus marcas y avisos (subrayados, notas, cinta, audio sonando,
-    /// pendientes). Sutil y escaso.
-    static let accent = Color(light: 0x3D6B55, dark: 0x8FBFA4)
+    /// Verde botella (AC-3, 26 nov 2026): el único acento. Marca solo tres cosas: dónde
+    /// estás (pestaña, filtro elegido), lo que avanzas (palabras, marca de la Mesa) y lo
+    /// tuyo (subrayados, cinta, pendientes). Las acciones van en tinta. Solo lo pintan las
+    /// piezas del sistema, nunca una pantalla (`DesignRulesTests`).
+    static let accent = Color(light: 0x0F4A35, dark: 0x4FB386)
+    /// Acción principal («Seguir leyendo», «Nota nueva»): verde fichero en los dos modos,
+    /// con letra clara. En oscuro antes era un bloque verde menta que gritaba (SD-1).
+    static let action = Color(light: 0x24332B, dark: 0x24332B)
+    /// Letra sobre la acción principal.
+    static let onAction = Color(light: 0xF3EFE6, dark: 0xECE9E2)
 
     /// Etapas de una sesión de lectura: del gris (interrumpida) al verde fichero
     /// (inmersa). Se distinguen por claridad; en oscuro, la más intensa es la más clara.
@@ -44,13 +51,14 @@ enum Theme {
         }
     }
 
-    // MARK: Espacio — escala de 4 pt
+    // MARK: Espacio — la escala común de interoperabilidad (SB-2): 4 · 8 · 16 · 24 · 32 · 48.
+    // Sin 12 ni 6 desde el 26 nov 2026 (SD-2): el trinquete de Gabinete quedó en cero.
 
     enum Space {
-        static let xxs: CGFloat = 2
+        /// Medio paso, solo dentro de piezas chicas (dos renglones de una fila, un selector).
+        static let xxs: CGFloat = 2 // sistema-base: ignora medio paso dentro de piezas chicas; nunca entre bloques
         static let xs: CGFloat = 4
         static let s: CGFloat = 8
-        static let m: CGFloat = 12
         static let l: CGFloat = 16
         static let xl: CGFloat = 24
         static let xxl: CGFloat = 32
@@ -58,9 +66,7 @@ enum Theme {
         // Medidas con nombre para lo que se repite fuera de la escala. Nunca se suman
         // tokens en una pantalla o pieza («s + xxs»): si hace falta otra medida, va aquí.
         /// Separación mínima: entre las letras del índice A–Z.
-        static let hair: CGFloat = 1
-        /// Entre un ícono y su texto, y dentro de piezas pequeñas (leyendas, barras).
-        static let inline: CGFloat = 6
+        static let hair: CGFloat = 1 // sistema-base: ignora separación de un punto entre las letras del índice A–Z
         /// Aire arriba y abajo de una fila de lista (libro, dato, sesión, resultado).
         static let rowY: CGFloat = 10
         /// Entre la portada (o la raya de una cita) y su texto.
@@ -73,9 +79,6 @@ enum Theme {
         static let screenTop: CGFloat = 24
         /// Aire al final del contenido, antes del dock.
         static let screenBottom: CGFloat = 32
-        /// Interior lateral de una fila de filtros que llega al borde: con el aire
-        /// de cada filtro (`s`), su primer texto cae justo en el margen.
-        static let chipInset: CGFloat = gutter - s
     }
 
     // MARK: Radio
@@ -83,8 +86,6 @@ enum Theme {
     enum Radius {
         /// Esquinas de una portada.
         static let cover: CGFloat = 3
-        /// Filtros y etiquetas.
-        static let chip: CGFloat = 8
         /// Botones y campos.
         static let control: CGFloat = 10
         /// Tarjetas pequeñas (opciones de la hoja «Aa»).
@@ -102,8 +103,28 @@ enum Theme {
     // MARK: Tamaño
 
     enum Size {
-        /// Área mínima de toque (HIG).
+        /// Área mínima de toque (HIG y SB-4).
         static let tapTarget: CGFloat = 44
+        /// Lo que el área de toque de un ícono (44) sobresale de su dibujo: se compensa para
+        /// que el botón no empuje lo de al lado.
+        static let tapBleed: CGFloat = 12
+        /// Alto de una fila de ajustes o de opciones: aire de libreta, cómoda de tocar.
+        static let row: CGFloat = 52
+        /// El trazo verde bajo el filtro elegido.
+        static let tabMark = CGSize(width: 16, height: 2)
+        /// Las hojitas de muestra de Apariencia (Sistema, Claro, Oscuro).
+        static let pageSwatch: CGFloat = 78
+        /// Renglones de esa hojita: grueso y largo de cada uno (fracción del ancho).
+        static let swatchLine: CGFloat = 3
+        static let swatchLines: [CGFloat] = [1, 0.8, 0.55]
+        /// Punto de estado (conectado o no) y de pendiente.
+        static let statusDot: CGFloat = 6
+        /// Renglones que puede ocupar el conteo de una lista antes de cortarse.
+        static let countLines = 2
+        /// Filo del punto de estado hueco.
+        static let statusDotLine: CGFloat = 1
+        /// Alto de las barras del ecualizador (audio sonando).
+        static let equalizerHeight: CGFloat = 12
         /// Alto de botones; ancho de botones redondos.
         static let control: CGFloat = 46
         static let coverHero: CGFloat = 132
@@ -270,8 +291,11 @@ enum Theme {
         static let searchRemember: TimeInterval = 1.2
         /// El texto del libro a esta distancia de las orillas, en páginas y en continuo y
         /// en todo iPhone; el contenido de la tarjeta de abajo empieza en la misma línea
-        /// (`chromeInset` + `Space.m`).
+        /// (`chromeInset` + `panelInset`).
         static let textMargin: CGFloat = 28
+        /// Lo de adentro de la tarjeta de abajo, a esto del vidrio: así su contenido empieza
+        /// en la misma línea que el texto del libro.
+        static let panelInset: CGFloat = textMargin - chromeInset
         /// El texto normal de iOS con el tamaño de siempre: lo que crezca sobre esto
         /// (Ajustes › Pantalla › Tamaño del texto) crece también la letra del libro.
         static let textBase: CGFloat = 17
@@ -386,6 +410,8 @@ enum Theme {
         static let folio = 0.74
         /// Renglones insinuados y filo de la muestra del pie: la tinta del libro, casi invisible.
         static let ghost = 0.12
+        /// Filo finísimo de la acción principal: la despega del papel oscuro.
+        static let actionEdge = 0.16
         /// Fondo de un botón redondo dentro del vidrio (buscar y letra en la tarjeta del lector).
         static let inGlass = 0.1
         /// El pie de una muestra que aún no tiene dato: más apagado que el folio.

@@ -62,7 +62,7 @@ struct CalibreMigrationScreen: View {
     // MARK: Pasos
 
     private func progress(title: String, value: Double?) -> some View {
-        VStack(alignment: .leading, spacing: Theme.Space.m) {
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
             Text(title).font(.body)
             if let value { ThinProgress(value: value) } else { ProgressView() }
             Text("Puedes dejar la app abierta; no cierres esta hoja.")

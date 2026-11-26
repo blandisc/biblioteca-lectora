@@ -48,7 +48,6 @@ struct NoteScreen: View {
                     if editing {
                         Button("Listo") { finishEditing() }
                             .fontWeight(.semibold)
-                            .foregroundStyle(Theme.accent)
                     } else {
                         Menu("Editar") {
                             Button { startEditing() } label: { Label("Escribir", systemImage: "pencil") }
@@ -96,10 +95,10 @@ struct NoteScreen: View {
                     .foregroundStyle(Theme.ink)
             }
             .gutter()
-            .padding(.top, Theme.Space.m)
+            .padding(.top, Theme.Space.l)
         } else {
             ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Space.m) {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
                     location
                     NoteBody(text: text)
                 }

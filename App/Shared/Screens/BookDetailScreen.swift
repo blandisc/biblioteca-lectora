@@ -19,7 +19,7 @@ struct BookDetailScreen: View {
             VStack(spacing: Theme.Space.l) {
                 ShelfCover(book: live)
                     .frame(width: Theme.Size.coverDetail)
-                    .padding(.top, Theme.Space.m)
+                    .padding(.top, Theme.Space.l)
                 VStack(spacing: Theme.Space.xs) {
                     // Número de ficha, como el id de Calibre que da nombre a la carpeta.
                     if let number = record?.calibreID {
@@ -55,9 +55,9 @@ struct BookDetailScreen: View {
                 }
 
                 readingSection
-                    .padding(.top, Theme.Space.m)
+                    .padding(.top, Theme.Space.l)
                 notesSection
-                    .padding(.top, Theme.Space.m)
+                    .padding(.top, Theme.Space.l)
                 highlightsSection
             }
             .screenContent()
@@ -95,7 +95,7 @@ extension BookDetailScreen {
         if !sessions.isEmpty {
             let period = ReadingPeriod(sessions)
             let remaining = live.bookID.flatMap { sessionStore.remaining(forBook: $0, progress: live.progress) }
-            VStack(alignment: .leading, spacing: Theme.Space.m) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 SectionLabel(text: "Lectura")
                 StatTrio(items: [
                     .init(value: ReadingFormat.duration(period.readingSeconds), label: "leído"),
@@ -125,7 +125,8 @@ extension BookDetailScreen {
                 SectionLabel(text: "Notas")
                 Spacer()
                 NavigationLink(value: NoteRef.new(draft: "# \n\n[[\(live.title)]] ")) {
-                    Text("Nota nueva").fontWeight(.medium).foregroundStyle(Theme.accent)
+                    Text("Nota nueva").fontWeight(.medium).foregroundStyle(Theme.ink)
+                        .frame(minHeight: Theme.Size.tapTarget)
                 }
                 .buttonStyle(.plain)
             }
@@ -152,7 +153,7 @@ extension BookDetailScreen {
     private var highlightsSection: some View {
         let highlights = live.bookID.map { model.annotations.annotations(forBook: $0) } ?? []
         if !highlights.isEmpty {
-            VStack(alignment: .leading, spacing: Theme.Space.m) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 HStack(alignment: .firstTextBaseline) {
                     SectionLabel(text: "Subrayados")
                     Spacer()
@@ -194,7 +195,7 @@ struct CoverPickerSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if loading {
-                        HStack(spacing: Theme.Space.m) {
+                        HStack(spacing: Theme.Space.l) {
                             ProgressView()
                             Text("Buscando portadas…").font(.subheadline).foregroundStyle(Theme.secondaryInk)
                         }

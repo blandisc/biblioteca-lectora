@@ -26,7 +26,7 @@ struct SeriesScreen: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.top, Theme.Space.m)
+                .padding(.top, Theme.Space.l)
             }
             .screenContent()
         }

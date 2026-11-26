@@ -69,7 +69,7 @@ struct MesaScreen: View {
             .foregroundStyle(Theme.secondaryInk)
             .padding(.top, Theme.Space.s)
 
-            HStack(spacing: Theme.Space.m) {
+            HStack(spacing: Theme.Space.l) {
                 PrimaryButton(title: book.progress > 0 ? "Seguir leyendo" : "Empezar a leer", action: model.continueReading)
                 if Features.audiobook {
                     RoundIconButton(systemImage: "headphones", label: "Escuchar como audiolibro") {
@@ -85,7 +85,7 @@ struct MesaScreen: View {
             if !model.desk.isEmpty {
                 SectionLabel(text: "En la mesa")
                     .padding(.top, Theme.Space.xxl)
-                    .padding(.bottom, Theme.Space.m)
+                    .padding(.bottom, Theme.Space.l)
                 CoverGrid {
                     ForEach(model.desk.prefix(Theme.Size.gridColumns)) { item in
                         NavigationLink(value: item) { CoverCell(book: item, caption: item.caption) }
@@ -111,7 +111,7 @@ struct MesaScreen: View {
     private var weekSection: some View {
         if !sessions.sessions.isEmpty {
             let week = sessions.week()
-            VStack(alignment: .leading, spacing: Theme.Space.m) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 HStack(alignment: .firstTextBaseline) {
                     SectionLabel(text: "Esta semana")
                     Spacer()
@@ -120,10 +120,12 @@ struct MesaScreen: View {
                             .labelStyle(TrailingIconLabelStyle())
                             .font(.footnote)
                             .foregroundStyle(Theme.secondaryInk)
+                            .frame(minHeight: Theme.Size.tapTarget)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
-                HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Space.l) {
                     Text(ReadingFormat.duration(week.period.readingSeconds))
                         .font(.bookTitle)
                     Text("\(ReadingFormat.words(week.period.words)) palabras · \(week.period.days()) días")

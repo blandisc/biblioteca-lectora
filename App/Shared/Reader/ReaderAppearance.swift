@@ -315,7 +315,7 @@ struct ReaderAppearanceSheet: View {
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, Theme.Space.m)
+                            .padding(.horizontal, Theme.Space.l)
                             .padding(.vertical, Theme.Space.s)
                             .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
                             .overlay {
@@ -356,7 +356,7 @@ struct ReaderAppearanceSheet: View {
             HStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
-                        VStack(spacing: Theme.Space.inline) {
+                        VStack(spacing: Theme.Space.s) {
                             swatch(for: item)
                                 .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
                                 .overlay {
@@ -396,7 +396,7 @@ struct ReaderAppearanceSheet: View {
     }
 
     private var sizeRow: some View {
-            HStack(spacing: Theme.Space.m) {
+            HStack(spacing: Theme.Space.l) {
                 Button { scale = max(Self.scales.lowerBound, scale - Self.scaleStep) } label: { Text("A").font(.footnote).sizeTarget() }
                     .accessibilityLabel("Letra más chica")
                 sizeSlider

@@ -49,7 +49,7 @@ struct SearchScreen: View {
                     // escondido con la barra de navegación y no había dónde escribir.
                     SearchField(prompt: "Libros, autores, subrayados y notas", text: $query, focused: $focused,
                                 onSubmit: remember)
-                        .padding(.top, Theme.Space.m)
+                        .padding(.top, Theme.Space.l)
                     if term.isEmpty {
                         start
                     } else {
@@ -104,14 +104,10 @@ struct SearchScreen: View {
                 ForEach(recents) { item in
                     RecentSearchRow(text: item.text, count: item.count) { query = item.text }
                 }
-                Button("Borrar recientes") {
+                TextAction(title: "Borrar recientes") {
                     RecentSearches.clear(nil)
                     recents = []
                 }
-                .font(.footnote)
-                .foregroundStyle(Theme.secondaryInk)
-                .frame(minHeight: Theme.Size.tapTarget)
-                .buttonStyle(.plain)
             }
             .padding(.top, Theme.Space.xl)
         }
@@ -137,7 +133,7 @@ struct SearchScreen: View {
             Text(summary(found))
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
-                .padding(.top, Theme.Space.m)
+                .padding(.top, Theme.Space.l)
             if !found.books.isEmpty {
                 section("Libros") {
                     ForEach(found.books) { book in
@@ -162,11 +158,7 @@ struct SearchScreen: View {
                     }
                     .padding(.top, Theme.Space.s)
                     if found.highlights.count > shown.count {
-                        Button("Ver los \(found.highlights.count) subrayados") { showsAllHighlights = true }
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Theme.accent)
-                            .frame(minHeight: Theme.Size.tapTarget)
-                            .buttonStyle(.plain)
+                        TextAction(title: "Ver los \(found.highlights.count) subrayados") { showsAllHighlights = true }
                     }
                 }
             }

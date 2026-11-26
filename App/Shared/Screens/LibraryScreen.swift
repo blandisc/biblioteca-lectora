@@ -47,27 +47,11 @@ struct LibraryScreen: View {
                         }
 
                         FilterBar(items: LibraryFilter.allCases, selection: $filter) { $0.rawValue }
-                            .padding(.top, Theme.Space.m)
+                            .padding(.top, Theme.Space.s)
 
-                        HStack {
-                            Text(summary)
-                            Spacer()
-                            Menu {
-                                Picker("Ordenar por", selection: $sort) {
-                                    ForEach(LibrarySort.allCases) { Text($0.rawValue).tag($0) }
-                                }
-                            } label: {
-                                Label(sort.rawValue, systemImage: "arrow.up.arrow.down")
-                                    .labelStyle(TrailingIconLabelStyle())
-                                    .foregroundStyle(Theme.ink)
-                            }
-                            .menuStyle(.button)
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Ordenar: \(sort.rawValue)")
+                        CountLine(text: summary) {
+                            SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
                         }
-                        .font(.footnote)
-                        .foregroundStyle(Theme.secondaryInk)
-                        .padding(.top, Theme.Space.m)
 
                         if !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
                             NavigationLink(value: ReviewInboxRef()) {
@@ -77,7 +61,7 @@ struct LibraryScreen: View {
                                         marked: !model.library.reviews.isEmpty)
                             }
                             .buttonStyle(.plain)
-                            .padding(.top, Theme.Space.m)
+                            .padding(.top, Theme.Space.l)
                         }
 
                         if model.shelf.isEmpty {
@@ -127,7 +111,9 @@ struct LibraryScreen: View {
             return "Buscando datos en internet…"
         }
         let all = model.shelf
-        return "\(all.count) libros · \(all.filter { !$0.inCloudOnly }.count) en este iPhone"
+        let inCloud = all.filter(\.inCloudOnly).count
+        let books = all.count == 1 ? "1 libro" : "\(all.count) libros"
+        return inCloud == 0 ? books : "\(books) · \(inCloud) en la nube"
     }
 
     private func grid(_ items: [ShelfBook]) -> some View {

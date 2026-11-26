@@ -43,10 +43,9 @@ struct NotebookScreen: View {
                         AccentIconButton(systemImage: "plus", label: "Nota nueva") { path.append(NoteRef.new()) }
                     }
                     FilterBar(items: Part.allCases, selection: $part) { $0.rawValue }
-                        .padding(.top, Theme.Space.m)
+                        .padding(.top, Theme.Space.s)
 
                     summary
-                        .padding(.top, Theme.Space.m)
 
                     Group {
                         switch part {
@@ -74,30 +73,14 @@ struct NotebookScreen: View {
     /// «4 notas · en Gabinete/Notas» o el orden de los subrayados.
     @ViewBuilder
     private var summary: some View {
-        HStack {
-            switch part {
-            case .notes:
-                Text(notes.count == 1 ? "1 nota" : "\(notes.count) notas")
-                    + Text(" · en \(CabinetLocation.notesFolder)")
-            case .highlights:
-                Text(highlights.count == 1 ? "1 subrayado" : "\(highlights.count) subrayados")
-                Spacer()
-                Menu {
-                    Picker("Ordenar por", selection: $order) {
-                        ForEach(HighlightOrder.allCases) { Text($0.rawValue).tag($0) }
-                    }
-                } label: {
-                    Label(order.rawValue, systemImage: "arrow.up.arrow.down")
-                        .labelStyle(TrailingIconLabelStyle())
-                        .foregroundStyle(Theme.ink)
-                }
-                .menuStyle(.button)
-                .buttonStyle(.plain)
-                .accessibilityLabel("Ordenar: \(order.rawValue)")
+        switch part {
+        case .notes:
+            CountLine(text: (notes.count == 1 ? "1 nota" : "\(notes.count) notas") + " · en \(CabinetLocation.notesFolder)")
+        case .highlights:
+            CountLine(text: highlights.count == 1 ? "1 subrayado" : "\(highlights.count) subrayados") {
+                SortMenu(options: HighlightOrder.allCases, selection: $order) { $0.rawValue }
             }
         }
-        .font(.footnote)
-        .foregroundStyle(Theme.secondaryInk)
     }
 
     @ViewBuilder
@@ -158,7 +141,7 @@ struct NotebookScreen: View {
                 ForEach(groups) { group in
                     NavigationLink(value: group.book) {
                         BookRow(book: group.book, detail: group.book.author) {
-                            Text("\(group.count)").monospacedDigit().foregroundStyle(Theme.accent)
+                            Text("\(group.count)").monospacedDigit()
                         }
                     }
                     .buttonStyle(.plain)
@@ -171,7 +154,7 @@ struct NotebookScreen: View {
                         .font(.footnote)
                         .foregroundStyle(Theme.secondaryInk)
                     ForEach(outside) { book in
-                        VStack(alignment: .leading, spacing: Theme.Space.m) {
+                        VStack(alignment: .leading, spacing: Theme.Space.l) {
                             Text(book.author.map { "\(book.title) · \($0)" } ?? book.title)
                                 .font(.rowTitle)
                             ForEach(book.highlights) { QuoteBlock(text: $0.quote, note: $0.note) }

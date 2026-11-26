@@ -37,7 +37,7 @@ struct MetadataEditorView: View {
                     HStack(alignment: .top, spacing: Theme.Space.l) {
                         coverPreview
                             .frame(width: Theme.Size.coverEditor)
-                        VStack(alignment: .leading, spacing: Theme.Space.m) {
+                        VStack(alignment: .leading, spacing: Theme.Space.l) {
                             PhotosPicker(selection: $photo, matching: .images) {
                                 Label("Elegir de Fotos", systemImage: "photo")
                             }
@@ -97,16 +97,7 @@ struct MetadataEditorView: View {
                     HStack {
                         Text("Valoración")
                         Spacer()
-                        ForEach(1...5, id: \.self) { star in
-                            Button {
-                                draft.rating = draft.rating == Double(star) ? nil : Double(star)
-                            } label: {
-                                Image(systemName: Double(star) <= (draft.rating ?? 0) ? "star.fill" : "star")
-                                    .foregroundStyle(Theme.accent)
-                            }
-                            .buttonStyle(.borderless)
-                            .accessibilityLabel("\(star) estrellas")
-                        }
+                        RatingPicker(rating: $draft.rating)
                     }
                 }
 

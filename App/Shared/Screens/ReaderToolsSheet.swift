@@ -42,7 +42,7 @@ struct ReaderToolsSheet: View {
                         case .highlights: highlightList
                         }
                     }
-                    .padding(.top, Theme.Space.m)
+                    .padding(.top, Theme.Space.l)
                 }
                 .screenContent()
             }
@@ -125,7 +125,7 @@ struct ReaderToolsSheet: View {
     }
 
     private var search: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.m) {
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
             SearchField(prompt: "Buscar en el libro", text: $query, focused: $searchFocused,
                         onSubmit: { controller.search(query) },
                         onClear: { controller.clearSearch() })

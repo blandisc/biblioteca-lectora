@@ -15,6 +15,15 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
         }
     }
 
+    /// La hojita de muestra en Ajustes › Apariencia.
+    var tone: PageTone {
+        switch self {
+        case .system: .both
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+
     var colorScheme: ColorScheme? {
         switch self {
         case .system: nil
@@ -50,76 +59,61 @@ struct SettingsScreen: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Apariencia") {
-                    Picker("Modo", selection: $mode) {
-                        ForEach(AppearanceMode.allCases) { Text($0.title).tag($0) }
+            ScrollViewReader { scroller in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ScreenHeading(title: "Ajustes")
+                    RuledSection(title: "Apariencia") {
+                        PageSwatchPicker(options: AppearanceMode.allCases, selection: $mode, title: \.title, tone: \.tone)
+                            .padding(.top, Theme.Space.l)
                     }
-                    .pickerStyle(.segmented) // ds-exception: control nativo de Form
-                }
-                Section {
-                    Toggle("Contador en el lector", isOn: $showsCounter)
-                    Toggle("Resumen al cerrar el libro", isOn: $showsSummary)
-                } header: {
-                    Text("Sesiones de lectura")
-                } footer: {
-                    Text("Gabinete anota cada sesión (tiempo, palabras y cuánto sostuviste la atención) en tu carpeta. Nada sale de tus dispositivos.")
-                }
-                Section {
-                    LabeledContent("Carpeta", value: CabinetLocation.displayName(model.library.cabinet))
-                    LabeledContent("Libros", value: "\(model.library.books.count)")
-                    if model.library.moving {
-                        HStack(spacing: Theme.Space.m) {
-                            ProgressView()
-                            Text("Moviendo tu Gabinete…")
-                        }
-                    } else {
-                        Button("Elegir carpeta (p. ej. en iCloud Drive)…") { choosingFolder = true }
-                        if !model.library.isLocal {
-                            Button("Volver a la carpeta de este dispositivo") { model.library.useLocalCabinet() }
-                        }
+                    RuledSection(title: "Lectura") {
+                        ToggleRow(title: "Contador de palabras", isOn: $showsCounter)
+                        ToggleRow(title: "Resumen al cerrar el libro", isOn: $showsSummary)
+                        HelpText(text: "Cada sesión se anota en tu carpeta. Nada sale de tus dispositivos.",
+                                 more: "Gabinete anota el tiempo, las palabras y cuánto sostuviste la atención en cada sesión.")
                     }
-                    Button("Traer mi biblioteca de Calibre…") { migratingCalibre = true }
-                    Button("Ordenar la biblioteca") { tidyReport = model.library.tidy() }
-                } header: {
-                    Text("Gabinete")
-                } footer: {
-                    Text("Dentro hay dos carpetas: Biblioteca, con la misma forma que una de Calibre (puedes abrirla en Calibre y restaurar la base de datos), y Notas, en Markdown. En iCloud Drive, tu iPhone y tu Mac usan la misma.")
-                }
-                Section {
-                    LabeledContent("Fuente", value: googleKey.isEmpty ? "Open Library" : "Open Library y Google Books")
-                    TextField("Clave de Google Books (opcional)", text: $googleKey)
-                        .autocorrectionDisabled()
-                        #if os(iOS)
-                        .textInputAutocapitalization(.never)
-                        #endif
-                    NavigationLink {
-                        RulesScreen()
-                    } label: {
-                        LabeledContent("Reglas de autores y etiquetas",
-                                       value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
-                    }
-                } header: {
-                    Text("Datos de los libros")
-                } footer: {
-                    Text("Portadas, sinopsis y datos se buscan en Open Library. Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.")
-                }
-                Section {
-                    ForEach(Connector.allCases) { connector in
+                    cabinetSection
+                    RuledSection(title: "Datos de los libros") {
+                        LinkRow(title: "Fuente", value: googleKey.isEmpty ? "Open Library" : "Open Library y Google Books", chevron: false)
+                        FieldRow(title: "Clave de Google Books", prompt: "Agregar", text: $googleKey)
                         NavigationLink {
-                            ConnectorScreen(connector: connector)
+                            RulesScreen()
                         } label: {
-                            LabeledContent(connector.title, value: connectors.isConnected(connector) ? "Conectado" : "Sin conectar")
+                            LinkRow(title: "Reglas de autores y etiquetas",
+                                    value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
                         }
+                        .buttonStyle(.plain)
+                        HelpText(text: "Portadas, sinopsis y datos salen de Open Library.",
+                                 more: "Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.")
                     }
-                } header: {
-                    Text("Conexiones")
-                } footer: {
-                    Text("Cada servicio se usa con tu propia llave, guardada en tu Llavero de iCloud. Gabinete no tiene servidor: habla directo con cada uno.")
+                    RuledSection(title: "Conexiones") {
+                        ForEach(Connector.allCases) { connector in
+                            let connected = connectors.isConnected(connector)
+                            NavigationLink {
+                                ConnectorScreen(connector: connector)
+                            } label: {
+                                LinkRow(title: connector.title, value: connected ? "Conectado" : "Sin conectar", status: connected)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        HelpText(text: "Cada servicio con tu propia llave, en tu Llavero de iCloud. Gabinete no tiene servidor.")
+                    }
+                    Colophon(version: Self.version)
+                        .id(Self.colophon)
                 }
+                .screenContent()
             }
-            .formScreen()
-            .navigationTitle("Ajustes")
+            #if DEBUG
+            // Capturas: `-screenshot.demo settingsEnd` abre Ajustes ya al final.
+            .task {
+                guard LaunchOptions.demo == "settingsEnd" else { return }
+                try? await Task.sleep(for: .seconds(1))
+                scroller.scrollTo(Self.colophon, anchor: .bottom)
+            }
+            #endif
+            }
+            .pushedScreen()
             .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -169,6 +163,55 @@ struct SettingsScreen: View {
 }
 
 extension SettingsScreen {
+    /// «Tu Gabinete»: tres cifras (libros, notas y dónde vive) y lo que se hace con la carpeta.
+    private var cabinetSection: some View {
+        RuledSection(title: "Tu Gabinete") {
+            StatTrio(items: [
+                .init(value: "\(model.library.books.count)", label: "Libros"),
+                .init(value: "\(model.notes.notes.count)", label: "Notas"),
+                .init(value: place, label: "Dónde vive"),
+            ], leading: true)
+            .padding(.vertical, Theme.Space.l)
+            .overlay(alignment: .bottom) { Hairline() }
+            if model.library.moving {
+                HStack(spacing: Theme.Space.l) {
+                    ProgressView()
+                    Text("Moviendo tu Gabinete…")
+                }
+                .frame(minHeight: Theme.Size.row)
+            } else {
+                Button { choosingFolder = true } label: { LinkRow(title: "Mover a iCloud Drive u otra carpeta") }
+                if !model.library.isLocal {
+                    Button { model.library.useLocalCabinet() } label: { LinkRow(title: "Volver a la carpeta de este dispositivo") }
+                }
+            }
+            Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
+            Button { tidyReport = model.library.tidy() } label: { LinkRow(title: "Ordenar la biblioteca") }
+            HelpText(text: "Tus libros con la forma de Calibre y tus notas en Markdown.",
+                     more: "Dentro hay dos carpetas: Biblioteca, con la misma forma que una de Calibre (puedes abrirla en Calibre y restaurar la base de datos), y Notas, en Markdown. En iCloud Drive, tu iPhone y tu Mac usan la misma.")
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Dónde vive el Gabinete, en una palabra.
+    private var place: String {
+        if model.library.isLocal {
+            #if os(iOS)
+            return "iPhone"
+            #else
+            return "Mac"
+            #endif
+        }
+        let name = CabinetLocation.displayName(model.library.cabinet)
+        return name.hasPrefix("iCloud") ? "iCloud" : name
+    }
+
+    private static let colophon = "colofon"
+
+    static var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+    }
+
     private var dialogTitle: String {
         guard let folder = chosenFolder else { return "" }
         return CabinetLocation.hasLibrary(in: folder) ? "Ya hay un Gabinete aquí" : "¿Mover tu Gabinete a «\(folder.lastPathComponent)»?"

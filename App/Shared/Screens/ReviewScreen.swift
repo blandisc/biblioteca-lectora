@@ -73,10 +73,7 @@ struct ReviewScreen: View {
             HStack(alignment: .firstTextBaseline) {
                 SectionLabel(text: "Se completaron solos")
                 Spacer()
-                Button("Todo bien") { model.library.forgetAllFilled() }
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Theme.accent)
-                    .buttonStyle(.plain)
+                TextAction(title: "Todo bien") { model.library.forgetAllFilled() }
             }
             Text("Datos que tomé de internet porque estaba seguro. Revísalos y deshaz lo que no quieras.")
                 .font(.subheadline)
@@ -151,7 +148,7 @@ struct CandidatesScreen: View {
 
                 Group {
                     if searching {
-                        HStack(spacing: Theme.Space.m) {
+                        HStack(spacing: Theme.Space.l) {
                             ProgressView()
                             Text("Buscando en internet…")
                                 .font(.subheadline)
@@ -183,7 +180,7 @@ struct CandidatesScreen: View {
                     }
                 }
 
-                VStack(spacing: Theme.Space.m) {
+                VStack(spacing: Theme.Space.l) {
                     SecondaryButton(title: "Buscar con otros datos", systemImage: "magnifyingglass") { searchingOther = true }
                     SecondaryButton(title: "Escribir a mano", systemImage: "pencil") { editing = true }
                     SecondaryButton(title: "Mantener mis datos") {
@@ -264,7 +261,7 @@ struct CandidatePreview: View {
                         .foregroundStyle(Theme.secondaryInk)
                         .padding(.top, Theme.Space.xl)
                     if loadingCovers {
-                        ProgressView().padding(.vertical, Theme.Space.m)
+                        ProgressView().padding(.vertical, Theme.Space.l)
                     } else if coverOptions.isEmpty {
                         Text("No encontré portadas en internet.")
                             .font(.subheadline)
@@ -437,7 +434,7 @@ struct FilledScreen: View {
                         }
                     }
                     .padding(.top, Theme.Space.l)
-                    VStack(spacing: Theme.Space.m) {
+                    VStack(spacing: Theme.Space.l) {
                         PrimaryButton(title: "Está bien", fillsWidth: true) {
                             model.library.forgetFilled(bookID)
                             dismiss()

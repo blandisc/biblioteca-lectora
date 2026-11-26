@@ -42,7 +42,7 @@ struct SessionCard: View {
                     .accessibilityLabel("Cerrar")
                 }
                 // El botón conserva su área de toque, pero no empuja lo de abajo.
-                .padding(.vertical, -Theme.Space.m)
+                .padding(.vertical, -Theme.Size.tapBleed)
                 if let session {
                     // Editorial: el tiempo en grande y, en la misma línea, el ritmo.
                     HStack(alignment: .lastTextBaseline) {
@@ -50,7 +50,7 @@ struct SessionCard: View {
                             .font(.bookTitle)
                             .monospacedDigit()
                             .contentTransition(.numericText())
-                        Spacer(minLength: Theme.Space.m)
+                        Spacer(minLength: Theme.Space.l)
                         VStack(alignment: .trailing, spacing: Theme.Space.xxs) {
                             Text(words(session))
                             if let perMinute = session.wordsPerMinute, session.words > 0 {
@@ -205,7 +205,7 @@ struct SessionDetail: View {
                       label: live ? "minutos" : "leyendo"),
                 .init(value: session.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
             ])
-            VStack(alignment: .leading, spacing: Theme.Space.m) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 HStack(alignment: .firstTextBaseline) {
                     SectionLabel(text: "Etapas")
                     Spacer()

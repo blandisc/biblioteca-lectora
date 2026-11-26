@@ -84,9 +84,7 @@ struct ReaderView: View {
             // tapaba la batería: ahí lo dice el ícono relleno del marcador.
             // En continuo no: ahí el marcador es el hilo y la cinta junto a su renglón.
             if currentBookmark != nil && !showsChrome && controller.isSettled && flow != .scrolled {
-                Ribbon()
-                    .fill(Theme.accent)
-                    .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
+                BookmarkRibbon()
                     .padding(.trailing, Theme.Space.gutter)
                     .ignoresSafeArea(edges: .top)
                     .transition(.move(edge: .top))
@@ -534,10 +532,7 @@ private struct TopControls: View {
             Button {
                 withAnimation(Theme.Motion.standard) { onBookmark() }
             } label: {
-                Image(systemName: bookmarked ? "bookmark.fill" : "bookmark")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(bookmarked ? Theme.accent : Theme.ink)
-                    .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                BookmarkGlyph(on: bookmarked)
                     .glassCircle()
             }
             .accessibilityLabel(bookmarked ? "Quitar marcador" : "Añadir marcador")
@@ -665,7 +660,7 @@ private struct BottomPanel: View {
 
             // La página (arrastrando: a cuál vas) y, a la derecha, las palabras de la
             // sesión. Todo en gris y sin íconos: lo que manda es el capítulo.
-            HStack(spacing: Theme.Space.m) {
+            HStack(spacing: Theme.Space.l) {
                 Text(position)
                     .monospacedDigit()
                     .foregroundStyle(dragValue == nil ? Theme.ink.opacity(Theme.Emphasis.glassText) : Theme.ink)
@@ -693,7 +688,7 @@ private struct BottomPanel: View {
             .font(.footnote)
             .frame(minHeight: Theme.Size.tapTarget)
             // La página va pegada a su barra, no a media fila de ella.
-            .padding(.top, -Theme.Space.m)
+            .padding(.top, -Theme.Size.tapBleed)
 
             if expanded {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
@@ -732,10 +727,10 @@ private struct BottomPanel: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(Theme.ink)
-        // Vidrio a `chromeInset` de la orilla y lo de adentro a `Space.m` del vidrio:
+        // Vidrio a `chromeInset` de la orilla y lo de adentro a `Reader.panelInset` del vidrio:
         // empieza en la misma línea que el texto del libro (`Reader.textMargin`).
-        .padding(.horizontal, Theme.Space.m)
-        .padding(.bottom, Theme.Space.m)
+        .padding(.horizontal, Theme.Reader.panelInset)
+        .padding(.bottom, Theme.Reader.panelInset)
         // Lo de adentro no se asoma fuera del vidrio mientras la tarjeta crece.
         .glassPanel(cornerRadius: Theme.Radius.panel, clipped: true)
         // Todo el panel es suyo: un toque en su aire no llega a la página de abajo
@@ -787,10 +782,10 @@ private struct HighlightCard: View {
     let perform: (Action) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.m) {
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
             // La cita y la ✕ en un renglón, sin aire de sobra: la ✕ conserva su
             // área de toque pero no empuja la tarjeta hacia abajo.
-            HStack(alignment: .center, spacing: Theme.Space.m) {
+            HStack(alignment: .center, spacing: Theme.Space.l) {
                 QuoteBlock(text: annotation.quote, note: annotation.note, italic: true)
                     .lineLimit(Theme.Reader.highlightLines)
                 Spacer(minLength: 0)
@@ -906,7 +901,7 @@ private struct ReadingFolio<Counter: View>: View {
                     Text(footerText)
                         .monospacedDigit()
                         .lineLimit(1)
-                        .padding(.horizontal, Theme.Space.m)
+                        .padding(.horizontal, Theme.Space.l)
                         .frame(minHeight: Theme.Size.tapTarget)
                         .contentShape(Rectangle())
                 }
@@ -992,7 +987,7 @@ private struct FooterPicker: View {
                 }
             }
         }
-        .padding(Theme.Space.m)
+        .padding(Theme.Space.l)
         .frame(width: Theme.Size.footerPicker)
         .sensoryFeedback(.selection, trigger: selection)
     }

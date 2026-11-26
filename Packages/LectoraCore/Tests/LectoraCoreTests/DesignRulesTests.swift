@@ -418,4 +418,89 @@ final class DesignRulesTests: XCTestCase {
     func testRomanCapsOnlyForMarkAndLabels() {
         check(hits(#"\.brandMark|\.sectionLabel"#, in: Self.screens), "Cinzel solo a través de BrandMark y SectionLabel")
     }
+
+    // MARK: Libreta del futuro (26 nov 2026, SD-1 a SD-8)
+
+    /// El cuerpo de una pieza de Components.swift, de su `struct` a la siguiente.
+    static func piece(_ name: String) -> String {
+        let text = sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }?.text ?? ""
+        guard let start = text.range(of: "struct \(name)") else { return "" }
+        let rest = text[start.upperBound...]
+        let end = rest.range(of: "\nstruct ")?.lowerBound ?? rest.endIndex
+        return String(rest[..<end])
+    }
+
+    /// Regla 1, un solo verde y poco: el verde marca dónde estás, lo que avanzas y lo tuyo,
+    /// y solo lo pintan las piezas. Una pantalla que lo usa directo lo está gastando en
+    /// una acción («Todo bien», «Crear», «Listo» salían en verde): las acciones van en tinta.
+    func testOnlyPiecesPaintTheAccent() {
+        check(hits(#"Theme\.accent"#, in: Self.screens),
+              "Verde en una pantalla: las acciones van en tinta (TextAction) y lo tuyo sale de una pieza")
+    }
+
+    /// Regla 3, rótulos en versalitas: toda versalita sale de `CapsText` (o de una pieza
+    /// del catálogo), con su tamaño, su espaciado y cifras exactas. Nada de armarlas a mano.
+    func testCapsComeFromThePieces() {
+        check(hits(#"Tracking\.caps|textCase\(\.uppercase\)"#, in: Self.screens),
+              "Versalitas armadas a mano: usa CapsText, RuledLabel o CountLine")
+    }
+
+    /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
+    /// en toda pieza que los enseña, para que no bailen al cambiar.
+    func testFiguresAreExact() {
+        let problems = ["CapsText", "FactRow", "LinkRow", "StatTrio", "RecentSearchRow"]
+            .filter { !Self.piece($0).contains(".monospacedDigit()") }
+        check(problems, "Pieza que enseña cifras sin .monospacedDigit()")
+    }
+
+    /// Regla 5 y sistema base de la casa (SB-2, interoperabilidad): el espacio sale de la
+    /// escala común 4 · 8 · 16 · 24 · 32 · 48. Gabinete arrastraba 12 y 6 con trinquete;
+    /// el 26 nov 2026 la cuenta llegó a cero y ya no puede volver a subir.
+    func testSpacingKeepsTheHouseScale() {
+        let config = (try? String(contentsOf: Self.root.appendingPathComponent("sistema-base.json"), encoding: .utf8)) ?? ""
+        let data = Data(config.utf8)
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let inherited = json?["heredado"] as? [String: [String: Int]] ?? [:]
+        var problems = inherited.flatMap { rule, files in files.map { "\(rule): \($0.key) (\($0.value))" } }
+        problems += hits(#"static let (m|inline): CGFloat"#, in: Self.sources("App/Shared/Design"))
+        check(problems, "Espacio fuera de la escala común (SB-2): usa s, l, xl… y deja `heredado` en cero")
+    }
+
+    /// Regla 6, botón principal oscuro en los dos modos: verde fichero con letra clara;
+    /// en oscuro era un bloque verde menta que gritaba más que el libro.
+    func testMainActionIsDarkInBothModes() {
+        let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.text ?? ""
+        let regex = try! NSRegularExpression(pattern: #"static let action = Color\(light: 0x([0-9A-F]{6}), dark: 0x([0-9A-F]{6})\)"#)
+        var problems: [String] = []
+        if let match = regex.firstMatch(in: theme, range: NSRange(theme.startIndex..., in: theme)),
+           let light = Range(match.range(at: 1), in: theme), let dark = Range(match.range(at: 2), in: theme) {
+            if theme[light] != theme[dark] { problems.append("Theme.action cambia en oscuro") }
+            for hex in [theme[light], theme[dark]] where (UInt32(hex, radix: 16) ?? 0) > 0x404040 {
+                problems.append("Theme.action #\(hex) no es oscuro")
+            }
+        } else {
+            problems.append("No encontré Theme.action")
+        }
+        if !Self.piece("PrimaryButton").contains("Theme.action") { problems.append("PrimaryButton no usa Theme.action") }
+        check(problems, "La acción principal va oscura en los dos modos")
+    }
+
+    /// Sistema base de la casa (D2-B, interoperabilidad): la negrita va solo en el título más
+    /// grande y en cifras; lo demás, en seminegrita o media.
+    func testBoldOnlyForTitlesAndFigures() {
+        check(hits(#"\.bold\(\)|(weight|fontWeight)\(\.(bold|heavy|black)\)"#, in: Self.sources("App")),
+              "Negrita fuera de un título o una cifra: usa .semibold o .medium (D2-B)")
+    }
+
+    /// Recetas: toda pantalla se arma con una receta (`.screen()`, `.pushedScreen()` o
+    /// `.formScreen()`): así lo nuevo nace con el papel, el margen y la barra de la app.
+    func testEveryScreenFollowsARecipe() {
+        /// Piezas con estado que viven con las pantallas pero no son una.
+        let notScreens = ["MiniPlayer.swift"]
+        let problems = Self.sources("App/Shared/Screens")
+            .filter { file in !notScreens.contains { file.path.hasSuffix($0) } }
+            .filter { !$0.text.contains(".screen()") && !$0.text.contains(".pushedScreen(") && !$0.text.contains(".formScreen()") }
+            .map(\.path)
+        check(problems, "Pantalla sin receta: usa .screen(), .pushedScreen() o .formScreen() (ver «Recetas»)")
+    }
 }

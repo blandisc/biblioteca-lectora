@@ -1,8 +1,39 @@
-# Sistema de diseño de Gabinete
+# Sistema de diseño de Gabinete: la libreta del futuro
 
-Un solo estilo (Editorial): papel, tipografía y un verde escaso para la acción y tus marcas, sobre
-componentes nativos de Apple. Todo valor visual es un **token**; toda pieza repetida es
-un **componente**; toda pantalla sigue una **receta**.
+Cómo se vería una libreta fina en el futuro: la misma elegancia, con minimalismo tecnológico.
+Precisión en vez de materiales: líneas finísimas, mucho aire, versalitas, cifras exactas y un
+solo verde. Nada de cuero, hendidos ni costuras (decisión del 25 nov 2026; sistema elegido el
+26 nov 2026 con AC-3, SD-1 a SD-8 y AJ-B).
+
+Todo valor visual es un **token**; toda pieza repetida es un **componente**; toda pantalla
+sigue una **receta**; toda regla tiene una **prueba** que falla si alguien la rompe. Lo nuevo
+se arma con lo que ya hay: si falta algo, se agrega aquí primero.
+
+## Las seis reglas de la libreta
+
+Cada regla dice lo que nota quien usa la app; la medida exacta vive en `Theme` con su nombre.
+
+| # | Regla | Lo que notas | La cuida |
+|---|---|---|---|
+| 1 | **Un solo verde, y poco** | El verde botella marca solo dónde estás (pestaña, filtro elegido), lo que avanzas (palabras, la marca de la Mesa) y lo tuyo (subrayados, cinta, pendientes). Las acciones van en tinta | `testOnlyPiecesPaintTheAccent` |
+| 2 | **Líneas finas en vez de cajas** | Las secciones se separan con una línea finísima y aire, no con tarjetas grises | `testScreensUseCatalogPieces` (sin formas a mano), `RuledSection`, `ScreenHeading` |
+| 3 | **Rótulos en versalitas** | Toda sección se anuncia igual: mayúsculas chicas, espaciadas, con su línea a la derecha | `testCapsComeFromThePieces` |
+| 4 | **Cifras exactas** | Cantidades, fechas y porcentajes no bailan: todas las cifras miden lo mismo | `testFiguresAreExact`, `testDatesAndNumbersInSpanish` |
+| 5 | **Aire en una sola escala** | Todo espacio sale de 4 · 8 · 16 · 24 · 32 · 48, la escala común de la casa | `testSpacingKeepsTheHouseScale`, `tools/sistema-base` (SB-2) |
+| 6 | **Botón principal oscuro en los dos modos** | «Seguir leyendo» y «Nota nueva» en verde fichero con letra clara, también en oscuro, con un filo finísimo | `testMainActionIsDarkInBothModes`, `testOneMainActionPerScreen` |
+
+### Las reglas de la casa (interoperabilidad)
+
+Gabinete cumple el sistema base común a todas las apps de Fernando
+(`~/code/interoperabilidad/sistema-base`, copia en `tools/sistema-base/`, corre en CI):
+
+| Regla | Qué exige | La cuida |
+|---|---|---|
+| SB-1 | Botones y avisos que dicen qué hacen («Crear nota», no «Crear» u «OK») | `tools/sistema-base/revisar.py` |
+| SB-2 | Solo la escala 4 · 8 · 16 · 24 · 32 · 48 · 64. Desde el 26 nov 2026 Gabinete no arrastra nada heredado: se fueron el 12 y el 6 | `revisar.py`, `testSpacingKeepsTheHouseScale` |
+| SB-3 | Ninguna letra de menos de 12 | `revisar.py`, `testNoTextUnderTwelve` |
+| SB-4 | Todo lo que se toca responde en 44 × 44 | `revisar.py`, `Size.tapTarget` en cada pieza que se toca |
+| D2-B | La negrita solo en el título más grande y en cifras; lo demás en seminegrita | `testBoldOnlyForTitlesAndFigures` |
 
 ## Regla
 
@@ -29,12 +60,14 @@ un **componente**; toda pantalla sigue una **receta**.
 | `field` | `#EFEDE8` | `#242320` | Campos, filtro activo, botón secundario |
 | `ink` | `#1C1B19` | `#ECE9E2` | Texto |
 | `onInk` | `#FFFFFF` | `#141413` | Texto sobre tinta |
-| `brand` | `#24332B` | `#8FBFA4` | Marca: botón principal, avance, pestaña elegida, el «+» de la Biblioteca (verde fichero) |
+| `brand` | `#24332B` | `#8FBFA4` | Marca (verde fichero): avance de un libro, la tarjeta para compartir, el color del sistema |
+| `action` | `#24332B` | `#24332B` | La acción principal (`PrimaryButton`), oscura en los dos modos (regla 6) |
+| `onAction` | `#F3EFE6` | `#ECE9E2` | Letra sobre la acción principal |
 | `onBrand` | `#FFFFFF` | `#141413` | Texto sobre la marca |
 | `secondaryInk` | `#6F6C65` | `#9C988F` | Texto secundario (contraste ≥ 4,5 sobre `paper`) |
 | `tertiaryInk` | `#837F78` | `#7C7870` | Folios y etiquetas pequeñas (contraste ≥ 3 sobre `paper`) |
 | `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
-| `accent` | `#3D6B55` | `#8FBFA4` | Verde hoja, **solo tus marcas y avisos**: subrayado, nota, cinta, audio sonando, pendientes, índice A–Z, el «+» (antes `pencil`, rojo) |
+| `accent` | `#0F4A35` | `#4FB386` | Verde botella (AC-3, 26 nov 2026), el único acento: dónde estás, lo que avanzas y lo tuyo (regla 1). Solo lo pintan las piezas |
 
 **Etapas de lectura** (`Theme.stage(_:)`), del gris al verde fichero; se distinguen por
 claridad, y en oscuro la más intensa es la más clara:
@@ -49,18 +82,17 @@ claridad, y en oscuro la más intensa es la más clara:
 
 Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPalette`.
 
-### Espacio (`Theme.Space`, escala de 4 pt)
+### Espacio (`Theme.Space`, la escala común de la casa)
 
-`xxs 2 · xs 4 · s 8 · m 12 · l 16 · xl 24 · xxl 32 · xxxl 48`
+`xs 4 · s 8 · l 16 · xl 24 · xxl 32 · xxxl 48`, más `xxs 2`: medio paso solo dentro de piezas
+chicas. Sin 12 ni 6 desde el 26 nov 2026 (SD-2): cada uso pasó a 16 o a 8.
 
 | Token | Valor | Uso |
 |---|---|---|
 | `gutter` | 28 | Margen lateral de toda pantalla, igual a ambos lados |
 | `screenTop` | 24 | Del área segura al título de pantalla |
 | `screenBottom` | 32 | Aire antes del dock |
-| `chipInset` | 20 (`gutter − s`) | Interior de una fila de filtros que llega al borde: su primer texto cae en el margen |
 | `hair` | 1 | Entre las letras del índice A–Z |
-| `inline` | 6 | Entre un ícono y su texto; dentro de piezas pequeñas (leyendas, barras) |
 | `rowY` | 10 | Aire arriba y abajo de una fila de lista |
 | `rowGap` | 14 | Entre la portada (o la raya de una cita) y su texto |
 | `buttonX` | 20 | Interior horizontal del botón principal |
@@ -71,18 +103,18 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 ### Radio (`Theme.Radius`)
 
-`swatch 2 · cover 3 · chip 8 · control 10 · tile 14 · panel 28 · inset 12` (inset: lo que va dentro de un panel, concéntrico)
+`swatch 2 · cover 3 · control 10 · tile 14 · panel 28 · inset 12` (inset: lo que va dentro de un panel, concéntrico)
 
 ### Tamaño (`Theme.Size`)
 
-`tapTarget 44 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
+`tapTarget 44 · tapBleed 12 (lo que el toque de un ícono sobresale de su dibujo) · row 52 (fila de libreta) · tabMark 16 × 2 (el trazo del filtro elegido) · pageSwatch 78, swatchLine 3, swatchLines (las hojitas de Apariencia) · statusDot 6, statusDotLine 1 · equalizerHeight 12 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageBarThin 4 · footerPreview 64 · footerPicker 320 (el globo del pie) · deskMark 16 × 4 (el trazo verde del encabezado de la Mesa) · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · panelSwipe 24 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · grabber 36×5 · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,8) texto callado sobre el vidrio del lector (subió de 0,72: en Noche cálida quedaba justo en el mínimo de contraste); `scrubberTrack` (0,25) riel de la barra de avance;
-`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `inGlass` (0,1) el círculo de un botón dentro del vidrio (`roundInGlass`: buscar y «Aa» en la tarjeta del lector); `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles, en páginas no hay franja detrás de los botones de arriba (arriba hay papel liso y el vidrio basta); en continuo, donde el texto corre por debajo, va la misma franja de papel que se desvanece del capítulo (decisión D3-B, 24 nov 2026).
+`pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `inGlass` (0,1) el círculo de un botón dentro del vidrio (`roundInGlass`: buscar y «Aa» en la tarjeta del lector); `actionEdge` (0,16) el filo de la acción principal; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles, en páginas no hay franja detrás de los botones de arriba (arriba hay papel liso y el vidrio basta); en continuo, donde el texto corre por debajo, va la misma franja de papel que se desvanece del capítulo (decisión D3-B, 24 nov 2026).
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -97,7 +129,7 @@ En la Mesa las portadas son nítidas (`crispCovers`, ME-1): un filo de media lí
 Neoclásico mínimo: del mundo grecorromano solo las mayúsculas romanas, el
 interpunto «·» y el aire. El gabinete (el portaetiquetas de latón de un cajón)
 vive en el ícono; en la app solo queda su color. Verde con mesura: la acción
-principal y, como mucho, **un** ícono de acción en verde por pantalla (`AccentIconButton`).
+principal oscura y, como mucho, **un** ícono de acción en verde por pantalla (`AccentIconButton`).
 El modo oscuro se queda neutro; solo cambia el verde.
 Ícono en `App/Resources/Assets.xcassets/AppIcon.appiconset`: verde fichero
 (claro), tinta (oscuro) y tintado; los PNG se generan desde el diseño del lienzo.
@@ -132,14 +164,29 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | Componente | Qué es | Dónde |
 |---|---|---|
 | `.screen()` | Receta de pantalla raíz: papel, sin barra de navegación, destinos de libro y serie | Mesa, Biblioteca, Cuaderno |
-| `.formScreen()` | Receta de formulario: el papel de la app de fondo, no el gris del sistema; botones e interruptores en `accent` (con la marca, casi negra en claro, parecían texto) | Ajustes, Conexiones, Reglas, Editar datos, Buscar con otros datos |
+| `.formScreen()` | Receta de formulario: el papel de la app de fondo, no el gris del sistema; botones e interruptores en `accent` (con la marca, casi negra en claro, parecían texto) | Conexiones, Reglas, Editar datos, Buscar con otros datos |
 | `.pushedScreen(título)` | Receta de pantalla empujada u hoja: papel, título en línea, controles del contenido en `accent`; los botones de la barra de vidrio, en tinta como en iOS 26 | Ficha, serie, nota, Diario, Por revisar, Lector › herramientas, Sesión, Llevar a una nota, Traer de Calibre, Bienvenida |
 | `.inlineTitle(título)` | Título pequeño en la barra (lo usan `.pushedScreen` y los formularios empujados) | Conexión, Editar datos, Buscar con otros datos |
 | `.screenContent()` | Margen `gutter`, aire `screenTop`/`screenBottom`, tinta | Todo contenido con scroll |
-| `ScreenHeading` | Título serif + acciones a la derecha | Cada pantalla |
-| `PrimaryButton` | Acción principal en tinta (una por pantalla) | «Seguir leyendo», «Leer», estado vacío |
+| `ScreenHeading` | Título serif + acciones a la derecha y una línea finísima debajo (SD-3) | Biblioteca, Cuaderno, Buscar, Ajustes |
+| `PrimaryButton` | Acción principal en `action`, oscura en los dos modos, con filo finísimo (una por pantalla) | «Seguir leyendo», «Leer», estado vacío |
+| `TextAction` | Acción de texto en tinta, que se toca en 44 (las acciones no van en verde) | «Todo bien», «Ver los N subrayados», «Borrar recientes», «Crear nota» |
+| `CapsText` | Versalitas de interfaz: mayúsculas chicas, espaciadas (`Tracking.caps`) y con cifras exactas. Toda versalita sale de aquí | Fecha de la Mesa, conteos, rótulos |
+| `RuledLabel` | Rótulo de sección: `CapsText` y una línea finísima hasta la orilla | «Donde lo dejaste», secciones de Ajustes, vacíos |
+| `RuledSection` | Sección de una hoja de libreta: `RuledLabel` arriba y sus filas debajo, sin tarjetas | Ajustes |
+| `CountLine` | El conteo de una lista en versalitas y, a la derecha, cómo se ordena | Biblioteca, Cuaderno |
+| `SortMenu` | Menú para elegir el orden, en versalitas de tinta con su flecha | Biblioteca, Cuaderno › Subrayados |
+| `ToggleRow` | Interruptor en una fila de libreta (`Size.row`), en verde | Ajustes › Lectura |
+| `FieldRow` | Campo de texto en una fila: nombre a la izquierda, lo escrito a la derecha | Ajustes › Clave de Google Books |
+| `HelpText` | Ayuda de una línea bajo una sección; lo largo detrás de «Más» (AJ-2) | Ajustes |
+| `StatusDot` | Punto lleno en verde (conectado, pendiente) o hueco en gris | `LinkRow` |
+| `PageSwatchPicker`, `PageTone` | Elegir entre hojitas de papel que se ven como el resultado; la elegida con filo verde (AJ-1) | Ajustes › Apariencia |
+| `Colophon` | La firma al final: «GABINETE», una línea corta y la versión (AJ-3) | Ajustes |
+| `BookmarkRibbon` | La cinta verde del marcador colgando de la esquina de la hoja | Lector, en páginas |
+| `BookmarkGlyph` | El ícono del marcador en 44: relleno y en verde si la página está marcada | Lector, arriba a la derecha |
+| `RatingPicker` | Cinco estrellas en verde (lo tuyo); tocar la misma la quita; cada una se toca en 44 | Editar datos |
 | `RoundIconButton` | Botón redondo secundario | Audiolibro |
-| `FilterBar` | Opciones en texto; la activa con fondo `field` | Filtros de Biblioteca, secciones del Cuaderno |
+| `FilterBar` | Opciones en texto; la elegida en tinta con un trazo verde debajo (`Size.tabMark`) que se desliza; sin píldoras (SD-3) | Filtros de Biblioteca, partes del Cuaderno |
 | `ShelfCover` / `CoverView` | Portada real o tipográfica, con lomo | Toda portada |
 | `SeriesStack` | Pila de portadas de una serie | Biblioteca |
 | `CoverCell` + `CoverGrid` | Celda y cuadrícula de 3 columnas | Biblioteca, Mesa |
@@ -152,14 +199,16 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `ScrubberBar` | Barra de avance del lector: riel fino, lo leído en tinta, perilla chica que crece al arrastrar; se toca en 44 pt de alto | Panel del lector |
 | `FooterPreview` | Muestra del pie: recorte de la página (papel, tres renglones fantasma y el pie tal cual, con su letra) y su nombre debajo; filo de tinta y palomita si está elegido | Tarjeta del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido; en tinta si es la acción principal | Estilo de la hoja, tarjeta de un subrayado, barra de selección |
-| `FactRow` | Etiqueta / valor con línea fina | Ficha del libro |
-| `EmptyState` | Título, explicación y acción opcional | Toda lista vacía |
+| `FactRow` | Etiqueta / valor con línea fina y cifras exactas | Ficha del libro |
+| `EmptyState` | `RuledLabel` con lo que falta, explicación y acción opcional | Toda lista vacía |
+| `LinkRow` | Fila de libreta (`Size.row`): título, valor, flecha y línea finísima debajo; con `marked` o `status`, su punto | «Por revisar», Ajustes |
+| `StatTrio` | Tres cifras grandes con su rótulo en versalitas; centradas o a la izquierda (`leading`) | Diario, Ajustes › Tu Gabinete |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
 | `BrandMark` | «GABINETE» en Cinzel, centrado (o a la izquierda) | Bienvenida, dentro de `DeskHeader` |
 | `DeskHeader` | Encabezado de la Mesa: «GABINETE» a la izquierda, la fecha de hoy en versalitas a la derecha y una línea finísima que acaba en un trazo verde (`Size.deskMark`); MT-F, 25 nov 2026 | Arriba de la Mesa |
 | `SectionLabel` | Rótulo en mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`) | «EN LA MESA», «SE COMPLETARON SOLOS», «Nº 7» en la ficha |
-| `AccentIconButton` | Ícono de acción en `accent` (verde hoja, se distingue de la tinta), sin fondo: el único acento verde de una pantalla | «+» de la Biblioteca y del Cuaderno |
+| `AccentIconButton` | Ícono de acción en `accent` (verde botella, se distingue de la tinta), sin fondo: el único acento verde de una pantalla | «+» de la Biblioteca y del Cuaderno |
 | `SecondaryButton`, `LinkRow` | Acción secundaria a lo ancho; fila que lleva a otra pantalla | «Por revisar» |
 | `QuietButton` | Salida discreta, solo texto, bajo opciones que importan más | «Empezar sin libros» en la bienvenida |
 | `CandidateRow`, `CandidateCover` | Libro encontrado en internet: probabilidad y razones en palabras | Elegir los datos |
@@ -172,11 +221,11 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `StatTrio` | Tres números en serif con su leyenda | Sesión actual, resumen, ficha › Lectura, Diario |
 | `StageBar`, `StageLegend` | La sesión como barra de etapas; leyenda con minutos | Resumen al cerrar, ficha, Diario |
 | `StageChart` | Etapas en el tiempo, una fila por etapa (Swift Charts) | Sesión actual, una sesión pasada |
-| `WordCounter` | Contador de palabras de la sesión, en verde hoja | Lector, abajo a la izquierda |
+| `WordCounter` | Contador de palabras de la sesión, en verde | Lector, abajo a la izquierda |
 | `FlowRow` | Fila que baja a otra línea si no cabe | Leyendas |
 | `WeekBars` | Una barra por día (lunes a domingo), partida en etapas; hoy en tinta | Mesa › Esta semana, Diario › Semana |
 | `MonthCalendar` | El mes como calendario: más oscuro cuanto más leíste; hoy con anillo | Diario › Mes |
-| `YearBars` | Una barra por mes; el actual en verde hoja | Diario › Año |
+| `YearBars` | Una barra por mes; el actual en verde | Diario › Año |
 | `SessionRow` | Una sesión en una lista: cuándo, palabras, avance y duración | Diario, ficha › Lectura |
 | `OptionRow` | Opción para elegir: ícono, título, explicación; la elegida con borde y marca verdes | Bienvenida |
 | `ContentsRow` | Entrada del índice del libro, con sangría por nivel y punto verde donde vas | Lector › Índice |
@@ -191,13 +240,17 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 
 ## Recetas
 
-**Pantalla raíz de pestaña**
+Toda pantalla nueva se arma con una de estas recetas y solo con piezas del catálogo. Si algo
+no sale con ellas, se agrega una pieza o un token aquí primero; nunca se resuelve en la pantalla.
+
+**Pestaña (Biblioteca, Cuaderno, Buscar)**
 ```swift
 NavigationStack {
     ScrollView {
         VStack(alignment: .leading, spacing: 0) {
-            ScreenHeading(title: "…") { /* acciones */ }
-            FilterBar(…).padding(.top, Theme.Space.m)        // opcional
+            ScreenHeading(title: "…") { /* acciones; el AccentIconButton, al final */ }
+            FilterBar(…).padding(.top, Theme.Space.s)            // si hay partes
+            CountLine(text: "32 libros · …") { SortMenu(…) }     // si es una lista
             /* contenido */.padding(.top, Theme.Space.l)
         }
         .screenContent()
@@ -210,6 +263,25 @@ NavigationStack {
 
 **Cuadrícula:** `CoverGrid { ForEach { NavigationLink(value: book) { CoverCell(book: book) }.buttonStyle(PressableStyle()) } }`
 
+**Hoja de libreta (Ajustes y toda hoja de opciones):**
+```swift
+NavigationStack {
+    ScrollView {
+        VStack(alignment: .leading, spacing: 0) {
+            ScreenHeading(title: "Ajustes")
+            RuledSection(title: "Lectura") {
+                ToggleRow(…) · LinkRow(…) · FieldRow(…)            // filas de Size.row con su línea
+                HelpText(text: "Una línea.", more: "Lo largo.")
+            }
+            Colophon(version: …)                                   // si es la última hoja
+        }
+        .screenContent()
+    }
+    .pushedScreen()
+    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Listo") { dismiss() } } }
+}
+```
+
 **Pantalla empujada u hoja (ficha, serie, herramientas del lector):**
 ```swift
 ScrollView { VStack(alignment: .leading, spacing: Theme.Space.xl) { … }.screenContent() }
@@ -218,10 +290,20 @@ ScrollView { VStack(alignment: .leading, spacing: Theme.Space.xl) { … }.screen
 ```
 Una hoja lleva además `.presentationDetents([.medium, .large])` o `[.large]`.
 
-**Formulario (Ajustes, Conexiones, Editar datos):** `Form { Section("…") { … } }.formScreen()`,
-y `.inlineTitle("…")` si es empujado. Nunca otro fondo ni otro color de botones.
+**Formulario del sistema (Conexiones, Editar datos):** `Form { Section("…") { … } }.formScreen()`,
+y `.inlineTitle("…")` si es empujado. Nunca otro fondo ni otro color de botones. Para opciones
+propias de Gabinete, mejor la hoja de libreta.
 
 **Vacío:** siempre `EmptyState` con qué falta y cómo resolverlo; con acción si existe.
+
+**Antes de dar por terminada una pantalla nueva**
+1. ¿Sale de una receta y solo de piezas del catálogo?
+2. ¿El verde marca solo dónde estás, lo que avanzas o lo tuyo? Las acciones, en tinta.
+3. ¿Cada sección tiene su `RuledLabel` y se separa con línea y aire, no con cajas?
+4. ¿Las cifras salen de una pieza con cifras exactas?
+5. ¿Todo espacio es un token de la escala; todo lo que se toca, 44?
+6. ¿Una sola acción principal, oscura?
+7. `swift test --filter DesignRulesTests`, `scripts/lint-design.sh` y `tools/sistema-base/revisar.py` en verde.
 
 ## Simetría
 
@@ -285,7 +367,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testEveryPieceIsInTheCatalog` | Toda pieza de `Components.swift` tiene fila en el catálogo de arriba |
 | `testEveryTokenIsUsed` | Ningún token de `Theme` sobra |
 | `testExceptionsAreDocumented` | Toda `ds-exception` tiene su motivo en «Excepciones» |
-| `testNoRedPencilLeft` | Decisión del 30 oct 2026: el rojo lápiz se fue; lo tuyo va en verde hoja |
+| `testNoRedPencilLeft` | Decisión del 30 oct 2026: el rojo lápiz se fue; lo tuyo va en verde |
 | `testDatesAndNumbersInSpanish` | Decisión del 18 nov 2026: fechas y porcentajes en español aunque el dispositivo no lo esté (`fecha.es(…)`, `percentText`); desde el 19 nov, todo porcentaje sale de `percentText` («57 %», con espacio que no se parte) |
 | `testNoArithmeticBetweenTokens` | Decisión del 19 nov 2026: ninguna medida se arma sumando tokens; se nombra en `Theme` |
 | `testAccentActionGoesLast` | Decisión del 19 nov 2026: el ícono verde de un encabezado va siempre al final, a la derecha |
@@ -298,6 +380,13 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testReadingNeverVibratesByItself` | Decisión del 24 nov 2026: leyendo, nada vibra porque la página avanzó; solo lo que haces tú (con «Vibrar al pasar de página» apagado, la barra de avance vibraba en cada hoja) |
 | `testNoTextUnderTwelve` | Sistema base de la casa (SB-3), 24 nov 2026: ninguna letra de menos de 12 pt; `.caption2` (11) solo en íconos |
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |
+| `testOnlyPiecesPaintTheAccent` | Regla 1 (26 nov 2026): ninguna pantalla usa el verde directo; las acciones van en tinta (`TextAction`) |
+| `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `RuledLabel` o `CountLine`, nunca a mano |
+| `testFiguresAreExact` | Regla 4: toda pieza que enseña cifras las pone del mismo ancho |
+| `testSpacingKeepsTheHouseScale` | Regla 5 y SB-2 de la casa: sin 12 ni 6, y nada heredado en `sistema-base.json` |
+| `testMainActionIsDarkInBothModes` | Regla 6: `Theme.action` igual y oscuro en los dos modos, y `PrimaryButton` lo usa |
+| `testBoldOnlyForTitlesAndFigures` | D2-B de la casa: negrita solo en el título más grande y en cifras |
+| `testEveryScreenFollowsARecipe` | Toda pantalla usa `.screen()`, `.pushedScreen()` o `.formScreen()`, así lo nuevo nace con la forma de la app |
 
 Cuando se decide algo de diseño que no debe volver a romperse, se vuelve una prueba con
 su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
@@ -306,7 +395,8 @@ su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
 
 | Motivo | Dónde | Por qué |
 |---|---|---|
-| control nativo de Form | Ajustes › Apariencia, Reglas | Dentro de un `Form` del sistema, el segmentado nativo es lo esperado; `FilterBar` es para el contenido de una pantalla |
+| control nativo de Form | Reglas | Dentro de un `Form` del sistema, el segmentado nativo es lo esperado; `FilterBar` es para el contenido de una pantalla |
+| lo buscado | `SearchResultRow` | Lo que buscaste va en verde y negritas dentro del resultado (decisión de Buscar, 24 nov 2026): es una cifra de lo tuyo, no un título |
 | portada dibujada | `CoverView` | La letra de la portada tipográfica es una fracción de su ancho (`Theme.CoverArt`), no un tamaño de la interfaz |
 | fuente del lector | Lector › «Aa» | La muestra de cada fuente es la fuente que vas a leer, al tamaño que elegiste |
 | índice A–Z | `LetterIndex` | Las 27 letras van en columna a la orilla, como el índice de Contactos: a 12 pt no caben en un iPhone chico |

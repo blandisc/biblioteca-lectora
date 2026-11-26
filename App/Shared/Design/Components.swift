@@ -72,21 +72,25 @@ extension View {
     }
 }
 
-/// Título de pantalla en serif, con acciones a la derecha.
+/// Título de pantalla en serif, con acciones a la derecha y una línea finísima debajo:
+/// la cabecera de una hoja de libreta (SD-3, 26 nov 2026).
 struct ScreenHeading<Trailing: View>: View {
     let title: String
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .font(.screenTitle)
-                .accessibilityAddTraits(.isHeader)
-            Spacer()
-            HStack(spacing: Theme.Space.l) { trailing }
-                .font(.title3)
-                .foregroundStyle(Theme.ink)
-                .buttonStyle(.plain)
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.screenTitle)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                HStack(spacing: Theme.Space.l) { trailing }
+                    .font(.title3)
+                    .foregroundStyle(Theme.ink)
+                    .buttonStyle(.plain)
+            }
+            Hairline()
         }
     }
 }
@@ -130,12 +134,7 @@ struct DeskHeader: View {
         VStack(spacing: Theme.Space.s) {
             HStack(alignment: .firstTextBaseline) {
                 BrandMark(alignment: .leading)
-                Text(dateLine)
-                    .font(.caption.weight(.medium))
-                    .tracking(Theme.Tracking.caps)
-                    .monospacedDigit()
-                    .foregroundStyle(Theme.secondaryInk)
-                    .lineLimit(1)
+                CapsText(text: dateLine)
                     .fixedSize()
             }
             Hairline()
@@ -165,6 +164,41 @@ struct SectionLabel: View {
     }
 }
 
+/// Versalitas de interfaz: mayúsculas chicas, espaciadas, con cifras del mismo ancho
+/// para que nada baile («32 LIBROS · 32 EN ESTE IPHONE», «MIÉ · 25 NOV»). Toda versalita
+/// de la app sale de aquí.
+struct CapsText: View {
+    let text: String
+    var tone: Color = Theme.secondaryInk
+    /// Un conteo que puede crecer («Buscando datos en internet…») baja a otro renglón.
+    var lines = 1
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(.caption.weight(.medium))
+            .tracking(Theme.Tracking.caps)
+            .monospacedDigit()
+            .foregroundStyle(tone)
+            .lineLimit(lines)
+    }
+}
+
+/// Rótulo de una sección de libreta: versalitas y una línea finísima hasta la orilla
+/// («DONDE LO DEJASTE», «APARIENCIA»). Separa sin cajas.
+struct RuledLabel: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: Theme.Space.l) {
+            CapsText(text: text)
+                .fixedSize()
+            Hairline()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
 // MARK: - Botones
 
 /// Mosaico chico de una acción u opción: ícono arriba (todos del mismo alto) y
@@ -177,7 +211,7 @@ struct IconTile<Icon: View>: View {
     @ViewBuilder var icon: Icon
 
     var body: some View {
-        VStack(spacing: Theme.Space.inline) {
+        VStack(spacing: Theme.Space.s) {
             icon.frame(height: Theme.Space.xl)
             Text(title)
                 .font(.caption.weight(.medium))
@@ -186,7 +220,7 @@ struct IconTile<Icon: View>: View {
         }
         .foregroundStyle(prominent ? Theme.onInk : Theme.ink)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, Theme.Space.m)
+        .padding(.vertical, Theme.Space.l)
         .background(prominent ? Theme.ink : Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
@@ -423,10 +457,14 @@ struct PrimaryButton: View {
                 }
             }
             .font(.body.weight(.medium))
-            .foregroundStyle(Theme.onBrand)
+            .foregroundStyle(Theme.onAction)
             .padding(.horizontal, Theme.Space.buttonX)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Theme.Size.control)
-            .background(Theme.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .background(Theme.action, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
+                    .strokeBorder(Theme.ink.opacity(Theme.Emphasis.actionEdge), lineWidth: Theme.Size.hairline)
+            }
         }
         .buttonStyle(PressableStyle())
     }
@@ -470,35 +508,109 @@ struct RoundIconButton: View {
     }
 }
 
+/// Acción de texto en tinta («Todo bien», «Ver los 12 subrayados», «Nota nueva»): las
+/// acciones no van en verde (SD-1). Responde en 44 aunque se dibuje chica.
+struct TextAction: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Theme.ink)
+                .frame(minHeight: Theme.Size.tapTarget)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Filtros y pestañas
 
-/// Fila de opciones en texto; la elegida lleva fondo suave. Se usa para los
-/// filtros de la Biblioteca y las secciones del Cuaderno.
+/// El conteo de una lista en versalitas («32 LIBROS · 32 EN ESTE IPHONE») y, a la
+/// derecha, cómo se ordena si se puede elegir.
+struct CountLine<Trailing: View>: View {
+    let text: String
+    @ViewBuilder var trailing: Trailing
+
+    var body: some View {
+        HStack {
+            CapsText(text: text, lines: Theme.Size.countLines)
+            Spacer(minLength: Theme.Space.l)
+            trailing
+        }
+        .frame(minHeight: Theme.Size.tapTarget)
+    }
+}
+
+extension CountLine where Trailing == EmptyView {
+    init(text: String) {
+        self.init(text: text) { EmptyView() }
+    }
+}
+
+/// Menú para elegir el orden de una lista, en versalitas de tinta con su flecha.
+struct SortMenu<Option: Hashable & Identifiable>: View {
+    let options: [Option]
+    @Binding var selection: Option
+    let title: (Option) -> String
+
+    var body: some View {
+        Menu {
+            Picker("Ordenar por", selection: $selection) {
+                ForEach(options) { Text(title($0)).tag($0) }
+            }
+        } label: {
+            HStack(spacing: Theme.Space.xs) {
+                CapsText(text: title(selection), tone: Theme.ink)
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Theme.ink)
+            }
+            .frame(minHeight: Theme.Size.tapTarget)
+            .contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Ordenar: \(title(selection))")
+    }
+}
+
+/// Filtros en texto (SD-3, 26 nov 2026): la elegida en tinta con un trazo verde debajo,
+/// las demás en gris; sin píldoras. Filtros de la Biblioteca y partes del Cuaderno.
 struct FilterBar<Item: Hashable & Identifiable>: View {
     let items: [Item]
     @Binding var selection: Item
     let title: (Item) -> String
+    @Namespace private var mark
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Theme.Space.xs) {
+            HStack(spacing: Theme.Space.xl) {
                 ForEach(items) { item in
                     let selected = item == selection
-                    Button { withAnimation(Theme.Motion.standard) { selection = item } } label: {
+                    Button { withAnimation(Theme.Motion.select) { selection = item } } label: {
                         Text(title(item))
-                            .font(.subheadline.weight(selected ? .semibold : .regular))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(selected ? Theme.ink : Theme.secondaryInk)
-                            .padding(.horizontal, Theme.Space.s)
-                            .padding(.vertical, Theme.Space.inline)
-                            .background(selected ? Theme.field : .clear,
-                                        in: RoundedRectangle(cornerRadius: Theme.Radius.chip, style: .continuous))
+                            .frame(minHeight: Theme.Size.tapTarget)
+                            .overlay(alignment: .bottomLeading) {
+                                if selected {
+                                    Capsule()
+                                        .fill(Theme.accent)
+                                        .frame(width: Theme.Size.tabMark.width, height: Theme.Size.tabMark.height)
+                                        .matchedGeometryEffect(id: "trazo", in: mark)
+                                }
+                            }
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(selected ? .isSelected : [])
                 }
             }
-            // El texto de la primera opción queda alineado con el margen.
-            .padding(.horizontal, Theme.Space.chipInset)
+            // El texto de la primera opción queda en el margen.
+            .padding(.horizontal, Theme.Space.gutter)
         }
         .padding(.horizontal, -Theme.Space.gutter)
     }
@@ -668,14 +780,7 @@ struct QuoteBlock: View {
     private var hangingBody: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
             if let label {
-                HStack(spacing: Theme.Space.l) {
-                    Text(label.uppercased())
-                        .font(.caption.weight(.medium))
-                        .tracking(Theme.Tracking.caps)
-                        .foregroundStyle(Theme.secondaryInk)
-                        .fixedSize()
-                    Hairline()
-                }
+                RuledLabel(text: label)
             }
             Text(Found.marked("\(text)»", match))
                 .font(.quote)
@@ -724,7 +829,7 @@ struct FactRow: View {
         HStack(alignment: .firstTextBaseline) {
             Text(label).foregroundStyle(Theme.secondaryInk)
             Spacer(minLength: Theme.Space.l)
-            Text(value).multilineTextAlignment(.trailing)
+            Text(value).multilineTextAlignment(.trailing).monospacedDigit()
         }
         .font(.subheadline)
         .foregroundStyle(Theme.ink)
@@ -748,9 +853,8 @@ struct EmptyState: View {
     var action: (() -> Void)? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.m) {
-            Text(title)
-                .font(.bookTitle)
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
+            RuledLabel(text: title)
             Text(message)
                 .font(.body)
                 .foregroundStyle(Theme.secondaryInk)
@@ -835,31 +939,279 @@ struct QuietButton: View {
     }
 }
 
-/// Fila que lleva a otra pantalla: título, valor y flecha. Con `marked`, un
-/// punto de lápiz avisa que hay algo pendiente.
+/// Fila que lleva a otra pantalla o hace algo: título, valor y flecha, con una línea
+/// finísima debajo (SD, 26 nov 2026). Con `marked`, un punto verde avisa que hay algo
+/// pendiente; con `status`, un punto dice si está conectado (lleno) o no (hueco).
 struct LinkRow: View {
     let title: String
     var value: String? = nil
     var marked = false
+    var status: Bool? = nil
+    var chevron = true
 
     var body: some View {
         HStack(spacing: Theme.Space.s) {
             if marked {
-                Circle().fill(Theme.accent).frame(width: Theme.Space.s, height: Theme.Space.s)
-                    .accessibilityHidden(true)
+                StatusDot(on: true)
             }
             Text(title).foregroundStyle(Theme.ink)
-            Spacer()
-            if let value { Text(value).foregroundStyle(Theme.secondaryInk).monospacedDigit() }
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(Theme.tertiaryInk)
+            Spacer(minLength: Theme.Space.l)
+            if let status { StatusDot(on: status) }
+            if let value { Text(value).foregroundStyle(Theme.secondaryInk).monospacedDigit().lineLimit(1) }
+            if chevron {
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.tertiaryInk)
+            }
         }
-        .font(.subheadline)
-        .padding(.vertical, Theme.Space.m)
+        .font(.body)
+        .frame(minHeight: Theme.Size.row)
         .contentShape(Rectangle())
-        .overlay(alignment: .top) { Hairline() }
         .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Punto de estado: lleno en verde (conectado, pendiente) o hueco en gris.
+struct StatusDot: View {
+    let on: Bool
+
+    var body: some View {
+        Circle()
+            .strokeBorder(on ? Theme.accent : Theme.secondaryInk, lineWidth: Theme.Size.statusDotLine)
+            .background(Circle().fill(on ? Theme.accent : .clear))
+            .frame(width: Theme.Size.statusDot, height: Theme.Size.statusDot)
+            .accessibilityHidden(true)
+    }
+}
+
+/// Sección de una hoja de libreta (Ajustes, AJ-B): su rótulo con línea y, debajo, sus filas.
+/// Sin tarjetas: separa el aire y la línea.
+struct RuledSection<Content: View>: View {
+    let title: String
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            RuledLabel(text: title)
+                .padding(.bottom, Theme.Space.xs)
+            content
+        }
+        .padding(.top, Theme.Space.xxl)
+    }
+}
+
+/// Campo de texto en una fila de libreta: el nombre a la izquierda y lo escrito a la derecha.
+struct FieldRow: View {
+    let title: String
+    let prompt: String
+    @Binding var text: String
+
+    var body: some View {
+        HStack(spacing: Theme.Space.l) {
+            Text(title).foregroundStyle(Theme.ink).fixedSize()
+            TextField(prompt, text: $text)
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(Theme.secondaryInk)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+        }
+        .font(.body)
+        .frame(minHeight: Theme.Size.row)
+        .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Interruptor en una fila de libreta, con el verde del sistema.
+struct ToggleRow: View {
+    let title: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(title, isOn: $isOn)
+            .font(.body)
+            .foregroundStyle(Theme.ink)
+            .tint(Theme.accent)
+            .frame(minHeight: Theme.Size.row)
+            .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Ayuda bajo una sección: una línea. Lo largo va detrás de «Más» (AJ-2).
+struct HelpText: View {
+    let text: String
+    var more: String? = nil
+    @State private var expanded = false
+
+    var body: some View {
+        Group {
+            if let more {
+                // «Más» va pegado al final de la línea; toda la ayuda se toca para abrirla.
+                Button { withAnimation(Theme.Motion.standard) { expanded.toggle() } } label: {
+                    (Text(expanded ? "\(text) \(more)" : text)
+                        + Text(expanded ? "" : " Más").foregroundStyle(Theme.ink))
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, minHeight: Theme.Size.tapTarget, alignment: .topLeading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(expanded ? "" : "Muestra más sobre esto")
+            } else {
+                Text(text)
+            }
+        }
+        .font(.footnote)
+        .foregroundStyle(Theme.secondaryInk)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, Theme.Space.s)
+    }
+}
+
+/// Elegir entre hojas de muestra que se ven como el resultado (Apariencia, AJ-1):
+/// papel claro, papel oscuro o las dos mitades. La elegida lleva un filo verde.
+struct PageSwatchPicker<Option: Hashable & Identifiable>: View {
+    let options: [Option]
+    @Binding var selection: Option
+    let title: (Option) -> String
+    let tone: (Option) -> PageTone
+
+    var body: some View {
+        HStack(spacing: Theme.Space.l) {
+            ForEach(options) { option in
+                let selected = option == selection
+                Button { withAnimation(Theme.Motion.select) { selection = option } } label: {
+                    VStack(spacing: Theme.Space.s) {
+                        page(tone(option))
+                            .frame(height: Theme.Size.pageSwatch)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
+                                    .strokeBorder(selected ? Theme.accent : Theme.track,
+                                                  lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
+                            }
+                        Text(title(option))
+                            .font(.subheadline.weight(selected ? .semibold : .regular))
+                            .foregroundStyle(selected ? Theme.ink : Theme.secondaryInk)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(PressableStyle())
+                .accessibilityLabel(title(option))
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+    }
+
+    private func page(_ tone: PageTone) -> some View {
+        ZStack {
+            switch tone {
+            case .light: PaperSample(dark: false)
+            case .dark: PaperSample(dark: true)
+            case .both:
+                PaperSample(dark: false)
+                PaperSample(dark: true).mask(DiagonalHalf())
+            }
+        }
+    }
+}
+
+/// Qué papel enseña una hojita de muestra: el claro, el oscuro o las dos mitades.
+enum PageTone { case light, dark, both }
+
+/// Una hojita de papel con tres renglones, en el papel claro o el oscuro sin importar el modo.
+private struct PaperSample: View {
+    let dark: Bool
+
+    var body: some View {
+        let scheme: ColorScheme = dark ? .dark : .light
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            ForEach(Theme.Size.swatchLines, id: \.self) { length in
+                GeometryReader { proxy in
+                    Capsule().fill(Theme.secondaryInk).frame(width: proxy.size.width * length)
+                }
+                .frame(height: Theme.Size.swatchLine)
+            }
+        }
+        .padding(.horizontal, Theme.Space.l)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.paper)
+        .environment(\.colorScheme, scheme)
+    }
+}
+
+/// La mitad de abajo a la derecha, partida en diagonal.
+private struct DiagonalHalf: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.closeSubpath()
+        }
+    }
+}
+
+/// El colofón al final de Ajustes (AJ-3): la firma, una línea corta y la versión.
+struct Colophon: View {
+    let version: String
+
+    var body: some View {
+        VStack(spacing: Theme.Space.l) {
+            BrandMark()
+            Hairline().frame(width: Theme.Space.xxxl)
+            VStack(spacing: Theme.Space.xs) {
+                CapsText(text: "Versión \(version)")
+                CapsText(text: "Tus libros viven en tu carpeta")
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Theme.Space.xxxl)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// La cinta del marcador colgando de la esquina de la hoja, en verde (lo tuyo).
+struct BookmarkRibbon: View {
+    var body: some View {
+        Ribbon()
+            .fill(Theme.accent)
+            .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
+    }
+}
+
+/// El ícono del marcador en su área de toque: relleno y en verde si la página está marcada.
+struct BookmarkGlyph: View {
+    let on: Bool
+
+    var body: some View {
+        Image(systemName: on ? "bookmark.fill" : "bookmark")
+            .font(.body.weight(.semibold))
+            .foregroundStyle(on ? Theme.accent : Theme.ink)
+            .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+            .contentTransition(.symbolEffect(.replace))
+    }
+}
+
+/// Estrellas de una valoración: lo tuyo, en verde. Tocar la misma estrella la quita.
+struct RatingPicker: View {
+    @Binding var rating: Double?
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(1...5, id: \.self) { star in
+                Button {
+                    rating = rating == Double(star) ? nil : Double(star)
+                } label: {
+                    Image(systemName: Double(star) <= (rating ?? 0) ? "star.fill" : "star")
+                        .foregroundStyle(Theme.accent)
+                        .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("\(star) estrellas")
+            }
+        }
     }
 }
 
@@ -986,7 +1338,7 @@ struct CoverChoiceRow: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .top, spacing: Theme.Space.m) {
+            HStack(alignment: .top, spacing: Theme.Space.l) {
                 ForEach(options, id: \.self) { option in
                     CoverChoiceCell(option: option, selection: $selection)
                 }
@@ -1076,24 +1428,26 @@ struct NoteRow: View {
                     .lineLimit(2)
             }
             meta
-                .font(.footnote)
+                .font(.caption.weight(.medium))
+                .tracking(Theme.Tracking.caps)
+                .monospacedDigit()
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, Theme.Space.m)
+        .padding(.vertical, Theme.Space.l)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
     }
 
     private var meta: Text {
-        let date = Text(NoteRow.day(note.modifiedAt)).foregroundStyle(Theme.tertiaryInk)
+        let date = Text(NoteRow.day(note.modifiedAt).uppercased()).foregroundStyle(Theme.secondaryInk)
         if let detail {
-            return date + Text(" · \(detail)").foregroundStyle(Theme.tertiaryInk)
+            return date + Text(" · \(detail)".uppercased()).foregroundStyle(Theme.secondaryInk)
         }
         let links = note.bookLinks
         guard !links.isEmpty else { return date }
-        return date + Text(" · ").foregroundStyle(Theme.tertiaryInk)
-            + Text(links.joined(separator: " · ")).foregroundStyle(Theme.accent)
+        return date + Text(" · ").foregroundStyle(Theme.secondaryInk)
+            + Text(links.joined(separator: " · ").uppercased()).foregroundStyle(Theme.accent)
     }
 
     /// «Hoy», «Ayer» o «3 nov».
@@ -1229,20 +1583,22 @@ struct StatTrio: View {
     }
 
     let items: [Item]
+    /// A la izquierda, como cifras de libreta (Ajustes › Tu Gabinete); centradas en el diario.
+    var leading = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(items) { item in
-                VStack(spacing: Theme.Space.xxs) {
+                VStack(alignment: leading ? .leading : .center, spacing: Theme.Space.xs) {
                     Text(item.value)
                         .font(.bookTitle)
                         .monospacedDigit()
                         .foregroundStyle(Theme.ink)
-                    Text(item.label)
-                        .font(.caption)
-                        .foregroundStyle(Theme.secondaryInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+                    CapsText(text: item.label)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: leading ? .leading : .center)
                 .accessibilityElement(children: .combine)
             }
         }
@@ -1300,7 +1656,7 @@ struct FlowRow<Content: View>: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Space.m) { content }
+            HStack(spacing: Theme.Space.l) { content }
             VStack(alignment: .leading, spacing: Theme.Space.xs) { content }
         }
     }
@@ -1345,7 +1701,7 @@ struct WordCounter: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: Theme.Space.inline) {
+            HStack(spacing: Theme.Space.s) {
                 Circle().fill(Theme.accent).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
                 Text(ReadingFormat.words(words))
                     .monospacedDigit()
@@ -1423,7 +1779,7 @@ struct FooterPreview: View {
                     .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
                     .contentTransition(.numericText())
             }
-            .padding(Theme.Space.m)
+            .padding(Theme.Space.s)
             .frame(maxWidth: .infinity)
             // Crece con el tamaño de texto de iOS: el pie nunca se corta.
             .frame(minHeight: Theme.Size.footerPreview)
@@ -1576,13 +1932,13 @@ struct EqualizerBars: View {
             ForEach([0.5, 1.0, 0.7], id: \.self) { height in
                 Capsule()
                     .fill(Theme.accent)
-                    .frame(width: Theme.Size.equalizerBar, height: Theme.Space.m * height)
+                    .frame(width: Theme.Size.equalizerBar, height: Theme.Size.equalizerHeight * height)
                     .phaseAnimator([1.0, 0.4]) { bar, phase in
                         bar.scaleEffect(y: phase, anchor: .bottom)
                     } animation: { _ in Theme.Motion.equalizer(height) }
             }
         }
-        .frame(height: Theme.Space.m, alignment: .bottom)
+        .frame(height: Theme.Size.equalizerHeight, alignment: .bottom)
         .accessibilityHidden(true)
     }
 }
@@ -1628,7 +1984,7 @@ struct WeekBars: View {
     private let stacked: [ReadingStage] = [.skimming, .light, .active, .immersed]
 
     var body: some View {
-        VStack(spacing: Theme.Space.inline) {
+        VStack(spacing: Theme.Space.s) {
             HStack(alignment: .bottom, spacing: Theme.Space.s) {
                 ForEach(days) { day in
                     VStack(spacing: 0) {
@@ -1693,7 +2049,7 @@ struct MonthCalendar: View {
                         .accessibilityLabel("\(day.date.es(.dateTime.day().month(.wide))): \(ReadingFormat.duration(day.seconds))")
                 }
             }
-            HStack(spacing: Theme.Space.inline) {
+            HStack(spacing: Theme.Space.s) {
                 Text("Menos")
                 ForEach([ReadingStage.skimming, .light, .active, .immersed], id: \.self) { stage in
                     Circle().fill(Theme.stage(stage)).frame(width: Theme.Size.legendSwatch, height: Theme.Size.legendSwatch)
@@ -1716,8 +2072,8 @@ struct YearBars: View {
 
     var body: some View {
         let most = max(months.max() ?? 0, 1)
-        VStack(spacing: Theme.Space.inline) {
-            HStack(alignment: .bottom, spacing: Theme.Space.inline) {
+        VStack(spacing: Theme.Space.s) {
+            HStack(alignment: .bottom, spacing: Theme.Space.s) {
                 ForEach(Array(months.enumerated()), id: \.offset) { index, seconds in
                     Rectangle()
                         .fill(index == current ? Theme.accent : (seconds > 0 ? Theme.stage(.light) : Theme.track))
@@ -1728,7 +2084,7 @@ struct YearBars: View {
             }
             .frame(height: Theme.Size.yearChart, alignment: .bottom)
             .overlay(alignment: .bottom) { Hairline() }
-            HStack(spacing: Theme.Space.inline) {
+            HStack(spacing: Theme.Space.s) {
                 ForEach(Array(Self.initials.enumerated()), id: \.offset) { index, letter in
                     Text(letter)
                         .font(.caption.weight(index == current ? .semibold : .regular))
@@ -1749,7 +2105,7 @@ struct SessionRow: View {
     var bookTitle: String? = nil
 
     var body: some View {
-        HStack(alignment: .center, spacing: Theme.Space.m) {
+        HStack(alignment: .center, spacing: Theme.Space.l) {
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 HStack(spacing: Theme.Space.xs) {
                     Text(session.start.es(.dateTime.weekday(.abbreviated).day().hour().minute()))
@@ -1808,7 +2164,7 @@ struct ShareCard: View {
                 Spacer()
                 cardNumber(ReadingFormat.duration(session.seconds(in: .immersed)), "inmersa")
             }
-            .padding(.top, Theme.Space.m)
+            .padding(.top, Theme.Space.l)
         }
         .foregroundStyle(Theme.onBrand)
         .padding(Theme.Space.xl)
@@ -1887,9 +2243,9 @@ struct SearchResultRow: View {
     let place: String
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.l) {
             // Lo encontrado en verde y en negritas: no depende solo del color.
-            (Text(Self.lead(before)) + Text(match).bold().foregroundStyle(Theme.accent) + Text(Self.tail(after)))
+            (Text(Self.lead(before)) + Text(match).bold().foregroundStyle(Theme.accent) + Text(Self.tail(after))) // ds-exception: lo buscado
                 .font(.prose)
                 .foregroundStyle(Theme.ink)
                 .lineLimit(3)
@@ -1949,7 +2305,7 @@ struct SearchField: View {
                     .accessibilityLabel("Borrar la búsqueda")
             }
         }
-        .padding(.horizontal, Theme.Space.m)
+        .padding(.horizontal, Theme.Space.l)
         .frame(minHeight: Theme.Size.control)
         .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control))
     }
@@ -1966,7 +2322,7 @@ struct OptionRow: View {
     var selected = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: Theme.Space.m) {
+        HStack(alignment: .top, spacing: Theme.Space.l) {
             Image(systemName: systemImage)
                 .font(.title3)
                 .foregroundStyle(selected ? Theme.accent : Theme.secondaryInk)
@@ -2001,7 +2357,7 @@ struct SearchChapterHeading: View {
     let count: Int
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.l) {
             Text(title.isEmpty ? "Sección sin título" : title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Theme.ink)
@@ -2045,7 +2401,7 @@ struct RecentSearchRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: Theme.Space.m) {
+            HStack(spacing: Theme.Space.l) {
                 Image(systemName: "arrow.counterclockwise")
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)

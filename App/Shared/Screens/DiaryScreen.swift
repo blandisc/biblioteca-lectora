@@ -42,7 +42,7 @@ struct DiaryScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 ScreenHeading(title: "Diario")
                 FilterBar(items: Part.allCases, selection: $part) { $0.rawValue }
-                    .padding(.top, Theme.Space.m)
+                    .padding(.top, Theme.Space.l)
                 if store.sessions.isEmpty {
                     EmptyState(title: "Tu diario empieza al leer",
                                message: "Cada vez que abres un libro, Gabinete anota la sesión: cuánto leíste, a qué ritmo y cuánto tiempo sostuviste la atención. No hay metas que cumplir ni rachas que perder. Todo se queda en tu Gabinete.",
@@ -227,7 +227,7 @@ struct DiaryScreen: View {
     private func finishedSection(_ period: ReadingPeriod) -> some View {
         let books = finished(period)
         if !books.isEmpty {
-            VStack(alignment: .leading, spacing: Theme.Space.m) {
+            VStack(alignment: .leading, spacing: Theme.Space.l) {
                 SectionLabel(text: "Terminados")
                 CoverGrid {
                     ForEach(books) { book in
@@ -310,7 +310,7 @@ struct SessionScreen: View {
                         notice = SessionNote.write(session, bookTitle: book?.title ?? "Sin título")
                     }
                     if !highlights.isEmpty {
-                        VStack(alignment: .leading, spacing: Theme.Space.m) {
+                        VStack(alignment: .leading, spacing: Theme.Space.l) {
                             SectionLabel(text: "Subrayaste")
                             ForEach(highlights) { QuoteBlock(text: $0.quote, note: $0.note) }
                         }

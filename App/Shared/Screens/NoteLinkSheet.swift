@@ -24,12 +24,10 @@ struct NoteLinkSheet: View {
 
                     VStack(alignment: .leading, spacing: Theme.Space.s) {
                         SectionLabel(text: "Nota nueva")
-                        HStack(spacing: Theme.Space.m) {
+                        HStack(spacing: Theme.Space.l) {
                             TextField("Notas sobre \(bookTitle)", text: $newTitle)
                                 .font(.rowTitle)
-                            Button("Crear") { save(to: nil) }
-                                .fontWeight(.semibold)
-                                .foregroundStyle(Theme.accent)
+                            TextAction(title: "Crear nota") { save(to: nil) }
                         }
                         .padding(.vertical, Theme.Space.s)
                         .overlay(alignment: .bottom) { Hairline() }
