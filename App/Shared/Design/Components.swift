@@ -1809,6 +1809,26 @@ struct FooterPreview: View {
     }
 }
 
+/// En continuo, bajo el pie: una rayita corta con la tinta del libro que se llena
+/// con lo leído del capítulo. Quieta; en lugar de la barra de desplazamiento (SC-C).
+struct ChapterLine: View {
+    let done: Double
+    let ink: Color
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Capsule().fill(ink.opacity(Theme.Emphasis.ghost))
+            Capsule().fill(ink)
+                .frame(width: Theme.Reader.chapterLine * min(max(done, 0), 1))
+        }
+        .frame(width: Theme.Reader.chapterLine, height: Theme.Size.progress)
+        .animation(Theme.Motion.standard, value: done)
+        .accessibilityElement()
+        .accessibilityLabel("Capítulo")
+        .accessibilityValue(done.percentText)
+    }
+}
+
 /// Barra de avance del lector: un riel fino, lo leído en tinta y una perilla
 /// chica. Se arrastra o se toca en cualquier punto; el área de toque es alta.
 struct ScrubberBar: View {

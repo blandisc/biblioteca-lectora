@@ -368,7 +368,12 @@ extension ReaderView {
             let seconds = Double(words) / perMinute * 60
             return (seconds < 60 ? "Menos de 1 min" : ReadingFormat.duration(seconds), "para terminar el capítulo")
         case .bookTime:
-            guard let bookID, let seconds = sessions.remaining(forBook: bookID, progress: fraction) else { return nil }
+            // Con tus sesiones en este libro, a tu ritmo en él; mientras no hay, por su largo.
+            let estimate = controller.folioLocation?.bookWordsLeft.map { words in
+                Double(words) / (sessions.usualWordsPerMinute ?? SessionStore.defaultWordsPerMinute) * 60
+            }
+            guard let seconds = bookID.flatMap({ sessions.remaining(forBook: $0, progress: fraction) }) ?? estimate
+            else { return nil }
             return (seconds < 60 ? "Menos de 1 min" : ReadingFormat.duration(seconds), "para terminar el libro")
         case .page:
             guard let page = controller.folioLocation?.page, let count = controller.folioLocation?.pageCount, count > 0 else { return nil }
@@ -451,7 +456,7 @@ extension ReaderView {
     }
 
     #if DEBUG
-    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|dot|contents`): pasa
+    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|contents`): pasa
     /// páginas o cambia de modo solo, sin tocar la pantalla. Solo en Debug.
     private func runDemo() {
         guard !demoStarted, let demo = LaunchOptions.demo else { return }
@@ -467,12 +472,6 @@ extension ReaderView {
                 }
             case "aa":
                 showsAppearance = true
-            case "dot":
-                // En continuo: baja dos pantallas para ver el punto que viaja y cómo se apaga.
-                for _ in 0..<2 {
-                    controller.next()
-                    try? await Task.sleep(for: .seconds(0.4))
-                }
             case "contents":
                 tools = .contents
             case "bookmark":
@@ -843,9 +842,15 @@ private struct ReadingFolio<Counter: View>: View {
             Spacer()
             ZStack {
                 Button { choosing = true } label: {
-                    Text(footerText)
-                        .monospacedDigit()
-                        .lineLimit(1)
+                    VStack(spacing: Theme.Space.xs) {
+                        Text(footerText)
+                            .monospacedDigit()
+                            .lineLimit(1)
+                        // En continuo, dónde vas en el capítulo: sin barra ni punto en la orilla.
+                        if paper != nil, let done = location?.chapterDone {
+                            ChapterLine(done: done, ink: color)
+                        }
+                    }
                         .padding(.horizontal, Theme.Space.l)
                         .frame(minHeight: Theme.Size.tapTarget)
                         .contentShape(Rectangle())

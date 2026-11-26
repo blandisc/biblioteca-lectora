@@ -17,6 +17,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         var excerpt: String?
         /// Palabras que faltan para terminar el capítulo (para «6 min para terminar el capítulo»).
         var chapterWordsLeft: Int? = nil
+        /// Lo leído del capítulo, de 0 a 1 (la rayita bajo el pie en continuo).
+        var chapterDone: Double? = nil
+        /// Palabras que faltan para terminar el libro, estimadas por su largo.
+        var bookWordsLeft: Int? = nil
     }
 
     @Published private(set) var title: String?
@@ -253,10 +257,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let scrollTop = Int(Self.safeTop + Theme.Reader.pageMarginTop)
         let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl), "
             + "margin: \(top), marginBottom: \(Int(Theme.Reader.pageMarginBottom)), "
-            + "scrollTop: \(scrollTop), textMargin: \(Int(Theme.Reader.textMargin)), "
-            + "dot: { size: \(Theme.Reader.scrollDot), opacity: \(Theme.Reader.scrollDotOpacity), "
-            + "top: \(Self.safeTop + Theme.Reader.topFade), bottom: \(Theme.Reader.pageMarginBottom), "
-            + "right: \(Theme.Reader.scrollDotInset), hold: \(Theme.Reader.scrollDotHold), fade: \(Theme.Reader.scrollDotFade) } })"
+            + "scrollTop: \(scrollTop), textMargin: \(Int(Theme.Reader.textMargin)) })"
         flowScript = script
         guard isReady else { return }
         #if os(iOS)
@@ -481,7 +482,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 page: (body["current"] as? Int).map { $0 + 1 },
                 pageCount: body["total"] as? Int,
                 excerpt: body["excerpt"] as? String,
-                chapterWordsLeft: body["chapterLeft"] as? Int
+                chapterWordsLeft: body["chapterLeft"] as? Int,
+                chapterDone: body["chapterDone"] as? Double,
+                bookWordsLeft: body["bookLeft"] as? Int
             )
             if !isTurning { folioLocation = location }
             if !isSettled {

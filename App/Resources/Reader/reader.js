@@ -179,38 +179,6 @@ const applyStyle = () => {
     renderer.setStyles?.(getCSS(style))
 }
 reducedMotion?.addEventListener?.('change', applyStyle)
-
-// En continuo, en vez de la barra del sistema, un puntito en el margen derecho que
-// baja contigo mientras deslizas y se apaga al parar (SC-D, 26 nov 2026). Medidas,
-// tenue y tiempo llegan de la app (Theme.Reader.scrollDot…), el color es la tinta.
-let scrollDot = null
-let scrollDotTimer = null
-const moveScrollDot = () => {
-    const renderer = view?.renderer
-    const dot = style.dot
-    if (!renderer || !dot || style.flow !== 'scrolled') return
-    if (!scrollDot) {
-        scrollDot = document.createElement('div')
-        Object.assign(scrollDot.style, {
-            position: 'fixed', borderRadius: '50%', pointerEvents: 'none', opacity: '0', zIndex: '2',
-        })
-        document.body.append(scrollDot)
-    }
-    const room = renderer.viewSize - renderer.size
-    if (room <= 0) return
-    const fraction = Math.min(1, Math.max(0, renderer.start / room))
-    const track = window.innerHeight - dot.top - dot.bottom - dot.size
-    Object.assign(scrollDot.style, {
-        width: `${dot.size}px`, height: `${dot.size}px`,
-        right: `${dot.right - dot.size / 2}px`,
-        top: `${dot.top + fraction * track}px`,
-        background: style.textColor ?? 'currentColor',
-        transition: `opacity ${dot.fade}s ease-out`,
-        opacity: `${dot.opacity}`,
-    })
-    clearTimeout(scrollDotTimer)
-    scrollDotTimer = setTimeout(() => { if (scrollDot) scrollDot.style.opacity = '0' }, dot.hold * 1000)
-}
 // El margen en puntos depende del ancho: al girar se recalcula.
 window.addEventListener('resize', applyStyle)
 
@@ -272,22 +240,35 @@ const wordsOfText = text => {
 // Palabras que faltan para terminar el capítulo (el archivo del libro en que
 // estás): lo que queda después de la página, con la proporción de palabras por
 // letra del capítulo (se cuenta una vez por capítulo, no en cada página).
-const wordsPerChar = new WeakMap()
+const chapterText = new WeakMap()
+const chapterOf = doc => {
+    let known = chapterText.get(doc)
+    if (!known) {
+        const all = doc.body.textContent ?? ''
+        known = { length: all.length, rate: all.length ? wordsOfText(all) / all.length : 0 }
+        chapterText.set(doc, known)
+    }
+    return known
+}
 const chapterLeftOf = range => {
     const doc = range?.endContainer?.ownerDocument
     if (!doc?.body) return null
-    let rate = wordsPerChar.get(doc)
-    if (rate == null) {
-        const all = doc.body.textContent ?? ''
-        rate = all.length ? wordsOfText(all) / all.length : 0
-        wordsPerChar.set(doc, rate)
-    }
+    const { length, rate } = chapterOf(doc)
     try {
         const rest = doc.createRange()
         rest.setStart(range.endContainer, range.endOffset)
         rest.setEnd(doc.body, doc.body.childNodes.length)
-        return Math.round(rest.toString().length * rate)
+        const left = rest.toString().length
+        return { words: Math.round(left * rate), done: length ? 1 - left / length : null, rate }
     } catch { return null }
+}
+// Palabras que faltan para terminar el libro, mientras no hay sesiones tuyas con qué
+// calcularlo: las ubicaciones de foliate que quedan (~1,500 letras cada una) con la
+// proporción de palabras por letra de este capítulo.
+const lettersPerLocation = 1500
+const bookLeftOf = (location, chapter) => {
+    if (!chapter?.rate || location?.total == null || location?.current == null) return null
+    return Math.round(Math.max(0, location.total - location.current - 1) * lettersPerLocation * chapter.rate)
 }
 
 // Inicio de capítulo como en un libro bien editado: el primer título del archivo
@@ -365,6 +346,7 @@ const postMarks = () => post('marks', { cfis: bookmarkCFIs.filter(isOnPage) })
 
 const onRelocate = ({ detail }) => {
     const { fraction, cfi, tocItem, location, range } = detail
+    const chapter = chapterLeftOf(range)
     post('relocate', {
         // foliate da NaN en secciones de dos páginas (0 ÷ 0): no se manda.
         fraction: Number.isFinite(fraction) ? fraction : null,
@@ -378,7 +360,10 @@ const onRelocate = ({ detail }) => {
         total: location?.total ?? null,
         excerpt: excerptOf(range),
         words: wordsOf(range),
-        chapterLeft: chapterLeftOf(range),
+        chapterLeft: chapter?.words ?? null,
+        // Lo leído del capítulo (0 a 1): la rayita bajo el pie en continuo (SC-C).
+        chapterDone: chapter?.done ?? null,
+        bookLeft: bookLeftOf(location, chapter),
         jumped: navigation === 'jump',
     })
     navigation = null
@@ -655,7 +640,6 @@ window.lectora = {
         document.body.append(view)
         view.addEventListener('relocate', onRelocate)
         view.addEventListener('load', onLoad)
-        view.addEventListener('load', () => view.renderer?.addEventListener('scroll', moveScrollDot), { once: true })
         view.addEventListener('draw-annotation', onDrawAnnotation)
         view.addEventListener('create-overlay', onCreateOverlay)
         view.addEventListener('show-annotation', onShowAnnotation)
@@ -780,7 +764,6 @@ window.lectora = {
         applyStyle()
         if (partial.linkColor) for (const value of [...highlights, ...drawnBookmarks]) view?.addAnnotation({ value })
         if (flowChanged) syncBookmarkMarks()
-        if (flowChanged && scrollDot) scrollDot.style.opacity = '0'
     },
     // Devuelve la selección actual ({ cfi, text, prefix, suffix }) y la limpia.
     takeSelection() {
