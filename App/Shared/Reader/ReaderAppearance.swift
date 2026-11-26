@@ -174,11 +174,11 @@ struct ReaderPalette: Equatable {
     /// El color del texto para pintarlo en la app (muestras de «Aa»).
     var textColor: Color { Color(hex: UInt32(text.dropFirst(), radix: 16) ?? 0) } // ds-exception: paleta del lector
 
-    static let paper = ReaderPalette(background: Color(hex: 0xF8F7F4), text: "#1C1B19", link: "#3D6B55", scheme: .light) // ds-exception: paleta del lector
-    static let white = ReaderPalette(background: Color(hex: 0xFFFFFF), text: "#1C1B19", link: "#3D6B55", scheme: .light) // ds-exception: paleta del lector
-    static let darkPaper = ReaderPalette(background: Color(hex: 0x161514), text: "#DAD6CE", link: "#8FBFA4", scheme: .dark) // ds-exception: paleta del lector
-    static let night = ReaderPalette(background: Color(hex: 0x2B2420), text: "#E8D9C4", link: "#8FBFA4", scheme: .dark) // ds-exception: paleta del lector
-    static let black = ReaderPalette(background: Color(hex: 0x000000), text: "#BDB8AE", link: "#8FBFA4", scheme: .dark) // ds-exception: paleta del lector
+    static let paper = ReaderPalette(background: Color(hex: 0xF8F7F4), text: "#1C1B19", link: Theme.Green.css(dark: false), scheme: .light) // ds-exception: paleta del lector
+    static let white = ReaderPalette(background: Color(hex: 0xFFFFFF), text: "#1C1B19", link: Theme.Green.css(dark: false), scheme: .light) // ds-exception: paleta del lector
+    static let darkPaper = ReaderPalette(background: Color(hex: 0x161514), text: "#DAD6CE", link: Theme.Green.css(dark: true), scheme: .dark) // ds-exception: paleta del lector
+    static let night = ReaderPalette(background: Color(hex: 0x2B2420), text: "#E8D9C4", link: Theme.Green.css(dark: true), scheme: .dark) // ds-exception: paleta del lector
+    static let black = ReaderPalette(background: Color(hex: 0x000000), text: "#BDB8AE", link: Theme.Green.css(dark: true), scheme: .dark) // ds-exception: paleta del lector
 
     static func resolve(_ theme: ReaderTheme, autoNight: Bool, appIsDark: Bool, now: Date = Date()) -> ReaderPalette {
         switch theme {

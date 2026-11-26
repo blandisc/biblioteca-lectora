@@ -60,25 +60,27 @@ Gabinete cumple el sistema base común a todas las apps de Fernando
 | `field` | `#EFEDE8` | `#242320` | Campos, filtro activo, botón secundario |
 | `ink` | `#1C1B19` | `#ECE9E2` | Texto |
 | `onInk` | `#FFFFFF` | `#141413` | Texto sobre tinta |
-| `brand` | `#24332B` | `#8FBFA4` | Marca (verde fichero): avance de un libro, la tarjeta para compartir, el color del sistema |
+| `brand` | `#24332B` | `#4FB386` | Marca (verde fichero; en oscuro, el mismo verde del acento): avance de un libro, la tarjeta para compartir, el color del sistema |
 | `action` | `#24332B` | `#24332B` | La acción principal (`PrimaryButton`), oscura en los dos modos (regla 6) |
 | `onAction` | `#F3EFE6` | `#ECE9E2` | Letra sobre la acción principal |
 | `onBrand` | `#FFFFFF` | `#141413` | Texto sobre la marca |
 | `secondaryInk` | `#6F6C65` | `#9C988F` | Texto secundario (contraste ≥ 4,5 sobre `paper`) |
 | `tertiaryInk` | `#837F78` | `#7C7870` | Folios y etiquetas pequeñas (contraste ≥ 3 sobre `paper`) |
 | `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
-| `accent` | `#0F4A35` | `#4FB386` | Verde botella (AC-3, 26 nov 2026), el único acento: dónde estás, lo que avanzas y lo tuyo (regla 1). Solo lo pintan las piezas |
+| `accent` | `#0F4A35` | `#4FB386` | Verde botella (AC-3, 26 nov 2026), el único acento: dónde estás, lo que avanzas y lo tuyo (regla 1). Solo lo pintan las piezas. Sale de `Theme.Green`, la única fuente del verde (26 nov 2026) |
+| `highlight` | = `accent` | = `accent` | Lo tuyo: subrayados, marcadores, citas y enlaces de notas, en la app y dentro del libro (`reader.js` lo recibe de `Theme.Green.css`, nunca escribe un color). Todo apunta aquí |
 
-**Etapas de lectura** (`Theme.stage(_:)`), del gris al verde fichero; se distinguen por
-claridad, y en oscuro la más intensa es la más clara:
+**Etapas de lectura** (`Theme.stage(_:)`): del gris al verde del acento, el mismo verde
+a distinta intensidad (`Emphasis.stageSkim` 0,22 · `stageLight` 0,45 · `stageActive` 0,72 ·
+inmersa, entero), así no queda ningún verde aparte (26 nov 2026):
 
-| Etapa | Claro | Oscuro |
-|---|---|---|
-| Interrumpida | `#D9D6CF` | `#4A4844` |
-| Hojeo | `#CFDDD4` | `#3B5546` |
-| Ligera | `#8FBFA4` | `#5E8B73` |
-| Activa | `#3D6B55` | `#8FBFA4` |
-| Inmersa | `#24332B` | `#B9DCC6` |
+| Etapa | Color |
+|---|---|
+| Interrumpida | `track` |
+| Hojeo | `accent` al 22 % |
+| Ligera | `accent` al 45 % |
+| Activa | `accent` al 72 % |
+| Inmersa | `accent` |
 
 Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPalette`.
 
@@ -197,7 +199,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `Grabber` | Rayita de un panel que se sube | Panel del lector |
 | `SessionLine` | La sesión en una línea verde que abre su tarjeta | Panel del lector |
 | `ScrubberBar` | Barra de avance del lector: riel fino, lo leído en tinta, perilla chica que crece al arrastrar; se toca en 44 pt de alto | Panel del lector |
-| `FooterPreview` | Muestra del pie: recorte de la página (papel, tres renglones fantasma y el pie tal cual, con su letra) y su nombre debajo; filo de tinta y palomita si está elegido | Tarjeta del lector |
+| `FooterPreview` | Muestra del pie: recorte chico de la parte de abajo de la página (papel, dos renglones fantasma y el pie tal cual, con su letra), sin nombre debajo (lo lee VoiceOver); filo de tinta y palomita si está elegido | Tarjeta del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido; en tinta si es la acción principal | Estilo de la hoja, tarjeta de un subrayado, barra de selección |
 | `FactRow` | Etiqueta / valor con línea fina y cifras exactas | Ficha del libro |
 | `EmptyState` | `RuledLabel` con lo que falta, explicación y acción opcional | Toda lista vacía |
@@ -322,9 +324,9 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   La letra del libro sigue el tamaño de texto de iOS (`Reader.textBase`) además de lo que elijas en «Aa»; los títulos de libro, filas, citas y textos del libro también lo siguen, y las muestras del pie crecen con él. El texto va a `Reader.textMargin` (28 pt) de las orillas en páginas y en continuo y en todo iPhone, con 1,45 de aire entre renglones que el estilo del libro no cambia (D1-B y D2-B, 24 nov 2026): todos los renglones a la misma distancia, aunque el libro traiga su propio aire en sus clases, letras de otra fuente o llamadas de nota (25 nov 2026, `testLinesAreEvenlySpaced`); el contenido de la tarjeta de abajo empieza en esa misma línea. En páginas, el texto deja `Reader.pageMarginTop` (12 pt) arriba, justo debajo de la isla, y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
-  es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`); abajo empieza `Reader.folioFadeDrop` (20 pt) más abajo, con el sólido justo arriba del pie (25 nov 2026): la letra se sigue leyendo mientras se va. Arriba ya no va el capítulo (25 nov 2026): solo el papel que se desvanece desde la orilla de la pantalla; en continuo el texto corre hasta arriba y se va en ese desvanecido (hasta `Reader.topFade` bajo la isla), y el principio de cada capítulo empieza debajo de la isla. El folio
+  es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`); abajo empieza `Reader.folioFadeDrop` (20 pt) más abajo, con el sólido justo arriba del pie (25 nov 2026): la letra se sigue leyendo mientras se va. Arriba ya no va el capítulo (25 nov 2026): solo el papel que se desvanece desde la orilla de la pantalla; en continuo el texto corre hasta arriba y se va en ese desvanecido (hasta `Reader.topFade` bajo la isla; el marcador cae `Reader.bookmarkLinesBelowFade` (2) renglones más abajo para que el desvanecido no lo borre, 26 nov 2026), y el principio de cada capítulo empieza debajo de la isla. El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). El marcador: en páginas marca la hoja con la cinta de la esquina; en continuo marca el renglón que lees arriba y se ve como un hilo en el aire entre renglones, casi invisible a la izquierda y verde al llegar al margen, donde se dobla en una cinta chica que viaja con el texto (MC-E1, 25 nov 2026; al marcar, la cinta cae y el hilo se dibuja; al quitarlo, el hilo se recoge hacia la cinta y la cinta sube). Tocando el centro, arriba quedan solo cerrar y el marcador, cada uno en su círculo de vidrio, y abajo sale la tarjeta (`Grabber`; el capítulo completo con su número encima en `SectionLabel`, que abre el índice, y a su derecha buscar y «Aa» (BB-C, 25 nov 2026); la barra, que se toca en 44 pt de alto aunque se vea fina (`Size.scrubberReach`); la página y las palabras en gris, sin íconos; tras saltar con la barra, en lugar de las palabras, «Volver a la pág. N» para regresar a donde ibas);
-  subiéndola aparece «El pie dice» con cuatro `FooterPreview` (como se leerá). Tocando el pie mientras lees sale solo un globo con esas cuatro muestras, sin la tarjeta (25 nov 2026). Tocando el
+  subiéndola aparece «Abajo de la página» con cuatro `FooterPreview` chicos (como se leerá). Tocando el pie mientras lees sale solo un globo con esas cuatro muestras, sin la tarjeta (25 nov 2026). Tocando el
   contador, la tarjeta de abajo se desvanece en su lugar (`Motion.exit`) y, ya ida, «Esta sesión» crece apenas desde abajo (nunca dos tarjetas encimadas); sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
 - Pasar la hoja (se elige en «Aa», en páginas): Hoja (mate, se dobla con el dedo; radio
   `Reader.curlRadius` 16 % del ancho, esquina inclinada `Reader.curlTilt`, sombra
@@ -383,6 +385,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testOnlyPiecesPaintTheAccent` | Regla 1 (26 nov 2026): ninguna pantalla usa el verde directo; las acciones van en tinta (`TextAction`) |
 | `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `RuledLabel` o `CountLine`, nunca a mano |
 | `testFiguresAreExact` | Regla 4: toda pieza que enseña cifras las pone del mismo ancho |
+| `testOneGreenForEverything` | Un solo verde: sus valores solo viven en `Theme.Green`; fuera de `Theme.swift` no hay verdes viejos ni nuevos escritos a mano, y `reader.js` no escribe ningún color |
 | `testSpacingKeepsTheHouseScale` | Regla 5 y SB-2 de la casa: sin 12 ni 6, y nada heredado en `sistema-base.json` |
 | `testMainActionIsDarkInBothModes` | Regla 6: `Theme.action` igual y oscuro en los dos modos, y `PrimaryButton` lo usa |
 | `testBoldOnlyForTitlesAndFigures` | D2-B de la casa: negrita solo en el título más grande y en cifras |

@@ -289,11 +289,12 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         if isReady { evaluate(script) }
     }
 
-    /// En continuo, el renglón que se lee arriba (bajo el desvanecido): su CFI y el
+    /// En continuo, el renglón que se lee arriba (un par de renglones bajo el desvanecido): su CFI y el
     /// texto que sigue. Es lo que guarda el marcador (MC-E1). `nil` si no hay renglón.
     func readingLine(_ done: @escaping (_ cfi: String, _ excerpt: String?) -> Void) {
         let y = Double(Self.safeTop + Theme.Reader.topFade)
-        webView?.callAsyncJavaScript("return window.lectora.readingLine(y)", arguments: ["y": y],
+        webView?.callAsyncJavaScript("return window.lectora.readingLine(y, lines)",
+                                     arguments: ["y": y, "lines": Theme.Reader.bookmarkLinesBelowFade],
                                      in: nil, in: .page) { result in
             MainActor.assumeIsolated {
                 guard case .success(let value) = result, let line = value as? [String: Any],

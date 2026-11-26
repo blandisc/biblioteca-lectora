@@ -148,6 +148,18 @@ final class DesignRulesTests: XCTestCase {
     func testTextColorsAreReadable() {
         let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.text ?? ""
         func pair(_ name: String) -> (UInt32, UInt32)? {
+            if name == "accent" {
+                // El verde vive en `Theme.Green` (un solo lugar desde el 26 nov 2026).
+                let green = try! NSRegularExpression(pattern: #"static let (light|dark): UInt32 = 0x([0-9A-F]{6})"#)
+                var found: [String: UInt32] = [:]
+                for match in green.matches(in: theme, range: NSRange(theme.startIndex..., in: theme)) {
+                    if let key = Range(match.range(at: 1), in: theme), let hex = Range(match.range(at: 2), in: theme) {
+                        found[String(theme[key])] = UInt32(theme[hex], radix: 16)
+                    }
+                }
+                guard let light = found["light"], let dark = found["dark"] else { return nil }
+                return (light, dark)
+            }
             let regex = try! NSRegularExpression(pattern: "static let \(name) = Color\\(light: 0x([0-9A-F]{6}), dark: 0x([0-9A-F]{6})\\)")
             guard let match = regex.firstMatch(in: theme, range: NSRange(theme.startIndex..., in: theme)),
                   let light = Range(match.range(at: 1), in: theme), let dark = Range(match.range(at: 2), in: theme)
@@ -502,5 +514,30 @@ final class DesignRulesTests: XCTestCase {
             .filter { !$0.text.contains(".screen()") && !$0.text.contains(".pushedScreen(") && !$0.text.contains(".formScreen()") }
             .map(\.path)
         check(problems, "Pantalla sin receta: usa .screen(), .pushedScreen() o .formScreen() (ver «Recetas»)")
+    }
+
+    /// 26 nov 2026: después del cambio al verde botella, los subrayados, el marcador del libro,
+    /// la barra de avance y las etapas seguían en el verde azulado de antes: cada uno escribía
+    /// su propio verde. El verde se escribe una vez, en `Theme.Green`; todo lo demás apunta ahí
+    /// (`Theme.accent`, `Theme.highlight`, `Theme.Green.css`). El libro (reader.js) no escribe colores.
+    func testOneGreenForEverything() {
+        let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.text ?? ""
+        let regex = try! NSRegularExpression(pattern: #"static let (?:light|dark): UInt32 = 0x([0-9A-F]{6})"#)
+        let greens = regex.matches(in: theme, range: NSRange(theme.startIndex..., in: theme))
+            .compactMap { Range($0.range(at: 1), in: theme).map { String(theme[$0]) } }
+        var problems = greens.count == 2 ? [] : ["No encontré Theme.Green.light y .dark"]
+        // Los verdes de antes (verde hoja y su pareja oscura, y las etapas) no vuelven.
+        let banned = greens + ["3D6B55", "8FBFA4", "5E8B73", "CFDDD4", "3B5546", "B9DCC6"]
+        for file in Self.sources("App") where !file.path.hasSuffix("Theme.swift") {
+            for (index, line) in file.lines.enumerated() where banned.contains(where: { line.uppercased().contains($0) }) {
+                problems.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces).prefix(120))")
+            }
+        }
+        let script = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
+        let hex = try! NSRegularExpression(pattern: #"'#[0-9A-Fa-f]{6}'"#)
+        if hex.firstMatch(in: script, range: NSRange(script.startIndex..., in: script)) != nil {
+            problems.append("reader.js escribe un color: el verde llega de la app (Theme.Green.css)")
+        }
+        check(problems, "Un verde escrito fuera de Theme.Green: apunta a Theme.accent, Theme.highlight o Theme.Green.css")
     }
 }

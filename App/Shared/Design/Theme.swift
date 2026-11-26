@@ -19,7 +19,7 @@ enum Theme {
     static let onInk = Color(light: 0xFFFFFF, dark: 0x141413)
     /// Marca: verde fichero (en oscuro, verde claro). Acción principal, avance
     /// y pestaña elegida; el gabinete del ícono hecho color.
-    static let brand = Color(light: 0x24332B, dark: 0x8FBFA4)
+    static let brand = Color(light: 0x24332B, dark: Green.dark)
     /// Texto sobre la marca.
     static let onBrand = Color(light: 0xFFFFFF, dark: 0x141413)
     /// Texto secundario.
@@ -32,22 +32,37 @@ enum Theme {
     /// estás (pestaña, filtro elegido), lo que avanzas (palabras, marca de la Mesa) y lo
     /// tuyo (subrayados, cinta, pendientes). Las acciones van en tinta. Solo lo pintan las
     /// piezas del sistema, nunca una pantalla (`DesignRulesTests`).
-    static let accent = Color(light: 0x0F4A35, dark: 0x4FB386)
+    static let accent = Color(light: Green.light, dark: Green.dark)
+    /// Lo tuyo dentro y fuera del libro (subrayados, notas, marcador, la cita): el mismo
+    /// verde, con nombre propio para que todo lo que marca apunte a un solo lugar.
+    static let highlight = accent
+
+    /// El verde de Gabinete, escrito una sola vez (26 nov 2026). De aquí salen `accent`,
+    /// `highlight`, las etapas de lectura y el color de los subrayados en el libro. Ningún
+    /// otro archivo escribe un verde (`testOneGreenForEverything`).
+    enum Green {
+        static let light: UInt32 = 0x0F4A35
+        static let dark: UInt32 = 0x4FB386
+        /// El mismo verde como color CSS, para lo que se dibuja dentro del libro.
+        static func css(dark: Bool) -> String {
+            String(format: "#%06X", dark ? Green.dark : Green.light)
+        }
+    }
     /// Acción principal («Seguir leyendo», «Nota nueva»): verde fichero en los dos modos,
     /// con letra clara. En oscuro antes era un bloque verde menta que gritaba (SD-1).
     static let action = Color(light: 0x24332B, dark: 0x24332B)
     /// Letra sobre la acción principal.
     static let onAction = Color(light: 0xF3EFE6, dark: 0xECE9E2)
 
-    /// Etapas de una sesión de lectura: del gris (interrumpida) al verde fichero
-    /// (inmersa). Se distinguen por claridad; en oscuro, la más intensa es la más clara.
+    /// Etapas de una sesión de lectura: del gris (interrumpida) al verde pleno (inmersa).
+    /// Todas salen del mismo verde con más o menos fuerza, así nunca vuelve otro tono.
     static func stage(_ stage: ReadingStage) -> Color {
         switch stage {
-        case .interrupted: Color(light: 0xD9D6CF, dark: 0x4A4844)
-        case .skimming: Color(light: 0xCFDDD4, dark: 0x3B5546)
-        case .light: Color(light: 0x8FBFA4, dark: 0x5E8B73)
-        case .active: Color(light: 0x3D6B55, dark: 0x8FBFA4)
-        case .immersed: Color(light: 0x24332B, dark: 0xB9DCC6)
+        case .interrupted: track
+        case .skimming: accent.opacity(Emphasis.stageSkim)
+        case .light: accent.opacity(Emphasis.stageLight)
+        case .active: accent.opacity(Emphasis.stageActive)
+        case .immersed: accent
         }
     }
 
@@ -384,6 +399,9 @@ enum Theme {
         /// En continuo el texto corre hasta la orilla de la pantalla y se desvanece
         /// desde ahí hasta esto por debajo de la orilla segura (la isla).
         static let topFade: CGFloat = 24
+        /// En continuo, el marcador cae estos renglones debajo del desvanecido de
+        /// arriba: así el hilo y la cinta se ven enteros, no medio borrados (26 nov 2026).
+        static let bookmarkLinesBelowFade = 2
         /// El lomo del libro: sombra en la orilla izquierda de la hoja, su ancho y
         /// qué tan oscura empieza en papel claro y en papel oscuro.
         static let spineWidth: CGFloat = 26
@@ -410,6 +428,10 @@ enum Theme {
         static let folio = 0.74
         /// Renglones insinuados y filo de la muestra del pie: la tinta del libro, casi invisible.
         static let ghost = 0.12
+        /// Fuerza del verde en cada etapa de lectura (hojeo, ligera, activa).
+        static let stageSkim = 0.22
+        static let stageLight = 0.45
+        static let stageActive = 0.72
         /// Filo finísimo de la acción principal: la despega del papel oscuro.
         static let actionEdge = 0.16
         /// Fondo de un botón redondo dentro del vidrio (buscar y letra en la tarjeta del lector).

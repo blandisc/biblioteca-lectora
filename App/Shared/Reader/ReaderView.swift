@@ -694,8 +694,8 @@ private struct BottomPanel: View {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
                     Hairline()
                         .padding(.bottom, Theme.Space.s)
-                    SectionLabel(text: "El pie dice", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
-                    Grid(horizontalSpacing: Theme.Space.s, verticalSpacing: Theme.Space.l) {
+                    SectionLabel(text: "Abajo de la página", tone: Theme.ink.opacity(Theme.Emphasis.glassText))
+                    Grid(horizontalSpacing: Theme.Space.s, verticalSpacing: Theme.Space.s) {
                         ForEach(Array(stride(from: 0, to: options.count, by: 2)), id: \.self) { row in
                             GridRow {
                                 ForEach(Array(options[row..<min(row + 2, options.count)].enumerated()), id: \.element.id) { offset, option in
@@ -960,7 +960,8 @@ private struct ReadingFolio<Counter: View>: View {
 
 }
 
-/// El globo del pie: las cuatro muestras, cada una como se leerá; tocar una la elige y cierra.
+/// El globo del pie: cuatro recortes chicos de la parte de abajo de la página, dos por
+/// renglón, cada uno como se leerá; tocar uno lo elige y cierra.
 private struct FooterPicker: View {
     let options: [FooterOption]
     @Binding var selection: ReaderFooter
@@ -972,8 +973,8 @@ private struct FooterPicker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionLabel(text: "El pie dice", tone: Theme.secondaryInk)
-            LazyVGrid(columns: columns, spacing: Theme.Space.l) {
+            SectionLabel(text: "Abajo de la página", tone: Theme.secondaryInk)
+            LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                 ForEach(options) { option in
                     Button {
                         selection = option.kind

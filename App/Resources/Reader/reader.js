@@ -113,6 +113,9 @@ const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, s
 
 let view = null
 let style = { ...defaultStyle }
+// El verde de lo tuyo (subrayados, notas, marcador) llega siempre de la app (Theme.Green):
+// aquí no se escribe ningún color.
+const highlightColor = () => style.linkColor ?? 'currentColor'
 
 // Subrayados: CFI de rango. Se dibujan como un trazo de lápiz bajo el texto.
 const highlights = new Set()
@@ -120,7 +123,7 @@ let lastSelection = null
 let annotationTapped = false
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
-const pencil = (rects, { color = '#3D6B55' } = {}) => {
+const pencil = (rects, { color = highlightColor() } = {}) => {
     const g = document.createElementNS(SVG_NS, 'g')
     g.setAttribute('fill', 'none')
     g.setAttribute('stroke', color)
@@ -498,11 +501,11 @@ const onDrawAnnotation = ({ detail: { draw, annotation, doc, range } }) => {
     if (drawnBookmarks.has(annotation?.value)) {
         const animated = freshBookmark === annotation.value && !reducedMotion?.matches
         if (animated) freshBookmark = null
-        draw(threadAndTab(doc, range), { color: style.linkColor ?? '#3D6B55', animated, value: annotation.value })
+        draw(threadAndTab(doc, range), { color: highlightColor(), animated, value: annotation.value })
         return
     }
     const animated = freshHighlights.delete(annotation?.value) && !reducedMotion?.matches
-    draw(animated ? drawingPencil : pencil, { color: style.linkColor ?? '#3D6B55' })
+    draw(animated ? drawingPencil : pencil, { color: highlightColor() })
 }
 
 const onCreateOverlay = () => {
@@ -578,18 +581,19 @@ window.lectora = {
         postMarks()
         syncBookmarkMarks()
     },
-    // En continuo: el primer renglón que se lee entero bajo `y` (puntos desde arriba
-    // de la pantalla). Devuelve su CFI (su primera letra) y el texto que sigue, para
+    // En continuo: el primer renglón que se lee entero `lines` renglones bajo `y`
+    // (puntos desde arriba de la pantalla), para que el desvanecido no se coma el marcador. Devuelve su CFI (su primera letra) y el texto que sigue, para
     // la lista de marcadores. La próxima vez que se dibuje, el marcador entra animado.
-    readingLine(y) {
+    readingLine(y, lines = 0) {
         const renderer = view?.renderer
         if (!renderer?.scrolled) return null
         for (const { doc, index } of renderer.getContents()) {
             const frame = doc?.defaultView?.frameElement
             if (!frame || !doc.caretRangeFromPoint) continue
-            const top = y - frame.getBoundingClientRect().top
             const body = doc.body.getBoundingClientRect()
-            const step = (parseFloat(doc.defaultView.getComputedStyle(doc.body).lineHeight) || 24) / 4
+            const lineHeight = parseFloat(doc.defaultView.getComputedStyle(doc.body).lineHeight) || 24
+            const top = y - frame.getBoundingClientRect().top + lines * lineHeight
+            const step = lineHeight / 4
             for (let dy = 0; dy < step * 24; dy += step) {
                 const caret = doc.caretRangeFromPoint(body.left + 2, top + dy)
                 const node = caret?.startContainer
@@ -685,7 +689,7 @@ window.lectora = {
         const sizeTotal = sizes.reduce((a, b) => a + b, 0) || 1
         try {
             // Lo encontrado se recuadra en el verde de la app, no en el rojo de foliate.
-            const drawOptions = { color: style.linkColor ?? '#3D6B55', width: 1.5 }
+            const drawOptions = { color: highlightColor(), width: 1.5 }
             for await (const result of view.search({ query: text, drawOptions })) {
                 if (token !== searchToken) return
                 if (result === 'done') break

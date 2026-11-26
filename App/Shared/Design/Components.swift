@@ -748,7 +748,7 @@ struct ThinProgress: View {
             .overlay(alignment: .leading) {
                 GeometryReader { proxy in
                     Capsule()
-                        .fill(Theme.brand)
+                        .fill(Theme.accent)
                         .frame(width: proxy.size.width * min(max(value, 0), 1))
                 }
             }
@@ -789,7 +789,7 @@ struct QuoteBlock: View {
                 .overlay(alignment: .topLeading) {
                     Text("«")
                         .font(.quote)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.highlight)
                         .alignmentGuide(.leading) { $0[.trailing] }
                         .accessibilityHidden(true)
                 }
@@ -809,13 +809,13 @@ struct QuoteBlock: View {
             if let note {
                 Label(note, systemImage: "pencil")
                     .font(.subheadline)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.highlight)
             }
         }
         .foregroundStyle(Theme.ink)
         .padding(.leading, Theme.Space.rowGap)
         .overlay(alignment: .leading) {
-            Rectangle().fill(Theme.accent).frame(width: Theme.Size.quoteRule)
+            Rectangle().fill(Theme.highlight).frame(width: Theme.Size.quoteRule)
         }
     }
 }
@@ -1175,7 +1175,7 @@ struct Colophon: View {
 struct BookmarkRibbon: View {
     var body: some View {
         Ribbon()
-            .fill(Theme.accent)
+            .fill(Theme.highlight)
             .frame(width: Theme.Size.ribbon.width, height: Theme.Size.ribbon.height)
     }
 }
@@ -1187,7 +1187,7 @@ struct BookmarkGlyph: View {
     var body: some View {
         Image(systemName: on ? "bookmark.fill" : "bookmark")
             .font(.body.weight(.semibold))
-            .foregroundStyle(on ? Theme.accent : Theme.ink)
+            .foregroundStyle(on ? Theme.highlight : Theme.ink)
             .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
             .contentTransition(.symbolEffect(.replace))
     }
@@ -1447,7 +1447,7 @@ struct NoteRow: View {
         let links = note.bookLinks
         guard !links.isEmpty else { return date }
         return date + Text(" · ").foregroundStyle(Theme.secondaryInk)
-            + Text(links.joined(separator: " · ").uppercased()).foregroundStyle(Theme.accent)
+            + Text(links.joined(separator: " · ").uppercased()).foregroundStyle(Theme.highlight)
     }
 
     /// «Hoy», «Ayer» o «3 nov».
@@ -1503,7 +1503,7 @@ struct NoteBody: View {
         }
         .padding(.leading, Theme.Space.rowGap)
         .overlay(alignment: .leading) {
-            Rectangle().fill(Theme.accent).frame(width: Theme.Size.quoteRule)
+            Rectangle().fill(Theme.highlight).frame(width: Theme.Size.quoteRule)
         }
     }
 
@@ -1748,10 +1748,11 @@ struct SessionLine: View {
     }
 }
 
-/// Muestra del pie: la parte de abajo de una página, con el papel y la tinta del
-/// libro, tres renglones insinuados (el último, fin de párrafo) y el pie tal como
-/// se leerá, con su misma letra. Debajo, su nombre. La elegida lleva filo de tinta
-/// y palomita: no solo el color dice cuál es.
+/// Muestra del pie: un recorte chico de la parte de abajo de la página, con el
+/// papel y la tinta del libro, dos renglones insinuados y el pie tal como se
+/// leerá. Sin tarjeta ni nombre debajo: el recorte ya dice cómo se verá (el
+/// nombre lo lee VoiceOver). La elegida lleva filo de tinta y palomita: no solo
+/// el color dice cuál es.
 struct FooterPreview: View {
     let name: String
     let text: String
@@ -1763,46 +1764,41 @@ struct FooterPreview: View {
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.Radius.inset, style: .continuous) }
 
     var body: some View {
-        VStack(spacing: Theme.Space.xs) {
-            VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                    ghost
-                    ghost
-                    ghost.padding(.trailing, Theme.Space.xxl)
-                }
-                Spacer(minLength: 0)
-                Text(text)
-                    .font(.caption.weight(.medium))
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(Theme.Emphasis.labelMinScale)
-                    .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
-                    .contentTransition(.numericText())
-            }
-            .padding(Theme.Space.s)
-            .frame(maxWidth: .infinity)
-            // Crece con el tamaño de texto de iOS: el pie nunca se corta.
-            .frame(minHeight: Theme.Size.footerPreview)
-            .background(paper, in: shape)
-            .overlay {
-                shape.strokeBorder(selected ? ink : ink.opacity(Theme.Emphasis.ghost),
-                                   lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
-            }
-            .overlay(alignment: .topTrailing) {
-                if selected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(ink)
-                        .background(Circle().fill(paper))
-                        .padding(Theme.Space.xs)
-                        .transition(.scale.combined(with: .opacity))
-                }
-            }
-            Text(name)
-                .font(.caption)
-                .foregroundStyle(Theme.ink.opacity(selected ? Theme.Emphasis.rest : Theme.Emphasis.glassText))
+        VStack(alignment: .leading, spacing: Theme.Space.xs) {
+            // El primero deja sitio a la palomita; el segundo cierra el párrafo.
+            ghost.padding(.trailing, Theme.Space.l)
+            ghost.padding(.trailing, Theme.Space.xxl)
+            Spacer(minLength: 0)
+            Text(text)
+                .font(.caption.weight(.medium))
+                .monospacedDigit()
                 .lineLimit(1)
+                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+                .foregroundStyle(ink.opacity(available ? Theme.Emphasis.folio : Theme.Emphasis.folioMuted))
+                .frame(maxWidth: .infinity)
+                .contentTransition(.numericText())
         }
+        .padding(Theme.Space.s)
+        // Crece con el tamaño de texto de iOS: el pie nunca se corta.
+        .frame(maxWidth: .infinity, minHeight: Theme.Size.footerPreview)
+        .background(paper, in: shape)
+        .overlay {
+            shape.strokeBorder(selected ? ink : ink.opacity(Theme.Emphasis.ghost),
+                               lineWidth: selected ? Theme.Size.selection : Theme.Size.hairline)
+        }
+        .overlay(alignment: .topTrailing) {
+            if selected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.caption2)
+                    .foregroundStyle(ink)
+                    .background(Circle().fill(paper))
+                    .padding(Theme.Space.xs)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(name)
+        .accessibilityValue(text)
         // Al elegir: el filo y la palomita llegan con un resorte corto. Al presionar,
         // se hunde (PressableStyle); todas miden siempre lo mismo.
         .animation(Theme.Motion.select, value: selected)
