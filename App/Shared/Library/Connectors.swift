@@ -125,14 +125,16 @@ final class ConnectorsStore: ObservableObject {
         static let hardcover: Set<String> = [hardcoverProgress]
     }
 
-    init(library: LibraryStore = .shared, annotations: AnnotationStore = .shared, sessions: SessionStore = .shared) {
-        self.library = library
-        self.annotations = annotations
-        self.sessions = sessions
+    // Los valores por defecto se calculan fuera del hilo principal; las tiendas viven en él,
+    // así que se resuelven aquí adentro (si no, Swift 6 lo marca como error).
+    init(library: LibraryStore? = nil, annotations: AnnotationStore? = nil, sessions: SessionStore? = nil) {
+        self.library = library ?? .shared
+        self.annotations = annotations ?? .shared
+        self.sessions = sessions ?? .shared
         for connector in Connector.allCases {
             status[connector] = isConnected(connector) ? .idle : .off
         }
-        annotations.onChange = { [weak self] before, after in self?.annotationChanged(before: before, after: after) }
+        self.annotations.onChange = { [weak self] before, after in self?.annotationChanged(before: before, after: after) }
     }
 
     func isConnected(_ connector: Connector) -> Bool { ConnectorKeychain.key(for: connector) != nil }

@@ -23,7 +23,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Búsqueda de la app con datos reales
         run: |
           mkdir -p "out/${GITHUB_SHA::7}"

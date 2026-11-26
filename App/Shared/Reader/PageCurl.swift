@@ -629,14 +629,11 @@ final class SpineShade: UIView {
         super.init(frame: frame)
         isUserInteractionEnabled = false
         update()
+        // En claro u oscuro el papel cambia de brillo, y con él la sombra del lomo.
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (view: Self, _: UITraitCollection) in view.update() }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) no se usa") }
-
-    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
-        super.traitCollectionDidChange(previous)
-        update()
-    }
 
     private func update() {
         guard let gradient = layer as? CAGradientLayer else { return }

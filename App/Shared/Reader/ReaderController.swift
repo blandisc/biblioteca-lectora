@@ -470,8 +470,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
 
     nonisolated func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
-        MainActor.assumeIsolated { handle(type: type, body: body) }
+        MainActor.assumeIsolated {
+            guard let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
+            handle(type: type, body: body)
+        }
     }
 
     private func handle(type: String, body: [String: Any]) {
@@ -587,7 +589,7 @@ final class LectoraWebView: WKWebView {
     override func buildMenu(with builder: any UIMenuBuilder) {
         super.buildMenu(with: builder)
         guard builder.system == UIMenuSystem.context else { return }
-        var menus: [UIMenu.Identifier] = [.standardEdit, .lookup, .learn, .share, .replace, .spelling,
+        let menus: [UIMenu.Identifier] = [.standardEdit, .lookup, .learn, .share, .replace, .spelling,
                                           .spellingPanel, .spellingOptions, .substitutions, .transformations,
                                           .speech, .format, .textStyle, .autoFill]
         for menu in menus { builder.remove(menu: menu) }

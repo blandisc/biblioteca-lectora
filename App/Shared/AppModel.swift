@@ -189,7 +189,7 @@ final class AppModel: ObservableObject {
             "# Cervantes y la ironía\n\nAsí presenta Cervantes a su héroe: sin épica. La distancia entre lo que Alonso Quijano cree y lo que ve el lector es todo el libro." + cervantes,
             "# El silencio en Rulfo\n\nComala no se describe: se oye. Los murmullos hacen el trabajo que en otra novela haría el narrador. En [[Pedro Páramo]] nadie explica nada.",
         ]
-        for text in samples { try? notes.save(text: text, fileName: nil) }
+        for text in samples { _ = try? notes.save(text: text, fileName: nil) }
     }
 
     /// Subrayados de muestra para que el Cuaderno no salga vacío en las capturas.

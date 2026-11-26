@@ -193,7 +193,7 @@ struct SearchScreen: View {
 
     /// «Agentes del imperio · 12 nov».
     private func label(for highlight: Annotation) -> String {
-        let title = model.shelfBook(id: highlight.bookID.uuidString)?.title ?? highlight.bookTitle
+        let title = model.shelfBook(id: highlight.bookID.uuidString)?.title ?? highlight.bookTitle ?? "Sin título"
         return "\(title) · \(highlight.createdAt.es(.dateTime.day().month(.abbreviated)))"
     }
 }

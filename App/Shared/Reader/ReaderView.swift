@@ -299,19 +299,20 @@ extension ReaderView {
             applyStyle()
             // Sin capturar la vista: el controlador no debe retenerse a sí mismo.
             let chrome = $showsChrome
-            controller.onTap = { [weak controller] x in
+            let reader = controller
+            reader.onTap = { [weak reader] x in
                 // Con la guía del renglón: tocar avanza; en la orilla izquierda, regresa.
-                if controller?.guiding == true {
-                    controller?.stepGuide(forward: x >= Theme.Reader.edgeZone)
+                if reader?.guiding == true {
+                    reader?.stepGuide(forward: x >= Theme.Reader.edgeZone)
                     return
                 }
                 // En continuo, como en Libros de Apple, tocar solo muestra u oculta los controles.
                 if ReaderFlow.current == .scrolled {
                     withAnimation(Theme.Motion.standard) { chrome.wrappedValue.toggle() }
                 } else if x < Theme.Reader.edgeZone {
-                    controller?.previous()
+                    reader?.previous()
                 } else if x > 1 - Theme.Reader.edgeZone {
-                    controller?.next()
+                    reader?.next()
                 } else {
                     withAnimation(Theme.Motion.standard) { chrome.wrappedValue.toggle() }
                 }

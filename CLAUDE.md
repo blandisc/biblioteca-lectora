@@ -26,4 +26,6 @@
   (foliate da NaN en secciones de dos páginas y la app se cerraba). Lo vigila `DesignRulesTests`.
 - Una posición «está en la página» si cae entre su principio y su final (reader.js, con CFI);
   nunca compares el principio exacto ni el avance: cambian al volver a paginar.
+- Sin advertencias de Xcode (26 nov 2026): GitHub compila el iPhone, el Mac y LectoraCore
+  tratando cada advertencia como error; si aparece una, se arregla, no se apaga.
 - Antes de subir: `swift test` en `Packages/LectoraCore` (en CI) y `scripts/lint-design.sh`.

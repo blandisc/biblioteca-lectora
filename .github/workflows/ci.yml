@@ -9,9 +9,10 @@ jobs:
     name: Núcleo (swift test)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      # Sin advertencias (26 nov 2026): una advertencia nueva hace fallar la prueba.
       - name: Pruebas de LectoraCore
-        run: swift test --package-path Packages/LectoraCore
+        run: swift test --package-path Packages/LectoraCore -Xswiftc -warnings-as-errors
       - name: Pruebas de LectoraCore en hora de México (fechas que no dependen de UTC)
         run: TZ=America/Mexico_City swift test --package-path Packages/LectoraCore
       - name: Sistema de diseño (sin valores sueltos en pantallas)
@@ -23,7 +24,7 @@ jobs:
     name: App (iPhone y Mac)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # La app usa lo de iOS 26 (vidrio, marcas en la barra): el Xcode de fábrica
       # del runner (16.4) no lo conoce y la compilación fallaba desde el 23 nov.
       - name: Usar el Xcode más reciente
@@ -42,8 +43,10 @@ jobs:
           xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS
           -destination 'generic/platform=iOS Simulator'
           -configuration Debug build CODE_SIGNING_ALLOWED=NO
+          SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
       - name: Compilar para Mac
         run: >
           xcodebuild -project Lectora.xcodeproj -scheme Lectora_macOS
           -destination 'generic/platform=macOS'
           -configuration Debug build CODE_SIGNING_ALLOWED=NO
+          SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
