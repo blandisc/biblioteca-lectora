@@ -20,6 +20,9 @@ enum LaunchOptions {
     static var demo: String? { UserDefaults.standard.string(forKey: "screenshot.demo") }
     /// Importar los libros de `Documents/Semilla` al arrancar (biblioteca vacía).
     static var seed: Bool { UserDefaults.standard.bool(forKey: "screenshot.seed") }
+    /// Ajustes › Tu Gabinete como si viviera en otro lado: `icloud`, `icloudNested`,
+    /// `folder` o `moving` (para revisar el dibujo en cada estado).
+    static var cabinet: String? { UserDefaults.standard.string(forKey: "screenshot.cabinet") }
 }
 
 /// Lo que todavía no funciona no se muestra: nada en la app promete algo que no hace.

@@ -1362,6 +1362,116 @@ struct ConnectionsArt: View {
     }
 }
 
+/// Tu Gabinete (TG-1): la carpeta por dentro, como en el Finder. Arriba dónde vive;
+/// adentro, Biblioteca (forma de Calibre) y Notas (Markdown), cada una con su cifra.
+/// Cambia sola cuando la mueves a iCloud Drive o a otra carpeta.
+struct CabinetArt: View {
+    /// Dónde vive la carpeta.
+    enum Place: Equatable {
+        /// En el dispositivo: «iPhone», «iPad» o «Mac».
+        case device(String)
+        /// En iCloud Drive; `path` son las carpetas de en medio («Libros › Lectura»), si las hay.
+        case iCloud(path: String?)
+        /// En otra carpeta (un disco, Dropbox…): su nombre.
+        case folder(String)
+
+        var title: String {
+            switch self {
+            case .device(let name): name == "Mac" ? "En esta Mac" : "En este \(name)"
+            case .iCloud(let path): path.map { "iCloud Drive › \($0)" } ?? "iCloud Drive"
+            case .folder(let name): "En «\(name)»"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .device(let name): name == "Mac" ? "laptopcomputer" : name == "iPad" ? "ipad" : "iphone"
+            case .iCloud: "icloud"
+            case .folder: "externaldrive"
+            }
+        }
+    }
+
+    let place: Place
+    /// El nombre de la carpeta del Gabinete («Gabinete» si no la renombraste).
+    let folder: String
+    let books: Int
+    let notes: Int
+    var moving = false
+
+    var body: some View {
+        SettingsArt {
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                node(symbol: place.symbol, title: place.title, tint: Theme.ink, busy: moving)
+                VStack(alignment: .leading, spacing: Theme.Space.s) {
+                    node(symbol: "folder.fill", title: folder, tint: Theme.accent)
+                    VStack(alignment: .leading, spacing: Theme.Space.s) {
+                        node(symbol: "folder", title: "Biblioteca", note: "forma de Calibre", figure: count(books, "libro", "libros"))
+                        node(symbol: "folder", title: "Notas", note: "Markdown", figure: count(notes, "nota", "notas"))
+                    }
+                    .branch()
+                }
+                .branch()
+            }
+            .padding(.horizontal, Theme.Space.l)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Tu Gabinete \(place.title.lowercased()): \(count(books, "libro", "libros")) y \(count(notes, "nota", "notas"))")
+        .animation(Theme.Motion.select, value: place)
+    }
+
+    private func node(symbol: String, title: String, tint: Color = Theme.secondaryInk, note: String? = nil,
+                      figure: String? = nil, busy: Bool = false) -> some View {
+        HStack(spacing: Theme.Space.s) {
+            Group {
+                if busy { ProgressView().controlSize(.mini) } else { Image(systemName: symbol) }
+            }
+            .font(.footnote)
+            .foregroundStyle(tint)
+            .frame(width: Theme.Size.artTreeIcon)
+            Text(title)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Theme.ink)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .layoutPriority(1)
+            // Si no cabe, lo primero que se corta es la nota, nunca el nombre ni la cifra.
+            if let note {
+                Text(note)
+                    .font(.caption)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: Theme.Space.s)
+            if let figure {
+                Text(figure)
+                    .font(.footnote.weight(.medium))
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.ink)
+                    .fixedSize()
+            }
+        }
+    }
+
+    /// «1 libro», «1,250 libros», «0 notas».
+    private func count(_ value: Int, _ one: String, _ many: String) -> String {
+        "\(value.formatted(.number.locale(.gabinete))) \(value == 1 ? one : many)"
+    }
+}
+
+private extension View {
+    /// Un nivel del árbol: un paso adentro y la guía fina que lo cuelga de su carpeta.
+    func branch() -> some View {
+        padding(.leading, Theme.Space.l)
+            .overlay(alignment: .leading) {
+                Rectangle()
+                    .fill(Theme.track)
+                    .frame(width: Theme.Size.hairline)
+                    .padding(.leading, Theme.Size.artTreeGuide)
+            }
+    }
+}
+
 /// El colofón al final de Ajustes (AJ-3): la firma, una línea corta y la versión.
 struct Colophon: View {
     let version: String
@@ -1793,13 +1903,11 @@ struct StatTrio: View {
     }
 
     let items: [Item]
-    /// A la izquierda, como cifras de libreta (Ajustes › Tu Gabinete); centradas en el diario.
-    var leading = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(items) { item in
-                VStack(alignment: leading ? .leading : .center, spacing: Theme.Space.xs) {
+                VStack(spacing: Theme.Space.xs) {
                     Text(item.value)
                         .font(.bookTitle)
                         .monospacedDigit()
@@ -1808,7 +1916,7 @@ struct StatTrio: View {
                         .minimumScaleFactor(Theme.Emphasis.labelMinScale)
                     CapsText(text: item.label)
                 }
-                .frame(maxWidth: .infinity, alignment: leading ? .leading : .center)
+                .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .combine)
             }
         }

@@ -142,6 +142,9 @@ enum Theme {
         static let artHub: CGFloat = 58
         static let artHubLetter: CGFloat = 20
         static let artWire: CGFloat = 44
+        /// El ícono de cada carpeta en el árbol de Tu Gabinete y dónde cuelga su guía.
+        static let artTreeIcon: CGFloat = 18
+        static let artTreeGuide: CGFloat = 9
         /// Los renglones de la hojita de Lectura, a lo largo de la página.
         static let artLines: [CGFloat] = [1, 1, 0.86, 1, 0.62]
         /// Renglones de esa hojita: grueso y largo de cada uno (fracción del ancho).

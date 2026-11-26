@@ -187,6 +187,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `SettingsArt` | El lugar del dibujo de una tarjeta: `Size.settingsArt` (150) de alto, en papel, con una raya abajo | Ajustes |
 | `ReadingArt` | Lectura: una hoja con renglones, el contador de palabras y la tarjetita del resumen; apagas uno y se va del dibujo (AJ-6) | Ajustes › Lectura |
 | `BookDataArt` | Datos de los libros: libro sin datos → la fuente → el libro con portada y sinopsis | Ajustes › Datos de los libros |
+| `CabinetArt` | Tu Gabinete (TG-1): la carpeta por dentro como en el Finder; arriba dónde vive (este iPhone, iCloud Drive con sus carpetas, otra carpeta) y adentro Biblioteca y Notas con sus cifras | Ajustes › Tu Gabinete |
 | `ConnectionsArt` | Conexiones: tu Gabinete al centro y un hilo a cada servicio, verde al conectarlo | Ajustes › Conexiones |
 | `Colophon` | La firma al final: «GABINETE», una línea corta y la versión (AJ-3) | Ajustes |
 | `BookmarkRibbon` | La cinta verde del marcador colgando de la esquina de la hoja | Lector, en páginas |
@@ -211,7 +212,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `FactRow` | Etiqueta / valor con línea fina y cifras exactas | Ficha del libro |
 | `EmptyState` | `RuledLabel` con lo que falta, explicación y acción opcional | Toda lista vacía |
 | `LinkRow` | Fila de libreta (`Size.row`): título, valor, flecha y línea finísima debajo; con `marked` o `status`, su punto | «Por revisar», Ajustes |
-| `StatTrio` | Tres cifras grandes con su rótulo en versalitas; centradas o a la izquierda (`leading`) | Diario, Ajustes › Tu Gabinete |
+| `StatTrio` | Tres cifras grandes con su rótulo en versalitas, centradas | Diario |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
 | `BrandMark` | «GABINETE» en Cinzel, centrado (o a la izquierda) | Bienvenida, dentro de `DeskHeader` |

@@ -116,12 +116,14 @@ struct SettingsScreen: View {
                 .screenContent()
             }
             #if DEBUG
-            // Capturas: `-screenshot.demo settingsEnd` abre Ajustes ya al final; `settingsMiddle`, a media hoja.
+            // Capturas: `-screenshot.demo settingsEnd` abre Ajustes ya al final; `settingsMiddle`, a media hoja;
+            // `settingsCabinet`, en Tu Gabinete.
             .task {
                 guard let demo = LaunchOptions.demo, demo.hasPrefix("settings") else { return }
                 try? await Task.sleep(for: .seconds(1))
                 if demo == "settingsEnd" { scroller.scrollTo(Self.colophon, anchor: .bottom) }
                 if demo == "settingsMiddle" { scroller.scrollTo(Self.bookData, anchor: .center) }
+                if demo == "settingsCabinet" { scroller.scrollTo(Self.cabinet, anchor: .center) }
             }
             #endif
             }
@@ -177,19 +179,19 @@ struct SettingsScreen: View {
 }
 
 extension SettingsScreen {
-    /// «Tu Gabinete»: por ahora sus tres cifras (libros, notas y dónde vive) y lo que se
-    /// hace con la carpeta. El dibujo de esta tarjeta espera su propuesta (TG).
+    /// «Tu Gabinete» (TG-1): el dibujo de la carpeta con dónde vive y sus cifras, y lo
+    /// que se hace con ella.
     private var cabinetSection: some View {
         SettingsCard(title: "Tu Gabinete",
                      help: "Tus libros con la forma de Calibre y tus notas en Markdown.",
                      more: "Dentro hay dos carpetas: Biblioteca, con la misma forma que una de Calibre (puedes abrirla en Calibre y restaurar la base de datos), y Notas, en Markdown. En iCloud Drive, tu iPhone y tu Mac usan la misma.") {
-            StatTrio(items: [
-                .init(value: "\(model.library.books.count)", label: "Libros"),
-                .init(value: "\(model.notes.notes.count)", label: "Notas"),
-                .init(value: place, label: "Dónde vive"),
-            ], leading: true)
-            .padding(.vertical, Theme.Space.l)
-            .overlay(alignment: .bottom) { Hairline() }
+            CabinetArt(place: place,
+                       folder: model.library.isLocal ? "Gabinete" : model.library.cabinet.lastPathComponent,
+                       books: model.library.books.count,
+                       notes: model.notes.notes.count,
+                       moving: model.library.moving || LaunchOptions.cabinet == "moving")
+                .id(Self.cabinet)
+        } content: {
             if model.library.moving {
                 HStack(spacing: Theme.Space.l) {
                     ProgressView()
@@ -208,21 +210,36 @@ extension SettingsScreen {
         .buttonStyle(.plain)
     }
 
-    /// Dónde vive el Gabinete, en una palabra.
-    private var place: String {
+    /// Dónde vive el Gabinete: este dispositivo, iCloud Drive (con sus carpetas de en
+    /// medio) u otra carpeta.
+    private var place: CabinetArt.Place {
+        #if DEBUG
+        switch LaunchOptions.cabinet {
+        case "icloud": return .iCloud(path: nil)
+        case "icloudNested": return .iCloud(path: "Libros › Lectura")
+        case "folder": return .folder("Dropbox")
+        default: break
+        }
+        #endif
         if model.library.isLocal {
             #if os(iOS)
-            return "iPhone"
+            return .device(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")
             #else
-            return "Mac"
+            return .device("Mac")
             #endif
         }
-        let name = CabinetLocation.displayName(model.library.cabinet)
-        return name.hasPrefix("iCloud") ? "iCloud" : name
+        let parent = model.library.cabinet.deletingLastPathComponent().standardizedFileURL.path
+        if let range = parent.range(of: "com~apple~CloudDocs") {
+            let middle = parent[range.upperBound...].split(separator: "/").joined(separator: " › ")
+            return .iCloud(path: middle.isEmpty ? nil : middle)
+        }
+        if parent.contains("Mobile Documents") { return .iCloud(path: nil) }
+        return .folder(model.library.cabinet.deletingLastPathComponent().lastPathComponent)
     }
 
     private static let colophon = "colofon"
     private static let bookData = "datos"
+    private static let cabinet = "gabinete"
 
     static var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""

@@ -30,6 +30,8 @@ struct SlitScreen: View {
     @State private var playing = false
     @State private var finished = false
     @State private var loading = true
+    /// Solo tus toques vibran: que el capítulo se acabe no (la lectura nunca vibra sola).
+    @State private var taps = 0
 
     private var current: Slit.Chunk? { chunks.indices.contains(index) ? chunks[index] : nil }
 
@@ -58,7 +60,11 @@ struct SlitScreen: View {
         .foregroundStyle(ink)
         .background(paper.ignoresSafeArea())
         .contentShape(Rectangle())
-        .onTapGesture { if !finished { playing.toggle() } }
+        .onTapGesture {
+            guard !finished else { return }
+            playing.toggle()
+            taps += 1
+        }
         .gesture(
             DragGesture(minimumDistance: Theme.Reader.slitSwipe)
                 .onEnded { value in
@@ -66,7 +72,12 @@ struct SlitScreen: View {
                     step(value.translation.width > 0 ? -1 : 1)
                 }
         )
-        .sensoryFeedback(.selection, trigger: playing)
+        .sensoryFeedback(.selection, trigger: taps)
+        #if os(iOS)
+        // Mientras corre sola nadie toca la pantalla: que no se apague a media frase.
+        .onChange(of: playing) { _, now in UIApplication.shared.isIdleTimerDisabled = now }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        #endif
         .task { await load(nextChapter: false) }
         .task(id: playing) { await run() }
         .onChange(of: unit) { _, _ in rechunk() }

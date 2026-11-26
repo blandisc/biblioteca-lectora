@@ -166,8 +166,9 @@ struct ReaderView: View {
             }
         }
         .animation(Theme.Motion.sheet, value: showsSession)
-        // Con la guía puesta, tocar avanza el renglón; esto la quita.
-        .overlay(alignment: .topTrailing) {
+        // Con la guía puesta, tocar avanza el renglón; esto la quita. Abajo, junto al
+        // folio: arriba tapaba el primer renglón.
+        .overlay(alignment: .bottomTrailing) {
             if controller.guiding && !showsChrome {
                 Button { withAnimation(Theme.Motion.standard) { controller.stopGuide() } } label: {
                     Image(systemName: "xmark")
