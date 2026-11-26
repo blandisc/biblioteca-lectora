@@ -17,11 +17,6 @@ enum Theme {
     static let ink = Color(light: 0x1C1B19, dark: 0xECE9E2)
     /// Texto sobre tinta.
     static let onInk = Color(light: 0xFFFFFF, dark: 0x141413)
-    /// Marca: verde fichero (en oscuro, verde claro). Acción principal, avance
-    /// y pestaña elegida; el gabinete del ícono hecho color.
-    static let brand = Color(light: 0x24332B, dark: Green.dark)
-    /// Texto sobre la marca.
-    static let onBrand = Color(light: 0xFFFFFF, dark: 0x141413)
     /// Texto secundario.
     static let secondaryInk = Color(light: 0x6F6C65, dark: 0x9C988F)
     /// Texto terciario: folios y etiquetas pequeñas.
@@ -40,10 +35,13 @@ enum Theme {
     /// Lo tuyo dentro y fuera del libro (subrayados, notas, marcador, la cita): el mismo
     /// verde, con nombre propio para que todo lo que marca apunte a un solo lugar.
     static let highlight = accent
+    /// Letra sobre el verde (la tarjeta para compartir, la portada del dibujo de Ajustes).
+    static let onAccent = Color(light: 0xFFFFFF, dark: 0x141413)
 
     /// El verde de Gabinete, escrito una sola vez (26 nov 2026). De aquí salen `accent`,
-    /// `highlight`, las etapas de lectura y el color de los subrayados en el libro. Ningún
-    /// otro archivo escribe un verde (`testOneGreenForEverything`).
+    /// `highlight`, `action`, el color del sistema (enlaces, «Listo», alertas), las etapas
+    /// de lectura y los subrayados en el libro: cambiar el acento es cambiar estas dos
+    /// líneas. Ningún otro lugar escribe un verde (`testOneGreenForEverything`).
     enum Green {
         static let light: UInt32 = 0x0F4A35
         static let dark: UInt32 = 0x4FB386
@@ -52,9 +50,9 @@ enum Theme {
             String(format: "#%06X", dark ? Green.dark : Green.light)
         }
     }
-    /// Acción principal («Seguir leyendo», «Nota nueva»): verde fichero en los dos modos,
+    /// Acción principal («Seguir leyendo», «Nota nueva»): el verde hondo en los dos modos,
     /// con letra clara. En oscuro antes era un bloque verde menta que gritaba (SD-1).
-    static let action = Color(light: 0x24332B, dark: 0x24332B)
+    static let action = Color(light: Green.light, dark: Green.light)
     /// Letra sobre la acción principal.
     static let onAction = Color(light: 0xF3EFE6, dark: 0xECE9E2)
 

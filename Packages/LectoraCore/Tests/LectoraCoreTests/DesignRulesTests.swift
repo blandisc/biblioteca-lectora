@@ -482,19 +482,46 @@ final class DesignRulesTests: XCTestCase {
     /// en oscuro era un bloque verde menta que gritaba más que el libro.
     func testMainActionIsDarkInBothModes() {
         let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.text ?? ""
-        let regex = try! NSRegularExpression(pattern: #"static let action = Color\(light: 0x([0-9A-F]{6}), dark: 0x([0-9A-F]{6})\)"#)
         var problems: [String] = []
-        if let match = regex.firstMatch(in: theme, range: NSRange(theme.startIndex..., in: theme)),
-           let light = Range(match.range(at: 1), in: theme), let dark = Range(match.range(at: 2), in: theme) {
-            if theme[light] != theme[dark] { problems.append("Theme.action cambia en oscuro") }
-            for hex in [theme[light], theme[dark]] where (UInt32(hex, radix: 16) ?? 0) > 0x404040 {
-                problems.append("Theme.action #\(hex) no es oscuro")
-            }
-        } else {
-            problems.append("No encontré Theme.action")
+        // Desde el 26 nov 2026 la acción es el verde hondo en los dos modos: sale de `Theme.Green`.
+        if !theme.contains("static let action = Color(light: Green.light, dark: Green.light)") {
+            problems.append("Theme.action no es Green.light en los dos modos")
+        }
+        if let green = Self.greenPair(theme), Self.luminance(green.light) > 0.1 {
+            problems.append("Theme.Green.light no es oscuro: la acción principal dejaría de leerse como bloque")
         }
         if !Self.piece("PrimaryButton").contains("Theme.action") { problems.append("PrimaryButton no usa Theme.action") }
         check(problems, "La acción principal va oscura en los dos modos")
+    }
+
+    static func greenPair(_ theme: String) -> (light: UInt32, dark: UInt32)? {
+        let regex = try! NSRegularExpression(pattern: #"static let (light|dark): UInt32 = 0x([0-9A-F]{6})"#)
+        var found: [String: UInt32] = [:]
+        for match in regex.matches(in: theme, range: NSRange(theme.startIndex..., in: theme)) {
+            if let key = Range(match.range(at: 1), in: theme), let hex = Range(match.range(at: 2), in: theme) {
+                found[String(theme[key])] = UInt32(theme[hex], radix: 16)
+            }
+        }
+        guard let light = found["light"], let dark = found["dark"] else { return nil }
+        return (light, dark)
+    }
+
+    static func luminance(_ hex: UInt32) -> Double {
+        func linear(_ value: UInt32) -> Double {
+            let channel = Double(value & 0xFF) / 255
+            return channel <= 0.03928 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(hex >> 16) + 0.7152 * linear(hex >> 8) + 0.0722 * linear(hex)
+    }
+
+    /// Un color «se ve verde» si su tono cae entre el amarillo verdoso y el azul verdoso y
+    /// no es casi gris (el `#24332B` de la marca vieja lo era: tono 128°, saturación 0,29).
+    static func looksGreen(_ hex: UInt32) -> Bool {
+        let (r, g, b) = (Double((hex >> 16) & 0xFF), Double((hex >> 8) & 0xFF), Double(hex & 0xFF))
+        let top = max(r, g, b), span = top - min(r, g, b)
+        guard top > 0, span / top > 0.2, g == top || (b == top && g > r) else { return false }
+        let hue: Double = g == top ? 120 + 60 * (b - r) / span : 240 + 60 * (r - g) / span
+        return (80...190).contains(hue)
     }
 
     /// Sistema base de la casa (D2-B, interoperabilidad): la negrita va solo en el título más
@@ -522,20 +549,30 @@ final class DesignRulesTests: XCTestCase {
     /// (`Theme.accent`, `Theme.highlight`, `Theme.Green.css`). El libro (reader.js) no escribe colores.
     func testOneGreenForEverything() {
         let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.text ?? ""
-        let regex = try! NSRegularExpression(pattern: #"static let (?:light|dark): UInt32 = 0x([0-9A-F]{6})"#)
-        let greens = regex.matches(in: theme, range: NSRange(theme.startIndex..., in: theme))
-            .compactMap { Range($0.range(at: 1), in: theme).map { String(theme[$0]) } }
-        var problems = greens.count == 2 ? [] : ["No encontré Theme.Green.light y .dark"]
-        // Los verdes de antes (verde hoja y su pareja oscura, y las etapas) no vuelven.
-        let banned = greens + ["3D6B55", "8FBFA4", "5E8B73", "CFDDD4", "3B5546", "B9DCC6"]
-        for file in Self.sources("App") where !file.path.hasSuffix("Theme.swift") {
-            for (index, line) in file.lines.enumerated() where banned.contains(where: { line.uppercased().contains($0) }) {
-                problems.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces).prefix(120))")
+        var problems = Self.greenPair(theme) == nil ? ["No encontré Theme.Green.light y .dark"] : []
+        // Ningún color con tono verde se escribe fuera de `Theme.Green`, ni en Theme.swift
+        // (26 nov 2026: la marca y la acción tenían otro verde, #24332B, y el color del sistema
+        // salía de ahí; los acentos no se veían iguales).
+        let hex = try! NSRegularExpression(pattern: #"0x([0-9A-Fa-f]{6})\b"#)
+        for file in Self.sources("App") {
+            var insideGreen = false
+            for (index, line) in file.lines.enumerated() {
+                if line.contains("enum Green {") { insideGreen = true }
+                defer { if insideGreen, line.trimmingCharacters(in: .whitespaces) == "}" { insideGreen = false } }
+                if insideGreen || line.contains("ds-exception:") { continue }
+                for match in hex.matches(in: line, range: NSRange(line.startIndex..., in: line)) {
+                    guard let range = Range(match.range(at: 1), in: line), let value = UInt32(line[range], radix: 16),
+                          Self.looksGreen(value) else { continue }
+                    problems.append("\(file.path):\(index + 1): #\(line[range]) \(line.trimmingCharacters(in: .whitespaces).prefix(100))")
+                }
             }
         }
+        // El color del sistema (enlaces, «Listo», alertas) es el acento.
+        let app = Self.sources("App/Shared").first { $0.path.hasSuffix("LectoraApp.swift") }?.text ?? ""
+        if !app.contains(".tint(Theme.accent)") { problems.append("LectoraApp: el color del sistema no es Theme.accent") }
         let script = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
-        let hex = try! NSRegularExpression(pattern: #"'#[0-9A-Fa-f]{6}'"#)
-        if hex.firstMatch(in: script, range: NSRange(script.startIndex..., in: script)) != nil {
+        let css = try! NSRegularExpression(pattern: #"'#[0-9A-Fa-f]{6}'"#)
+        if css.firstMatch(in: script, range: NSRange(script.startIndex..., in: script)) != nil {
             problems.append("reader.js escribe un color: el verde llega de la app (Theme.Green.css)")
         }
         check(problems, "Un verde escrito fuera de Theme.Green: apunta a Theme.accent, Theme.highlight o Theme.Green.css")

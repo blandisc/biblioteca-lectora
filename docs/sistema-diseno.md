@@ -60,16 +60,15 @@ Gabinete cumple el sistema base común a todas las apps de Fernando
 | `field` | `#EFEDE8` | `#242320` | Campos, filtro activo, botón secundario |
 | `ink` | `#1C1B19` | `#ECE9E2` | Texto |
 | `onInk` | `#FFFFFF` | `#141413` | Texto sobre tinta |
-| `brand` | `#24332B` | `#4FB386` | Marca (verde fichero; en oscuro, el mismo verde del acento): avance de un libro, la tarjeta para compartir, el color del sistema |
-| `action` | `#24332B` | `#24332B` | La acción principal (`PrimaryButton`), oscura en los dos modos (regla 6) |
+| `action` | = `Green.light` | = `Green.light` | La acción principal (`PrimaryButton`): el verde hondo en los dos modos (regla 6) |
 | `onAction` | `#F3EFE6` | `#ECE9E2` | Letra sobre la acción principal |
-| `onBrand` | `#FFFFFF` | `#141413` | Texto sobre la marca |
 | `secondaryInk` | `#6F6C65` | `#9C988F` | Texto secundario (contraste ≥ 4,5 sobre `paper`) |
 | `tertiaryInk` | `#837F78` | `#7C7870` | Folios y etiquetas pequeñas (contraste ≥ 3 sobre `paper`) |
 | `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
 | `sunken` | `#F2F0EB` | `#121110` | El papel hondo de Ajustes, debajo de sus tarjetas (AJ-D, AJ-8) |
 | `card` | `#FFFFFF` | `#1F1E1C` | Una tarjeta de Ajustes |
-| `accent` | `#0F4A35` | `#4FB386` | Verde botella (AC-3, 26 nov 2026), el único acento: dónde estás, lo que avanzas y lo tuyo (regla 1). Solo lo pintan las piezas. Sale de `Theme.Green`, la única fuente del verde (26 nov 2026) |
+| `accent` | `#0F4A35` | `#4FB386` | Verde botella (AC-3, 26 nov 2026), el único acento: dónde estás, lo que avanzas y lo tuyo (regla 1). Solo lo pintan las piezas. Sale de `Theme.Green`, la única fuente del verde (26 nov 2026). También es el color del sistema (enlaces, «Listo», alertas), la tarjeta para compartir y la acción principal: **para cambiar el acento se cambian las dos líneas de `Theme.Green` y nada más** |
+| `onAccent` | `#FFFFFF` | `#141413` | Letra sobre el verde: la tarjeta para compartir, la portada del dibujo de Ajustes |
 | `highlight` | = `accent` | = `accent` | Lo tuyo: subrayados, marcadores, citas y enlaces de notas, en la app y dentro del libro (`reader.js` lo recibe de `Theme.Green.css`, nunca escribe un color). Todo apunta aquí |
 
 **Etapas de lectura** (`Theme.stage(_:)`): del gris al verde del acento, el mismo verde
@@ -395,7 +394,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testOnlyPiecesPaintTheAccent` | Regla 1 (26 nov 2026): ninguna pantalla usa el verde directo; las acciones van en tinta (`TextAction`) |
 | `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `RuledLabel` o `CountLine`, nunca a mano |
 | `testFiguresAreExact` | Regla 4: toda pieza que enseña cifras las pone del mismo ancho |
-| `testOneGreenForEverything` | Un solo verde: sus valores solo viven en `Theme.Green`; fuera de `Theme.swift` no hay verdes viejos ni nuevos escritos a mano, y `reader.js` no escribe ningún color |
+| `testOneGreenForEverything` | Un solo verde: ningún color con tono verde se escribe fuera de `Theme.Green` (ni en `Theme.swift`, ni en pantallas, piezas o el libro), `action` y el color del sistema salen de él, y `reader.js` no escribe ningún color |
 | `testSpacingKeepsTheHouseScale` | Regla 5 y SB-2 de la casa: sin 12 ni 6, y nada heredado en `sistema-base.json` |
 | `testMainActionIsDarkInBothModes` | Regla 6: `Theme.action` igual y oscuro en los dos modos, y `PrimaryButton` lo usa |
 | `testBoldOnlyForTitlesAndFigures` | D2-B de la casa: negrita solo en el título más grande y en cifras |
@@ -413,6 +412,7 @@ su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
 | portada dibujada | `CoverView` | La letra de la portada tipográfica es una fracción de su ancho (`Theme.CoverArt`), no un tamaño de la interfaz |
 | fuente del lector | Lector › «Aa» | La muestra de cada fuente es la fuente que vas a leer, al tamaño que elegiste |
 | índice A–Z | `LetterIndex` | Las 27 letras van en columna a la orilla, como el índice de Contactos: a 12 pt no caben en un iPhone chico |
+| portadas generadas | `CoverStyle.generated` | Las doce cubiertas de los libros sin portada son colores de libro, no acentos: una de ellas es verde a propósito |
 | paleta del lector | `ReaderPalette` | Los fondos del lector son sus propios tokens: el texto viaja como color CSS a la página |
 
 ### Lectura guiada (26 nov 2026: LG-B, AV-1, HE-A y HE-B, EN-1)

@@ -1279,13 +1279,13 @@ struct BookDataArt: View {
                 }
                 .frame(width: Theme.Size.artArrow)
                 VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                    Capsule().fill(Theme.onBrand.opacity(Theme.Emphasis.folioMuted)).frame(height: Theme.Size.ghostLine)
-                    Capsule().fill(Theme.onBrand.opacity(Theme.Emphasis.folioMuted)).frame(height: Theme.Size.ghostLine)
+                    Capsule().fill(Theme.onAccent.opacity(Theme.Emphasis.folioMuted)).frame(height: Theme.Size.ghostLine)
+                    Capsule().fill(Theme.onAccent.opacity(Theme.Emphasis.folioMuted)).frame(height: Theme.Size.ghostLine)
                         .padding(.trailing, Theme.Space.l)
                 }
                 .padding(Theme.Space.s)
                 .frame(width: Theme.Size.artBook.width, height: Theme.Size.artBook.height, alignment: .top)
-                .background(Theme.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.cover))
+                .background(Theme.accent, in: RoundedRectangle(cornerRadius: Theme.Radius.cover))
                 VStack(alignment: .leading, spacing: Theme.Space.xs) {
                     ForEach(Array(Theme.Size.swatchLines.enumerated()), id: \.offset) { _, length in
                         GeometryReader { proxy in
@@ -2435,10 +2435,10 @@ struct ShareCard: View {
             }
             .padding(.top, Theme.Space.l)
         }
-        .foregroundStyle(Theme.onBrand)
+        .foregroundStyle(Theme.onAccent)
         .padding(Theme.Space.xl)
         .frame(width: Theme.Size.shareCard.width, height: Theme.Size.shareCard.height, alignment: .topLeading)
-        .background(Theme.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
+        .background(Theme.accent, in: RoundedRectangle(cornerRadius: Theme.Radius.tile))
     }
 
     private func cardNumber(_ value: String, _ label: String) -> some View {

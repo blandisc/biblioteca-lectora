@@ -53,9 +53,9 @@ extension CoverStyle {
         // Doce tonos de cubierta bien separados entre sí (cálidos, fríos, claros y oscuros).
         let palette: [(UInt32, UInt32)] = [
             (0x2A2927, 0xEDEAE2), (0x3E4A6B, 0xEEF0F6), (0xC98B4E, 0x2B1A0E),
-            (0x2F5D50, 0xF1EBDD), (0xE4C887, 0x2E2010), (0x5A2E2A, 0xF3E6D8),
+            (0x2F5D50, 0xF1EBDD), (0xE4C887, 0x2E2010), (0x5A2E2A, 0xF3E6D8), // ds-exception: portadas generadas
             (0xD9D2C3, 0x1C1B19), (0x6B4E7A, 0xF1EAF4), (0x1F2A44, 0xE9DFC9),
-            (0xB8C4B0, 0x1E261C), (0x9A3B2E, 0xF7E8E0), (0x4F6D7A, 0xEEF3F5),
+            (0xB8C4B0, 0x1E261C), (0x9A3B2E, 0xF7E8E0), (0x4F6D7A, 0xEEF3F5), // ds-exception: portadas generadas
         ]
         // FNV-1a: títulos parecidos caen en colores distintos.
         var hash: UInt32 = 2_166_136_261
