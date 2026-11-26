@@ -391,6 +391,15 @@ enum Theme {
         /// En continuo, el marcador cae estos renglones debajo del desvanecido de
         /// arriba: así el hilo y la cinta se ven enteros, no medio borrados (26 nov 2026).
         static let bookmarkLinesBelowFade = 2
+        /// En continuo, en lugar de la barra del sistema: un punto en el margen derecho
+        /// que baja contigo mientras deslizas (SC-D, 26 nov 2026). Su tamaño, qué tan
+        /// tenue va, cuánto sigue visible al parar y cuánto tarda en apagarse.
+        static let scrollDot: CGFloat = 6
+        /// Del borde derecho al centro del punto: a media orilla del texto.
+        static let scrollDotInset: CGFloat = 14
+        static let scrollDotOpacity = 0.55
+        static let scrollDotHold: TimeInterval = 0.8
+        static let scrollDotFade: TimeInterval = 0.35
         /// El lomo del libro: sombra en la orilla izquierda de la hoja, su ancho y
         /// qué tan oscura empieza en papel claro y en papel oscuro.
         static let spineWidth: CGFloat = 26

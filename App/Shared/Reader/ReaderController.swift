@@ -253,7 +253,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let scrollTop = Int(Self.safeTop + Theme.Reader.pageMarginTop)
         let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl), "
             + "margin: \(top), marginBottom: \(Int(Theme.Reader.pageMarginBottom)), "
-            + "scrollTop: \(scrollTop), textMargin: \(Int(Theme.Reader.textMargin)) })"
+            + "scrollTop: \(scrollTop), textMargin: \(Int(Theme.Reader.textMargin)), "
+            + "dot: { size: \(Theme.Reader.scrollDot), opacity: \(Theme.Reader.scrollDotOpacity), "
+            + "top: \(Self.safeTop + Theme.Reader.topFade), bottom: \(Theme.Reader.pageMarginBottom), "
+            + "right: \(Theme.Reader.scrollDotInset), hold: \(Theme.Reader.scrollDotHold), fade: \(Theme.Reader.scrollDotFade) } })"
         flowScript = script
         guard isReady else { return }
         #if os(iOS)

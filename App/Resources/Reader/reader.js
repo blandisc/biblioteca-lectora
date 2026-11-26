@@ -179,6 +179,38 @@ const applyStyle = () => {
     renderer.setStyles?.(getCSS(style))
 }
 reducedMotion?.addEventListener?.('change', applyStyle)
+
+// En continuo, en vez de la barra del sistema, un puntito en el margen derecho que
+// baja contigo mientras deslizas y se apaga al parar (SC-D, 26 nov 2026). Medidas,
+// tenue y tiempo llegan de la app (Theme.Reader.scrollDot…), el color es la tinta.
+let scrollDot = null
+let scrollDotTimer = null
+const moveScrollDot = () => {
+    const renderer = view?.renderer
+    const dot = style.dot
+    if (!renderer || !dot || style.flow !== 'scrolled') return
+    if (!scrollDot) {
+        scrollDot = document.createElement('div')
+        Object.assign(scrollDot.style, {
+            position: 'fixed', borderRadius: '50%', pointerEvents: 'none', opacity: '0', zIndex: '2',
+        })
+        document.body.append(scrollDot)
+    }
+    const room = renderer.viewSize - renderer.size
+    if (room <= 0) return
+    const fraction = Math.min(1, Math.max(0, renderer.start / room))
+    const track = window.innerHeight - dot.top - dot.bottom - dot.size
+    Object.assign(scrollDot.style, {
+        width: `${dot.size}px`, height: `${dot.size}px`,
+        right: `${dot.right - dot.size / 2}px`,
+        top: `${dot.top + fraction * track}px`,
+        background: style.textColor ?? 'currentColor',
+        transition: `opacity ${dot.fade}s ease-out`,
+        opacity: `${dot.opacity}`,
+    })
+    clearTimeout(scrollDotTimer)
+    scrollDotTimer = setTimeout(() => { if (scrollDot) scrollDot.style.opacity = '0' }, dot.hold * 1000)
+}
 // El margen en puntos depende del ancho: al girar se recalcula.
 window.addEventListener('resize', applyStyle)
 
@@ -623,6 +655,7 @@ window.lectora = {
         document.body.append(view)
         view.addEventListener('relocate', onRelocate)
         view.addEventListener('load', onLoad)
+        view.addEventListener('load', () => view.renderer?.addEventListener('scroll', moveScrollDot), { once: true })
         view.addEventListener('draw-annotation', onDrawAnnotation)
         view.addEventListener('create-overlay', onCreateOverlay)
         view.addEventListener('show-annotation', onShowAnnotation)
@@ -747,6 +780,7 @@ window.lectora = {
         applyStyle()
         if (partial.linkColor) for (const value of [...highlights, ...drawnBookmarks]) view?.addAnnotation({ value })
         if (flowChanged) syncBookmarkMarks()
+        if (flowChanged && scrollDot) scrollDot.style.opacity = '0'
     },
     // Devuelve la selección actual ({ cfi, text, prefix, suffix }) y la limpia.
     takeSelection() {

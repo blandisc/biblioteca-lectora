@@ -516,7 +516,10 @@ export class Paginator extends HTMLElement {
             grid-column: 1 / -1;
             grid-row: 1 / -1;
             overflow: auto;
+            /* Gabinete: sin la barra del sistema; la app dibuja un punto (SC-D). */
+            scrollbar-width: none;
         }
+        #container::-webkit-scrollbar { display: none; }
         #header {
             grid-column: 3 / 4;
             grid-row: 1;

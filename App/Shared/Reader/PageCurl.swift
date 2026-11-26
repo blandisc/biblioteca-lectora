@@ -274,7 +274,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
         let (offset, velocity) = TurnMotion.step(offset: turn.progress - animation.to, velocity: animation.velocity,
                                                  stiffness: stiffness,
                                                  dt: min(now - animation.time, Theme.Reader.turnFrameCap))
-        turn.animation = (to: animation.to, velocity: velocity, time: now)
+        turn.animation = (to: animation.to, velocity: CGFloat(velocity), time: now)
         // Nunca más allá del final ni de regreso: una hoja no rebota.
         turn.progress = min(max(animation.to + offset, 0), 1)
         let done = abs(turn.progress - animation.to) < Theme.Reader.turnRest

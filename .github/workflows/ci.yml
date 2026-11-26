@@ -24,6 +24,13 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      # La app usa lo de iOS 26 (vidrio, marcas en la barra): el Xcode de fábrica
+      # del runner (16.4) no lo conoce y la compilación fallaba desde el 23 nov.
+      - name: Usar el Xcode más reciente
+        run: |
+          latest=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$latest"
+          xcodebuild -version
       - name: Instalar XcodeGen
         run: brew install xcodegen
       - name: Descargar foliate-js

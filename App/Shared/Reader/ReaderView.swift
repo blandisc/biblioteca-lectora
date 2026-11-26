@@ -423,7 +423,7 @@ struct ReaderView: View {
     }
 
     #if DEBUG
-    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|contents`): pasa
+    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|dot|contents`): pasa
     /// páginas o cambia de modo solo, sin tocar la pantalla. Solo en Debug.
     private func runDemo() {
         guard !demoStarted, let demo = LaunchOptions.demo else { return }
@@ -439,6 +439,12 @@ struct ReaderView: View {
                 }
             case "aa":
                 showsAppearance = true
+            case "dot":
+                // En continuo: baja dos pantallas para ver el punto que viaja y cómo se apaga.
+                for _ in 0..<2 {
+                    controller.next()
+                    try? await Task.sleep(for: .seconds(0.4))
+                }
             case "contents":
                 tools = .contents
             case "bookmark":
