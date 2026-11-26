@@ -418,6 +418,8 @@ enum Theme {
         /// La hendidura: el aire arriba y abajo del pedazo que se lee, y cuántos
         /// pedazos se asoman antes y después.
         static let slitPadding: CGFloat = 16
+        /// Alto de lo que se lee en la hendidura: dos renglones de `.bookTitle`, por frase o por palabra.
+        static let slitHeight: CGFloat = 72
         static let slitContext = 4
         /// Lo que hay que deslizar el dedo para regresar o adelantar un pedazo.
         static let slitSwipe: CGFloat = 24

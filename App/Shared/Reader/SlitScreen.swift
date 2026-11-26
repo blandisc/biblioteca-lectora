@@ -34,6 +34,8 @@ struct SlitScreen: View {
     @State private var taps = 0
 
     private var current: Slit.Chunk? { chunks.indices.contains(index) ? chunks[index] : nil }
+    /// PR-1: mientras corre solo queda la ranura; al pausar vuelven la ✕ y los controles.
+    private var showsControls: Bool { !playing || finished }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,6 +50,9 @@ struct SlitScreen: View {
                 Spacer()
             }
             .padding(.horizontal, Theme.Reader.chromeInset)
+            .opacity(showsControls ? Theme.Emphasis.rest : 0)
+            .allowsHitTesting(showsControls)
+            .accessibilityHidden(!showsControls)
 
             Spacer(minLength: 0)
             slit
@@ -56,7 +61,11 @@ struct SlitScreen: View {
             controls
                 .padding(.horizontal, Theme.Reader.textMargin)
                 .padding(.bottom, Theme.Space.l)
+                .opacity(showsControls ? Theme.Emphasis.rest : 0)
+                .allowsHitTesting(showsControls)
+                .accessibilityHidden(!showsControls)
         }
+        .animation(Theme.Motion.standard, value: showsControls)
         .foregroundStyle(ink)
         .background(paper.ignoresSafeArea())
         .contentShape(Rectangle())
@@ -102,8 +111,9 @@ struct SlitScreen: View {
                         Text(loading ? "Abriendo…" : "").font(.bookTitle)
                     }
                 }
+                // El mismo alto por frase o por palabra: los filos no brincan al cambiar.
+                .frame(maxWidth: .infinity, minHeight: Theme.Reader.slitHeight)
                 .padding(.vertical, Theme.Reader.slitPadding)
-                .frame(maxWidth: .infinity)
                 .contentTransition(.opacity)
                 .animation(Theme.Motion.press, value: index)
                 Hairline()
@@ -125,28 +135,49 @@ struct SlitScreen: View {
                     Task { await load(nextChapter: true) }
                 }
             } else {
-                // Por frase (HE-B) o palabra por palabra (HE-A): se cambia sin perder el lugar.
-                FilterBar(items: Array(Slit.Unit.allCases.reversed()), selection: $unit) { $0.name }
-                HStack(spacing: Theme.Space.l) {
-                    Button { pace = max(Slit.wordsPerMinuteRange.lowerBound, pace - Slit.wordsPerMinuteStep) } label: {
-                        Image(systemName: "minus").roundInGlass()
-                    }
-                    .accessibilityLabel("Más despacio")
-                    Text("\(pace) palabras/min")
-                        .font(.footnote.weight(.medium))
-                        .monospacedDigit()
-                        .frame(maxWidth: .infinity)
-                    Button { pace = min(Slit.wordsPerMinuteRange.upperBound, pace + Slit.wordsPerMinuteStep) } label: {
-                        Image(systemName: "plus").roundInGlass()
-                    }
-                    .accessibilityLabel("Más rápido")
+                // Una sola fila: por frase (HE-B) o palabra (HE-A) a la izquierda, como en toda
+                // la app, y la velocidad a la derecha.
+                HStack(alignment: .center, spacing: Theme.Space.l) {
+                    FilterBar(items: Array(Slit.Unit.allCases.reversed()), selection: $unit) { $0.name }
+                    pacer
                 }
-                Text(playing ? "Toca para pausar · desliza para regresar" : "Toca para empezar")
+                Text(hint)
                     .font(.footnote)
                     .foregroundStyle(ink.opacity(Theme.Emphasis.folioMuted))
             }
         }
         .buttonStyle(.plain)
+    }
+
+    /// − 260 palabras/min +: la cifra arriba y su unidad chica abajo, entre los dos botones.
+    private var pacer: some View {
+        HStack(spacing: Theme.Space.s) {
+            Button { pace = max(Slit.wordsPerMinuteRange.lowerBound, pace - Slit.wordsPerMinuteStep) } label: {
+                Image(systemName: "minus").roundInGlass()
+            }
+            .accessibilityLabel("Más despacio")
+            VStack(spacing: 0) {
+                Text("\(pace)")
+                    .font(.subheadline.weight(.medium))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                Text("palabras/min")
+                    .font(.caption)
+                    .foregroundStyle(ink.opacity(Theme.Emphasis.folioMuted))
+            }
+            .fixedSize()
+            .accessibilityElement(children: .combine)
+            .animation(Theme.Motion.select, value: pace)
+            Button { pace = min(Slit.wordsPerMinuteRange.upperBound, pace + Slit.wordsPerMinuteStep) } label: {
+                Image(systemName: "plus").roundInGlass()
+            }
+            .accessibilityLabel("Más rápido")
+        }
+        .fixedSize()
+    }
+
+    private var hint: String {
+        index == 0 ? "Toca para empezar · desliza para mover" : "Toca para seguir · desliza para regresar"
     }
 
     private func context(before: Bool) -> String {
