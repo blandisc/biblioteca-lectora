@@ -59,11 +59,11 @@ struct ReaderView: View {
 
     // El cuerpo va en tres partes: entero, el compilador de Xcode 26 no alcanzaba a revisarlo.
     var body: some View {
-        tail(withOverlays
+        lifecycle(alerts(tail(withOverlays
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { controller.session?.resume() } else { controller.session?.pause() }
             }
-            .onDisappear { controller.session?.finish() })
+            .onDisappear { controller.session?.finish() })))
     }
 
     /// La página y lo que se le pone encima mientras lees.
@@ -207,6 +207,11 @@ extension ReaderView {
         .onChange(of: controller.tappedHighlight) { _, cfi in
             if cfi != nil { showsChrome = false }
         }
+    }
+
+    /// Notas, avisos y errores.
+    fileprivate func alerts(_ content: some View) -> some View {
+        content
         .sheet(item: $controller.noteLinkTarget) { annotation in
             NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
                 controller.notice = "Se guardó en «\(saved.title)»."
@@ -235,6 +240,11 @@ extension ReaderView {
         } message: {
             Text(controller.notice ?? "")
         }
+    }
+
+    /// Al abrir y cuando cambia la letra, el tema o el modo: se lo dice al libro.
+    fileprivate func lifecycle(_ content: some View) -> some View {
+        content
         .onAppear {
             applyStyle()
             // Sin capturar la vista: el controlador no debe retenerse a sí mismo.
