@@ -28,6 +28,10 @@ enum Theme {
     static let tertiaryInk = Color(light: 0x837F78, dark: 0x7C7870)
     /// Pistas de progreso y separadores.
     static let track = Color(light: 0xE6E3DC, dark: 0x34322E)
+    /// El papel hondo de Ajustes, debajo de sus tarjetas (AJ-D): se despegan sin sombras.
+    static let sunken = Color(light: 0xF2F0EB, dark: 0x121110)
+    /// Una tarjeta de Ajustes sobre el papel hondo.
+    static let card = Color(light: 0xFFFFFF, dark: 0x1F1E1C)
     /// Verde botella (AC-3, 26 nov 2026): el único acento. Marca solo tres cosas: dónde
     /// estás (pestaña, filtro elegido), lo que avanzas (palabras, marca de la Mesa) y lo
     /// tuyo (subrayados, cinta, pendientes). Las acciones van en tinta. Solo lo pintan las
@@ -129,6 +133,19 @@ enum Theme {
         static let tabMark = CGSize(width: 16, height: 2)
         /// Las hojitas de muestra de Apariencia (Sistema, Claro, Oscuro).
         static let pageSwatch: CGFloat = 78
+        /// Ajustes (AJ-D): el alto del dibujo de cada tarjeta y lo que va en él.
+        static let settingsArt: CGFloat = 150
+        static let artPage = CGSize(width: 200, height: 124)
+        static let artSummary: CGFloat = 118
+        static let artBook = CGSize(width: 52, height: 78)
+        static let artArrow: CGFloat = 72
+        static let artSynopsis: CGFloat = 84
+        static let artNode: CGFloat = 46
+        static let artHub: CGFloat = 58
+        static let artHubLetter: CGFloat = 20
+        static let artWire: CGFloat = 44
+        /// Los renglones de la hojita de Lectura, a lo largo de la página.
+        static let artLines: [CGFloat] = [1, 1, 0.86, 1, 0.62]
         /// Renglones de esa hojita: grueso y largo de cada uno (fracción del ancho).
         static let swatchLine: CGFloat = 3
         static let swatchLines: [CGFloat] = [1, 0.8, 0.55]

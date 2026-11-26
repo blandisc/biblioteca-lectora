@@ -63,18 +63,26 @@ struct SettingsScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: "Ajustes")
-                    RuledSection(title: "Apariencia") {
+                    // AJ-D: cada grupo en su tarjeta, con el dibujo de lo que controla.
+                    SettingsCard(title: "Apariencia") {
                         PageSwatchPicker(options: AppearanceMode.allCases, selection: $mode, title: \.title, tone: \.tone)
-                            .padding(.top, Theme.Space.l)
+                            .padding(.vertical, Theme.Space.l)
                     }
-                    RuledSection(title: "Lectura") {
+                    SettingsCard(title: "Lectura",
+                                 help: "Cada sesión se anota en tu carpeta. Nada sale de tus dispositivos.",
+                                 more: "Gabinete anota el tiempo, las palabras y cuánto sostuviste la atención en cada sesión.") {
+                        ReadingArt(counter: showsCounter, summary: showsSummary)
+                    } content: {
                         ToggleRow(title: "Contador de palabras", isOn: $showsCounter)
                         ToggleRow(title: "Resumen al cerrar el libro", isOn: $showsSummary)
-                        HelpText(text: "Cada sesión se anota en tu carpeta. Nada sale de tus dispositivos.",
-                                 more: "Gabinete anota el tiempo, las palabras y cuánto sostuviste la atención en cada sesión.")
                     }
                     cabinetSection
-                    RuledSection(title: "Datos de los libros") {
+                    SettingsCard(title: "Datos de los libros",
+                                 help: "Portadas, sinopsis y datos salen de Open Library.",
+                                 more: "Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.") {
+                        BookDataArt(source: googleKey.isEmpty ? "Open Library" : "Open Library y Google")
+                            .id(Self.bookData)
+                    } content: {
                         LinkRow(title: "Fuente", value: googleKey.isEmpty ? "Open Library" : "Open Library y Google Books", chevron: false)
                         FieldRow(title: "Clave de Google Books", prompt: "Agregar", text: $googleKey)
                         NavigationLink {
@@ -84,10 +92,13 @@ struct SettingsScreen: View {
                                     value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
                         }
                         .buttonStyle(.plain)
-                        HelpText(text: "Portadas, sinopsis y datos salen de Open Library.",
-                                 more: "Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.")
                     }
-                    RuledSection(title: "Conexiones") {
+                    SettingsCard(title: "Conexiones",
+                                 help: "Cada servicio con tu propia llave, en tu Llavero de iCloud. Gabinete no tiene servidor.") {
+                        ConnectionsArt(services: Connector.allCases.map {
+                            .init(letter: String($0.title.prefix(1)), name: $0.title, connected: connectors.isConnected($0))
+                        })
+                    } content: {
                         ForEach(Connector.allCases) { connector in
                             let connected = connectors.isConnected(connector)
                             NavigationLink {
@@ -97,22 +108,25 @@ struct SettingsScreen: View {
                             }
                             .buttonStyle(.plain)
                         }
-                        HelpText(text: "Cada servicio con tu propia llave, en tu Llavero de iCloud. Gabinete no tiene servidor.")
                     }
                     Colophon(version: Self.version)
+                        .padding(.top, Theme.Space.xl)
                         .id(Self.colophon)
                 }
                 .screenContent()
             }
             #if DEBUG
-            // Capturas: `-screenshot.demo settingsEnd` abre Ajustes ya al final.
+            // Capturas: `-screenshot.demo settingsEnd` abre Ajustes ya al final; `settingsMiddle`, a media hoja.
             .task {
-                guard LaunchOptions.demo == "settingsEnd" else { return }
+                guard let demo = LaunchOptions.demo, demo.hasPrefix("settings") else { return }
                 try? await Task.sleep(for: .seconds(1))
-                scroller.scrollTo(Self.colophon, anchor: .bottom)
+                if demo == "settingsEnd" { scroller.scrollTo(Self.colophon, anchor: .bottom) }
+                if demo == "settingsMiddle" { scroller.scrollTo(Self.bookData, anchor: .center) }
             }
             #endif
             }
+            // Las tarjetas sobre un papel un poco más hondo que el de la app (AJ-8).
+            .background(Theme.sunken.ignoresSafeArea())
             .pushedScreen()
             .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
             .toolbar {
@@ -163,9 +177,12 @@ struct SettingsScreen: View {
 }
 
 extension SettingsScreen {
-    /// «Tu Gabinete»: tres cifras (libros, notas y dónde vive) y lo que se hace con la carpeta.
+    /// «Tu Gabinete»: por ahora sus tres cifras (libros, notas y dónde vive) y lo que se
+    /// hace con la carpeta. El dibujo de esta tarjeta espera su propuesta (TG).
     private var cabinetSection: some View {
-        RuledSection(title: "Tu Gabinete") {
+        SettingsCard(title: "Tu Gabinete",
+                     help: "Tus libros con la forma de Calibre y tus notas en Markdown.",
+                     more: "Dentro hay dos carpetas: Biblioteca, con la misma forma que una de Calibre (puedes abrirla en Calibre y restaurar la base de datos), y Notas, en Markdown. En iCloud Drive, tu iPhone y tu Mac usan la misma.") {
             StatTrio(items: [
                 .init(value: "\(model.library.books.count)", label: "Libros"),
                 .init(value: "\(model.notes.notes.count)", label: "Notas"),
@@ -187,8 +204,6 @@ extension SettingsScreen {
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
             Button { tidyReport = model.library.tidy() } label: { LinkRow(title: "Ordenar la biblioteca") }
-            HelpText(text: "Tus libros con la forma de Calibre y tus notas en Markdown.",
-                     more: "Dentro hay dos carpetas: Biblioteca, con la misma forma que una de Calibre (puedes abrirla en Calibre y restaurar la base de datos), y Notas, en Markdown. En iCloud Drive, tu iPhone y tu Mac usan la misma.")
         }
         .buttonStyle(.plain)
     }
@@ -207,6 +222,7 @@ extension SettingsScreen {
     }
 
     private static let colophon = "colofon"
+    private static let bookData = "datos"
 
     static var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""

@@ -984,21 +984,6 @@ struct StatusDot: View {
     }
 }
 
-/// Sección de una hoja de libreta (Ajustes, AJ-B): su rótulo con línea y, debajo, sus filas.
-/// Sin tarjetas: separa el aire y la línea.
-struct RuledSection<Content: View>: View {
-    let title: String
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            RuledLabel(text: title)
-                .padding(.bottom, Theme.Space.xs)
-            content
-        }
-        .padding(.top, Theme.Space.xxl)
-    }
-}
 
 /// Campo de texto en una fila de libreta: el nombre a la izquierda y lo escrito a la derecha.
 struct FieldRow: View {
@@ -1149,6 +1134,231 @@ private struct DiagonalHalf: Shape {
             path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
             path.closeSubpath()
         }
+    }
+}
+
+// MARK: - Ajustes en tarjetas ilustradas (AJ-D)
+
+/// Un grupo de Ajustes: su rótulo en versalitas, una tarjeta sobre el papel hondo
+/// con el dibujo de lo que controla arriba y sus filas abajo, y la ayuda debajo.
+struct SettingsCard<Art: View, Content: View>: View {
+    let title: String
+    var help: String? = nil
+    var more: String? = nil
+    @ViewBuilder var art: Art
+    @ViewBuilder var content: Content
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            CapsText(text: title)
+                .padding(.horizontal, Theme.Space.l)
+                .accessibilityAddTraits(.isHeader)
+            VStack(spacing: 0) {
+                art
+                VStack(spacing: 0) { content }
+                    .padding(.horizontal, Theme.Space.l)
+                    // La raya de la última fila no se asoma en la orilla de la tarjeta.
+                    .padding(.bottom, -Theme.Size.hairline)
+            }
+            .background(Theme.card, in: shape)
+            .clipShape(shape)
+            .overlay { shape.strokeBorder(Theme.track, lineWidth: Theme.Size.hairline) }
+            if let help {
+                HelpText(text: help, more: more)
+                    .padding(.horizontal, Theme.Space.l)
+            }
+        }
+        .padding(.top, Theme.Space.xl)
+    }
+}
+
+extension SettingsCard where Art == EmptyView {
+    init(title: String, help: String? = nil, more: String? = nil, @ViewBuilder content: () -> Content) {
+        self.init(title: title, help: help, more: more, art: { EmptyView() }, content: content)
+    }
+}
+
+/// El lugar del dibujo: papel, su alto y una raya que lo separa de las filas.
+struct SettingsArt<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .frame(maxWidth: .infinity)
+            .frame(height: Theme.Size.settingsArt)
+            .background(Theme.paper)
+            .clipped()
+            .overlay(alignment: .bottom) { Hairline() }
+            .accessibilityHidden(true)
+    }
+}
+
+/// Lectura: una hoja con renglones; abajo el contador de palabras y, al lado, la
+/// tarjetita del resumen. Apagas uno y se va del dibujo (AJ-6).
+struct ReadingArt: View {
+    let counter: Bool
+    let summary: Bool
+
+    var body: some View {
+        SettingsArt {
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                ForEach(Array(Theme.Size.artLines.enumerated()), id: \.offset) { _, length in
+                    GeometryReader { proxy in
+                        Capsule().fill(Theme.ink.opacity(Theme.Emphasis.ghost))
+                            .frame(width: proxy.size.width * length)
+                    }
+                    .frame(height: Theme.Size.ghostLine)
+                }
+                Spacer(minLength: 0)
+                (Text("1 248").foregroundStyle(Theme.accent).fontWeight(.semibold) + Text(" palabras"))
+                    .font(.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.secondaryInk)
+                    .opacity(counter ? Theme.Emphasis.rest : 0)
+            }
+            .padding(Theme.Space.l)
+            .frame(width: Theme.Size.artPage.width, height: Theme.Size.artPage.height, alignment: .topLeading)
+            .background(Theme.card)
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.control, topTrailingRadius: Theme.Radius.control))
+            .overlay {
+                UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.control, topTrailingRadius: Theme.Radius.control)
+                    .strokeBorder(Theme.track, lineWidth: Theme.Size.hairline)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                    CapsText(text: "Esta sesión")
+                    Text("24 min").font(.rowTitle)
+                    HStack(spacing: Theme.Size.stageGap) {
+                        ForEach([ReadingStage.skimming, .light, .immersed, .active], id: \.self) { stage in
+                            Theme.stage(stage).frame(height: Theme.Size.stageBarThin)
+                        }
+                    }
+                }
+                .padding(Theme.Space.s)
+                .frame(width: Theme.Size.artSummary, alignment: .leading)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
+                        .strokeBorder(Theme.track, lineWidth: Theme.Size.hairline)
+                }
+                .offset(x: Theme.Space.xl, y: summary ? Theme.Space.s : Theme.Size.artPage.height)
+                .opacity(summary ? Theme.Emphasis.rest : 0)
+            }
+            .frame(maxHeight: .infinity, alignment: .bottom)
+        }
+        .animation(Theme.Motion.select, value: counter)
+        .animation(Theme.Motion.select, value: summary)
+    }
+}
+
+/// Datos de los libros: un libro sin datos, la flecha de la fuente y el mismo
+/// libro con portada y sinopsis.
+struct BookDataArt: View {
+    let source: String
+
+    var body: some View {
+        SettingsArt {
+            HStack(spacing: Theme.Space.s) {
+                // El libro tal como llega: solo su título, sin portada.
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    Capsule().fill(Theme.ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                    Capsule().fill(Theme.ink.opacity(Theme.Emphasis.ghost)).frame(height: Theme.Size.ghostLine)
+                        .padding(.trailing, Theme.Space.l)
+                }
+                .padding(Theme.Space.s)
+                .frame(width: Theme.Size.artBook.width, height: Theme.Size.artBook.height, alignment: .bottom)
+                .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.cover))
+                VStack(spacing: Theme.Space.xs) {
+                    Image(systemName: "arrow.right")
+                        .font(.caption)
+                        .foregroundStyle(Theme.accent)
+                    CapsText(text: source, lines: 2)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(width: Theme.Size.artArrow)
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    Capsule().fill(Theme.onBrand.opacity(Theme.Emphasis.folioMuted)).frame(height: Theme.Size.ghostLine)
+                    Capsule().fill(Theme.onBrand.opacity(Theme.Emphasis.folioMuted)).frame(height: Theme.Size.ghostLine)
+                        .padding(.trailing, Theme.Space.l)
+                }
+                .padding(Theme.Space.s)
+                .frame(width: Theme.Size.artBook.width, height: Theme.Size.artBook.height, alignment: .top)
+                .background(Theme.brand, in: RoundedRectangle(cornerRadius: Theme.Radius.cover))
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    ForEach(Array(Theme.Size.swatchLines.enumerated()), id: \.offset) { _, length in
+                        GeometryReader { proxy in
+                            Capsule().fill(Theme.ink.opacity(Theme.Emphasis.ghost)).frame(width: proxy.size.width * length)
+                        }
+                        .frame(height: Theme.Size.ghostLine)
+                    }
+                    Text("Portada, sinopsis y año")
+                        .font(.caption)
+                        .foregroundStyle(Theme.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(width: Theme.Size.artSynopsis)
+            }
+        }
+    }
+}
+
+/// Conexiones: tu Gabinete al centro y un hilo a cada servicio; conectado, el hilo
+/// se vuelve verde y su punto se llena.
+struct ConnectionsArt: View {
+    struct Service: Identifiable {
+        let letter: String
+        let name: String
+        let connected: Bool
+        var id: String { name }
+    }
+    let services: [Service]
+
+    var body: some View {
+        SettingsArt {
+            HStack(spacing: 0) {
+                ForEach(Array(services.enumerated()), id: \.element.id) { index, service in
+                    if index == services.count / 2 { hub }
+                    if index >= services.count / 2 { wire(service.connected) }
+                    node(service)
+                    if index < services.count / 2 { wire(service.connected) }
+                }
+                if services.count < 2 { hub }
+            }
+            .padding(.bottom, Theme.Space.l)
+        }
+        .animation(Theme.Motion.select, value: services.map(\.connected))
+    }
+
+    private var hub: some View {
+        Text("G")
+            .font(.custom("Cinzel", size: Theme.Size.artHubLetter, relativeTo: .title3))
+            .frame(width: Theme.Size.artHub, height: Theme.Size.artHub)
+            .background(Theme.paper, in: Circle())
+            .overlay { Circle().strokeBorder(Theme.ink, lineWidth: Theme.Size.hairline) }
+    }
+
+    private func wire(_ on: Bool) -> some View {
+        Rectangle()
+            .fill(on ? Theme.accent : Theme.secondaryInk.opacity(Theme.Emphasis.folioMuted))
+            .frame(width: Theme.Size.artWire, height: Theme.Size.hairline)
+    }
+
+    private func node(_ service: Service) -> some View {
+        Text(service.letter)
+            .font(.rowTitle)
+            .frame(width: Theme.Size.artNode, height: Theme.Size.artNode)
+            .background(Theme.paper, in: Circle())
+            .overlay { Circle().strokeBorder(Theme.track, lineWidth: Theme.Size.hairline) }
+            .overlay(alignment: .topTrailing) { StatusDot(on: service.connected) }
+            .overlay(alignment: .bottom) {
+                Text(service.name)
+                    .font(.caption)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .fixedSize()
+                    .offset(y: Theme.Space.xl)
+            }
     }
 }
 

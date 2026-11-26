@@ -16,7 +16,7 @@ Cada regla dice lo que nota quien usa la app; la medida exacta vive en `Theme` c
 | # | Regla | Lo que notas | La cuida |
 |---|---|---|---|
 | 1 | **Un solo verde, y poco** | El verde botella marca solo dónde estás (pestaña, filtro elegido), lo que avanzas (palabras, la marca de la Mesa) y lo tuyo (subrayados, cinta, pendientes). Las acciones van en tinta | `testOnlyPiecesPaintTheAccent` |
-| 2 | **Líneas finas en vez de cajas** | Las secciones se separan con una línea finísima y aire, no con tarjetas grises | `testScreensUseCatalogPieces` (sin formas a mano), `RuledSection`, `ScreenHeading` |
+| 2 | **Líneas finas en vez de cajas** | Las secciones se separan con una línea finísima y aire, no con tarjetas grises. La excepción es Ajustes: tarjetas blancas con su dibujo sobre un papel más hondo (AJ-D, 26 nov 2026) | `testScreensUseCatalogPieces` (sin formas a mano), `RuledLabel`, `SettingsCard`, `ScreenHeading` |
 | 3 | **Rótulos en versalitas** | Toda sección se anuncia igual: mayúsculas chicas, espaciadas, con su línea a la derecha | `testCapsComeFromThePieces` |
 | 4 | **Cifras exactas** | Cantidades, fechas y porcentajes no bailan: todas las cifras miden lo mismo | `testFiguresAreExact`, `testDatesAndNumbersInSpanish` |
 | 5 | **Aire en una sola escala** | Todo espacio sale de 4 · 8 · 16 · 24 · 32 · 48, la escala común de la casa | `testSpacingKeepsTheHouseScale`, `tools/sistema-base` (SB-2) |
@@ -67,6 +67,8 @@ Gabinete cumple el sistema base común a todas las apps de Fernando
 | `secondaryInk` | `#6F6C65` | `#9C988F` | Texto secundario (contraste ≥ 4,5 sobre `paper`) |
 | `tertiaryInk` | `#837F78` | `#7C7870` | Folios y etiquetas pequeñas (contraste ≥ 3 sobre `paper`) |
 | `track` | `#E6E3DC` | `#34322E` | Pistas y separadores |
+| `sunken` | `#F2F0EB` | `#121110` | El papel hondo de Ajustes, debajo de sus tarjetas (AJ-D, AJ-8) |
+| `card` | `#FFFFFF` | `#1F1E1C` | Una tarjeta de Ajustes |
 | `accent` | `#0F4A35` | `#4FB386` | Verde botella (AC-3, 26 nov 2026), el único acento: dónde estás, lo que avanzas y lo tuyo (regla 1). Solo lo pintan las piezas. Sale de `Theme.Green`, la única fuente del verde (26 nov 2026) |
 | `highlight` | = `accent` | = `accent` | Lo tuyo: subrayados, marcadores, citas y enlaces de notas, en la app y dentro del libro (`reader.js` lo recibe de `Theme.Green.css`, nunca escribe un color). Todo apunta aquí |
 
@@ -175,7 +177,6 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `TextAction` | Acción de texto en tinta, que se toca en 44 (las acciones no van en verde) | «Todo bien», «Ver los N subrayados», «Borrar recientes», «Crear nota» |
 | `CapsText` | Versalitas de interfaz: mayúsculas chicas, espaciadas (`Tracking.caps`) y con cifras exactas. Toda versalita sale de aquí | Fecha de la Mesa, conteos, rótulos |
 | `RuledLabel` | Rótulo de sección: `CapsText` y una línea finísima hasta la orilla | «Donde lo dejaste», secciones de Ajustes, vacíos |
-| `RuledSection` | Sección de una hoja de libreta: `RuledLabel` arriba y sus filas debajo, sin tarjetas | Ajustes |
 | `CountLine` | El conteo de una lista en versalitas y, a la derecha, cómo se ordena | Biblioteca, Cuaderno |
 | `SortMenu` | Menú para elegir el orden, en versalitas de tinta con su flecha | Biblioteca, Cuaderno › Subrayados |
 | `ToggleRow` | Interruptor en una fila de libreta (`Size.row`), en verde | Ajustes › Lectura |
@@ -183,6 +184,11 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `HelpText` | Ayuda de una línea bajo una sección; lo largo detrás de «Más» (AJ-2) | Ajustes |
 | `StatusDot` | Punto lleno en verde (conectado, pendiente) o hueco en gris | `LinkRow` |
 | `PageSwatchPicker`, `PageTone` | Elegir entre hojitas de papel que se ven como el resultado; la elegida con filo verde (AJ-1) | Ajustes › Apariencia |
+| `SettingsCard` | Ajustes (AJ-D): rótulo en `CapsText`, tarjeta `card` con borde `track` sobre el papel hondo (`sunken`), su dibujo arriba y sus filas abajo; la ayuda (`HelpText`) debajo | Ajustes |
+| `SettingsArt` | El lugar del dibujo de una tarjeta: `Size.settingsArt` (150) de alto, en papel, con una raya abajo | Ajustes |
+| `ReadingArt` | Lectura: una hoja con renglones, el contador de palabras y la tarjetita del resumen; apagas uno y se va del dibujo (AJ-6) | Ajustes › Lectura |
+| `BookDataArt` | Datos de los libros: libro sin datos → la fuente → el libro con portada y sinopsis | Ajustes › Datos de los libros |
+| `ConnectionsArt` | Conexiones: tu Gabinete al centro y un hilo a cada servicio, verde al conectarlo | Ajustes › Conexiones |
 | `Colophon` | La firma al final: «GABINETE», una línea corta y la versión (AJ-3) | Ajustes |
 | `BookmarkRibbon` | La cinta verde del marcador colgando de la esquina de la hoja | Lector, en páginas |
 | `BookmarkGlyph` | El ícono del marcador en 44: relleno y en verde si la página está marcada | Lector, arriba a la derecha |
@@ -267,20 +273,22 @@ NavigationStack {
 
 **Cuadrícula:** `CoverGrid { ForEach { NavigationLink(value: book) { CoverCell(book: book) }.buttonStyle(PressableStyle()) } }`
 
-**Hoja de libreta (Ajustes y toda hoja de opciones):**
+**Ajustes en tarjetas ilustradas (AJ-D, 26 nov 2026):**
 ```swift
 NavigationStack {
     ScrollView {
         VStack(alignment: .leading, spacing: 0) {
             ScreenHeading(title: "Ajustes")
-            RuledSection(title: "Lectura") {
+            SettingsCard(title: "Lectura", help: "Una línea.", more: "Lo largo.") {
+                ReadingArt(…)                                      // el dibujo de lo que controla
+            } content: {
                 ToggleRow(…) · LinkRow(…) · FieldRow(…)            // filas de Size.row con su línea
-                HelpText(text: "Una línea.", more: "Lo largo.")
             }
             Colophon(version: …)                                   // si es la última hoja
         }
         .screenContent()
     }
+    .background(Theme.sunken.ignoresSafeArea())                    // el papel hondo
     .pushedScreen()
     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Listo") { dismiss() } } }
 }
