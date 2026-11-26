@@ -57,7 +57,17 @@ struct ReaderView: View {
             ?? controller.title ?? bookFile.deletingPathExtension().lastPathComponent
     }
 
+    // El cuerpo va en tres partes: entero, el compilador de Xcode 26 no alcanzaba a revisarlo.
     var body: some View {
+        tail(withOverlays
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { controller.session?.resume() } else { controller.session?.pause() }
+            }
+            .onDisappear { controller.session?.finish() })
+    }
+
+    /// La página y lo que se le pone encima mientras lees.
+    private var page: some View {
         ZStack {
             palette.background.ignoresSafeArea()
             // Tu página entra con un fundido corto cuando el libro ya se acomodó.
@@ -95,6 +105,11 @@ struct ReaderView: View {
             if controller.isSettled { chrome.transition(.opacity) }
         }
         .animation(Theme.Motion.standard, value: controller.isSettled)
+    }
+
+    /// La página con su barra de búsqueda, la tarjeta de la sesión y sus hojas.
+    private var withOverlays: some View {
+        page
         // Con «Aa» abierta se ve la página como al leer: sin botones encima (ni otra «Aa»).
         .onChange(of: showsAppearance) { _, shown in
             if shown { withAnimation(Theme.Motion.standard) { showsChrome = false } }
@@ -144,10 +159,13 @@ struct ReaderView: View {
         // Solo el botón de arriba cierra el libro: deslizar de la orilla pasa la hoja.
         .interactiveDismissDisabled()
         #endif
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active { controller.session?.resume() } else { controller.session?.pause() }
-        }
-        .onDisappear { controller.session?.finish() }
+    }
+}
+
+extension ReaderView {
+    /// Lo último del cuerpo del lector: subrayados, selección, notas y avisos.
+    fileprivate func tail(_ content: some View) -> some View {
+        content
         .sheet(isPresented: $showsAppearance) {
             ReaderAppearanceSheet()
         }
