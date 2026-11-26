@@ -808,6 +808,10 @@ export class Paginator extends HTMLElement {
         element[scrollProp] = Math.max(min, Math.min(max,
             element[scrollProp] + delta))
     }
+    // Gabinete: la guía del renglón mueve el texto en continuo, sin tocar el dedo.
+    nudge(delta) {
+        this.#container[this.scrollProp] += delta
+    }
     snap(vx, vy) {
         const velocity = this.#vertical ? vy : vx
         const [offset, a, b] = this.#scrollBounds

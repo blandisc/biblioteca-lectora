@@ -13,6 +13,9 @@ enum ReaderKeys {
     static let haptics = "reader.haptics"
     /// Cómo se pasa la hoja en páginas.
     static let turn = "reader.turn"
+    /// La hendidura: por frase o palabra por palabra, y a cuántas palabras por minuto.
+    static let slitUnit = "reader.slitUnit"
+    static let slitPace = "reader.slitPace"
 }
 
 /// Cómo se pasa la hoja en páginas (se elige en «Aa»).

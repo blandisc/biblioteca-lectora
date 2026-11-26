@@ -344,8 +344,97 @@ const isOnPage = cfi => {
 }
 const postMarks = () => post('marks', { cfis: bookmarkCFIs.filter(isOnPage) })
 
+// Lectura guiada (LG-B): la guía del renglón y la hendidura (HE). La app
+// dibuja la penumbra; aquí se encuentran los renglones y se mueve el texto.
+let lastRange = null
+let guide = null // { top, height, pending } — dónde está la guía, en puntos de la pantalla
+
+// Los renglones que se ven ahora, de arriba abajo, en puntos de la pantalla.
+const visibleLines = () => {
+    const renderer = view?.renderer
+    if (!renderer) return []
+    const rects = []
+    const height = window.innerHeight
+    for (const { doc } of renderer.getContents()) {
+        const frame = doc?.defaultView?.frameElement
+        if (!frame || !doc.body) continue
+        const box = frame.getBoundingClientRect()
+        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
+        const range = doc.createRange()
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (!node.data.trim()) continue
+            const parent = node.parentElement?.getBoundingClientRect()
+            if (!parent || parent.bottom + box.top < 0 || parent.top + box.top > height
+                || parent.right + box.left < 0 || parent.left + box.left > window.innerWidth) continue
+            range.selectNodeContents(node)
+            for (const r of range.getClientRects()) {
+                if (r.width < 1 || r.height < 1) continue
+                const top = r.top + box.top, left = r.left + box.left
+                if (left < -1 || left + r.width > window.innerWidth + 1 || top < 0 || top + r.height > height) continue
+                rects.push({ top, bottom: top + r.height })
+            }
+        }
+    }
+    rects.sort((a, b) => a.top - b.top)
+    const lines = []
+    for (const r of rects) {
+        const last = lines[lines.length - 1]
+        if (last && r.top < last.bottom - (r.bottom - r.top) / 2) {
+            last.top = Math.min(last.top, r.top)
+            last.bottom = Math.max(last.bottom, r.bottom)
+        } else lines.push({ ...r })
+    }
+    return lines
+}
+
+const postGuide = () => post('guide', guide ? { top: guide.top, height: guide.height } : {})
+
+// En continuo el texto sube con una curva corta; la guía se queda quieta.
+const glide = delta => new Promise(resolve => {
+    const renderer = view?.renderer
+    if (!renderer || !delta) return resolve()
+    const start = performance.now(), duration = 260
+    let moved = 0
+    const frame = now => {
+        const t = Math.min(1, (now - start) / duration)
+        const target = delta * (1 - Math.pow(1 - t, 3))
+        renderer.nudge(target - moved)
+        moved = target
+        t < 1 ? requestAnimationFrame(frame) : resolve()
+    }
+    requestAnimationFrame(frame)
+})
+
+// En páginas: el renglón `index` de la página (o el último si es -1).
+const placeOnPage = index => {
+    const lines = visibleLines()
+    if (!lines.length) { guide = { ...guide, top: null }; return postGuide() }
+    const line = lines[index < 0 ? lines.length - 1 : Math.min(index, lines.length - 1)]
+    guide = { top: line.top, height: line.bottom - line.top }
+    postGuide()
+}
+
+// La hendidura: el texto desde donde vas hasta el fin del capítulo.
+let slitStart = null
+const slitFrom = range => {
+    const doc = range?.startContainer?.ownerDocument
+    if (!doc?.body) return null
+    const contents = view.renderer.getContents().find(c => c.doc === doc)
+    const rest = doc.createRange()
+    rest.setStart(range.startContainer, range.startOffset)
+    rest.setEnd(doc.body, doc.body.childNodes.length)
+    slitStart = { doc, index: contents?.index ?? 0, rest }
+    return { text: rest.toString() }
+}
+
 const onRelocate = ({ detail }) => {
     const { fraction, cfi, tocItem, location, range } = detail
+    lastRange = range
+    // En páginas, al dar vuelta la hoja la guía empieza arriba (o abajo si regresaste).
+    if (guide && style.flow !== 'scrolled') {
+        const from = guide.pending ?? 0
+        requestAnimationFrame(() => placeOnPage(from))
+    }
     const chapter = chapterLeftOf(range)
     post('relocate', {
         // foliate da NaN en secciones de dos páginas (0 ÷ 0): no se manda.
@@ -660,6 +749,93 @@ window.lectora = {
     },
     next: () => view?.next(),
     prev: () => view?.prev(),
+
+    // Lectura guiada, el renglón. `anchor`: en continuo, a qué altura de la pantalla
+    // (0 a 1) se queda la guía.
+    async guideStart(anchor) {
+        if (style.flow === 'scrolled') {
+            const y = window.innerHeight * anchor
+            const lines = visibleLines()
+            const line = lines.find(l => l.bottom > y) ?? lines[0]
+            if (!line) return
+            guide = { top: y, height: line.bottom - line.top }
+            postGuide()
+            await glide(line.top - y)
+        } else {
+            guide = { top: null }
+            placeOnPage(0)
+        }
+    },
+    // Un renglón más (`dir` 1) o uno menos (-1). Al pasar del último de la página
+    // pide dar vuelta la hoja; en continuo sube el texto.
+    async guideStep(dir) {
+        if (!guide) return
+        const lines = visibleLines()
+        if (style.flow === 'scrolled') {
+            const current = lines.findIndex(l => l.bottom > guide.top + 1)
+            const target = lines[current + dir]
+            if (!target) return
+            guide = { top: guide.top, height: target.bottom - target.top }
+            postGuide()
+            await glide(target.top - guide.top)
+            return
+        }
+        const current = lines.findIndex(l => Math.abs(l.top - guide.top) < 2)
+        const next = current + dir
+        if (next >= 0 && next < lines.length) {
+            const line = lines[next]
+            guide = { top: line.top, height: line.bottom - line.top }
+            return postGuide()
+        }
+        guide = { ...guide, pending: dir > 0 ? 0 : -1 }
+        post('guideTurn', { dir })
+    },
+    guideStop() {
+        guide = null
+        postGuide()
+    },
+
+    // La hendidura: el texto desde la página que ves hasta el fin del capítulo.
+    slitText() {
+        return lastRange ? slitFrom(lastRange) : null
+    },
+    // El siguiente capítulo, desde su principio; `null` si ya no hay.
+    async slitNextSection() {
+        const renderer = view?.renderer
+        if (!renderer || !slitStart) return null
+        const before = slitStart.index
+        await new Promise(resolve => {
+            view.addEventListener('relocate', resolve, { once: true })
+            renderer.nextSection()
+            setTimeout(resolve, 1500)
+        })
+        const contents = renderer.getContents().find(c => c.index !== before) ?? renderer.getContents()[0]
+        if (!contents?.doc?.body || contents.index === before) return null
+        const range = contents.doc.createRange()
+        range.setStart(contents.doc.body, 0)
+        return slitFrom(range)
+    },
+    // Al cerrar la hendidura, el libro queda donde ibas: `offset` letras después del
+    // principio del texto que se mandó.
+    slitGoTo(offset) {
+        if (!slitStart) return
+        const { doc, index, rest } = slitStart
+        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
+        let left = offset
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (!rest.intersectsNode(node)) continue
+            const from = node === rest.startContainer ? rest.startOffset : 0
+            const available = node.data.length - from
+            if (left <= available) {
+                const range = doc.createRange()
+                range.setStart(node, from + left)
+                range.collapse(true)
+                navigation = 'jump'
+                return view.goTo(view.getCFI(index, range))
+            }
+            left -= available
+        }
+    },
     // Pasa de página sin animación y dice si se movió: la app ya tapó la página
     // con su foto y la va a doblar. Espera a que la nueva esté pintada.
     async turn(dir) {

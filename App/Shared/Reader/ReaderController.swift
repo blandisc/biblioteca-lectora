@@ -95,6 +95,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
 
     /// Toque en la página, con la posición horizontal de 0 a 1.
     var onTap: ((Double) -> Void)?
+    /// Lectura guiada, el renglón (LG-B): si está puesta y dónde va la guía
+    /// (arriba y alto, en puntos de la vista del libro). `nil` mientras se busca.
+    @Published private(set) var guiding = false
+    @Published private(set) var guideBand: ClosedRange<CGFloat>?
     /// Nueva posición, ya asentada (un instante después de pasar página).
     var onPositionSettled: ((Location) -> Void)?
     private var settleTask: Task<Void, Never>?
@@ -205,6 +209,31 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         }
     }
     func goTo(fraction: Double) { evaluate("window.lectora.goToFraction(\(fraction))") }
+
+    // MARK: Lectura guiada
+
+    func startGuide() {
+        guiding = true
+        evaluate("window.lectora.guideStart(\(Theme.Reader.guideAnchor))")
+    }
+    /// Un renglón más (`forward`) o uno menos.
+    func stepGuide(forward: Bool) { evaluate("window.lectora.guideStep(\(forward ? 1 : -1))") }
+    func stopGuide() {
+        guiding = false
+        guideBand = nil
+        evaluate("window.lectora.guideStop()")
+    }
+
+    /// La hendidura: el texto desde la página que ves hasta el fin del capítulo
+    /// (o, con `nextChapter`, el capítulo siguiente entero). `nil` si no hay más.
+    func slitText(nextChapter: Bool = false) async -> String? {
+        guard let webView else { return nil }
+        let script = nextChapter ? "return await window.lectora.slitNextSection()" : "return window.lectora.slitText()"
+        let value = try? await webView.callAsyncJavaScript(script, contentWorld: .page)
+        return (value as? [String: Any])?["text"] as? String
+    }
+    /// Al salir de la hendidura: el libro queda en el pedazo donde ibas.
+    func slitGoTo(offset: Int) { evaluate("window.lectora.slitGoTo(\(offset))") }
     /// Ir a una entrada del índice, a un resultado o a un subrayado (href o CFI).
     func goTo(target: String) { evaluate("window.lectora.goTo(\(Self.js(target)))") }
 
@@ -524,6 +553,14 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             annotation.cfi = cfi
             try? AnnotationStore.shared.save(annotation)
             evaluate("window.lectora.addHighlight(\(Self.js(cfi)))")
+        case "guide":
+            if let top = body["top"] as? Double, let height = body["height"] as? Double {
+                guideBand = CGFloat(top)...CGFloat(top + height)
+            } else {
+                guideBand = nil
+            }
+        case "guideTurn":
+            (body["dir"] as? Int ?? 1) > 0 ? next() : previous()
         case "tap":
             if let x = body["x"] as? Double { onTap?(x) }
         case "selecting":

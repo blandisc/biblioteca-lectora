@@ -1809,6 +1809,59 @@ struct FooterPreview: View {
     }
 }
 
+/// Lectura guiada (LG-B): todo menos el renglón que lees queda en penumbra,
+/// con el papel del libro encima. La guía viaja con un resorte corto.
+struct GuideShade: View {
+    let band: ClosedRange<CGFloat>
+    let paper: Color
+
+    var body: some View {
+        GeometryReader { proxy in
+            VStack(spacing: 0) {
+                paper.frame(height: max(0, band.lowerBound))
+                Color.clear.frame(height: band.upperBound - band.lowerBound)
+                paper.frame(height: max(0, proxy.size.height - band.upperBound))
+            }
+            .opacity(Theme.Reader.guideShade)
+        }
+        .animation(Theme.Motion.select, value: band)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// La hendidura: el pedazo que se lee, grande, con la letra del libro. Palabra
+/// por palabra (HE-A) lleva su letra de enfoque en verde, siempre en el mismo
+/// lugar de la ranura para que el ojo no se mueva; por frase (HE-B), centrada.
+struct SlitText: View {
+    let text: String
+    let focus: Int?
+    let ink: Color
+
+    var body: some View {
+        if let focus, focus < text.count {
+            let characters = Array(text)
+            // La letra de enfoque queda al centro: lo de antes a la izquierda, lo demás a la derecha.
+            HStack(spacing: 0) {
+                Text(String(characters[..<focus]))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                Text(String(characters[focus])).foregroundStyle(Theme.highlight)
+                Text(String(characters[(focus + 1)...]))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .font(.bookTitle)
+            .foregroundStyle(ink)
+            .lineLimit(1)
+        } else {
+            Text(text)
+                .font(.bookTitle)
+                .foregroundStyle(ink)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+        }
+    }
+}
+
 /// En continuo, bajo el pie: una rayita corta con la tinta del libro que se llena
 /// con lo leído del capítulo. Quieta; en lugar de la barra de desplazamiento (SC-C).
 struct ChapterLine: View {

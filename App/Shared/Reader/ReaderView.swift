@@ -25,6 +25,8 @@ struct ReaderView: View {
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @ObservedObject private var library = LibraryStore.shared
     @State private var showsAppearance = false
+    /// La hendidura (HE) a la vista, sobre el libro.
+    @State private var slitting = false
     #if DEBUG
     @State private var demoStarted = false
     #endif
@@ -74,6 +76,15 @@ struct ReaderView: View {
             // En continuo el texto corre hasta la orilla de arriba de la pantalla.
             ReaderWebView(controller: controller)
                 .ignoresSafeArea(edges: flow == .scrolled ? [.top, .bottom] : .bottom)
+                // El renglón (LG-B): lo demás en penumbra, en las mismas medidas que el libro.
+                .overlay {
+                    if let band = controller.guideBand {
+                        GuideShade(band: band, paper: palette.background)
+                            .ignoresSafeArea(edges: flow == .scrolled ? [.top, .bottom] : .bottom)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(Theme.Motion.standard, value: controller.guideBand == nil)
                 .opacity(controller.isSettled ? Theme.Emphasis.rest : 0)
             // Hasta que aparece la primera página: que se note que está trabajando.
             if !controller.isSettled && controller.errorMessage == nil {
@@ -155,10 +166,48 @@ struct ReaderView: View {
             }
         }
         .animation(Theme.Motion.sheet, value: showsSession)
+        // Con la guía puesta, tocar avanza el renglón; esto la quita.
+        .overlay(alignment: .topTrailing) {
+            if controller.guiding && !showsChrome {
+                Button { withAnimation(Theme.Motion.standard) { controller.stopGuide() } } label: {
+                    Image(systemName: "xmark")
+                        .font(.body.weight(.semibold))
+                        .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                        .glassCircle()
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, Theme.Reader.chromeInset)
+                .accessibilityLabel("Terminar el renglón")
+                .transition(.opacity)
+            }
+        }
+        .overlay {
+            if slitting {
+                SlitScreen(controller: controller, paper: palette.background, ink: palette.textColor) {
+                    withAnimation(Theme.Motion.standard) { slitting = false }
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(Theme.Motion.standard, value: slitting)
         #if os(iOS)
         // Solo el botón de arriba cierra el libro: deslizar de la orilla pasa la hoja.
         .interactiveDismissDisabled()
         #endif
+    }
+
+    /// «Guiada» en la tarjeta (EN-1): el renglón o la hendidura, por frase o por palabra.
+    private func guide(_ choice: GuideChoice) {
+        withAnimation(Theme.Motion.standard) { showsChrome = false }
+        switch choice {
+        case .line:
+            controller.startGuide()
+        case .slit(let unit):
+            controller.stopGuide()
+            UserDefaults.standard.set(unit.rawValue, forKey: ReaderKeys.slitUnit)
+            slitting = true
+        }
     }
 }
 
@@ -250,6 +299,11 @@ extension ReaderView {
             // Sin capturar la vista: el controlador no debe retenerse a sí mismo.
             let chrome = $showsChrome
             controller.onTap = { [weak controller] x in
+                // Con la guía del renglón: tocar avanza; en la orilla izquierda, regresa.
+                if controller?.guiding == true {
+                    controller?.stepGuide(forward: x >= Theme.Reader.edgeZone)
+                    return
+                }
                 // En continuo, como en Libros de Apple, tocar solo muestra u oculta los controles.
                 if ReaderFlow.current == .scrolled {
                     withAnimation(Theme.Motion.standard) { chrome.wrappedValue.toggle() }
@@ -300,7 +354,10 @@ extension ReaderView {
         .onChange(of: font) { _, _ in applyStyle() }
         .onChange(of: scale) { _, _ in applyStyle() }
         .onChange(of: dynamicTypeSize) { _, _ in applyStyle() }
-        .onChange(of: flow) { _, _ in applyStyle() }
+        .onChange(of: flow) { _, _ in
+            controller.stopGuide()
+            applyStyle()
+        }
         .onChange(of: turnStyle) { _, _ in applyStyle() }
     }
 
@@ -344,6 +401,7 @@ extension ReaderView {
                                 onContents: { tools = .contents },
                                 onSearch: { tools = .search },
                                 onAppearance: { showsAppearance = true },
+                                onGuide: { guide($0) },
                                 onSeek: { controller.goTo(fraction: $0) },
                                 onReturn: { origin in
                                     if let cfi = origin.cfi { controller.goTo(target: cfi) } else { controller.goTo(fraction: origin.fraction) }
@@ -456,7 +514,7 @@ extension ReaderView {
     }
 
     #if DEBUG
-    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|contents`): pasa
+    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|guide|slit|slitWord|contents`): pasa
     /// páginas o cambia de modo solo, sin tocar la pantalla. Solo en Debug.
     private func runDemo() {
         guard !demoStarted, let demo = LaunchOptions.demo else { return }
@@ -472,6 +530,15 @@ extension ReaderView {
                 }
             case "aa":
                 showsAppearance = true
+            case "guide":
+                // El renglón: se pone y baja tres renglones.
+                guide(.line)
+                for _ in 0..<3 {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    controller.stepGuide(forward: true)
+                }
+            case "slit", "slitWord":
+                guide(.slit(demo == "slit" ? .phrase : .word))
             case "contents":
                 tools = .contents
             case "bookmark":
@@ -566,6 +633,12 @@ private struct TopControls: View {
     }
 }
 
+/// Lo que se elige en «Guiada».
+enum GuideChoice {
+    case line
+    case slit(Slit.Unit)
+}
+
 /// Panel de abajo al tocar el centro: el capítulo (abre el índice), buscar y «Aa»,
 /// la barra para saltar y la página con la sesión. No se sube: qué dice el pie se
 /// elige tocando el pie mientras lees (26 nov 2026).
@@ -577,6 +650,7 @@ private struct BottomPanel: View {
     let onContents: () -> Void
     let onSearch: () -> Void
     let onAppearance: () -> Void
+    let onGuide: (GuideChoice) -> Void
     let onSeek: (Double) -> Void
     let onReturn: (ReaderController.Location) -> Void
     @State private var dragValue: Double?
@@ -644,6 +718,16 @@ private struct BottomPanel: View {
                         Text("Aa").roundInGlass()
                     }
                     .accessibilityLabel("Apariencia")
+                    // Lectura guiada (EN-1): el renglón o la hendidura.
+                    Menu {
+                        Button { onGuide(.line) } label: { Label("Renglón", systemImage: "text.line.first.and.arrowtriangle.forward") }
+                        Button { onGuide(.slit(.phrase)) } label: { Label("Hendidura por frase", systemImage: "text.word.spacing") }
+                        Button { onGuide(.slit(.word)) } label: { Label("Hendidura por palabra", systemImage: "character.cursor.ibeam") }
+                    } label: {
+                        Image(systemName: "text.viewfinder").roundInGlass()
+                    }
+                    .menuStyle(.button)
+                    .accessibilityLabel("Lectura guiada")
                 }
             }
 

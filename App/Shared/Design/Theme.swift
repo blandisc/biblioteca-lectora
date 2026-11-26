@@ -393,6 +393,16 @@ enum Theme {
         static let bookmarkLinesBelowFade = 2
         /// En continuo, el largo de la rayita bajo el pie que se llena con el capítulo.
         static let chapterLine: CGFloat = 64
+        /// Lectura guiada (LG-B): en continuo, a qué altura de la pantalla se queda
+        /// la guía; y qué tanto se apaga lo que no es el renglón.
+        static let guideAnchor = 0.38
+        static let guideShade = 0.72
+        /// La hendidura: el aire arriba y abajo del pedazo que se lee, y cuántos
+        /// pedazos se asoman antes y después.
+        static let slitPadding: CGFloat = 16
+        static let slitContext = 4
+        /// Lo que hay que deslizar el dedo para regresar o adelantar un pedazo.
+        static let slitSwipe: CGFloat = 24
         /// El lomo del libro: sombra en la orilla izquierda de la hoja, su ancho y
         /// qué tan oscura empieza en papel claro y en papel oscuro.
         static let spineWidth: CGFloat = 26
@@ -429,6 +439,8 @@ enum Theme {
         static let inGlass = 0.1
         /// El pie de una muestra que aún no tiene dato: más apagado que el folio.
         static let folioMuted = 0.55
+        /// Lo que se asoma alrededor de lo que lees (antes y después de la hendidura).
+        static let aside = 0.3
         /// La perilla de la barra de avance crece así al arrastrarla.
         static let knobGrow = 1.4
         /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
