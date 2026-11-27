@@ -290,6 +290,7 @@ struct SessionScreen: View {
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var store = SessionStore.shared
     @State private var notice: String?
+    @State private var writing: NoteRef?
 
     private var session: ReadingSession? { store.sessions.first { $0.id == ref.id } }
 
@@ -307,7 +308,9 @@ struct SessionScreen: View {
                         .buttonStyle(.plain)
                     }
                     SessionDetail(session: session, bookTitle: book?.title ?? "", fraction: session.toFraction) {
-                        notice = SessionNote.write(session, bookTitle: book?.title ?? "Sin título")
+                        do { writing = try SessionNote.open(session, bookTitle: book?.title ?? "Sin título") } catch {
+                            notice = error.localizedDescription
+                        }
                     }
                     if !highlights.isEmpty {
                         VStack(alignment: .leading, spacing: Theme.Space.l) {
@@ -329,10 +332,7 @@ struct SessionScreen: View {
             }
         }
         .pushedScreen()
-        .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button("Volver al diario", role: .cancel) {}
-        } message: {
-            Text(notice ?? "")
-        }
+        .navigationDestination(item: $writing) { NoteScreen(ref: $0) }
+        .sessionNoteError($notice)
     }
 }

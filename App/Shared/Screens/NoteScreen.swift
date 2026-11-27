@@ -5,10 +5,16 @@ import SwiftUI
 struct NoteRef: Hashable {
     var fileName: String?
     var draft = ""
+    /// Abre una nota que ya existe directo en el editor («Escribir sobre ella»).
+    var writes = false
     /// Cada «Nota nueva» es una pantalla distinta.
     var token = UUID()
 
     static func new(draft: String = "") -> NoteRef { NoteRef(fileName: nil, draft: draft) }
+}
+
+extension NoteRef: Identifiable {
+    var id: UUID { token }
 }
 
 /// Una nota: se lee con sus enlaces y se escribe en Markdown con «Editar».
@@ -100,7 +106,7 @@ struct NoteScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.l) {
                     location
-                    NoteBody(text: text)
+                    NoteBody(text: text) { model.shelfBook(titled: $0) != nil }
                 }
                 .screenContent()
             }
@@ -143,6 +149,7 @@ struct NoteScreen: View {
         if let name = ref.fileName, let existing = notes.note(fileName: name) {
             fileName = name
             text = existing.text
+            if ref.writes { startEditing() }
         } else {
             text = ref.draft.isEmpty ? "# " : ref.draft
             startEditing()

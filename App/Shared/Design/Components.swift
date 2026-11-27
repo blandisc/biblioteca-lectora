@@ -1725,6 +1725,7 @@ struct CoverChoiceCell: View {
 /// Fila de nota en el Cuaderno y en la ficha: título en serif, las primeras
 /// líneas y, abajo, la fecha y los libros que enlaza (en verde).
 struct NoteRow: View {
+    @EnvironmentObject private var model: AppModel
     let note: Note
     /// Detalle en lugar de los libros enlazados («1 cita»).
     var detail: String? = nil
@@ -1767,8 +1768,12 @@ struct NoteRow: View {
         }
         let links = note.bookLinks
         guard !links.isEmpty else { return date }
-        return date + Text(" · ").foregroundStyle(Theme.secondaryInk)
-            + Text(links.joined(separator: " · ").uppercased()).foregroundStyle(Theme.highlight)
+        // En verde solo los libros que están en tu biblioteca: uno que no está no es enlace (RB-7b).
+        return links.enumerated().reduce(date) { text, link in
+            let found = model.shelfBook(titled: link.element) != nil
+            return text + Text(" · ").foregroundStyle(Theme.secondaryInk)
+                + Text(link.element.uppercased()).foregroundStyle(found ? Theme.highlight : Theme.secondaryInk)
+        }
     }
 
     /// «Hoy», «Ayer» o «3 nov».
@@ -1784,6 +1789,9 @@ struct NoteRow: View {
 /// verde. Los `[[Libro]]` y «ir al pasaje» son enlaces (los abre `openURL`).
 struct NoteBody: View {
     let text: String
+    /// Si el título de un `[[Libro]]` está en tu biblioteca. Uno que no está se lee como texto
+    /// normal, sin verde ni toque (RB-7b, 26 nov 2026: se veía como enlace y no hacía nada).
+    var hasBook: (String) -> Bool = { _ in true }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
@@ -1794,7 +1802,7 @@ struct NoteBody: View {
                         .font(index == 0 ? Font.bookTitle : Font.rowTitle.weight(.semibold))
                         .padding(.bottom, index == 0 ? Theme.Space.xs : 0)
                 case .paragraph(let paragraph):
-                    Text(Self.inline(paragraph))
+                    Text(inline(paragraph))
                         .font(.prose)
                         .lineSpacing(Theme.Space.xs)
                 case .quote(let quote):
@@ -1813,11 +1821,11 @@ struct NoteBody: View {
         var lines = quote.components(separatedBy: "\n")
         let source = lines.last?.hasPrefix("—") == true ? lines.removeLast() : nil
         return VStack(alignment: .leading, spacing: Theme.Space.xs) {
-            Text(Self.inline(lines.joined(separator: "\n")))
+            Text(inline(lines.joined(separator: "\n")))
                 .font(.quote)
                 .lineSpacing(Theme.Space.xs)
             if let source {
-                Text(Self.inline(String(source.dropFirst()).trimmingCharacters(in: .whitespaces)))
+                Text(inline(String(source.dropFirst()).trimmingCharacters(in: .whitespaces)))
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             }
@@ -1828,10 +1836,19 @@ struct NoteBody: View {
         }
     }
 
-    static func inline(_ markdown: String) -> AttributedString {
+    private func inline(_ markdown: String) -> AttributedString {
+        Self.inline(markdown, hasBook: hasBook)
+    }
+
+    static func inline(_ markdown: String, hasBook: (String) -> Bool = { _ in true }) -> AttributedString {
         let resolved = NoteMarkdown.resolvingLinks(markdown)
-        return (try? AttributedString(markdown: resolved, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+        var text = (try? AttributedString(markdown: resolved, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
             ?? AttributedString(markdown)
+        for run in text.runs {
+            guard let url = run.link, case .book(let title) = NoteMarkdown.target(of: url), !hasBook(title) else { continue }
+            text[run.range].link = nil
+        }
+        return text
     }
 }
 
@@ -1852,6 +1869,13 @@ extension Date {
 }
 
 extension Double {
+    /// El entero más cercano, o nada si no es finito o se sale de ±1e9: `Int(inf)` o
+    /// `Int(1e20)` cierran la app (C5, 26 nov 2026: un tomo «inf» la cerraba en cada arranque).
+    var safeInt: Int? {
+        guard isFinite, Swift.abs(self) < 1e9 else { return nil }
+        return Int(rounded())
+    }
+
     /// 57 (de 0,57), redondeado igual en toda la app.
     var percentNumber: Int { Int((Swift.min(1, Swift.max(0, self)) * 100).rounded()) }
 
@@ -1879,7 +1903,7 @@ enum ReadingFormat {
 
     /// «19:37» (minutos y segundos), para la sesión en curso.
     static func clock(_ seconds: TimeInterval) -> String {
-        let total = Int(seconds)
+        let total = Swift.max(0, seconds.safeInt ?? 0)
         return String(format: "%d:%02d", total / 60, total % 60)
     }
 
@@ -1897,7 +1921,7 @@ enum ReadingFormat {
 
     /// «20 min», «1 h 21 min».
     static func duration(_ seconds: TimeInterval) -> String {
-        let minutes = Int((seconds / 60).rounded())
+        let minutes = Swift.max(0, (seconds / 60).safeInt ?? 0)
         if minutes < 60 { return "\(minutes) min" }
         return minutes % 60 == 0 ? "\(minutes / 60) h" : "\(minutes / 60) h \(minutes % 60) min"
     }
