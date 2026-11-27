@@ -64,8 +64,11 @@ struct LibraryScreen: View {
                                        label: layout == .covers ? "Ver como lista" : "Ver portadas") {
                                 withAnimation(Theme.Motion.standard) { layout = layout == .covers ? .list : .covers }
                             }
-                            // El único acento verde de la pantalla.
-                            AccentIconButton(systemImage: LibraryAction.addBooks.symbol, label: LibraryAction.addBooks.title) { model.importing = true }
+                            // El único acento verde de la pantalla. Mientras bajo tu biblioteca de iCloud
+                            // no sale: el vacío dice por qué (auditoría 5).
+                            if model.addBooksBlocked == nil {
+                                AccentIconButton(systemImage: LibraryAction.addBooks.symbol, label: LibraryAction.addBooks.title) { model.addBooks() }
+                            }
                         }
 
                         FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
@@ -73,19 +76,22 @@ struct LibraryScreen: View {
 
                         // Del conteo para abajo, todo deja libre la columna del índice A–Z.
                         VStack(alignment: .leading, spacing: 0) {
-                            CountLine(text: summary(books)) {
-                                // Sin libros a la vista no hay nada que ordenar (auditoría 4).
-                                if !books.isEmpty {
-                                    SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
-                                }
-                                // Con la letra más grande no hay índice A–Z: un menú salta a la letra.
-                                if jumpsByLetter(books) {
-                                    LetterJumpMenu(letters: LetterIndex.letters.filter { letter in books.contains { $0.sortTitle.firstLetter == letter } }) { letter in
-                                        jump(to: letter, in: books, scroller)
+                            // Mientras bajo tu biblioteca de iCloud no digo «0 libros» (auditoría 5): el vacío dice qué pasa.
+                            if !(model.shelf.isEmpty && model.library.waitingForCloud) {
+                                CountLine(text: summary(books)) {
+                                    // Sin libros a la vista no hay nada que ordenar (auditoría 4).
+                                    if !books.isEmpty {
+                                        SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
+                                    }
+                                    // Con la letra más grande no hay índice A–Z: un menú salta a la letra.
+                                    if jumpsByLetter(books) {
+                                        LetterJumpMenu(letters: LetterIndex.letters.filter { letter in books.contains { $0.sortTitle.firstLetter == letter } }) { letter in
+                                            jump(to: letter, in: books, scroller)
+                                        }
                                     }
                                 }
+                                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.contentSpace)).maxY } action: { letterIndexTop = $0 }
                             }
-                            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.contentSpace)).maxY } action: { letterIndexTop = $0 }
 
                             // Solo en «Todos»: con un filtro, sus libros no son los que se ven (auditoría 3).
                             if filter == .all, !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
@@ -110,7 +116,7 @@ struct LibraryScreen: View {
                             if model.shelf.isEmpty {
                                 LibraryEmptyState(kind: LibraryEmptyKind(waitingForCloud: model.library.waitingForCloud,
                                                                          cloudGaveUp: model.library.cloudGaveUp),
-                                                  add: { model.importing = true }, welcome: { model.welcomeRequested = true })
+                                                  add: { model.addBooks() }, welcome: { model.welcomeRequested = true })
                             } else if books.isEmpty {
                                 EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message,
                                            actionTitle: EmptyCopy.showAll) { filter = .all }

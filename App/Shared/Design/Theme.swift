@@ -92,9 +92,13 @@ enum Theme {
         static let rowCover = CGSize(width: 16, height: 24)
         static let coverColumn: CGFloat = 24
         static let titleColumn: CGFloat = 180
-        /// Lo más que crece el título con la ficha abierta: lo que sobra va a las otras columnas, que
-        /// antes quedaban bajo la ficha (auditoría 4).
-        static let titleColumnMax: CGFloat = 280
+        /// Lo más que crecen el autor y la serie: lo que sobra en una ventana ancha va al título
+        /// (auditoría 5: con la ficha abierta el título se quedaba en 120 y cortado y la serie
+        /// crecía a 436).
+        static let nameColumnMax: CGFloat = 240
+        /// Cuánto espera la tabla a que dejes de cambiar el ancho antes de volver a repartir sus
+        /// columnas (auditoría 5): antes se rearmaba a cada paso y saltaba arriba.
+        static let relayoutPause: Duration = .milliseconds(350)
         static let shortColumn: CGFloat = 72
         static let column: CGFloat = 110
         /// Lo más que se encoge una columna de la tabla antes de cortar con «…».

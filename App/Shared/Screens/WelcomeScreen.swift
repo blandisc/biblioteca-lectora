@@ -25,6 +25,7 @@ struct WelcomeScreen: View {
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var connectors = ConnectorsStore.shared
     @AppStorage(WelcomeKeys.seen) private var seen = false
+    @Environment(\.dismiss) private var dismiss
     @State private var step: Step = {
         #if DEBUG
         // Capturas: `-screenshot.step place|books|readwise` abre la bienvenida en ese paso.
@@ -65,7 +66,7 @@ struct WelcomeScreen: View {
                                   importing: model.library.progressLine,
                                   importFraction: model.library.progressFraction,
                                   calibre: { migratingCalibre = true },
-                                  add: { importingBooks = true }) {
+                                  add: { if model.addBooksBlocked == nil { importingBooks = true } }) {
                             step = .readwise
                         }
                         // Un selector de archivos por vista: este va aquí y el de la carpeta, arriba.
@@ -74,12 +75,12 @@ struct WelcomeScreen: View {
                     case .readwise:
                         ReadwiseStep(connected: connectors.isConnected(.readwise),
                                      connect: { connectingReadwise = true }) {
-                            seen = true
+                            finish()
                         }
                     }
                     #if os(macOS)
                     // La hoja de la Mac no enseña los botones de la barra: saltar y volver van al pie.
-                    WelcomeExits(back: step == .hello ? nil : goBack) { seen = true }
+                    WelcomeExits(back: step == .hello ? nil : goBack) { finish() }
                     #endif
                 }
                 .screenContent()
@@ -96,7 +97,7 @@ struct WelcomeScreen: View {
             #if os(iOS)
             // Con la letra más grande, «Ir a la biblioteca» baja al pie en vez de esconderse en «•••».
             .sheetActions(leave: step == .hello ? nil : SheetAction(title: Self.backTitle, action: goBack),
-                          confirm: SheetAction(title: Self.skipTitle) { seen = true }, quiet: true)
+                          confirm: SheetAction(title: Self.skipTitle) { finish() }, quiet: true)
             #endif
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { useFolder(folder) }
@@ -107,6 +108,14 @@ struct WelcomeScreen: View {
             }
             .errorAlert("No pude usar esa carpeta", message: $errorMessage, back: "Elegir otra carpeta")
         }
+    }
+
+    /// Toda salida cierra la bienvenida (auditoría 5): se anota que ya la viste y se cierra aquí
+    /// mismo. Antes se cerraba solo si «vista» cambiaba, y al volver a ella desde el vacío (ya vista)
+    /// ninguna salida la cerraba.
+    private func finish() {
+        seen = true
+        dismiss()
     }
 
     private func goBack() { step = Step(rawValue: step.rawValue - 1) ?? .hello }

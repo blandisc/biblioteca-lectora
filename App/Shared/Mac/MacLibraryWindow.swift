@@ -309,6 +309,7 @@ private struct MacSidebar: View {
                             Button("Renombrar o juntar…") { renaming = .init(field: field, value: value) }
                             if field == .series {
                                 Button("Renumerar tomos 1, 2, 3…") { renumber(value) }
+                                    .disabled(library.busyReason != nil)
                             }
                         }
                     }

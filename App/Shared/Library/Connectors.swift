@@ -369,7 +369,7 @@ final class ConnectorsStore: ObservableObject {
     }
 
     private func sendProgress(_ job: Job, client: HardcoverClient) async throws {
-        guard let id = UUID(uuidString: job.target), var book = library.book(id: id) else { return }
+        guard let id = UUID(uuidString: job.target), let book = library.book(id: id) else { return }
         let progress = job.payload.doubleValue ?? library.position(for: id)?.fraction ?? 0
         // El libro en Hardcover: el que ya se encontró antes, o se busca una vez.
         var hardcoverID = book.identifiers[HardcoverClient.identifierKey].flatMap(Int.init)
@@ -382,8 +382,12 @@ final class ConnectorsStore: ObservableObject {
             hardcoverID = match.id
             pages = match.pages
             // Como openlibrary: o google:, queda en el catálogo y en el OPF (Calibre lo respeta).
-            book.identifiers[HardcoverClient.identifierKey] = String(match.id)
-            _ = try? library.update(book)
+            // Solo ese dato, sobre el libro de ahora (auditoría 5): mientras preguntaba a Hardcover
+            // pudiste editarlo, y guardar la copia de antes revertía tu cambio.
+            if var current = library.book(id: id) {
+                current.identifiers[HardcoverClient.identifierKey] = String(match.id)
+                _ = try? library.update(current)
+            }
             var known = defaults.dictionary(forKey: ConnectorKeys.hardcoverPages) as? [String: Int] ?? [:]
             known[String(match.id)] = match.pages
             defaults.set(known, forKey: ConnectorKeys.hardcoverPages)
@@ -392,13 +396,15 @@ final class ConnectorsStore: ObservableObject {
         }
         guard let hardcoverID else { return }
         let finished = progress >= 0.99 && marksFinished
-        let started = sessions.sessions(forBook: id).first?.start ?? book.addedAt
+        // La valoración de ahora, no la de antes de preguntar.
+        let latest = library.book(id: id) ?? book
+        let started = sessions.sessions(forBook: id).first?.start ?? latest.addedAt
         try await client.apply(.init(
             bookID: hardcoverID,
             status: finished ? .read : HardcoverClient.status(for: min(progress, 0.98)),
             progress: progress, pages: pages,
             startedAt: started, finishedAt: finished ? Date() : nil,
-            rating: book.rating.flatMap { $0 > 0 ? $0 : nil }))
+            rating: latest.rating.flatMap { $0 > 0 ? $0 : nil }))
     }
 
     // MARK: Salida libre

@@ -52,6 +52,7 @@ public struct NoteFolder: Sendable {
             if wanted != fileName, !CloudFile.isTaken(file(for: wanted)) {
                 do {
                     try FileManager.default.moveItem(at: file(for: fileName), to: file(for: wanted))
+                    WriteJournal.shared.note(file(for: fileName))
                     name = wanted
                 } catch {
                     // Si no se pudo renombrar, lo que escribiste no se pierde (auditoría de medios):
@@ -64,6 +65,7 @@ public struct NoteFolder: Sendable {
         }
         let destination = file(for: name)
         try Data(text.utf8).write(to: destination, options: .atomic)
+        WriteJournal.shared.note(destination)
         return Note(fileName: name, text: text, modifiedAt: Date())
     }
 
@@ -85,6 +87,7 @@ public struct NoteFolder: Sendable {
 
     public func delete(fileName: String) throws {
         try FileManager.default.removeItem(at: file(for: fileName))
+        WriteJournal.shared.note(file(for: fileName))
     }
 
     /// Nombre de archivo válido en iCloud, Windows y Calibre: sin `/ \ : * ? " < > |`.

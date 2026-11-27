@@ -25,8 +25,10 @@ struct LectoraApp: App {
         .commands {
             // Archivo › Añadir libros… en lugar de «Nueva ventana».
             CommandGroup(replacing: .newItem) {
-                Button("\(LibraryAction.addBooks.title)…") { model.importing = true }
+                Button("\(LibraryAction.addBooks.title)…") { model.addBooks() }
                     .keyboardShortcut("o")
+                    // Mientras bajo tu biblioteca de iCloud, no (auditoría 5).
+                    .disabled(model.addBooksBlocked != nil)
             }
         }
         #endif

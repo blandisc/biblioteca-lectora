@@ -62,6 +62,11 @@ struct RulesScreen: View {
                         let count = model.library.applyRulesToLibrary()
                         appliedMessage = "\(count == 1 ? "Cambió" : "Cambiaron") \(count.counted("libro", "libros"))."
                     }
+                    // No mientras ordeno, muevo o traigo de Calibre (auditoría 5): te digo por qué.
+                    .disabled(model.library.busyReason != nil)
+                    if let reason = model.library.busyReason {
+                        Text(reason).font(.footnote).foregroundStyle(Theme.secondaryInk)
+                    }
                 }
             }
         }

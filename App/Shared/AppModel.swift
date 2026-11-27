@@ -120,6 +120,19 @@ final class AppModel: ObservableObject {
 
     func continueReading() {
         if let book = currentBook, open(book, fromCover: true) { return }
+        addBooks()
+    }
+
+    /// Por qué no puedo añadir libros ahora (nil si puedo): mientras bajo tu biblioteca de iCloud,
+    /// añadirlos los duplicaría (auditoría 5). Lo dicen el «+», la barra de la Mac y el menú.
+    var addBooksBlocked: String? {
+        library.waitingForCloud ? EmptyCopy.addWhileDownloading : nil
+    }
+
+    /// El único camino para elegir libros que añadir (auditoría 5): el «+» de la Biblioteca, el de
+    /// la Mac, Archivo › Añadir libros…, los vacíos y «Seguir leyendo» sin libro pasan por aquí.
+    func addBooks() {
+        guard addBooksBlocked == nil else { return }
         importing = true
     }
 

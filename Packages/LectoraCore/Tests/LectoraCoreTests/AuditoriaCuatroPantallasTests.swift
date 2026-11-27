@@ -15,12 +15,12 @@ final class AuditoriaCuatroPantallasTests: XCTestCase {
         let table = source("MacBookTable.swift")
         XCTAssertTrue(table.contains("@SceneStorage(\"mac.columnas.ficha\")") && table.contains("columnCustomization: $narrowColumns"),
                       "Cada tabla guarda sus columnas aparte: la de la ficha no toma los anchos de la ancha")
-        XCTAssertTrue(table.contains(".id(TableLayoutKey(inspector: showsInspector, widthStep: widthStep))")
+        XCTAssertTrue(table.contains(".id(TableLayoutKey(inspector: showsInspector, widthStep: settledStep))")
                       && table.contains(".onGeometryChange(for: Int.self) { Int($0.size.width / Theme.Mac.column) }"),
                       "Al cambiar el ancho (ventana o ficha) la tabla vuelve a repartir sus columnas")
-        XCTAssertTrue(table.contains("max: showsInspector ? Theme.Mac.titleColumnMax : nil"),
-                      "Con la ficha, el título tiene tope: lo demás no queda bajo la ficha")
-        XCTAssertTrue(table.contains("scroller.scrollTo(id, anchor: .center)"), "Al volver a armarse, regresa a lo elegido")
+        XCTAssertTrue(table.components(separatedBy: "max: Theme.Mac.nameColumnMax").count - 1 == 2,
+                      "Autor y serie tienen tope: lo que sobra va al título (auditoría 5)")
+        XCTAssertTrue(table.contains("scroller.scrollTo(id, anchor: firstVisible == nil ? .center : .top)"), "Al volver a armarse, regresa a donde ibas")
         XCTAssertTrue(table.contains("hiddenSortLine") && table.contains("\"por \\(column.name)\""),
                       "Un orden por una columna que no se ve se dice en la barra")
     }
@@ -30,7 +30,7 @@ final class AuditoriaCuatroPantallasTests: XCTestCase {
     func testHardcoverFooterSpeaksWords() {
         let screen = source("ConnectorScreen.swift")
         XCTAssertFalse(screen.contains("hardcover:…") || screen.contains("en el OPF"), "Ni la clave cruda ni el nombre del formato")
-        XCTAssertTrue(screen.contains("guardo su número de Hardcover con los datos del libro, también los que abre Calibre"))
+        XCTAssertTrue(screen.contains("guardo su número de Hardcover en los datos del libro, también en los que lee Calibre"))
     }
 
     // MARK: U4 · Ir a la letra no se lee como otro orden

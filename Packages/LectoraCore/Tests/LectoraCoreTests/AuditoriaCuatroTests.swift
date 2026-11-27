@@ -106,7 +106,7 @@ final class AuditoriaCuatroTests: XCTestCase {
         try Data("uno\ndos\n".utf8).write(to: log)
         try Data("# Nueva\n".utf8).write(to: from.appendingPathComponent("nueva.md"))
         try FileManager.default.removeItem(at: from.appendingPathComponent("borrar.md"))
-        XCTAssertGreaterThan(try FolderCatchUp.sync(from: from, to: to, since: started), 0)
+        XCTAssertGreaterThan(try FolderCatchUp.sync(from: from, to: to, since: started).touched, 0)
         XCTAssertEqual(try String(contentsOf: to.appendingPathComponent(".lectora/registro/iphone.jsonl"), encoding: .utf8), "uno\ndos\n")
         XCTAssertTrue(FileManager.default.fileExists(atPath: to.appendingPathComponent("nueva.md").path))
         XCTAssertFalse(FileManager.default.fileExists(atPath: to.appendingPathComponent("borrar.md").path))
@@ -115,7 +115,7 @@ final class AuditoriaCuatroTests: XCTestCase {
         let move = body(of: "func move(toCabinet destination: URL) async throws {", in: store)
         guard let copy = move.range(of: "coordinatedCopy"), let catchUp = move.range(of: "FolderCatchUp.sync"),
               let remember = move.range(of: "CabinetLocation.remember(destination)"),
-              let last = move.range(of: "for folder in Self.catchUpFolders") else {
+              let last = move.range(of: "for folder in catchUp {") else {
             return XCTFail("Mover pasa a la copia lo que cambió mientras copiaba")
         }
         XCTAssertTrue(copy.upperBound <= catchUp.lowerBound && last.upperBound <= remember.lowerBound)
@@ -186,9 +186,9 @@ final class AuditoriaCuatroTests: XCTestCase {
         XCTAssertTrue(apply.contains("loadReviews()"), "Reglas, estantes y «Por revisar» también")
         let giveUp = body(of: "private func giveUpOnCloud() {", in: store)
         XCTAssertTrue(giveUp.contains("waitingForCloud = false") && giveUp.contains("cloudGaveUp = true")
-                      && giveUp.contains("notice = Self.cloudGaveUpNotice"), "Dejo de esperar y te lo digo")
+                      && giveUp.contains("notice = Self.cloudGaveUpNotice(books.count)"), "Dejo de esperar y te lo digo")
         XCTAssertTrue(body(of: "private func waitForLogs(_ notDownloaded: [URL]) {", in: store).contains("self.giveUpOnCloud()"))
-        XCTAssertTrue(store.contains("static let cloudGaveUpNotice = \"Todavía no baja de iCloud"))
+        XCTAssertTrue(store.contains("\"Todavía no baja de iCloud todo el registro"))
         let open = body(of: "private func open(cabinet: URL) {", in: store)
         XCTAssertTrue(open.contains("rereadTask?.cancel()") && open.contains("waitingForCloud = false"),
                       "Otro Gabinete no se queda esperando lo del anterior")

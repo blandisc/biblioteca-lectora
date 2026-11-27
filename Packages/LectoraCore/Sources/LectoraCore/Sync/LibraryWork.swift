@@ -61,51 +61,191 @@ public struct DeferCount: Sendable {
 /// que guardaste durante la copia (la página, una sesión, una nota) se pasa a la copia antes de
 /// borrar la vieja.
 public enum FolderCatchUp {
+    /// Cómo quedó una pasada: lo que tocó, lo que había en `source` al recorrerla y cuánto de eso
+    /// está en `destination` al terminar (la cuenta sale de la misma lectura: una nota creada justo
+    /// después ya no hace fallar el «ni de menos ni de más», auditoría 5).
+    public struct Pass: Equatable, Sendable {
+        public var touched = 0
+        public var expected = 0
+        public var present = 0
+        public var isComplete: Bool { present == expected }
+    }
+
+    /// Los nombres que hay en una carpeta (rutas relativas), contando un marcador de iCloud como
+    /// el archivo que representa: `.cover.jpg.icloud` es `cover.jpg`.
+    public static func snapshot(of folder: URL) -> Set<String> {
+        Set(entries(in: folder, keys: []).keys)
+    }
+
     /// Deja `destination` igual a `source`: copia lo nuevo o cambiado (otro tamaño, o modificado
     /// desde `since`) y quita lo que ya no está en `source`. Úsalo solo con un destino que es una
-    /// copia de esta corrida. Los marcadores de iCloud no se copian. Devuelve cuántos archivos tocó.
+    /// copia de esta corrida. Los marcadores de iCloud no se copian ni se borran, y cuentan como el
+    /// archivo que representan (auditoría 5: un `cover.jpg` de verdad se borraba porque en el
+    /// origen solo estaba su marcador). Solo se borra lo que `copied` dice que esta corrida puso
+    /// ahí (lo que había en el origen al empezar o lo que copió); a `copied` se suma lo que copia.
     @discardableResult
-    public static func sync(from source: URL, to destination: URL, since: Date) throws -> Int {
+    public static func sync(from source: URL, to destination: URL, since: Date, copied: inout Set<String>) throws -> Pass {
         let manager = FileManager.default
         let keys: [URLResourceKey] = [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey]
-        var touched = 0
-        let sourceFiles = files(in: source, keys: keys)
-        for (relative, values) in sourceFiles {
-            let from = source.appendingPathComponent(relative), to = destination.appendingPathComponent(relative)
+        var pass = Pass()
+        let sourceEntries = entries(in: source, keys: keys)
+        for (relative, entry) in sourceEntries {
+            pass.expected += 1
+            let to = destination.appendingPathComponent(relative)
+            // Un marcador del origen: lo que representa ya cuenta; no se copia el marcador vacío.
+            guard let values = entry.values else {
+                if isTaken(relative, in: destination) { pass.present += 1 }
+                continue
+            }
+            let from = source.appendingPathComponent(relative)
             if values.isDirectory == true {
                 if !manager.fileExists(atPath: to.path) {
                     try manager.createDirectory(at: to, withIntermediateDirectories: true)
-                    touched += 1
+                    pass.touched += 1
                 }
+                copied.insert(relative)
+                pass.present += 1
                 continue
             }
-            if CloudFile.realName(ofPlaceholder: from.lastPathComponent) != nil { continue }
             let there = try? to.resourceValues(forKeys: Set(keys))
             let changed = there == nil || there?.fileSize != values.fileSize || (values.contentModificationDate ?? .distantPast) >= since
-            guard changed else { continue }
-            try manager.createDirectory(at: to.deletingLastPathComponent(), withIntermediateDirectories: true)
-            if there != nil { try manager.removeItem(at: to) }
-            try manager.copyItem(at: from, to: to)
-            touched += 1
+            if changed {
+                try manager.createDirectory(at: to.deletingLastPathComponent(), withIntermediateDirectories: true)
+                if there != nil { try manager.removeItem(at: to) }
+                try manager.copyItem(at: from, to: to)
+                pass.touched += 1
+            }
+            copied.insert(relative)
+            pass.present += 1
         }
-        // Lo que borraste durante la copia (una nota) tampoco se queda en la nueva.
-        for (relative, _) in files(in: destination, keys: keys).sorted(by: { $0.key.count > $1.key.count })
-        where sourceFiles[relative] == nil {
+        // Lo que borraste durante la copia (una nota) tampoco se queda en la nueva; lo que no puso
+        // esta corrida (lo que llega de iCloud a la carpeta nueva) no se toca.
+        for (relative, entry) in entries(in: destination, keys: keys).sorted(by: { $0.key.count > $1.key.count })
+        where sourceEntries[relative] == nil && entry.values != nil && copied.contains(relative) {
             try? manager.removeItem(at: destination.appendingPathComponent(relative))
-            touched += 1
+            copied.remove(relative)
+            pass.touched += 1
+        }
+        return pass
+    }
+
+    /// Lo mismo, con un destino que es entero de esta corrida (todo lo que tiene lo puso ella).
+    @discardableResult
+    public static func sync(from source: URL, to destination: URL, since: Date) throws -> Pass {
+        var copied = snapshot(of: destination).union(snapshot(of: source))
+        return try sync(from: source, to: destination, since: since, copied: &copied)
+    }
+
+    /// Pasa a `destination` solo los archivos de `written` (rutas que se escribieron en `source`):
+    /// lo último antes de cambiar de carpeta, sin recorrer todo (auditoría 5, `WriteJournal`).
+    /// Uno que ya no está en `source` se quita de la copia si esta corrida lo puso ahí.
+    @discardableResult
+    public static func copy(_ written: Set<String>, from source: URL, to destination: URL, copied: inout Set<String>) throws -> Int {
+        let manager = FileManager.default
+        var touched = 0
+        let base = WriteJournal.canonical(source)
+        for path in written.sorted() where path.hasPrefix(base + "/") {
+            let relative = String(path.dropFirst(base.count + 1))
+            guard CloudFile.realName(ofPlaceholder: (relative as NSString).lastPathComponent) == nil else { continue }
+            let from = source.appendingPathComponent(relative), to = destination.appendingPathComponent(relative)
+            var isFolder: ObjCBool = false
+            if manager.fileExists(atPath: from.path, isDirectory: &isFolder) {
+                guard !isFolder.boolValue else { continue }
+                try manager.createDirectory(at: to.deletingLastPathComponent(), withIntermediateDirectories: true)
+                if manager.fileExists(atPath: to.path) { try manager.removeItem(at: to) }
+                try manager.copyItem(at: from, to: to)
+                copied.insert(relative)
+                touched += 1
+            } else if copied.contains(relative), manager.fileExists(atPath: to.path) {
+                try manager.removeItem(at: to)
+                copied.remove(relative)
+                touched += 1
+            }
         }
         return touched
     }
 
-    private static func files(in folder: URL, keys: [URLResourceKey]) -> [String: URLResourceValues] {
-        var result: [String: URLResourceValues] = [:]
+    /// ¿Está ese nombre en la carpeta, como archivo o como su marcador de iCloud?
+    private static func isTaken(_ relative: String, in folder: URL) -> Bool {
+        CloudFile.isTaken(folder.appendingPathComponent(relative))
+    }
+
+    /// Lo de la carpeta por ruta relativa. Un marcador de iCloud entra con el nombre de lo que
+    /// representa y sin valores (`values == nil`).
+    private struct Entry {
+        /// nil: es un marcador de iCloud.
+        let values: URLResourceValues?
+    }
+
+    private static func entries(in folder: URL, keys: [URLResourceKey]) -> [String: Entry] {
+        var result: [String: Entry] = [:]
         let base = folder.standardizedFileURL.resolvingSymlinksInPath().path
         guard let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: keys) else { return result }
         for case let url as URL in walker {
             let path = url.standardizedFileURL.resolvingSymlinksInPath().path
-            guard path.hasPrefix(base + "/"), let values = try? url.resourceValues(forKeys: Set(keys)) else { continue }
-            result[String(path.dropFirst(base.count + 1))] = values
+            guard path.hasPrefix(base + "/") else { continue }
+            let relative = String(path.dropFirst(base.count + 1))
+            if let real = CloudFile.realName(ofPlaceholder: url.lastPathComponent) {
+                let name = ((relative as NSString).deletingLastPathComponent as NSString).appendingPathComponent(real)
+                if result[name] == nil { result[name] = Entry(values: nil) }
+                continue
+            }
+            guard let values = try? url.resourceValues(forKeys: Set(keys)) else { continue }
+            result[relative] = Entry(values: values)
         }
         return result
+    }
+}
+
+/// Lo que la app escribe en el Gabinete mientras se mueve (auditoría 5): el registro, las
+/// sesiones, las notas y los archivos de `.lectora`. Así la última pasada antes de cambiar de
+/// carpeta copia solo eso, en el hilo de la interfaz y sin recorrer todo; el recorrido grande va
+/// en segundo plano. Fuera de un movimiento no guarda nada.
+public final class WriteJournal: @unchecked Sendable {
+    public static let shared = WriteJournal()
+
+    private let lock = NSLock()
+    private var depth = 0
+    private var paths = Set<String>()
+
+    public init() {}
+
+    /// Empieza a anotar (un movimiento a la vez; se pueden anidar).
+    public func begin() {
+        lock.lock(); defer { lock.unlock() }
+        depth += 1
+    }
+
+    /// Anota un archivo escrito, movido o borrado.
+    public func note(_ url: URL) {
+        lock.lock(); defer { lock.unlock() }
+        guard depth > 0 else { return }
+        paths.insert(Self.canonical(url))
+    }
+
+    /// Lo anotado hasta ahora, y lo olvida (sigue anotando).
+    public func drain() -> Set<String> {
+        lock.lock(); defer { lock.unlock() }
+        let out = paths
+        paths = []
+        return out
+    }
+
+    /// Deja de anotar y devuelve lo que faltaba.
+    @discardableResult
+    public func end() -> Set<String> {
+        lock.lock(); defer { lock.unlock() }
+        depth = max(0, depth - 1)
+        let out = paths
+        if depth == 0 { paths = [] }
+        return out
+    }
+
+    /// La ruta real, también de un archivo que ya no existe (se resuelve su carpeta): en la Mac
+    /// `/var/…` y `/private/var/…` son la misma.
+    public static func canonical(_ url: URL) -> String {
+        let standard = url.standardizedFileURL
+        let parent = standard.deletingLastPathComponent().resolvingSymlinksInPath().path
+        return (parent as NSString).appendingPathComponent(standard.lastPathComponent)
     }
 }

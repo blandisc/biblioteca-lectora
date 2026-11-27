@@ -1357,6 +1357,9 @@ struct LinkRow: View {
     var status: Bool? = nil
     var chevron = true
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// Una fila apagada se ve apagada (auditoría 5): en Ajustes «Mover…», «Traer de Calibre» y
+    /// «Ordenar» seguían en tinta aunque no se podían tocar.
+    @Environment(\.isEnabled) private var isEnabled
     @ScaledMetric(relativeTo: .body) private var markSize = Theme.Size.statusDot
 
     var body: some View {
@@ -1373,7 +1376,7 @@ struct LinkRow: View {
             }
             // Con la letra más grande, el valor baja bajo el nombre (antes «Fuent / e  Open…»).
             AdaptiveStack(spacing: Theme.Space.s) {
-                Text(title).foregroundStyle(Theme.ink)
+                Text(title).foregroundStyle(isEnabled ? Theme.ink : Theme.secondaryInk)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: Theme.Space.s) {
                     if let status { StatusDot(on: status) }
@@ -2620,6 +2623,8 @@ enum EmptyCopy {
     /// siempre; te dejo añadir libros o volver a la bienvenida.
     static let cloudGaveUp = (title: "Tu biblioteca no ha bajado",
                               message: "Le pedí a iCloud tu biblioteca y todavía no llega. Si ya tenías libros en otro aparato, aparecen aquí en cuanto baje; si es tu primer Gabinete, añade libros o vuelve a la bienvenida.")
+    /// Por qué no ofrezco añadir libros mientras bajo la tuya (auditoría 5).
+    static let addWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para añadir libros."
     /// Volver a la bienvenida desde una biblioteca que no bajó.
     static let openWelcome = "Volver a la bienvenida"
     static func noMatch(_ what: String) -> (title: String, message: String) {
@@ -2630,7 +2635,7 @@ enum EmptyCopy {
     static let noDuplicates = (title: "Sin libros repetidos",
                                message: "No encontré dos libros con el mismo título y un autor parecido, ni con el mismo ISBN.")
     static let chooseBook = (title: "Elige un libro",
-                             message: "Con varios elegidos, lo que cambies aquí lo aplico a todos.")
+                             message: "Elige uno en la tabla para ver y cambiar sus datos.")
 }
 
 /// Cómo está una biblioteca sin libros respecto de iCloud (auditoría 4): bajando, ya no la
@@ -3810,6 +3815,8 @@ struct OptionRow: View {
     let title: String
     let detail: String
     var selected = false
+    /// Apagada se ve apagada, como `LinkRow` (auditoría 5).
+    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Space.l) {
@@ -3818,7 +3825,7 @@ struct OptionRow: View {
                 .foregroundStyle(selected ? Theme.accent : Theme.secondaryInk)
                 .frame(width: Theme.Size.tapTarget)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text(title).font(.rowTitle).foregroundStyle(Theme.ink)
+                Text(title).font(.rowTitle).foregroundStyle(isEnabled ? Theme.ink : Theme.secondaryInk)
                 Text(detail).font(.subheadline).foregroundStyle(Theme.secondaryInk)
                     .multilineTextAlignment(.leading)
             }

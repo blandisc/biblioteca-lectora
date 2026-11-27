@@ -111,10 +111,13 @@ public enum NoteMarkdown {
         return (lines + [source]).joined(separator: "\n")
     }
 
-    /// Añade un bloque al final de una nota, separado por una línea en blanco.
+    /// Añade un bloque al final de una nota, separado por una línea en blanco, con el mismo final
+    /// de renglón que ya usa la nota (auditoría 5).
     public static func appending(_ block: String, to text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? block + "\n" : trimmed + "\n\n" + block + "\n"
+        let separator = lines(text).separator
+        let added = lines(block).lines.joined(separator: separator)
+        return trimmed.isEmpty ? added + separator : trimmed + separator + separator + added + separator
     }
 
     /// Títulos enlazados con `[[Título]]` o `[[Título|texto]]`.
@@ -214,19 +217,57 @@ public enum NoteMarkdown {
         sessionID(inMarker: line) != nil
     }
 
+    /// Los renglones de la nota y con qué terminan (auditoría 5): una nota de Windows u otro editor
+    /// termina sus renglones en «\r\n» (o «\r»), que para Swift es un solo carácter; partir solo en
+    /// «\n» no la partía y la marca se veía en el editor. Al volver a juntarla se usa el mismo final.
+    static func lines(_ text: String) -> (lines: [String], separator: String) {
+        var lines: [String] = []
+        var current = ""
+        var separator: String?
+        for character in text {
+            if character == "\r\n" || character == "\n" || character == "\r" {
+                lines.append(current)
+                current = ""
+                if separator == nil { separator = String(character) }
+            } else {
+                current.append(character)
+            }
+        }
+        lines.append(current)
+        return (lines, separator ?? "\n")
+    }
+
+    /// Una cerca de bloque de código (CommonMark): tres o más «`» o «~» seguidas, con hasta tres
+    /// espacios antes. La de «`» no lleva otra «`» en su texto (`info`).
+    static func fence(_ line: String) -> (mark: Character, length: Int, info: Substring)? {
+        let indent = line.prefix { $0 == " " }.count
+        guard indent <= 3 else { return nil }
+        let text = line.dropFirst(indent)
+        guard let mark = text.first, mark == "`" || mark == "~" else { return nil }
+        let length = text.prefix { $0 == mark }.count
+        guard length >= 3 else { return nil }
+        let info = text.dropFirst(length)
+        if mark == "`", info.contains("`") { return nil }
+        return (mark, length, info)
+    }
+
     /// Las marcas de sesión de la nota, con su renglón. Nunca dentro de un bloque de código
-    /// (```` ``` ```` o `~~~`): ahí lo que parece una marca es texto tuyo.
+    /// (```` ``` ```` o `~~~`): ahí lo que parece una marca es texto tuyo. El bloque lo cierra solo
+    /// una cerca del mismo signo, igual de larga o más y sin texto después, como en CommonMark
+    /// (auditoría 5: «```swift» o «```» dentro de un bloque de «````» lo cerraban).
     static func markerLines(_ text: String) -> [(index: Int, line: String)] {
-        var fence: String?
+        var open: (mark: Character, length: Int)?
         var found: [(Int, String)] = []
-        for (index, line) in text.components(separatedBy: "\n").enumerated() {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if let open = fence {
-                if trimmed.hasPrefix(open) { fence = nil }
+        for (index, line) in lines(text).lines.enumerated() {
+            if let current = open {
+                if let close = fence(line), close.mark == current.mark, close.length >= current.length,
+                   close.info.allSatisfy({ $0 == " " || $0 == "\t" }) {
+                    open = nil
+                }
                 continue
             }
-            if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
-                fence = String(trimmed.prefix(3))
+            if let start = fence(line) {
+                open = (start.mark, start.length)
                 continue
             }
             if isSessionMarker(line) { found.append((index, line)) }
@@ -243,8 +284,9 @@ public enum NoteMarkdown {
         let markers = markerLines(text)
         guard !markers.isEmpty else { return (text, []) }
         let hidden = Set(markers.map(\.index))
-        let kept = text.components(separatedBy: "\n").enumerated().filter { !hidden.contains($0.offset) }.map(\.element)
-        return (kept.joined(separator: "\n"), markers.map { $0.line.trimmingCharacters(in: .whitespaces) })
+        let split = lines(text)
+        let kept = split.lines.enumerated().filter { !hidden.contains($0.offset) }.map(\.element)
+        return (kept.joined(separator: split.separator), markers.map { $0.line.trimmingCharacters(in: .whitespaces) })
     }
 
     /// Vuelve a poner las marcas que se quitaron para editar: debajo del título, donde la deja la
@@ -254,10 +296,10 @@ public enum NoteMarkdown {
         let present = Set(markerLines(text).map { $0.line.trimmingCharacters(in: .whitespaces) })
         let missing = comments.filter { !present.contains($0) }
         guard !missing.isEmpty else { return text }
-        var lines = text.components(separatedBy: "\n")
-        let at = lines.first?.trimmingCharacters(in: .whitespaces).hasPrefix("#") == true ? 1 : 0
-        lines.insert(contentsOf: missing, at: at)
-        return lines.joined(separator: "\n")
+        var (rows, separator) = lines(text)
+        let at = rows.first?.trimmingCharacters(in: .whitespaces).hasPrefix("#") == true ? 1 : 0
+        rows.insert(contentsOf: missing, at: at)
+        return rows.joined(separator: separator)
     }
 
     /// Lo que se guarda al terminar de escribir. Si dejaste la nota vacía (o solo «#»), vacío:
@@ -275,7 +317,8 @@ public enum NoteMarkdown {
     /// El texto en que se busca: sin comentarios, así «sesion» o «gabinete» no encuentran las
     /// notas de sesión por su marca escondida (auditoría 3). Los comentarios no se ven al leer.
     public static func searchText(_ text: String) -> String {
-        text.components(separatedBy: "\n").filter { !isComment($0) }.joined(separator: "\n")
+        let split = lines(text)
+        return split.lines.filter { !isComment($0) }.joined(separator: split.separator)
     }
 
     /// Un comentario de Markdown en un renglón (`<!-- … -->`): no se enseña.
@@ -303,7 +346,7 @@ public enum NoteMarkdown {
             paragraph = []
             quote = []
         }
-        for raw in text.components(separatedBy: .newlines) {
+        for raw in lines(text).lines {
             let line = raw.trimmingCharacters(in: .whitespaces)
             if line.isEmpty {
                 flush()

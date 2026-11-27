@@ -15,7 +15,7 @@ struct MacCatalogSheet: View {
     let target: Target
     /// Todos los valores de ese campo con cuántos libros tienen cada uno.
     let values: [(String, Int)]
-    let library: LibraryStore
+    @ObservedObject var library: LibraryStore
     /// Al terminar, con el nombre nuevo (para seguir viendo lo mismo en la barra lateral).
     let done: (String) -> Void
 
@@ -69,6 +69,10 @@ struct MacCatalogSheet: View {
                     }
                 }
             }
+            // Mientras ordeno, muevo o traigo de Calibre no cambio muchos libros a la vez, y te digo por qué (auditoría 5).
+            if let reason = library.busyReason {
+                Text(reason).font(.footnote).foregroundStyle(Theme.secondaryInk)
+            }
             if !failed.isEmpty {
                 Section("No pude cambiar estos") {
                     Text(failed.joined(separator: ", ")).foregroundStyle(Theme.secondaryInk)
@@ -85,7 +89,7 @@ struct MacCatalogSheet: View {
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button(merges ? "Juntar en \(affected.counted("libro", "libros"))" : "Renombrar en \(affected.counted("libro", "libros"))", action: apply)
-                    .disabled(unchanged)
+                    .disabled(unchanged || library.busyReason != nil)
             }
         }
         .onAppear { joined = Set(lookalikes) }
@@ -120,6 +124,7 @@ struct MacCatalogSheet: View {
         guard !unchanged else { return }
         let final = existing ?? trimmed
         let change = library.rename(CatalogRename(field: target.field, from: sources, to: final))
+        if change.refused != nil { return }
         if !change.originals.isEmpty {
             let library = library
             undoManager?.registerUndo(withTarget: library) { store in

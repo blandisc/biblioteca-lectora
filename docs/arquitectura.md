@@ -49,6 +49,14 @@ nuestro queda fuera.
   (auditoría 2; `AuditoriaDosTests`). Un registro que iCloud no ha bajado no es uno vacío (la
   biblioteca dice «Bajando tu biblioteca» y vuelve a leer), mover el Gabinete primero escribe lo
   que esperaba y lo que espera solo crece renglón por renglón (auditoría 3).
+- Lo que guardas se guarda sobre lo de ahora: después de esperar a internet o a otro trabajo,
+  cada cambio vuelve a leer el libro y toca solo su dato (Hardcover revertía tus ediciones); si
+  no se pudo guardar, lo encontrado se queda pendiente o en «Por revisar», nunca se tira; y un
+  registro que no se pudo leer no vacía la biblioteca. Mover el Gabinete no borra lo tuyo (un
+  marcador de iCloud cuenta como su archivo y solo se quita de la copia lo que puso esa
+  corrida), si falla quita lo que copió para que puedas volver a intentarlo, y su último repaso
+  va en segundo plano: lo que escribes mientras lo anota `WriteJournal` y se copia justo antes
+  del cambio (auditoría 5; `AuditoriaCincoTests`).
 - Una carpeta nunca tiene una gemela que solo cambia en mayúsculas: iCloud y la Mac no las
   distinguen y el iPhone sí. Si ya existe con otras mayúsculas, el libro entra a ella y el
   catálogo guarda el nombre que tiene en el disco (`FolderMove.createFolder`,

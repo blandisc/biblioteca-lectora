@@ -28,6 +28,11 @@ struct MacBookTable: View {
     /// tabla se vuelve a armar y reparte de nuevo sus columnas. Antes se quedaban con los anchos de
     /// la primera vez y «Serie», «Estado» y «Formato» quedaban bajo la ficha (auditoría 4).
     @State private var widthStep = 0
+    /// El ancho ya quieto (auditoría 5): la tabla se rearma una vez al terminar de cambiarlo, no a
+    /// cada paso mientras arrastras la orilla de la ventana.
+    @State private var settledStep = 0
+    /// Las filas que se ven ahora: al rearmarse, la tabla vuelve a la primera de ellas.
+    @State private var visibleRows = Set<UUID>()
 
     var body: some View {
         let parsed = LibraryQuery(query)
@@ -40,7 +45,7 @@ struct MacBookTable: View {
                     if query.isEmpty {
                         if library.books.isEmpty {
                             MacEmptyState(library: LibraryEmptyKind(waitingForCloud: library.waitingForCloud, cloudGaveUp: library.cloudGaveUp),
-                                          add: { model.importing = true }, welcome: { model.welcomeRequested = true })
+                                          add: { model.addBooks() }, welcome: { model.welcomeRequested = true })
                         } else {
                             MacEmptyState(title: EmptyCopy.noMatch(section.title).title, message: EmptyCopy.noMatch(section.title).message,
                                           actionTitle: EmptyCopy.showAll, action: showAll)
@@ -53,7 +58,9 @@ struct MacBookTable: View {
             .navigationTitle(section.title)
             // Si el orden es de una columna que no se ve (la tabla con la ficha no la tiene, o la
             // escondiste), se dice en la barra: si no, el orden no tenía encabezado (auditoría 4).
-            .navigationSubtitle([rows.count.counted("libro", "libros"), hiddenSortLine].compactMap { $0 }.joined(separator: " · "))
+            // Mientras bajo tu biblioteca de iCloud no digo «0 libros» (auditoría 5).
+            .navigationSubtitle([library.books.isEmpty && library.waitingForCloud ? nil : rows.count.counted("libro", "libros"), hiddenSortLine]
+                .compactMap { $0 }.joined(separator: " · "))
             // La pista en palabras; los filtros (`autor:`, `serie:`…) se ponen desde su menú.
             .searchable(text: $query, placement: .toolbar, prompt: "Buscar en la biblioteca")
             .inspector(isPresented: $showsInspector) {
@@ -72,8 +79,10 @@ struct MacBookTable: View {
                     }
                     .macToolbarInk(active: !parsed.filters.isEmpty)
                     .help("Buscar solo en un dato: autor, serie, etiqueta, idioma, editorial, estado, ISBN o título")
-                    Button { model.importing = true } label: { Label(LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) }
-                        .help("\(LibraryAction.addBooks.title) (⌘O)")
+                    Button { model.addBooks() } label: { Label(LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) }
+                        // Mientras bajo tu biblioteca de iCloud, no: añadirlos los duplicaría (auditoría 5).
+                        .disabled(library.waitingForCloud)
+                        .help(model.addBooksBlocked ?? "\(LibraryAction.addBooks.title) (⌘O)")
                     Button { savingShelf = query } label: { Label("Guardar como estante", systemImage: "rectangle.stack.badge.plus") }
                         .disabled(LibraryQuery(query).isEmpty)
                         .help("Guardar esta búsqueda como un estante que se llena solo")
@@ -107,7 +116,7 @@ struct MacBookTable: View {
             #endif
             .saveShelfAlert(query: $savingShelf) { library.saveShelf($0) }
             .dropDestination(for: URL.self) { urls, _ in
-                guard !urls.isEmpty else { return false }
+                guard !urls.isEmpty, model.addBooksBlocked == nil else { return false }
                 Task { await model.importBooks(urls) }
                 return true
             }
@@ -141,15 +150,22 @@ struct MacBookTable: View {
                     }
                 }
             }
-            .id(TableLayoutKey(inspector: showsInspector, widthStep: widthStep))
-            // Al volver a armarse (abrir o cerrar la ficha, cambiar el ancho), vuelve a lo elegido:
-            // antes regresaba arriba y perdías dónde ibas (auditoría 4).
-            .onChange(of: TableLayoutKey(inspector: showsInspector, widthStep: widthStep)) {
-                guard let id = rows.first(where: { selection.contains($0.id) })?.id else { return }
-                Task { @MainActor in scroller.scrollTo(id, anchor: .center) }
+            .id(TableLayoutKey(inspector: showsInspector, widthStep: settledStep))
+            // Al volver a armarse (abrir o cerrar la ficha, cambiar el ancho), vuelve a donde ibas:
+            // la primera fila que veías, o lo elegido (auditoría 4 y 5: antes regresaba arriba).
+            .onChange(of: TableLayoutKey(inspector: showsInspector, widthStep: settledStep)) {
+                let firstVisible = rows.first { visibleRows.contains($0.id) }?.id
+                let chosen = rows.first { selection.contains($0.id) }?.id
+                guard let id = firstVisible ?? chosen else { return }
+                Task { @MainActor in scroller.scrollTo(id, anchor: firstVisible == nil ? .center : .top) }
             }
         }
         .onGeometryChange(for: Int.self) { Int($0.size.width / Theme.Mac.column) } action: { widthStep = $0 }
+        // Se rearma cuando el ancho se queda quieto, no a cada paso.
+        .task(id: widthStep) {
+            try? await Task.sleep(for: Theme.Mac.relayoutPause)
+            if !Task.isCancelled { settledStep = widthStep }
+        }
         // De papel (MX-B): la tabla sobre el papel de Gabinete, sin franjas.
         .macPaper()
         .contextMenu(forSelectionType: UUID.self) { ids in
@@ -171,14 +187,18 @@ struct MacBookTable: View {
         }
         .width(Theme.Mac.coverColumn)
         .customizationID("portada")
-        TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in MacCell(text: row.title, role: .title) }
-            .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn, max: showsInspector ? Theme.Mac.titleColumnMax : nil)
+        TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in
+            MacCell(text: row.title, role: .title)
+                .onAppear { visibleRows.insert(row.id) }
+                .onDisappear { visibleRows.remove(row.id) }
+        }
+            .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn)
             .customizationID("titulo")
         TableColumn("Autor", value: \MacBookRow.authorKey) { (row: MacBookRow) in MacCell(text: row.author) }
-            .width(min: Theme.Mac.nameColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.nameColumn, ideal: Theme.Mac.column, max: Theme.Mac.nameColumnMax)
             .customizationID("autor")
         TableColumn("Serie", value: \MacBookRow.seriesKey) { (row: MacBookRow) in MacCell(text: row.seriesLabel, role: .secondary) }
-            .width(min: Theme.Mac.nameColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.nameColumn, ideal: Theme.Mac.column, max: Theme.Mac.nameColumnMax)
             .customizationID("serie")
     }
 

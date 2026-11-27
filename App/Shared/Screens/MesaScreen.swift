@@ -24,7 +24,7 @@ struct MesaScreen: View {
                             // «Bajando tu biblioteca» y aquí también (auditoría 4).
                             LibraryEmptyState(kind: LibraryEmptyKind(waitingForCloud: model.library.waitingForCloud,
                                                                      cloudGaveUp: model.library.cloudGaveUp),
-                                              add: { model.importing = true }, welcome: { model.welcomeRequested = true })
+                                              add: { model.addBooks() }, welcome: { model.welcomeRequested = true })
                         }
                     }
                 }

@@ -119,6 +119,8 @@ public enum LineFile {
     /// Agrega líneas al final. Si la última quedó cortada (la app se cerró a media escritura),
     /// primero termina esa línea: así la rota se pierde sola y la nueva no se pega a ella.
     public static func append(_ data: Data, to file: URL) throws {
+        // Si estoy moviendo el Gabinete, la última pasada lo copia (auditoría 5).
+        defer { WriteJournal.shared.note(file) }
         guard FileManager.default.fileExists(atPath: file.path) else {
             try data.write(to: file, options: .atomic)
             return

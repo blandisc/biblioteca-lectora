@@ -37,6 +37,10 @@ enum LaunchOptions {
     /// Con `-screenshot.screen welcome`, el paso de la bienvenida: `place`, `books` o `readwise`
     /// (`-screenshot.step place`).
     static var welcomeStep: String? { UserDefaults.standard.string(forKey: "screenshot.step") }
+    /// Solo en DEBUG: la biblioteca como si iCloud no la hubiera bajado, para revisar esas
+    /// pantallas sin dejar marcadores a mano (auditoría 5): `downloading` («Bajando tu biblioteca»)
+    /// o `gaveUp` (ya no la espero). `-screenshot.cloud downloading`.
+    static var cloud: String? { UserDefaults.standard.string(forKey: "screenshot.cloud") }
 }
 
 /// Lo que todavía no funciona no se muestra: nada en la app promete algo que no hace, ni

@@ -160,6 +160,6 @@ private struct LibraryNotice: ViewModifier {
     @ObservedObject var library: LibraryStore
 
     func body(content: Content) -> some View {
-        content.noticeAlert("No pude leer un archivo de tu Gabinete", message: $library.notice, back: "Volver a mi biblioteca")
+        content.noticeAlert(library.noticeTitle, message: $library.notice, back: "Volver a mi biblioteca")
     }
 }
