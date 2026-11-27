@@ -245,7 +245,8 @@ private struct Draft: Equatable {
     }
 }
 
-private extension Collection {
+/// «» se vuelve nil: para unir solo los datos que sí hay.
+extension Collection {
     var nonEmpty: Self? { isEmpty ? nil : self }
 }
 #endif

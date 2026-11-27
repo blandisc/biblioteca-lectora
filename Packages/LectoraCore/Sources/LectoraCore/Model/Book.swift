@@ -26,6 +26,9 @@ public struct Book: Identifiable, Hashable, Sendable {
     /// SHA-256 del archivo, para reconocer duplicados.
     public var fileHash: String?
     public var addedAt: Date?
+    /// Otros formatos del mismo libro (CB-3), en su misma carpeta: nombres de archivo como
+    /// «Rayuela - Julio Cortázar.pdf». El que se lee es `filePath`.
+    public var extraFiles: [String] = []
 
     public init(
         id: UUID = UUID(),
@@ -63,6 +66,17 @@ public struct Book: Identifiable, Hashable, Sendable {
         self.calibreID = calibreID
         self.fileHash = fileHash
         self.addedAt = addedAt
+    }
+
+    /// Los formatos del libro en mayúsculas, el que se lee primero: «EPUB · PDF».
+    public var formats: [String] {
+        ([filePath].compactMap { $0 } + extraFiles).map { ($0 as NSString).pathExtension.uppercased() }
+            .filter { !$0.isEmpty }
+    }
+
+    /// El borrado del libro en el registro (al juntar duplicados).
+    public static func deletion(id: UUID, clock: HybridLogicalClock) -> Change {
+        Change(hlc: clock.tick(), entity: .book, entityID: id, field: Change.deletedField, value: .bool(true))
     }
 
     /// Carpeta del libro relativa a la biblioteca («Autor/Título (12)»).
@@ -113,6 +127,7 @@ extension Book {
         static let calibreID = "calibre_id"
         static let fileHash = "file_hash"
         static let addedAt = "added_at"
+        static let extraFiles = "extra_files"
     }
 
     /// Construye el libro a partir de sus campos; `nil` si no tiene título.
@@ -143,6 +158,7 @@ extension Book {
             fileHash: fields[Field.fileHash]?.stringValue,
             addedAt: fields[Field.addedAt]?.doubleValue.map(Date.init(timeIntervalSince1970:))
         )
+        extraFiles = fields[Field.extraFiles]?.stringArrayValue ?? []
     }
 
     /// Cambios que describen el libro completo (para altas e importaciones).
@@ -165,6 +181,7 @@ extension Book {
         fields.append((Field.calibreID, calibreID.map { JSONValue.number(Double($0)) } ?? .null))
         fields.append((Field.fileHash, fileHash.map(JSONValue.string) ?? .null))
         fields.append((Field.addedAt, addedAt.map { JSONValue.number($0.timeIntervalSince1970) } ?? .null))
+        fields.append((Field.extraFiles, .array(extraFiles.map(JSONValue.string))))
         return fields.map { field, value in
             Change(hlc: clock.tick(), entity: .book, entityID: id, field: field, value: value)
         }

@@ -24,7 +24,8 @@ struct MacBookRow: Identifiable {
     }
     var tagsLabel: String { book.tags.joined(separator: ", ") }
     var language: String { book.language ?? "" }
-    var format: String { ((book.filePath ?? "") as NSString).pathExtension.uppercased() }
+    /// «EPUB · PDF» si tiene varios formatos (CB-3).
+    var format: String { book.formats.joined(separator: " · ") }
     var progress: Double { shelf.progress }
     var progressLabel: String { progress > 0 ? progress.percentText : "" }
     var rating: Double { book.rating ?? 0 }

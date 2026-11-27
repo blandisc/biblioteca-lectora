@@ -6,6 +6,8 @@ import SwiftUI
 /// Lo que se ve a la derecha de la barra lateral.
 enum MacSection: Hashable {
     case desk, notebook, search
+    /// Posibles duplicados (CB-3).
+    case duplicates
     case all, reading, toRead, finished, review, noCover
     case author(String), series(String), tag(String), language(String)
     /// Un estante: búsqueda guardada (CB-1).
@@ -16,6 +18,7 @@ enum MacSection: Hashable {
         case .desk: "Mesa"
         case .notebook: "Cuaderno"
         case .search: "Buscar"
+        case .duplicates: "Posibles duplicados"
         case .all: "Biblioteca"
         case .reading: "Leyendo"
         case .toRead: "Por leer"
@@ -29,7 +32,7 @@ enum MacSection: Hashable {
 
     func contains(_ row: MacBookRow) -> Bool {
         switch self {
-        case .desk, .notebook, .search, .all: true
+        case .desk, .notebook, .search, .duplicates, .all: true
         case .reading: row.state == .reading
         case .toRead: row.state == .toRead
         case .finished: row.state == .finished
@@ -68,6 +71,7 @@ struct MacLibraryWindow: View {
             case .notebook: NotebookScreen().navigationTitle("Cuaderno")
             // Buscar en todo (SG-3): libros, subrayados y notas. La búsqueda de la tabla es solo de libros.
             case .search: SearchScreen().navigationTitle("Buscar")
+            case .duplicates: MacDuplicatesView(library: model.library)
             default: MacBookTable(library: model.library, section: section ?? .all)
             }
         }
@@ -143,6 +147,10 @@ private struct MacSidebar: View {
                 item(.finished, "checkmark.circle", rows.filter { $0.state == .finished }.count)
                 item(.review, "questionmark.circle", rows.filter(\.inReview).count)
                 item(.noCover, "photo", rows.filter { !$0.hasCover }.count)
+                let duplicates = library.duplicateGroups().count
+                if duplicates > 0 || selection == .duplicates {
+                    item(.duplicates, "square.on.square", duplicates)
+                }
             }
             if !library.shelves.isEmpty {
                 Section("Estantes") {
@@ -172,9 +180,25 @@ private struct MacSidebar: View {
         }
         .listStyle(.sidebar)
         #if DEBUG
-        // Capturas: `-screenshot.demo macBatch` busca datos de los incompletos; `macRename` abre «Renombrar o juntar» con el primer autor;
+        // Capturas: `-screenshot.demo macDuplicates` importa copias y abre los duplicados; `macBatch` busca datos de los incompletos; `macRename` abre «Renombrar o juntar» con el primer autor;
         // `-screenshot.query Nombre` además lo renombra así (prueba de punta a punta).
         .task {
+            if LaunchOptions.demo == "macDuplicates" {
+                // Importa `Documents/Duplicados` (copias de libros que ya están) y abre «Posibles duplicados».
+                let folder = URL.documentsDirectory.appendingPathComponent("Duplicados", isDirectory: true)
+                let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+                _ = await library.importFiles(files)
+                // `-screenshot.query juntar` además junta el primer grupo en el que se queda (prueba de punta a punta).
+                if UserDefaults.standard.string(forKey: "screenshot.query") == "juntar", let group = library.duplicateGroups().first,
+                   let keep = DuplicateFinder.preferred(group, highlights: Dictionary(uniqueKeysWithValues: group.map {
+                       ($0.id, AnnotationStore.shared.annotations(forBook: $0.id).count)
+                   })) {
+                    let report = try? library.merge(keep: keep, others: group.map(\.id).filter { $0 != keep })
+                    print("juntar:", report.map { "\($0)" } ?? "falló")
+                }
+                selection = .duplicates
+                return
+            }
             if LaunchOptions.demo == "macBatch" {
                 // Buscar datos de los incompletos, como el clic derecho en «Todos los libros».
                 library.lookUpMany(library.incompleteBooks())

@@ -53,6 +53,8 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var shelves: [SavedShelf] = []
     /// Buscar datos de muchos libros a la vez (CB-4): cómo va. Sigue aunque cierres la ventana.
     @Published private(set) var batch: BatchLookup.Progress?
+    /// Parejas que dijiste que no son el mismo libro (CB-3).
+    @Published private(set) var notDuplicates: Set<DuplicateFinder.Pair> = []
     private var batchTask: Task<Void, Never>?
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
@@ -386,6 +388,16 @@ final class LibraryStore: ObservableObject {
                 CoverImaging.forget(oldFolder.appendingPathComponent(CalibreLayout.coverFileName))
             }
             book.filePath = "\(newFolderPath)/\(newName)"
+            // Los otros formatos (CB-3) se llaman igual que el principal, con su extensión.
+            book.extraFiles = book.extraFiles.map { extra in
+                let wanted = CalibreLayout.fileName(title: book.title, authors: book.authors,
+                                                    fileExtension: (extra as NSString).pathExtension)
+                guard wanted != extra, !FileManager.default.fileExists(atPath: newFolder.appendingPathComponent(wanted).path),
+                      (try? FileManager.default.moveItem(at: newFolder.appendingPathComponent(extra),
+                                                         to: newFolder.appendingPathComponent(wanted))) != nil
+                else { return extra }
+                return wanted
+            }
         }
 
         if let newCover, let jpeg = CoverImaging.jpeg(from: newCover), let folder = book.folderPath {
@@ -720,6 +732,97 @@ final class LibraryStore: ObservableObject {
         setReview(bookID, candidates: nil)
     }
 
+    // MARK: Duplicados (CB-3)
+
+    /// Los posibles duplicados de la biblioteca, sin los que ya descartaste.
+    func duplicateGroups() -> [[Book]] {
+        DuplicateFinder.groups(books, dismissed: notDuplicates)
+    }
+
+    /// «No son el mismo»: no se vuelve a proponer ninguna pareja de este grupo.
+    func dismissDuplicates(_ group: [Book]) {
+        for (i, a) in group.enumerated() {
+            for b in group[(i + 1)...] { notDuplicates.insert(DuplicateFinder.Pair(a.id, b.id)) }
+        }
+        save(notDuplicates, to: notDuplicatesURL)
+    }
+
+    struct MergeReport {
+        /// Formatos que el libro no tenía y ahora tiene («PDF»).
+        var addedFormats: [String] = []
+        /// Archivos repetidos (mismo formato) que se fueron a la Papelera.
+        var trashed = 0
+        var movedHighlights = 0
+    }
+
+    /// Junta varios libros en uno: el que se queda recibe los formatos que no tenía (en su
+    /// carpeta, con el nombre de Calibre), los datos que le faltaban, los subrayados y los
+    /// marcadores. Un archivo de un formato que ya tenía va a la Papelera (se puede recuperar).
+    @discardableResult
+    func merge(keep keepID: UUID, others otherIDs: [UUID]) throws -> MergeReport {
+        guard var keep = book(id: keepID), let keepFolderPath = keep.folderPath else { throw LibraryError.bookNotFound }
+        let keepFolder = root.appendingPathComponent(keepFolderPath, isDirectory: true)
+        let others = otherIDs.compactMap { book(id: $0) }.filter { $0.id != keepID }
+        var report = MergeReport()
+        var formats = Set(keep.formats)
+        for other in others {
+            let folder = other.folderPath.map { root.appendingPathComponent($0, isDirectory: true) }
+            let files = ([other.filePath.map { ($0 as NSString).lastPathComponent }].compactMap { $0 } + other.extraFiles)
+            for name in files {
+                guard let folder else { break }
+                let source = folder.appendingPathComponent(name)
+                guard FileManager.default.fileExists(atPath: source.path) else { continue }
+                let format = (name as NSString).pathExtension.uppercased()
+                if formats.contains(format) {
+                    try Self.discard(source)
+                    report.trashed += 1
+                } else {
+                    let target = CalibreLayout.fileName(title: keep.title, authors: keep.authors,
+                                                        fileExtension: (name as NSString).pathExtension)
+                    try FileManager.default.moveItem(at: source, to: keepFolder.appendingPathComponent(target))
+                    keep.extraFiles.append(target)
+                    formats.insert(format)
+                    report.addedFormats.append(format)
+                }
+            }
+            // La portada del otro, si el que se queda no tenía.
+            if coverURL(for: keep) == nil, let cover = coverURL(for: other) {
+                try? FileManager.default.copyItem(at: cover, to: keepFolder.appendingPathComponent(CalibreLayout.coverFileName))
+            }
+            // Subrayados: pasan al que se queda y se vuelven a anclar por su cita (el archivo es otro).
+            for var annotation in AnnotationStore.shared.annotations(forBook: other.id) {
+                annotation.bookID = keepID
+                annotation.cfi = nil
+                try? AnnotationStore.shared.save(annotation)
+                report.movedHighlights += 1
+            }
+            for var bookmark in bookmarks(for: other.id) {
+                removeBookmark(id: bookmark.id)
+                bookmark.id = UUID()
+                bookmark.bookID = keepID
+                addBookmark(bookmark)
+            }
+            // Lo que queda de su carpeta (portada y metadata.opf) también va a la Papelera.
+            if let folder, FileManager.default.fileExists(atPath: folder.path) {
+                try? Self.discard(folder)
+                removeIfEmpty(folder.deletingLastPathComponent())
+            }
+            record([Book.deletion(id: other.id, clock: clock)])
+            setReview(other.id, candidates: nil)
+        }
+        try update(DuplicateFinder.merged(keep: keep, with: others))
+        return report
+    }
+
+    /// A la Papelera en la Mac (se puede recuperar); en el iPhone no hay Papelera.
+    private static func discard(_ url: URL) throws {
+        #if os(macOS)
+        try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+        #else
+        try FileManager.default.removeItem(at: url)
+        #endif
+    }
+
     // MARK: Buscar datos en lote (CB-4)
 
     /// Los libros a los que les falta portada, sinopsis, ISBN, editorial o año.
@@ -784,6 +887,10 @@ final class LibraryStore: ObservableObject {
         root.appendingPathComponent(".lectora/reglas.json")
     }
 
+    private var notDuplicatesURL: URL {
+        root.appendingPathComponent(".lectora/no-duplicados.json")
+    }
+
     private var shelvesURL: URL {
         root.appendingPathComponent(".lectora/estantes.json")
     }
@@ -826,6 +933,10 @@ final class LibraryStore: ObservableObject {
         }
         if let data = try? Data(contentsOf: shelvesURL), let saved = try? JSONDecoder().decode([SavedShelf].self, from: data) {
             shelves = saved
+        }
+        if let data = try? Data(contentsOf: notDuplicatesURL),
+           let saved = try? JSONDecoder().decode(Set<DuplicateFinder.Pair>.self, from: data) {
+            notDuplicates = saved
         }
     }
 
