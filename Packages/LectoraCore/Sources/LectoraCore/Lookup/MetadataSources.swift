@@ -129,7 +129,7 @@ public enum OpenLibrary {
             let isNeutral = Set(TextMatch.tokens(name)).isSubset(of: Set(TextMatch.tokens(title)))
             if TextMatch.fold(title) == TextMatch.fold(workTitle) || isNeutral {
                 series = name
-                seriesIndex = (doc["series_position"] as? [String])?.first.flatMap { Double($0) }
+                seriesIndex = Book.sanitizedSeriesIndex((doc["series_position"] as? [String])?.first.flatMap { Double($0) })
             }
         }
         if series == nil, let parsed = SeriesParser.split((edition["title"] as? String) ?? "") {
@@ -209,7 +209,9 @@ public enum OpenLibrary {
     /// Messiah» → solo el primero; «FICCIONES» → «Ficciones».
     static func cleanEditionTitle(_ title: String, language: String? = nil) -> String {
         var cleaned = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let slash = cleaned.range(of: " / ") ?? cleaned.range(of: "/"), cleaned.distance(from: cleaned.startIndex, to: slash.lowerBound) > 3 {
+        // «/» sin espacios solo separa dos títulos completos: «Ciencia/Ficción» es una sola palabra.
+        if let slash = cleaned.range(of: " / ") ?? cleaned.range(of: "/"), cleaned.distance(from: cleaned.startIndex, to: slash.lowerBound) > 3,
+           cleaned[slash].count == 3 || cleaned[..<slash.lowerBound].contains(" ") {
             cleaned = String(cleaned[..<slash.lowerBound])
         }
         cleaned = cleaned.replacingOccurrences(of: " :", with: ":").trimmingCharacters(in: CharacterSet(charactersIn: " .,;:"))

@@ -38,6 +38,10 @@ public struct MetadataService: Sendable {
     /// Búsqueda automática (al importar) o pedida desde la ficha.
     public func lookup(_ book: Book) async -> Result {
         let isbn = book.identifiers["isbn"].flatMap(ISBN.normalized)
+        // «Sin título» no se busca como título: con ISBN se busca por él; sin ISBN, a revisar.
+        guard book.title != MetadataCleaner.untitled else {
+            return await search(book: book, isbn: isbn, title: "", author: nil)
+        }
         let title = TextMatch.mainTitle(SeriesParser.split(book.title)?.title ?? book.title)
         let author = book.authors.first.flatMap { TextMatch.nameParts($0).isEmpty ? nil : $0 }
         return await search(book: book, isbn: isbn, title: title.isEmpty ? book.title : title, author: author)
@@ -107,7 +111,7 @@ public struct MetadataService: Sendable {
 
         var ranked = MetadataMatcher.rank(found, for: book)
         if ranked.isEmpty {
-            return Result(candidates: [], decision: failed == asked ? .unreachable : .notFound)
+            return Result(candidates: [], decision: asked > 0 && failed == asked ? .unreachable : .notFound)
         }
         ranked = Array(ranked.prefix(6))
         ranked[0] = await withSummary(ranked[0], for: book)
