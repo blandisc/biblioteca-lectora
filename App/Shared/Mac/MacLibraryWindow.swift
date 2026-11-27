@@ -8,6 +8,8 @@ enum MacSection: Hashable {
     case desk, notebook, search
     case all, reading, toRead, finished, review, noCover
     case author(String), series(String), tag(String), language(String)
+    /// Un estante: búsqueda guardada (CB-1).
+    case shelf(SavedShelf)
 
     var title: String {
         switch self {
@@ -21,6 +23,7 @@ enum MacSection: Hashable {
         case .review: "Por revisar"
         case .noCover: "Sin portada"
         case .author(let name), .series(let name), .tag(let name), .language(let name): name
+        case .shelf(let shelf): shelf.name
         }
     }
 
@@ -36,6 +39,7 @@ enum MacSection: Hashable {
         case .series(let name): row.book.series == name
         case .tag(let name): row.book.tags.contains(name)
         case .language(let code): row.book.language == code
+        case .shelf(let shelf): shelf.contains(row.book)
         }
     }
 }
@@ -81,6 +85,8 @@ private struct MacSidebar: View {
     @Environment(\.undoManager) private var undoManager
     /// Renombrar o fusionar (CB-2), desde el clic derecho en un autor, serie o etiqueta.
     @State private var renaming: MacCatalogSheet.Target?
+    @State private var renamingShelf: SavedShelf?
+    @State private var shelfName = ""
 
     var body: some View {
         let rows = MacBookTable.rows(library: library, shelf: shelf)
@@ -97,6 +103,25 @@ private struct MacSidebar: View {
                 item(.finished, "checkmark.circle", rows.filter { $0.state == .finished }.count)
                 item(.review, "questionmark.circle", rows.filter(\.inReview).count)
                 item(.noCover, "photo", rows.filter { !$0.hasCover }.count)
+            }
+            if !library.shelves.isEmpty {
+                Section("Estantes") {
+                    ForEach(library.shelves) { shelf in
+                        Label(shelf.name, systemImage: "books.vertical")
+                            .badge(rows.filter { shelf.contains($0.book) }.count)
+                            .tag(MacSection.shelf(shelf))
+                            .contextMenu {
+                                Button("Renombrar estante…") {
+                                    shelfName = shelf.name
+                                    renamingShelf = shelf
+                                }
+                                Button("Borrar estante", role: .destructive) {
+                                    if case .shelf(shelf) = selection { selection = .all }
+                                    library.removeShelf(id: shelf.id)
+                                }
+                            }
+                    }
+                }
             }
             Section("Explorar") {
                 group("Autores", "person.2", values(rows.flatMap(\.book.authors)), MacSection.author, icon: "person", field: .author)
@@ -121,6 +146,19 @@ private struct MacSidebar: View {
             }
         }
         #endif
+        .alert("Renombrar estante", isPresented: Binding(
+            get: { renamingShelf != nil }, set: { if !$0 { renamingShelf = nil } }
+        )) {
+            TextField("Nombre", text: $shelfName)
+            Button("Guardar nombre") {
+                guard var shelf = renamingShelf, !shelfName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                let wasSelected = selection == .shelf(shelf)
+                shelf.name = shelfName.trimmingCharacters(in: .whitespaces)
+                library.saveShelf(shelf)
+                if wasSelected { selection = .shelf(shelf) }
+            }
+            Button("Dejar como está", role: .cancel) {}
+        }
         .sheet(item: $renaming) { target in
             MacCatalogSheet(target: target, values: values(for: target.field, rows), library: library) { final in
                 // Si estabas viendo lo que cambió de nombre, sigues viéndolo con el nombre nuevo.

@@ -14,6 +14,8 @@ struct MacBookTable: View {
     @State private var selection = Set<UUID>()
     @State private var sortOrder = [KeyPathComparator(\MacBookRow.titleKey)]
     @State private var query = ""
+    /// «Guardar como estante» con la búsqueda escrita (CB-1).
+    @State private var savingShelf: String?
     @AppStorage("mac.ficha") private var showsInspector = true
     @SceneStorage("mac.columnas") private var columns = TableColumnCustomization<MacBookRow>()
 
@@ -44,6 +46,9 @@ struct MacBookTable: View {
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button { model.importing = true } label: { Label("Importar libros", systemImage: "plus") }
                         .help("Importar libros (⌘O)")
+                    Button { savingShelf = query } label: { Label("Guardar como estante", systemImage: "rectangle.stack.badge.plus") }
+                        .disabled(LibraryQuery(query).isEmpty)
+                        .help("Guardar esta búsqueda como un estante que se llena solo")
                     Button { lookUp(selection) } label: { Label("Buscar datos", systemImage: "wand.and.stars") }
                         .disabled(selection.isEmpty)
                         .help("Buscar portada y datos en internet para lo elegido")
@@ -60,6 +65,7 @@ struct MacBookTable: View {
                 selection = Set(rows.prefix(demo == "macMany" ? 3 : 1).map(\.id))
             }
             #endif
+            .saveShelfAlert(query: $savingShelf) { library.saveShelf($0) }
             .dropDestination(for: URL.self) { urls, _ in
                 guard !urls.isEmpty else { return false }
                 Task { await model.importBooks(urls) }

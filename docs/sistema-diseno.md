@@ -332,6 +332,7 @@ En la Mac, Gabinete es una app de Mac: la mesa de trabajo de tu biblioteca. Vive
 | Libro abierto | Cada libro en su propia ventana, con su nombre en la barra: lees con la biblioteca al lado y puedes tener varios abiertos. ⌘W lo cierra | `MacReaderWindow` |
 | Menús | Archivo › Importar libros… (⌘O) y Gabinete › Ajustes… (⌘,), como en toda app de Mac | `LectoraApp` |
 | Ordenar autores, series y etiquetas | Clic derecho en la barra lateral › «Renombrar o juntar…»: escribir un nombre que ya existe es juntar, y los parecidos («Cortázar, Julio», «J. Cortázar») vienen marcados. En series, «Renumerar tomos 1, 2, 3…». ⌘Z deshace. Con autores y etiquetas queda la regla para lo que importes después (CB-2) | `MacCatalogSheet`, `CatalogRename` |
+| Estantes | Búsquedas guardadas que se llenan solas (CB-1). En la Mac, «Guardar como estante» en la barra de la tabla y la sección Estantes en la barra lateral (clic derecho: renombrar o borrar). En el iPhone, «Guardar estos libros como estante» en Buscar, y cada estante como renglón en la Biblioteca. Viven en la carpeta (`.lectora/estantes.json`) | `SavedShelf`, `SavedShelfScreen` |
 | Buscar en todo | En la barra lateral (Leer): la misma pantalla Buscar del iPhone, con libros, subrayados y notas (SG-3). La búsqueda de la barra de la tabla sigue siendo solo de libros | `MacLibraryWindow`, `SearchScreen` |
 
 Aquí no aplican las recetas del iPhone (`FilterBar`, `SearchField`, `PrimaryButton`): en la Mac

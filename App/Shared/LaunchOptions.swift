@@ -11,8 +11,8 @@ enum LaunchOptions {
     static var hidesReaderChrome: Bool { UserDefaults.standard.bool(forKey: "screenshot.hideChrome") }
     /// Mostrar el mini reproductor como si sonara el libro actual.
     static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
-    /// Pantalla empujada: en la Biblioteca, `review` («Por revisar») o `detail` (ficha
-    /// del primer libro); en el Cuaderno, `note` (la primera nota), `highlights` o
+    /// Pantalla empujada: en la Biblioteca, `review` («Por revisar»), `detail` (ficha
+    /// del primer libro) o `shelf` (el primer estante); en el Cuaderno, `note` (la primera nota), `highlights` o
     /// `settings` (Ajustes); en el lector, `contents`, `booksearch`, `marks` o `appearance` («Aa»).
     static var screen: String? { UserDefaults.standard.string(forKey: "screenshot.screen") }
     /// Revisar animaciones en video: en el lector, `turns` pasa páginas solo

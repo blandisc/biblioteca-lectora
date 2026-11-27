@@ -49,6 +49,8 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var filled: [UUID: FilledRecord] = [:]
     /// Reglas de autores y etiquetas (en la carpeta: viajan con la biblioteca).
     @Published private(set) var rules = MetadataRules()
+    /// Estantes: búsquedas guardadas con nombre (CB-1). En la carpeta: viajan con la biblioteca.
+    @Published private(set) var shelves: [SavedShelf] = []
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
 
@@ -580,6 +582,25 @@ final class LibraryStore: ObservableObject {
         return changed
     }
 
+    // MARK: Estantes (CB-1)
+
+    /// Guarda un estante nuevo o los cambios de uno que ya existe.
+    func saveShelf(_ shelf: SavedShelf) {
+        if let index = shelves.firstIndex(where: { $0.id == shelf.id }) {
+            shelves[index] = shelf
+        } else {
+            shelves.append(shelf)
+        }
+        save(shelves, to: shelvesURL)
+    }
+
+    func removeShelf(id: UUID) {
+        shelves.removeAll { $0.id == id }
+        save(shelves, to: shelvesURL)
+    }
+
+    func shelf(id: UUID) -> SavedShelf? { shelves.first { $0.id == id } }
+
     // MARK: Ordenar autores, series y etiquetas (CB-2)
 
     /// Lo que cambió una operación de la biblioteca entera, para deshacerla.
@@ -715,6 +736,10 @@ final class LibraryStore: ObservableObject {
         root.appendingPathComponent(".lectora/reglas.json")
     }
 
+    private var shelvesURL: URL {
+        root.appendingPathComponent(".lectora/estantes.json")
+    }
+
     private var pendingURL: URL {
         root.appendingPathComponent(".lectora/por-buscar.json")
     }
@@ -750,6 +775,9 @@ final class LibraryStore: ObservableObject {
         }
         if let data = try? Data(contentsOf: rulesURL), let saved = try? JSONDecoder().decode(MetadataRules.self, from: data) {
             rules = saved
+        }
+        if let data = try? Data(contentsOf: shelvesURL), let saved = try? JSONDecoder().decode([SavedShelf].self, from: data) {
+            shelves = saved
         }
     }
 

@@ -15,6 +15,7 @@ extension View {
             .background(Theme.paper.ignoresSafeArea())
             .navigationDestination(for: ShelfBook.self) { BookDetailScreen(book: $0) }
             .navigationDestination(for: SeriesRef.self) { SeriesScreen(series: $0) }
+            .navigationDestination(for: ShelfRef.self) { SavedShelfScreen(ref: $0) }
             .navigationDestination(for: ReviewInboxRef.self) { _ in ReviewScreen() }
             .navigationDestination(for: CandidatesRef.self) { CandidatesScreen(bookID: $0.bookID, searchesFirst: $0.searchesFirst) }
             .navigationDestination(for: FilledRef.self) { FilledScreen(bookID: $0.bookID) }

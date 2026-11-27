@@ -70,3 +70,8 @@ enum LibraryKeys {
     static let sort = "library.sort"
     static let layout = "library.layout"
 }
+
+/// Para empujar la pantalla de un estante (CB-1).
+struct ShelfRef: Hashable {
+    let id: UUID
+}

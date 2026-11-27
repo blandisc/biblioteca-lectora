@@ -64,6 +64,14 @@ struct LibraryScreen: View {
                             .padding(.top, Theme.Space.l)
                         }
 
+                        // Estantes (CB-1): búsquedas guardadas que se llenan solas.
+                        ForEach(model.library.shelves) { shelf in
+                            NavigationLink(value: ShelfRef(id: shelf.id)) {
+                                LinkRow(title: shelf.name, value: "\(model.library.books.filter(shelf.contains).count)")
+                            }
+                            .buttonStyle(.plain)
+                        }
+
                         if model.shelf.isEmpty {
                             EmptyState(title: "Todavía no hay libros",
                                        message: "Toca + para añadir los primeros. También puedes migrar tu biblioteca de Calibre.")
@@ -101,6 +109,7 @@ struct LibraryScreen: View {
         switch LaunchOptions.screen {
         case "review": path.append(ReviewInboxRef())
         case "detail": if let first = model.shelf.first { path.append(first) }
+        case "shelf": if let first = model.library.shelves.first { path.append(ShelfRef(id: first.id)) }
         default: break
         }
     }
@@ -112,7 +121,7 @@ struct LibraryScreen: View {
         }
         let all = model.shelf
         let inCloud = all.filter(\.inCloudOnly).count
-        let books = all.count == 1 ? "1 libro" : "\(all.count) libros"
+        let books = all.count.counted("libro", "libros")
         return inCloud == 0 ? books : "\(books) · \(inCloud) en la nube"
     }
 

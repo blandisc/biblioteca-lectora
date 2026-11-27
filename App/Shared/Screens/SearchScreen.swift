@@ -12,6 +12,8 @@ struct SearchScreen: View {
     @State private var recents: [RecentSearches.Item] = []
     /// «Ver los 12 subrayados»: de inicio solo los primeros.
     @State private var showsAllHighlights = false
+    /// «Guardar como estante» con esta búsqueda (CB-1).
+    @State private var savingShelf: String?
 
     private var term: String { query.trimmingCharacters(in: .whitespaces) }
     private var parsed: LibraryQuery { LibraryQuery(term) }
@@ -74,6 +76,7 @@ struct SearchScreen: View {
             }
             // Al deslizar se esconde el teclado; y no se abre solo (se ven tus recientes).
             .scrollDismissesKeyboard(.immediately)
+            .saveShelfAlert(query: $savingShelf) { model.library.saveShelf($0) }
             .screen()
             .onAppear {
                 recents = RecentSearches.load(nil)
@@ -142,6 +145,9 @@ struct SearchScreen: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
                 .padding(.top, Theme.Space.l)
+            if !found.books.isEmpty {
+                TextAction(title: "Guardar estos libros como estante") { savingShelf = term }
+            }
             if !found.books.isEmpty {
                 section("Libros") {
                     ForEach(found.books) { book in
