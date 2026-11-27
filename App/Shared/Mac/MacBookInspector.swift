@@ -77,7 +77,10 @@ struct MacBookInspector: View {
                 }
             }
             Section("Sinopsis") {
+                // Con la letra y el fondo del resto de la ficha, no un recuadro blanco aparte.
                 TextEditor(text: $draft.summary)
+                    .font(.body)
+                    .scrollContentBackground(.hidden)
                     .frame(minHeight: Theme.Mac.summary)
             }
             buttons(count: 1)

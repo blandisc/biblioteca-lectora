@@ -3,7 +3,7 @@ import LectoraCore
 import SwiftUI
 
 /// Libro abierto en el lector.
-struct OpenBook: Identifiable {
+struct OpenBook: Identifiable, Hashable, Codable {
     let url: URL
     var bookID: UUID?
     /// Pasaje donde abrir (un subrayado enlazado desde una nota) en vez de donde lo dejaste.

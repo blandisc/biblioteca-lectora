@@ -84,6 +84,10 @@ enum Theme {
         static let titleColumn: CGFloat = 180
         static let shortColumn: CGFloat = 72
         static let column: CGFloat = 110
+        /// Gabinete › Ajustes… (⌘,).
+        static let settings = CGSize(width: 560, height: 720)
+        /// Lo más chica que puede ser la ventana de un libro.
+        static let readerMin = CGSize(width: 520, height: 600)
         static let summary: CGFloat = 120
     }
 

@@ -7,7 +7,10 @@ struct RootView: View {
         case desk, library, notebook, search
     }
 
-    @StateObject private var model = AppModel()
+    @ObservedObject var model: AppModel
+    #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+    #endif
     @ObservedObject private var sessions = SessionStore.shared
     @AppStorage(WelcomeKeys.seen) private var welcomeSeen = false
     /// Se decide al arrancar: la bienvenida no se cierra sola si a media bienvenida llegan libros.
@@ -79,9 +82,11 @@ struct RootView: View {
                     .bookOpeningDestination(in: opening, enabled: book.fromCover)
             }
             #else
-            .sheet(item: $model.openBook) { book in
-                ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
-                    .frame(minWidth: Theme.Size.macReader.width, minHeight: Theme.Size.macReader.height)
+            // El libro se abre en su propia ventana (MG-1).
+            .onChange(of: model.openBook) { _, book in
+                guard let book else { return }
+                openWindow(id: MacReaderWindow.id, value: book)
+                model.openBook = nil
             }
             #endif
     }

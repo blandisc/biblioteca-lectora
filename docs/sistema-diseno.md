@@ -328,6 +328,8 @@ En la Mac, Gabinete es una app de Mac: la mesa de trabajo de tu biblioteca. Vive
 | Tabla | `Table` nativa: ordenar por columna, elegir columnas (clic derecho en el encabezado; idioma, valoración, editorial, publicado e ISBN empiezan escondidas), selección múltiple, doble clic abre el libro, arrastrar archivos importa | `MacBookTable`, `MacBookRow` |
 | Búsqueda | En la barra de la ventana, con filtros como Calibre: `autor:` `serie:` `etiqueta:` `idioma:` `editorial:` `estado:` `isbn:` `título:` (`LibraryQuery`, con sus pruebas) | `MacBookTable` |
 | Ficha | `inspector` a la derecha: con un libro, todos sus datos; con varios, lo que escribas se aplica a todos y lo que dejes en blanco no cambia (`BulkEdit`, con sus pruebas) | `MacBookInspector` |
+| Libro abierto | Cada libro en su propia ventana, con su nombre en la barra: lees con la biblioteca al lado y puedes tener varios abiertos. ⌘W lo cierra | `MacReaderWindow` |
+| Menús | Archivo › Importar libros… (⌘O) y Gabinete › Ajustes… (⌘,), como en toda app de Mac | `LectoraApp` |
 
 Aquí no aplican las recetas del iPhone (`FilterBar`, `SearchField`, `PrimaryButton`): en la Mac
 mandan la búsqueda de la barra, el botón del sistema (con el acento) y los formularios agrupados.

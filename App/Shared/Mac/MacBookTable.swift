@@ -43,7 +43,6 @@ struct MacBookTable: View {
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button { model.importing = true } label: { Label("Importar libros", systemImage: "plus") }
-                        .keyboardShortcut("o")
                         .help("Importar libros (⌘O)")
                     Button { lookUp(selection) } label: { Label("Buscar datos", systemImage: "wand.and.stars") }
                         .disabled(selection.isEmpty)

@@ -43,7 +43,14 @@ enum MacSection: Hashable {
 /// y ficha, como Música o Fotos. Leer (Mesa y Cuaderno) vive en la misma barra lateral.
 struct MacLibraryWindow: View {
     @EnvironmentObject private var model: AppModel
-    @State private var section: MacSection? = .all
+    @State private var section: MacSection? = {
+        // Capturas: `-screenshot.tab desk|notebook` abre en la Mesa o el Cuaderno.
+        switch LaunchOptions.tab {
+        case "desk": .desk
+        case "notebook": .notebook
+        default: .all
+        }
+    }()
 
     var body: some View {
         NavigationSplitView {
@@ -51,12 +58,14 @@ struct MacLibraryWindow: View {
                 .navigationSplitViewColumnWidth(min: Theme.Mac.sidebarMin, ideal: Theme.Mac.sidebar)
         } detail: {
             switch section ?? .all {
-            case .desk: MesaScreen()
-            case .notebook: NotebookScreen()
+            case .desk: MesaScreen().navigationTitle("Mesa")
+            case .notebook: NotebookScreen().navigationTitle("Cuaderno")
             default: MacBookTable(library: model.library, section: section ?? .all)
             }
         }
-        .frame(minWidth: Theme.Mac.window.width, minHeight: Theme.Mac.window.height)
+        // El tamaño ideal es con el que abre la primera vez (si no, abría en el mínimo).
+        .frame(minWidth: Theme.Mac.window.width, idealWidth: Theme.Mac.defaultWindow.width,
+               minHeight: Theme.Mac.window.height, idealHeight: Theme.Mac.defaultWindow.height)
     }
 }
 
