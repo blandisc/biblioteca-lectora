@@ -244,6 +244,16 @@ final class DesignRulesTests: XCTestCase {
         // En la Mac, la búsqueda vive en la barra de la ventana, como en toda app de Mac.
         check(hits(#"\.searchable\("#, in: Self.screens.filter { !$0.path.hasPrefix("App/Shared/Mac/") }),
               "Búsqueda: usa SearchField bajo el título")
+        // 27 nov 2026: un filtro sin libros decía que no había ninguno y ahí quedaba. El vacío de un
+        // filtro trae su salida a todos los libros, en el iPhone y en la Mac.
+        var exits: [String] = []
+        for file in Self.screens {
+            for (index, line) in file.lines.enumerated() where line.contains("EmptyCopy.noMatch(") {
+                let call = file.lines[index..<min(index + 3, file.lines.count)].joined()
+                if !call.contains("EmptyCopy.showAll") { exits.append("\(file.path):\(index + 1)") }
+            }
+        }
+        check(exits, "Un filtro vacío ofrece volver a todos (EmptyCopy.showAll)")
     }
 
     /// Las piezas reciben datos y avisan con acciones; lo que necesita el estado de la app es una pantalla.

@@ -91,7 +91,7 @@ struct MacLibraryWindow: View {
             // Buscar en todo (SG-3): libros, subrayados y notas. La búsqueda de la tabla es solo de libros.
             case .search: SearchScreen()
             case .duplicates: MacDuplicatesView(library: model.library)
-            default: MacBookTable(library: model.library, section: section ?? .all)
+            default: MacBookTable(library: model.library, section: section ?? .all) { section = .all }
             }
         }
         // Buscar datos en lote (CB-4): cómo va, en cualquier sección.

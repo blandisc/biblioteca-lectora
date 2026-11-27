@@ -11,6 +11,8 @@ struct MacBookTable: View {
     @Environment(\.openSettings) private var openSettings
     @ObservedObject var library: LibraryStore
     let section: MacSection
+    /// Volver a «Todos» desde una sección que no deja nada.
+    var showAll: () -> Void = {}
 
     @State private var selection = Set<UUID>()
     @State private var sortOrder = [KeyPathComparator(\MacBookRow.titleKey)]
@@ -29,8 +31,12 @@ struct MacBookTable: View {
             .overlay {
                 if rows.isEmpty {
                     if query.isEmpty {
-                        let copy = library.books.isEmpty ? EmptyCopy.noBooks : EmptyCopy.noMatch(section.title)
-                        MacEmptyState(title: copy.title, message: copy.message)
+                        if library.books.isEmpty {
+                            MacEmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message)
+                        } else {
+                            MacEmptyState(title: EmptyCopy.noMatch(section.title).title, message: EmptyCopy.noMatch(section.title).message,
+                                          actionTitle: EmptyCopy.showAll, action: showAll)
+                        }
                     } else {
                         ContentUnavailableView.search(text: query)
                     }

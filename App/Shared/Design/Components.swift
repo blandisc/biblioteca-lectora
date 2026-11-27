@@ -2265,6 +2265,8 @@ enum EmptyCopy {
     static func noMatch(_ what: String) -> (title: String, message: String) {
         ("Ningún libro aquí", "Ningún libro coincide con «\(what)».")
     }
+    /// La salida de un filtro que no deja nada: volver a todos los libros, sin buscar dónde.
+    static let showAll = "Ver todos los libros"
     static let noDuplicates = (title: "Sin libros repetidos",
                                message: "No encontré dos libros con el mismo título y un autor parecido, ni con el mismo ISBN.")
     static let chooseBook = (title: "Elige un libro",
@@ -2297,9 +2299,19 @@ struct MacEmptyState: View {
     let title: String
     let message: String
     var systemImage = "books.vertical"
+    var actionTitle: String? = nil
+    var action: (() -> Void)? = nil
 
     var body: some View {
-        ContentUnavailableView(title, systemImage: systemImage, description: Text(message))
+        ContentUnavailableView {
+            Label(title, systemImage: systemImage)
+        } description: {
+            Text(message)
+        } actions: {
+            if let actionTitle, let action {
+                Button(actionTitle, action: action)
+            }
+        }
     }
 }
 

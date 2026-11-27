@@ -76,7 +76,8 @@ struct LibraryScreen: View {
                             EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
                                        actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
                         } else if books.isEmpty {
-                            EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message)
+                            EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message,
+                                       actionTitle: EmptyCopy.showAll) { filter = .all }
                         } else {
                             switch layout {
                             case .covers: grid(coverItems(books)).padding(.top, Theme.Space.l)
