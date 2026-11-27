@@ -48,15 +48,9 @@ enum CabinetLocation {
         return FileManager.default.fileExists(atPath: library(in: cabinet).appendingPathComponent(".lectora").path)
     }
 
-    /// «iCloud Drive › Gabinete», «En este iPhone», o el nombre de la carpeta.
+    /// «iCloud Drive › Gabinete», «En este iPhone» (o iPad, o Mac), o el nombre de la carpeta.
     static func displayName(_ cabinet: URL) -> String {
-        if isLocal(cabinet) {
-            #if os(iOS)
-            return "En este iPhone"
-            #else
-            return "En esta Mac"
-            #endif
-        }
+        if isLocal(cabinet) { return DeviceKind.current.here }
         let path = cabinet.standardizedFileURL.path
         if let range = path.range(of: "com~apple~CloudDocs/") {
             return "iCloud Drive › " + path[range.upperBound...].replacingOccurrences(of: "/", with: " › ")

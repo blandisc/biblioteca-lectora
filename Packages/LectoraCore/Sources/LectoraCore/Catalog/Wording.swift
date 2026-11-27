@@ -218,3 +218,47 @@ extension BookFields {
         return clean.isEmpty ? nil : clean
     }
 }
+
+/// El dispositivo donde corre Gabinete, dicho por su nombre (auditoría 2, 27 nov 2026): la
+/// bienvenida decía «Archivos › En mi iPhone» también en la Mac y en el iPad, y la carpeta
+/// local se llamaba «En este iPhone» en el iPad. Toda pantalla compartida lo dice con esto
+/// (regla 8), nunca con «iPhone» escrito a mano.
+public enum DeviceKind: String, CaseIterable, Sendable {
+    case iPhone, iPad, mac
+
+    /// «iPhone», «iPad», «Mac».
+    public var name: String {
+        switch self {
+        case .iPhone: "iPhone"
+        case .iPad: "iPad"
+        case .mac: "Mac"
+        }
+    }
+
+    /// «En este iPhone», «En este iPad», «En esta Mac».
+    public var here: String { self == .mac ? "En esta Mac" : "En este \(name)" }
+
+    /// Su dibujo, el mismo en la bienvenida y en Ajustes › Tu Gabinete.
+    public var symbol: String {
+        switch self {
+        case .iPhone: "iphone"
+        case .iPad: "ipad"
+        case .mac: "desktopcomputer"
+        }
+    }
+
+    /// Dónde queda la carpeta del Gabinete cuando vive en el dispositivo, como la encuentras.
+    public var localFolder: String {
+        switch self {
+        case .iPhone, .iPad: "Archivos › En mi \(name) › Gabinete"
+        // En la Mac la app vive en su espacio propio (sandbox): no hay ruta corta que enseñar.
+        case .mac: "En la carpeta propia de Gabinete en tu Mac"
+        }
+    }
+
+    /// Dónde están tus archivos para añadirlos: «Archivos» en el iPhone y el iPad, el Finder en la Mac.
+    public var files: String { self == .mac ? "el Finder" : "Archivos" }
+
+    /// El otro dispositivo con el que suele compartir la carpeta en iCloud Drive.
+    public var partner: DeviceKind { self == .mac ? .iPhone : .mac }
+}

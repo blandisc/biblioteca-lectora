@@ -15,7 +15,8 @@ enum LaunchOptions {
     static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
     /// Pantalla empujada: en la Biblioteca, `review` («Por revisar»), `detail` (ficha
     /// del primer libro, o del de `-screenshot.book`), `edit` (la ficha con «Escribir a mano» abierto) o `shelf` (el primer estante); en el Cuaderno, `note` (la primera nota), `highlights` o
-    /// `settings` (Ajustes); en la Mesa, `diary` (el Diario, también en la Mac); en el lector, `contents`, `booksearch`, `marks` o `appearance` («Aa»).
+    /// `settings` (Ajustes); en la Mesa, `diary` (el Diario, también en la Mac) o `summary` (el resumen
+    /// «Sesión terminada», como al cerrar un libro); en el lector, `contents`, `booksearch`, `marks` o `appearance` («Aa»).
     static var screen: String? { UserDefaults.standard.string(forKey: "screenshot.screen") }
     /// En la Biblioteca, el filtro ya elegido: el título de uno («Leyendo», «Por leer», «Series»…),
     /// para revisar que el conteo cuente lo que ves (`-screenshot.filter Leyendo`).
@@ -33,6 +34,9 @@ enum LaunchOptions {
     /// Ajustes › Tu Gabinete como si viviera en otro lado: `icloud`, `icloudNested`,
     /// `folder` o `moving` (para revisar el dibujo en cada estado).
     static var cabinet: String? { UserDefaults.standard.string(forKey: "screenshot.cabinet") }
+    /// Con `-screenshot.screen welcome`, el paso de la bienvenida: `place`, `books` o `readwise`
+    /// (`-screenshot.step place`).
+    static var welcomeStep: String? { UserDefaults.standard.string(forKey: "screenshot.step") }
 }
 
 /// Lo que todavía no funciona no se muestra: nada en la app promete algo que no hace, ni

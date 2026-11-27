@@ -18,10 +18,24 @@ struct WelcomeScreen: View {
         case device, folder
     }
 
+    /// Las dos salidas de cada paso, con el mismo nombre en el iPhone (en la barra) y en la Mac (al pie).
+    static let skipTitle = "Ir a la biblioteca"
+    static let backTitle = "Volver al paso anterior"
+
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var connectors = ConnectorsStore.shared
     @AppStorage(WelcomeKeys.seen) private var seen = false
-    @State private var step: Step = .hello
+    @State private var step: Step = {
+        #if DEBUG
+        // Capturas: `-screenshot.step place|books|readwise` abre la bienvenida en ese paso.
+        if let name = LaunchOptions.welcomeStep, let step = ["place": Step.place, "books": .books, "readwise": .readwise][name] { return step }
+        #endif
+        return .hello
+    }()
+    #if os(macOS)
+    /// En la Mac la hoja mide lo que mide su paso, sin pasar de la ventana más chica.
+    @State private var contentHeight: CGFloat = Theme.Mac.sheetMax
+    #endif
     @State private var place: Place = .device
     @State private var choosingFolder = false
     @State private var migratingCalibre = false
@@ -63,20 +77,34 @@ struct WelcomeScreen: View {
                             seen = true
                         }
                     }
+                    #if os(macOS)
+                    // La hoja de la Mac no enseña los botones de la barra: saltar y volver van al pie.
+                    WelcomeExits(back: step == .hello ? nil : goBack) { seen = true }
+                    #endif
                 }
                 .screenContent()
+                #if os(macOS)
+                // Una hoja no tiene la barra de la ventana que deja su aire arriba.
+                .padding(.top, Theme.Space.screenTopInSheet)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+                #endif
             }
+            #if os(macOS)
+            .frame(width: Theme.Mac.welcome, height: min(contentHeight, Theme.Mac.sheetMax))
+            #endif
             .pushedScreen()
+            #if os(iOS)
             .toolbar {
                 if step != .hello {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Volver al paso anterior") { step = Step(rawValue: step.rawValue - 1) ?? .hello }
+                        Button(Self.backTitle, action: goBack)
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Ir a la biblioteca") { seen = true }.foregroundStyle(Theme.secondaryInk)
+                    Button(Self.skipTitle) { seen = true }.foregroundStyle(Theme.secondaryInk)
                 }
             }
+            #endif
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { useFolder(folder) }
             }
@@ -87,6 +115,8 @@ struct WelcomeScreen: View {
             .errorAlert("No pude usar esa carpeta", message: $errorMessage, back: "Elegir otra carpeta")
         }
     }
+
+    private func goBack() { step = Step(rawValue: step.rawValue - 1) ?? .hello }
 
     /// La carpeta elegida: si ya tiene un Gabinete (el de tu Mac), se usa; si no, se crea ahí.
     private func useFolder(_ folder: URL) {
@@ -135,6 +165,7 @@ private struct PlaceStep: View {
     let working: Bool
     let chooseFolder: () -> Void
     let next: () -> Void
+    private let device = DeviceKind.current
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
@@ -143,14 +174,14 @@ private struct PlaceStep: View {
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             Button { place = .device } label: {
-                OptionRow(systemImage: "iphone", title: "En este dispositivo",
-                          detail: "Archivos › En mi iPhone › Gabinete. Puedes moverlo a iCloud después.",
+                OptionRow(systemImage: device.symbol, title: device.here,
+                          detail: "\(device.localFolder). Puedes moverlo a iCloud Drive después.",
                           selected: place == .device && chosen == nil)
             }
             .buttonStyle(.plain)
             Button(action: chooseFolder) {
                 OptionRow(systemImage: "icloud", title: chosen ?? "En iCloud Drive",
-                          detail: "Elige o crea una carpeta «Gabinete». Si tu Mac ya tiene uno ahí, se usa ese: así tu iPhone y tu Mac comparten todo.",
+                          detail: "Elige o crea una carpeta «Gabinete». Si tu \(device.partner.name) ya tiene uno ahí, se usa ese: así tu \(device.name) y tu \(device.partner.name) comparten todo.",
                           selected: chosen != nil)
             }
             .buttonStyle(.plain)
@@ -197,7 +228,7 @@ private struct BooksStep: View {
             .buttonStyle(.plain)
             Button(action: add) {
                 OptionRow(systemImage: "plus", title: "Añadir archivos",
-                          detail: "Desde Archivos, iCloud Drive o donde los tengas.")
+                          detail: "Desde \(DeviceKind.current.files), iCloud Drive o donde los tengas.")
             }
             .buttonStyle(.plain)
             // Sin libros, la salida es discreta: lo importante es traerlos.
@@ -235,3 +266,22 @@ private struct ReadwiseStep: View {
         }
     }
 }
+
+#if os(macOS)
+/// Las salidas de la bienvenida en la Mac, al pie de cada paso: la hoja de la Mac no enseña los
+/// botones de la barra, y sin ellas no había cómo saltarla ni volver (auditoría 2).
+private struct WelcomeExits: View {
+    let back: (() -> Void)?
+    let skip: () -> Void
+
+    var body: some View {
+        VStack(spacing: Theme.Space.s) {
+            Hairline()
+            AdaptiveStack(spacing: Theme.Space.s) {
+                if let back { QuietButton(title: WelcomeScreen.backTitle, action: back) }
+                QuietButton(title: WelcomeScreen.skipTitle, action: skip)
+            }
+        }
+    }
+}
+#endif

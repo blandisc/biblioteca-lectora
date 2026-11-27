@@ -309,13 +309,7 @@ extension SettingsScreen {
         default: break
         }
         #endif
-        if model.library.isLocal {
-            #if os(iOS)
-            return .device(UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone")
-            #else
-            return .device("Mac")
-            #endif
-        }
+        if model.library.isLocal { return .device(.current) }
         let parent = model.library.cabinet.deletingLastPathComponent().standardizedFileURL.path
         if let range = parent.range(of: "com~apple~CloudDocs") {
             let middle = parent[range.upperBound...].split(separator: "/").joined(separator: " › ")

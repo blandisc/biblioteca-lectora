@@ -43,6 +43,17 @@ struct RootView: View {
                 // Primer arranque, con el Gabinete vacío (no en las capturas automáticas).
                 showsWelcome = (!welcomeSeen && !LaunchOptions.seed && model.library.books.isEmpty)
                     || LaunchOptions.screen == "welcome"
+                #if DEBUG
+                // Capturas: `-screenshot.screen summary` enseña «Sesión terminada» con una sesión de muestra.
+                if LaunchOptions.screen == "summary" {
+                    let start = Date().addingTimeInterval(-26 * 65)
+                    let pages = (0..<26).map { index in
+                        PageView(start: start.addingTimeInterval(Double(index) * 65), end: start.addingTimeInterval(Double(index + 1) * 65),
+                                 words: 250, fraction: 0.31 + Double(index) * 0.002)
+                    }
+                    sessions.justFinished = SessionClassifier().session(bookID: model.currentBook?.bookID ?? UUID(), device: AnnotationStore.deviceID, pages: pages)
+                }
+                #endif
                 // Readwise y Hardcover, si están conectados.
                 ConnectorsStore.shared.start()
                 // Los que se importaron sin internet se buscan ahora.
@@ -128,7 +139,8 @@ private struct WelcomeCover: ViewModifier {
         #if os(iOS)
         content.fullScreenCover(isPresented: $isPresented) { WelcomeScreen().environmentObject(model) }
         #else
-        content.sheet(isPresented: $isPresented) { WelcomeScreen().environmentObject(model).frame(minWidth: Theme.Size.macReader.width, minHeight: Theme.Size.macReader.height) }
+        // Mide lo que mide su paso (`Theme.Mac.welcome` de ancho), sin pasar de la ventana más chica.
+        content.sheet(isPresented: $isPresented) { WelcomeScreen().environmentObject(model) }
         #endif
     }
 }

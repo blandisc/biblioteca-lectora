@@ -99,7 +99,7 @@ enum Theme {
         /// El alto de Reglas o de una conexión, abiertas desde una pestaña de Ajustes.
         static let settingsPage: CGFloat = 520
         /// Una nota o las portadas de internet abiertas desde la ficha.
-        static let sheet = CGSize(width: 560, height: 640)
+        static let sheet = CGSize(width: 560, height: 560)
         /// El libro en la Mac va en una sola columna centrada, aunque la ventana sea ancha.
         static let readingColumns = 1
         /// La barra de avance de «Buscar datos» en lote (CB-4).
@@ -109,6 +109,11 @@ enum Theme {
         /// Lo más chica que puede ser la ventana de un libro.
         static let readerMin = CGSize(width: 520, height: 600)
         static let summary: CGFloat = 120
+        /// La bienvenida en la Mac: su ancho; el alto es el de cada paso, hasta `sheetMax`.
+        static let welcome: CGFloat = 560
+        /// Lo más alta que es una hoja: cabe bajo la barra de la ventana más chica (`window`, 620).
+        /// Antes la bienvenida medía 820 y salía más alta que la ventana (auditoría 2).
+        static let sheetMax: CGFloat = 560
     }
 
     // MARK: Espacio — la escala común de interoperabilidad (SB-2): 4 · 8 · 16 · 24 · 32 · 48.

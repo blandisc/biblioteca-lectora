@@ -109,10 +109,29 @@ struct SessionSummarySheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var notice: String?
     @State private var writing: NoteRef?
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var book: ShelfBook? { model.shelfBook(id: session.bookID.uuidString) }
 
     var body: some View {
+        // Se desplaza y crece a todo lo alto: con la letra más grande o en un iPhone SE, a media
+        // pantalla «Escribir sobre ella» y «Cerrar el resumen» quedaban fuera, sin cómo llegar (auditoría 2).
+        ScrollView {
+            summary
+                .screenContent()
+        }
+        .pushedScreen()
+        #if os(macOS)
+        .contentMargins(.top, Theme.Space.screenTopInSheet, for: .scrollContent)
+        .frame(width: Theme.Mac.sheet.width, height: Theme.Mac.sheetMax)
+        #endif
+        .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.medium, .large])
+        .presentationDragIndicator(.visible)
+        .noteSheet(item: $writing)
+        .sessionNoteError($notice)
+    }
+
+    private var summary: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 SectionHeader(title: "Sesión terminada") {
@@ -127,9 +146,9 @@ struct SessionSummarySheet: View {
             }
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 StageBar(segments: session.segments)
-                HStack {
+                AdaptiveStack {
                     Text(session.start.es(.dateTime.hour().minute()))
-                    Spacer()
+                    Spacer(minLength: 0)
                     Text(session.end.es(.dateTime.hour().minute()))
                 }
                 .font(.caption)
@@ -140,7 +159,7 @@ struct SessionSummarySheet: View {
                 .init(value: ReadingFormat.duration(session.seconds(in: .immersed)), label: "inmersa"),
                 .init(value: session.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
             ])
-            HStack(spacing: Theme.Space.s) {
+            AdaptiveStack(spacing: Theme.Space.s) {
                 SecondaryButton(title: "Escribir sobre ella") {
                     do { writing = try SessionNote.open(session, bookTitle: book?.title ?? MetadataCleaner.untitled) } catch {
                         notice = error.localizedDescription
@@ -149,15 +168,6 @@ struct SessionSummarySheet: View {
                 PrimaryButton(title: "Cerrar el resumen", fillsWidth: true) { dismiss() }
             }
         }
-        .foregroundStyle(Theme.ink)
-        .gutter()
-        .padding(.top, Theme.Space.xl)
-        .frame(maxHeight: .infinity, alignment: .top)
-        .pushedScreen()
-        .presentationDetents([.medium])
-        .presentationDragIndicator(.visible)
-        .noteSheet(item: $writing)
-        .sessionNoteError($notice)
     }
 
     private var progressLine: String {

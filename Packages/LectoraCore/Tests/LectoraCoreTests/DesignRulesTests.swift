@@ -609,7 +609,7 @@ final class DesignRulesTests: XCTestCase {
         check(titles, "Letra que no crece con el tamaño de texto de iOS (relativeTo:, @ScaledMetric o .screenTitleFont())")
 
         // 3. Lo que va lado a lado se apila con la letra grande, y los nombres no se cortan en un renglón.
-        let adaptive = ["ScreenHeading", "DeskHeader", "CountLine", "FieldRow", "LinkRow", "SegmentedChoice", "PageSwatchPicker"]
+        let adaptive = ["ScreenHeading", "DeskHeader", "CountLine", "FieldRow", "LinkRow", "SegmentedChoice", "PageSwatchPicker", "StatTrio"]
             .filter { name in !(pieces.first { $0.name == name }?.body.contains("AdaptiveStack") ?? false) }
             .map { "\($0) no usa AdaptiveStack" }
         let grows = ["IconTile", "BookRow", "NoteRow", "CoverGrid", "CapsText"]
@@ -711,6 +711,50 @@ final class DesignRulesTests: XCTestCase {
             }
         }
         check(hidden, "Hoja con dos botones de texto y el título en medio, donde iOS lo esconde: usa .sheetTitle")
+
+        // 11. Auditoría 2 (27 nov 2026): «Sesión terminada» era media hoja que no se desplazaba; con
+        //     AX5 o en un iPhone SE sus dos botones quedaban fuera, sin cómo llegar. Toda hoja que
+        //     se abre a media pantalla se desplaza y puede crecer a todo lo alto; sus botones lado
+        //     a lado se apilan con la letra grande.
+        var sheets: [String] = []
+        for file in Self.screens + Self.pieces {
+            for (index, line) in file.lines.enumerated() where line.contains(".presentationDetents(") && line.contains(".medium") {
+                if !line.contains(".large") { sheets.append("\(file.path):\(index + 1): media hoja sin .large") }
+                if !file.text.contains("ScrollView") { sheets.append("\(file.path):\(index + 1): media hoja que no se desplaza") }
+            }
+        }
+        let summary = Self.screens.first { $0.path.hasSuffix("SessionSheet.swift") }?.text ?? ""
+        if let start = summary.range(of: "struct SessionSummarySheet") {
+            let body = summary[start.upperBound...].components(separatedBy: "\nstruct ").first ?? ""
+            if body.contains("HStack") { sheets.append("SessionSummarySheet: lo que va lado a lado no usa AdaptiveStack") }
+            if !body.contains("isAccessibilitySize ? [.large]") { sheets.append("SessionSummarySheet: con la letra más grande no abre a todo lo alto") }
+        }
+        check(sheets, "Hoja que deja fuera lo de abajo con la letra más grande o en un iPhone chico")
+
+        // 12. Auditoría 2: la bienvenida de la Mac medía 820 de alto en una ventana de 672, así que
+        //     su barra de abajo («Volver al paso anterior», «Ir a la biblioteca») quedaba fuera y no
+        //     había cómo saltarla. Ninguna hoja de la Mac pasa de `Mac.sheetMax`, que cabe bajo la
+        //     barra de la ventana más chica; la medida del lector es solo para su ventana.
+        let theme12 = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }!.text
+        func macHeight(_ name: String) -> Double? {
+            let pattern = #"static let \#(name)(: CGFloat = ([0-9.]+)| = CGSize\(width: [0-9.]+, height: ([0-9.]+)\))"#
+            guard let match = try! NSRegularExpression(pattern: pattern).firstMatch(in: theme12, range: NSRange(theme12.startIndex..., in: theme12)) else { return nil }
+            for group in [2, 3] { if let range = Range(match.range(at: group), in: theme12) { return Double(theme12[range]) } }
+            return nil
+        }
+        var mac12: [String] = []
+        let sheetMax = macHeight("sheetMax") ?? .infinity
+        let macToolbar = 52.0 // la barra de la ventana: título y herramientas juntos
+        if sheetMax + macToolbar > (macHeight("window") ?? 0) { mac12.append("Mac.sheetMax no cabe bajo la barra de la ventana más chica") }
+        for name in ["sheet", "settingsPage", "catalogSheet"] where (macHeight(name) ?? .infinity) > sheetMax {
+            mac12.append("Mac.\(name) mide más que Mac.sheetMax")
+        }
+        mac12 += hits(#"Size\.macReader"#, in: Self.ui.filter { !$0.path.hasSuffix("LectoraApp.swift") })
+        let welcome = Self.screens.first { $0.path.hasSuffix("WelcomeScreen.swift") }?.text ?? ""
+        if !welcome.contains("WelcomeExits(") || !welcome.contains("min(contentHeight, Theme.Mac.sheetMax)") {
+            mac12.append("WelcomeScreen: en la Mac no tiene sus salidas a la vista o pasa de Mac.sheetMax")
+        }
+        check(mac12, "Hoja de la Mac más alta que la ventana: lo de abajo queda fuera")
 
         // 9. UX-1a: el primer renglón del libro quedaba bajo los botones de arriba. El aire de
         //    arriba alcanza para el botón entero (`tapTarget` − `chromeLift`).
@@ -1058,6 +1102,13 @@ final class DesignRulesTests: XCTestCase {
         check(hits(#"localizedString\(forLanguageCode|"(Buscar en todo|Buscar en el libro|Posibles duplicados|Posible duplicado)""#, in: Self.ui) +
               hits(#"navigationTitle\("Buscar"\)|Label\("Buscar","#, in: Self.ui),
               "Idioma, Buscar o duplicados nombrados a mano: usa BookFields.languageName, SearchWording o Duplicates")
+        // Auditoría 2 (27 nov 2026): la bienvenida decía «Archivos › En mi iPhone» también en la Mac y
+        // el iPad, y la carpeta local era «En este iPhone» en el iPad. El dispositivo sale de
+        // DeviceKind (su nombre, su dibujo y dónde queda la carpeta); un texto que nombra el iPhone
+        // a mano solo vale si habla de los dos («tu iPhone y tu Mac»).
+        check(hits(#"systemImage: "(iphone|ipad|laptopcomputer|desktopcomputer)"|"[^"]*\b(este|mi) (iPhone|iPad)\b[^"]*"|"[^"]*esta Mac[^"]*""#, in: Self.ui) +
+              hits(#""(?![^"]*Mac)[^"]*iPhone[^"]*""#, in: Self.ui),
+              "Dispositivo nombrado a mano: usa DeviceKind.current (here, symbol, localFolder, files)")
         check(hits(#"\.day\(\)\.month\(\.abbreviated\)"#, in: Self.ui.filter { !$0.path.hasSuffix("Design/Components.swift") }),
               "Fecha corta armada a mano: usa fecha.esShort («3 oct 2024») o fecha.esDayMonth")
     }

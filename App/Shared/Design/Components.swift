@@ -1667,14 +1667,25 @@ struct ConnectionsArt: View {
     }
 }
 
+extension DeviceKind {
+    /// El dispositivo donde corre la app ahora.
+    static var current: DeviceKind {
+        #if os(macOS)
+        .mac
+        #else
+        UIDevice.current.userInterfaceIdiom == .pad ? .iPad : .iPhone
+        #endif
+    }
+}
+
 /// Tu Gabinete (TG-1): la carpeta por dentro, como en el Finder. Arriba dónde vive;
 /// adentro, Biblioteca (forma de Calibre) y Notas (Markdown), cada una con su cifra.
 /// Cambia sola cuando la mueves a iCloud Drive o a otra carpeta.
 struct CabinetArt: View {
     /// Dónde vive la carpeta.
     enum Place: Equatable {
-        /// En el dispositivo: «iPhone», «iPad» o «Mac».
-        case device(String)
+        /// En el dispositivo: el iPhone, el iPad o la Mac.
+        case device(DeviceKind)
         /// En iCloud Drive; `path` son las carpetas de en medio («Libros › Lectura»), si las hay.
         case iCloud(path: String?)
         /// En otra carpeta (un disco, Dropbox…): su nombre.
@@ -1682,7 +1693,7 @@ struct CabinetArt: View {
 
         var title: String {
             switch self {
-            case .device(let name): name == "Mac" ? "En esta Mac" : "En este \(name)"
+            case .device(let kind): kind.here
             case .iCloud(let path): path.map { "iCloud Drive › \($0)" } ?? "iCloud Drive"
             case .folder(let name): "En «\(name)»"
             }
@@ -1690,7 +1701,7 @@ struct CabinetArt: View {
 
         var symbol: String {
             switch self {
-            case .device(let name): name == "Mac" ? "laptopcomputer" : name == "iPad" ? "ipad" : "iphone"
+            case .device(let kind): kind.symbol
             case .iCloud: "icloud"
             case .folder: "externaldrive"
             }
@@ -2596,11 +2607,15 @@ struct StatTrio: View {
     }
 
     let items: [Item]
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
+        // Con la letra más grande, una cifra bajo otra: en un tercio de pantalla «6,5 mil» se
+        // cortaba en «6,5…» y «PALABRAS» se partía a media palabra (auditoría 2).
+        let stacked = typeSize.isAccessibilitySize
+        AdaptiveStack(rowAlignment: .top, spacing: stacked ? Theme.Space.l : 0) {
             ForEach(items) { item in
-                VStack(spacing: Theme.Space.xs) {
+                VStack(alignment: stacked ? .leading : .center, spacing: Theme.Space.xs) {
                     Text(item.value)
                         .font(.bookTitle)
                         .monospacedDigit()
@@ -2610,9 +2625,9 @@ struct StatTrio: View {
                     // En un tercio de pantalla, la leyenda larga baja a otro renglón: antes
                     // «LIBROS TERMI…» se cortaba (UX-4c).
                     CapsText(text: item.label, lines: Theme.Size.labelLines)
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(stacked ? .leading : .center)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: stacked ? .leading : .center)
                 .accessibilityElement(children: .combine)
             }
         }
