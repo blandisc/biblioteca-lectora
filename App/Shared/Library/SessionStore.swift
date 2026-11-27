@@ -7,6 +7,8 @@ enum SessionKeys {
     static let counter = "sesiones.contador"
     /// Mostrar el resumen al cerrar el libro.
     static let summary = "sesiones.resumen"
+    /// Sesiones que aún no se pudieron escribir (el registro seguía en iCloud sin bajar).
+    static let unsaved = "sesiones.pendientes"
 }
 
 /// Las sesiones de lectura del Gabinete (`Biblioteca/.lectora/sesiones/`), de
@@ -43,7 +45,37 @@ final class SessionStore: ObservableObject {
     }
 
     func reload() {
-        sessions = log.readAll()
+        writeUnsaved()
+        let saved = log.readAll()
+        let ids = Set(saved.map(\.id))
+        // Lo que aún no se escribe también se ve en el diario.
+        sessions = (saved + unsaved.filter { !ids.contains($0.id) }).sorted { $0.start < $1.start }
+    }
+
+    /// Sesiones que esperan a que iCloud baje tu registro (auditoría 1): se guardan aquí, no se
+    /// pierden al cerrar la app, y se escriben en cuanto el registro está en el dispositivo.
+    private var unsaved: [ReadingSession] {
+        get {
+            UserDefaults.standard.data(forKey: SessionKeys.unsaved)
+                .flatMap { try? JSONDecoder().decode([ReadingSession].self, from: $0) } ?? []
+        }
+        set {
+            if newValue.isEmpty {
+                UserDefaults.standard.removeObject(forKey: SessionKeys.unsaved)
+            } else {
+                UserDefaults.standard.set(try? JSONEncoder().encode(newValue), forKey: SessionKeys.unsaved)
+            }
+        }
+    }
+
+    /// Escribe lo pendiente. Devuelve si quedó todo escrito.
+    @discardableResult
+    private func writeUnsaved() -> Bool {
+        let pending = unsaved
+        guard !pending.isEmpty else { return true }
+        guard (try? log.append(pending)) != nil else { return false }
+        unsaved = []
+        return true
     }
 
     /// Al volver a la app: pide a iCloud las sesiones de tus otros dispositivos y vuelve a leer.
@@ -59,14 +91,13 @@ final class SessionStore: ObservableObject {
     /// Guarda una sesión terminada (si se leyó lo suficiente).
     func record(_ session: ReadingSession) {
         guard session.readingSeconds >= Self.minimumReading else { return }
-        do {
-            try log.append(session)
-            sessions.append(session)
-            let wantsSummary = UserDefaults.standard.object(forKey: SessionKeys.summary) as? Bool ?? true
-            if wantsSummary, session.readingSeconds >= Self.minimumForSummary { justFinished = session }
-        } catch {
-            // Sin carpeta disponible: la sesión se pierde, pero leer no se interrumpe.
-        }
+        // Si tu registro sigue en iCloud sin bajar, la sesión espera y se escribe después:
+        // nunca se crea un registro nuevo encima del tuyo (auditoría 1).
+        unsaved.append(session)
+        writeUnsaved()
+        sessions.append(session)
+        let wantsSummary = UserDefaults.standard.object(forKey: SessionKeys.summary) as? Bool ?? true
+        if wantsSummary, session.readingSeconds >= Self.minimumForSummary { justFinished = session }
     }
 
     /// Guarda sin mostrar el resumen (sesiones de muestra para las capturas).

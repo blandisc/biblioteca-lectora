@@ -12,6 +12,12 @@ struct FilledChange: Codable, Hashable {
 struct FilledRecord: Codable, Hashable {
     var date: Date
     var changes: [FilledChange]
+    /// Los identificadores que dejó el registro de internet (`openlibrary:`, `google:`): al
+    /// deshacer se quitan (auditoría 1). Opcional: los archivos de antes no lo tienen.
+    var identifiers: [AutoFill.IdentifierChange]? = nil
+    /// El registro de internet de donde salió («openlibrary:OL46125W»): al deshacer se recuerda
+    /// como rechazado y ya no se aplica solo.
+    var record: Set<String>? = nil
 }
 
 /// Los campos que se completan solos (nunca el título: ese no se toca).

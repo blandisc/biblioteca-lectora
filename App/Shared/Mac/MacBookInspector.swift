@@ -12,6 +12,9 @@ struct MacBookInspector: View {
 
     @State private var draft = Draft()
     @State private var loaded = Draft()
+    /// El libro como estaba al abrir la ficha: al guardar solo se escribe lo que cambiaste
+    /// desde entonces, encima del libro de ahora (auditoría 1).
+    @State private var loadedBook: Book?
     @State private var errorMessage: String?
     /// Mientras se buscan los datos en internet: la ficha lo dice, no corre en silencio (C8).
     @State private var finding = false
@@ -303,9 +306,11 @@ struct MacBookInspector: View {
     private func load() {
         if books.count == 1, let book = books.first {
             draft = Draft(book)
+            loadedBook = book
         } else {
             draft = Draft()
             draft.status = nil
+            loadedBook = nil
         }
         loaded = draft
     }
@@ -315,8 +320,12 @@ struct MacBookInspector: View {
     private func save(_ targets: Set<UUID>) {
         var failed: [String] = []
         let books = books(targets)
-        if books.count == 1, let book = books.first {
-            do { _ = try library.update(draft.applied(to: book)) } catch { failed.append(error.localizedDescription) }
+        if books.count == 1, let current = books.first {
+            // Lo que no tocaste (la valoración de 3.5, una sinopsis que llegó de internet) se queda
+            // como está ahora; antes la ficha entera pisaba lo más nuevo.
+            let base = loadedBook?.id == current.id ? loadedBook ?? current : current
+            let edited = Book.applyingEdits(from: draft.applied(to: base), loaded: loaded.applied(to: base), onto: current)
+            do { _ = try library.update(edited) } catch { failed.append(error.localizedDescription) }
         } else {
             let edit = draft.bulk
             for book in books where !edit.isEmpty {

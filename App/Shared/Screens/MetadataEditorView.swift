@@ -155,8 +155,19 @@ struct MetadataEditorView: View {
         edited.tags = BookFields.tags(tags)
         edited.seriesIndex = edited.series == nil ? nil : seriesInput.value(keeping: book.seriesIndex)
         edited.identifiers["isbn"] = BookFields.isbn(isbn)
+        // El libro al abrir, pasado por los mismos campos: así un dato que no tocaste no cuenta
+        // como cambio aunque el campo lo escriba distinto.
+        var loaded = book
+        loaded.authors = BookFields.authors(BookFields.authorsText(book.authors))
+        loaded.tags = BookFields.tags(BookFields.tagsText(book.tags))
+        loaded.seriesIndex = book.series == nil ? nil
+            : SeriesIndexInput(book.seriesIndex.flatMap(ShelfBook.number) ?? "").value(keeping: book.seriesIndex)
+        loaded.identifiers["isbn"] = BookFields.isbn(book.identifiers["isbn"] ?? "")
+        // Solo lo que cambiaste aquí va encima del libro de ahora: lo que llegó mientras tanto
+        // (de otro dispositivo o de internet) no se pisa (auditoría 1).
+        let current = model.library.book(id: book.id) ?? book
         do {
-            try model.library.update(edited, cover: newCover)
+            try model.library.update(Book.applyingEdits(from: edited, loaded: loaded, onto: current), cover: newCover)
             dismiss()
         } catch {
             saveError = error.localizedDescription

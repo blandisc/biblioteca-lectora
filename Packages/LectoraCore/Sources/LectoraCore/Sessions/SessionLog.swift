@@ -21,10 +21,28 @@ public struct SessionLog: Sendable {
         return encoder
     }()
 
+    /// El marcador que deja iCloud cuando desaloja el registro propio: `.<id>.jsonl.icloud`.
+    public var ownPlaceholder: URL { CloudFile.placeholder(for: ownFile) }
+
+    /// Agrega una sesión al registro propio. Si iCloud lo desalojó, pide bajarlo y lanza
+    /// `ChangeLogError.ownLogNotDownloaded`, como el registro de cambios: crear uno nuevo con
+    /// solo la sesión de hoy reemplazaría tu diario en todos los dispositivos (auditoría 1).
     public func append(_ session: ReadingSession) throws {
+        try append([session])
+    }
+
+    public func append(_ sessions: [ReadingSession]) throws {
+        guard !sessions.isEmpty else { return }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        var data = try Self.encoder.encode(session)
-        data.append(0x0A)
+        if CloudFile.isPlaceholder(ownFile) {
+            CloudFile.requestDownload(ownFile)
+            throw ChangeLogError.ownLogNotDownloaded
+        }
+        var data = Data()
+        for session in sessions {
+            data.append(try Self.encoder.encode(session))
+            data.append(0x0A)
+        }
         if FileManager.default.fileExists(atPath: ownFile.path) {
             let handle = try FileHandle(forWritingTo: ownFile)
             defer { try? handle.close() }

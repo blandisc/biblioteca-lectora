@@ -35,14 +35,21 @@ public struct NoteFolder: Sendable {
 
     /// Guarda el texto. Si la nota ya existía (`fileName`) y su título cambió,
     /// se renombra el archivo cuando el nombre nuevo está libre. Devuelve la nota guardada.
+    ///
+    /// Una nota que iCloud no ha bajado nunca se pisa (auditoría 1): guardar sobre ella lanza
+    /// `notDownloaded` y pide bajarla, y una nota nueva no toma el nombre de una que está en la nube.
     @discardableResult
     public func save(text: String, fileName: String? = nil) throws -> Note {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         let wanted = Self.fileName(forTitle: Note.title(of: text) ?? "")
         var name: String
         if let fileName {
+            if CloudFile.isPlaceholder(file(for: fileName)) {
+                CloudFile.requestDownload(file(for: fileName))
+                throw NoteFolderError.notDownloaded
+            }
             name = fileName
-            if wanted != fileName, !FileManager.default.fileExists(atPath: file(for: wanted).path) {
+            if wanted != fileName, !CloudFile.isTaken(file(for: wanted)) {
                 try FileManager.default.moveItem(at: file(for: fileName), to: file(for: wanted))
                 name = wanted
             }
@@ -59,7 +66,12 @@ public struct NoteFolder: Sendable {
     /// Devuelve las que escribió.
     @discardableResult
     public func seed(_ texts: [String]) throws -> [Note] {
-        let titles = Set(all().map { NoteMarkdown.key($0.title) })
+        // Las que están en iCloud sin bajar también cuentan (por su nombre de archivo).
+        let waiting = ((try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? [])
+            .compactMap(CloudFile.realName(ofPlaceholder:))
+            .filter { ($0 as NSString).pathExtension.lowercased() == Self.fileExtension }
+            .map { NoteMarkdown.key(($0 as NSString).deletingPathExtension) }
+        let titles = Set(all().map { NoteMarkdown.key($0.title) } + waiting)
         return try texts
             .filter { !titles.contains(NoteMarkdown.key(Note.title(of: $0) ?? "")) }
             .map { try save(text: $0) }
@@ -83,10 +95,15 @@ public struct NoteFolder: Sendable {
     private func freeName(_ base: String) -> String {
         var name = base
         var number = 2
-        while FileManager.default.fileExists(atPath: file(for: name).path) {
+        while CloudFile.isTaken(file(for: name)) {
             name = "\(base) \(number)"
             number += 1
         }
         return name
     }
+}
+
+public enum NoteFolderError: Error, Equatable {
+    /// La nota está en iCloud pero no en este dispositivo; ya se pidió bajarla.
+    case notDownloaded
 }

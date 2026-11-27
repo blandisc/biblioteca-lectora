@@ -130,10 +130,7 @@ enum CloudFiles {
     static let poll: Duration = .milliseconds(500)
 
     /// El archivo no está bajado: en su lugar hay un «.nombre.icloud».
-    static func isPlaceholder(_ file: URL) -> Bool {
-        !FileManager.default.fileExists(atPath: file.path) && FileManager.default.fileExists(atPath:
-            file.deletingLastPathComponent().appendingPathComponent(".\(file.lastPathComponent).icloud").path)
-    }
+    static func isPlaceholder(_ file: URL) -> Bool { CloudFile.isPlaceholder(file) }
 
     /// ¿Está el archivo en el dispositivo? (Fuera de iCloud, siempre.)
     static func isDownloaded(_ url: URL) -> Bool {
@@ -181,6 +178,15 @@ extension ChangeLogError: @retroactive LocalizedError {
         switch self {
         case .ownLogNotDownloaded:
             "Tu biblioteca todavía se está bajando de iCloud. Espera un momento y vuelve a intentarlo."
+        }
+    }
+}
+
+extension NoteFolderError: @retroactive LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .notDownloaded:
+            "Esta nota todavía se está bajando de iCloud. Espera un momento y vuelve a intentarlo."
         }
     }
 }

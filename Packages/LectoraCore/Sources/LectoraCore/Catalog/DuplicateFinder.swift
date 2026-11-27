@@ -100,6 +100,14 @@ public enum DuplicateFinder {
 
     /// Los datos del que se queda, completados con los de los otros: lo que le falta, todas
     /// las etiquetas e identificadores, y el estado de lectura más avanzado.
+    /// Después de juntar: la carpeta del otro libro solo se tira si ya no queda nada suyo más
+    /// que portada y metadata.opf (auditoría 1). Un archivo que no se movió, también uno que
+    /// sigue en iCloud sin bajar (`.Rayuela.pdf.icloud`), deja la carpeta donde está.
+    public static func canDiscardFolder(containing names: [String]) -> Bool {
+        let disposable: Set<String> = [CalibreLayout.coverFileName, CalibreLayout.opfFileName, ".DS_Store"]
+        return names.allSatisfy { disposable.contains(CloudFile.realName(ofPlaceholder: $0) ?? $0) }
+    }
+
     public static func merged(keep: Book, with others: [Book]) -> Book {
         var book = keep
         for other in others {

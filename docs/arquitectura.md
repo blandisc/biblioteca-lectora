@@ -33,7 +33,10 @@ nuestro queda fuera.
 ### D2. El centro es la carpeta `Gabinete/` en iCloud Drive
 - `Biblioteca/` con la forma de Calibre (`Autor/Título (id)/archivo + cover.jpg + metadata.opf`).
 - `Biblioteca/.lectora/`: registros por dispositivo (JSONL, solo se agregan líneas),
-  reglas, lo completado, por revisar y, después, las sesiones de lectura.
+  reglas, lo completado, por revisar y las sesiones de lectura.
+- Lo que iCloud todavía no baja nunca se pisa ni se borra: la app pide bajarlo, espera y te
+  dice que vuelvas a intentar (auditoría 1; `AuditoriaUnoTests`, y solo `ChangeLog`,
+  `SessionLog`, `NoteFolder` y `SideFile` escriben en la carpeta).
 - `Notas/`: Markdown normal, legible por Obsidian o cualquier editor.
 - Si borras Gabinete, todo sigue ahí y se abre con Calibre y Obsidian.
 
