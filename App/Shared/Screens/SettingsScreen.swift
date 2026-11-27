@@ -55,6 +55,8 @@ struct SettingsScreen: View {
     @State private var migratingCalibre = false
     @State private var chosenFolder: URL?
     @State private var tidyReport: LibraryStore.TidyReport?
+    /// «Ordenar la biblioteca» mueve carpetas: primero dice qué va a hacer (UX-6a).
+    @State private var confirmingTidy = false
     @State private var errorMessage: String?
     #if os(macOS)
     /// La pestaña de Ajustes en la Mac. Capturas: `-screenshot.demo settingsReading`, `settingsCabinet`,
@@ -149,7 +151,11 @@ extension SettingsScreen {
             ScrollViewReader { scroller in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ScreenHeading(title: "Ajustes")
+                    // La ✕ va junto al título y se va con él al deslizar (UX-6b): en la barra, la
+                    // cápsula «Cerrar Ajustes» flotaba sobre las tarjetas y apretaba el título.
+                    ScreenHeading(title: "Ajustes") {
+                        CloseButton(label: "Cerrar Ajustes", style: .glass) { dismiss() }
+                    }
                     // AJ-D: cada grupo en su tarjeta, con el dibujo de lo que controla.
                     appearanceCard
                     readingCard
@@ -170,18 +176,15 @@ extension SettingsScreen {
                 try? await Task.sleep(for: .seconds(1))
                 if demo == "settingsEnd" { scroller.scrollTo(Self.colophon, anchor: .bottom) }
                 if demo == "settingsMiddle" { scroller.scrollTo(Self.bookData, anchor: .center) }
-                if demo == "settingsCabinet" { scroller.scrollTo(Self.cabinet, anchor: .center) }
+                if demo == "settingsCabinet" || demo == "settingsTidy" { scroller.scrollTo(Self.cabinet, anchor: .center) }
+                // `settingsTidy` pide confirmar «Ordenar la biblioteca».
+                if demo == "settingsTidy" { confirmingTidy = true }
             }
             #endif
             }
             // Las tarjetas sobre un papel un poco más hondo que el de la app (AJ-8).
             .background(Theme.sunken.ignoresSafeArea())
-            .pushedScreen()
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Cerrar Ajustes") { dismiss() }
-                }
-            }
+            .pushedScreen(bar: false)
         }
         #endif
     }
@@ -284,9 +287,15 @@ extension SettingsScreen {
                 }
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
-            Button { tidyReport = model.library.tidy() } label: { LinkRow(title: "Ordenar la biblioteca") }
+            Button { confirmingTidy = true } label: { LinkRow(title: "Ordenar la biblioteca") }
         }
         .buttonStyle(.plain)
+        .confirmationDialog("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy, titleVisibility: .visible) {
+            Button("Ordenar la biblioteca") { tidyReport = model.library.tidy() }
+            Button("Dejarla como está", role: .cancel) {}
+        } message: {
+            Text("Reviso cada libro y muevo a su carpeta de Calibre («Autor/Título») los que no están donde deben. Solo muevo: no borro nada, y lo que no esté en el catálogo se queda donde está.")
+        }
     }
 
     /// Dónde vive el Gabinete: este dispositivo, iCloud Drive (con sus carpetas de en
@@ -332,9 +341,9 @@ extension SettingsScreen {
     private var dialogMessage: String {
         guard let folder = chosenFolder else { return "" }
         if CabinetLocation.hasLibrary(in: folder) {
-            return "Se usará esa biblioteca (por ejemplo, la de tu Mac). La de este dispositivo se queda donde está."
+            return "Uso esa biblioteca (por ejemplo, la de tu Mac). La de este dispositivo se queda donde está."
         }
-        return "Se copian tus libros y notas, se comprueba la copia y luego se borra la de este dispositivo."
+        return "Copio tus libros y notas, compruebo la copia y luego borro la de este dispositivo."
     }
 
     private func run(_ action: @escaping () async throws -> Void) {
@@ -348,7 +357,7 @@ extension SettingsScreen {
     }
 
     private func describe(_ report: LibraryStore.TidyReport) -> String {
-        var lines = ["Revisé \(report.checked.counted("libro", "libros")); \(report.relocated) cambiaron de carpeta para quedar como en Calibre."]
+        var lines = ["Revisé \(report.checked.counted("libro", "libros")); \(report.relocated.counted("cambió", "cambiaron")) de carpeta para quedar como en Calibre."]
         if !report.missing.isEmpty {
             lines.append("Sin archivo: \(report.missing.prefix(Theme.Lists.preview).joined(separator: ", "))\(report.missing.count > Theme.Lists.preview ? "…" : "").")
         }

@@ -54,4 +54,20 @@ final class SlitTests: XCTestCase {
         XCTAssertEqual(Slit.index(atOffset: 0, in: chunks), 0)
         XCTAssertEqual(Slit.index(atOffset: chunks[2].offset + 1, in: chunks), 2)
     }
+
+    /// UX-8b: el título del capítulo iba pegado a la primera frase («Capítulo IEn un lugar…»).
+    /// Un salto de renglón separa dos bloques: ningún pedazo los junta y el título respira.
+    func testChapterTitleNeverRunsIntoTheFirstSentence() {
+        let text = "Capítulo primero\nEn un lugar de la Mancha, de cuyo nombre\nno quiero acordarme."
+        let phrases = Slit.chunks(text, unit: .phrase)
+        XCTAssertEqual(phrases.first?.text, "Capítulo primero")
+        XCTAssertEqual(phrases.first?.endsSentence, true, "el título termina con un respiro")
+        XCTAssertTrue(phrases[1].text.hasPrefix("En un lugar"))
+        XCTAssertFalse(phrases.contains { $0.text.contains("primero En") || $0.text.contains("nombre no") })
+        let words = Slit.chunks(text, unit: .word)
+        XCTAssertEqual(words[1].text, "primero")
+        XCTAssertTrue(words[1].endsSentence)
+        XCTAssertEqual(words[2].offset, ("Capítulo primero\n" as NSString).length)
+    }
 }
+

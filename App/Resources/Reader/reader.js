@@ -518,6 +518,36 @@ const placeOnPage = index => {
 }
 
 // La hendidura: el texto desde donde vas hasta el fin del capítulo.
+// Entre un bloque y otro (el título del capítulo y su primera frase, dos párrafos) va un
+// salto de renglón: el texto de un rango los pegaba, «Capítulo IEn un lugar…» (UX-8b). Los
+// saltos de renglón del código del libro, dentro de un párrafo, cuentan como espacio.
+// Cada pedazo recuerda dónde empieza, para volver al mismo lugar al cerrar.
+const slitBlocks = /^(P|DIV|H[1-6]|LI|BLOCKQUOTE|SECTION|ARTICLE|HEADER|FOOTER|ASIDE|NAV|TR|TD|TH|DT|DD|FIGCAPTION|PRE|TABLE|UL|OL|DL|FIGURE|HR)$/
+const blockOf = node => {
+    for (let el = node.parentElement; el; el = el.parentElement) {
+        if (slitBlocks.test(el.tagName.toUpperCase())) return el
+    }
+    return null
+}
+const slitTextOf = rest => {
+    const doc = rest.startContainer.ownerDocument
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
+    let text = '', block, started = false
+    const pieces = []
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (!rest.intersectsNode(node)) continue
+        const from = node === rest.startContainer ? rest.startOffset : 0
+        const to = node === rest.endContainer ? rest.endOffset : node.data.length
+        if (to <= from) continue
+        const here = blockOf(node)
+        if (started && here !== block && !text.endsWith('\n')) text += '\n'
+        started = true
+        block = here
+        pieces.push({ node, from, start: text.length, length: to - from })
+        text += node.data.slice(from, to).replace(/[\n\r\u2028\u2029]/g, ' ')
+    }
+    return { text, pieces }
+}
 let slitStart = null
 const slitFrom = range => {
     const doc = range?.startContainer?.ownerDocument
@@ -526,8 +556,9 @@ const slitFrom = range => {
     const rest = doc.createRange()
     rest.setStart(range.startContainer, range.startOffset)
     rest.setEnd(doc.body, doc.body.childNodes.length)
-    slitStart = { doc, index: contents?.index ?? 0, rest }
-    return { text: rest.toString() }
+    const { text, pieces } = slitTextOf(rest)
+    slitStart = { doc, index: contents?.index ?? 0, pieces }
+    return { text }
 }
 
 const onRelocate = ({ detail }) => {
@@ -950,22 +981,14 @@ window.lectora = {
     slitGoTo(offset) {
         if (!slitStart) return
         moved = true
-        const { doc, index, rest } = slitStart
-        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
-        let left = offset
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-            if (!rest.intersectsNode(node)) continue
-            const from = node === rest.startContainer ? rest.startOffset : 0
-            const available = node.data.length - from
-            if (left <= available) {
-                const range = doc.createRange()
-                range.setStart(node, from + left)
-                range.collapse(true)
-                navigation = 'jump'
-                return view.goTo(view.getCFI(index, range))
-            }
-            left -= available
-        }
+        const { index, pieces } = slitStart
+        const piece = pieces.findLast(p => p.start <= offset) ?? pieces[0]
+        if (!piece) return
+        const range = piece.node.ownerDocument.createRange()
+        range.setStart(piece.node, piece.from + Math.min(Math.max(0, offset - piece.start), piece.length))
+        range.collapse(true)
+        navigation = 'jump'
+        return view.goTo(view.getCFI(index, range))
     },
     // Pasa de página sin animación y dice si se movió: la app ya tapó la página
     // con su foto y la va a doblar. Espera a que la nueva esté pintada.

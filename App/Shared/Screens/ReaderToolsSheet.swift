@@ -217,8 +217,8 @@ struct ReaderToolsSheet: View {
 
     private func accessibilityLabel(for result: ReaderController.SearchResult) -> String {
         let number = (controller.searchResults.firstIndex(of: result) ?? 0) + 1
-        let page = result.page.map { ", página \($0)" } ?? ""
-        return "Resultado \(number) de \(controller.searchResults.count), \(result.chapter)\(page). "
+        let place = [result.chapter, result.page.map { "página \($0)" }].compactMap { $0 }.joined(separator: ", ")
+        return "Resultado \(number) de \(controller.searchResults.count), \(place). "
             + result.before + result.match + result.after
     }
 

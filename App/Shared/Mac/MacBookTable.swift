@@ -166,13 +166,14 @@ struct MacBookTable: View {
         }
     }
 
-    /// Todos los libros como renglones, con su avance y si les falta portada o esperan revisión.
+    /// Todos los libros como renglones, con su avance y si les falta portada o esperan revisión
+    /// (también los que no encontré en internet: la misma cuenta que «Por revisar» en el iPhone).
     static func rows(library: LibraryStore, shelf: [ShelfBook]) -> [MacBookRow] {
         let byID = Dictionary(shelf.compactMap { item in item.bookID.map { ($0, item) } }, uniquingKeysWith: { first, _ in first })
         return library.books.compactMap { book in
             byID[book.id].map {
                 MacBookRow(book: book, shelf: $0, hasCover: $0.coverImage != nil,
-                           inReview: !(library.reviews[book.id] ?? []).isEmpty)
+                           inReview: library.reviews[book.id] != nil)
             }
         }
     }

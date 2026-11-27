@@ -91,6 +91,9 @@ struct MacLibraryWindow: View {
             // Buscar en todo (SG-3): libros, subrayados y notas. La búsqueda de la tabla es solo de libros.
             case .search: SearchScreen()
             case .duplicates: MacDuplicatesView(library: model.library)
+            // Por revisar se resuelve aquí, con la misma pantalla del iPhone (UX-5): uno por uno
+            // o en lote. En la tabla solo se veía la lista, sin manera de elegir los datos.
+            case .review: NavigationStack { ReviewScreen().screen() }
             default: MacBookTable(library: model.library, section: section ?? .all) { section = .all }
             }
         }

@@ -49,19 +49,21 @@ public enum Slit {
         "and", "or", "but", "that", "which", "because", "when", "while", "with", "for",
     ]
 
-    /// Corta el texto en pedazos. Los espacios y saltos de línea no cuentan.
+    /// Corta el texto en pedazos. Los espacios no cuentan; un salto de renglón separa dos
+    /// bloques (el título del capítulo y su primera frase, dos párrafos): ningún pedazo los
+    /// junta y el último de un bloque termina con el respiro de una oración (UX-8b).
     public static func chunks(_ text: String, unit: Unit) -> [Chunk] {
         let words = tokens(text)
         guard unit == .phrase else {
             return words.map { Chunk(text: $0.text, offset: $0.offset, words: 1,
-                                     endsSentence: endsSentence($0.text), endsClause: endsClause($0.text)) }
+                                     endsSentence: $0.endsBlock || endsSentence($0.text), endsClause: endsClause($0.text)) }
         }
         var chunks: [Chunk] = []
-        var current: [(text: String, offset: Int)] = []
+        var current: [Token] = []
         func close() {
             guard let first = current.first, let last = current.last else { return }
             chunks.append(Chunk(text: current.map(\.text).joined(separator: " "), offset: first.offset,
-                                words: current.count, endsSentence: endsSentence(last.text),
+                                words: current.count, endsSentence: last.endsBlock || endsSentence(last.text),
                                 endsClause: endsClause(last.text)))
             current = []
         }
@@ -69,7 +71,7 @@ public enum Slit {
             current.append(word)
             let next = index + 1 < words.count ? words[index + 1].text : nil
             let opener = next.map { openers.contains(bare($0)) } ?? false
-            if endsSentence(word.text) || endsClause(word.text) || current.count >= phraseMax
+            if word.endsBlock || endsSentence(word.text) || endsClause(word.text) || current.count >= phraseMax
                 || (current.count >= phraseMin && opener) {
                 close()
             }
@@ -105,20 +107,28 @@ public enum Slit {
 
     // MARK: - Palabras
 
-    private static func tokens(_ text: String) -> [(text: String, offset: Int)] {
-        var result: [(text: String, offset: Int)] = []
+    /// Una palabra, dónde empieza y si después de ella acaba su bloque (un salto de renglón).
+    private struct Token {
+        var text: String
+        var offset: Int
+        var endsBlock = false
+    }
+
+    private static func tokens(_ text: String) -> [Token] {
+        var result: [Token] = []
         var start: String.Index?
         for index in text.indices {
             if text[index].isWhitespace {
                 if let begin = start {
-                    result.append((String(text[begin..<index]), begin.utf16Offset(in: text)))
+                    result.append(Token(text: String(text[begin..<index]), offset: begin.utf16Offset(in: text)))
                     start = nil
                 }
+                if text[index].isNewline, !result.isEmpty { result[result.count - 1].endsBlock = true }
             } else if start == nil {
                 start = index
             }
         }
-        if let begin = start { result.append((String(text[begin...]), begin.utf16Offset(in: text))) }
+        if let begin = start { result.append(Token(text: String(text[begin...]), offset: begin.utf16Offset(in: text))) }
         return result
     }
 

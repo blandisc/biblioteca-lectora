@@ -22,7 +22,7 @@ Cada regla dice lo que nota quien usa la app; la medida exacta vive en `Theme` c
 | 5 | **Aire en una sola escala** | Todo espacio sale de 4 · 8 · 16 · 24 · 32 · 48, la escala común de la casa | `testSpacingKeepsTheHouseScale`, `tools/sistema-base` (SB-2) |
 | 6 | **Botón principal oscuro en los dos modos** | «Seguir leyendo» y «Nota nueva» en verde fichero con letra clara, también en oscuro, con un filo finísimo | `testMainActionIsDarkInBothModes`, `testOneMainActionPerScreen` |
 | 7 | **Te hablo de tú y digo qué pasó** | Los avisos dicen qué pasó en primera persona («No pude abrir el libro», nunca «No se pudo» ni «Aviso»), y su botón a dónde vuelves («Volver a la ficha»). Los botones dicen qué hacen: nunca «Cancelar», «OK» ni «Listo» a secas; salir sin cambiar es «Dejar como está». Mientras algo tarda, digo qué estoy haciendo | `testNoticesSayWhatHappened`, `testButtonsSayWhatTheyDo`, `testWaitingSaysWhat` |
-| 8 | **Lo mismo se llama igual en el iPhone y la Mac** | Un libro está «Leyendo», «Por leer» o «Leído» por la misma regla en las dos; añadir libros, buscar datos, lo que haces con el texto elegido y los datos de un libro tienen un solo nombre y un solo ícono; los autores se separan con « & »; un idioma se dice por su nombre («Español», nunca «es») y Buscar se llama igual en la pestaña, el título y su campo («Buscar en…»). Y cada cosa se dice una vez: en la Mac el nombre de la pantalla va en la barra de la ventana, no repetido en el contenido, y lo que se abre dentro (el Diario desde la Mesa) pone el suyo; Ajustes se abre con ⌘, en pestañas, sin engrane dentro de una pantalla (MX-B) | `testSameWordsOnBothPlatforms`, `ReadingStateTests`, `testMacSaysTheNameOnce` |
+| 8 | **Lo mismo se llama igual en el iPhone y la Mac** | Un libro está «Leyendo», «Por leer» o «Leído» por la misma regla en las dos; añadir libros, buscar datos, lo que haces con el texto elegido y los datos de un libro tienen un solo nombre y un solo ícono; los autores se separan con « & »; un idioma se dice por su nombre («Español», nunca «es») y Buscar se llama igual en la pestaña, el título y su campo («Buscar en…»). Y cada cosa se dice una vez: en la Mac el nombre de la pantalla va en la barra de la ventana, no repetido en el contenido, y lo que se abre dentro (el Diario desde la Mesa) pone el suyo; Ajustes se abre con ⌘, en pestañas, sin engrane dentro de una pantalla (MX-B). Y dos textos nunca se pegan: lo que tecleas no se suma a un nombre ya escrito (el campo empieza vacío y lo propuesto va de pista) y el título del capítulo no se junta con su primera frase (UX-7, UX-8b) | `testSameWordsOnBothPlatforms`, `ReadingStateTests`, `testMacSaysTheNameOnce`, `testTextsNeverRunTogether` |
 | 9 | **Cabe con la letra más grande y se toca con el dedo** | Con la letra más grande de iOS (AX5) nada se sale de la pantalla ni se parte a media palabra: los títulos crecen, lo que va lado a lado se pone uno bajo otro y los nombres usan dos renglones en vez de cortarse; una hoja con dos botones de texto lleva su título debajo de ellos, donde sí cabe. Lo que va en fila y no cabe (filtros) baja entero al renglón de abajo; una portada de otra forma cabe entera en su marco. Todo lo que se toca responde en 44 × 44 aunque se dibuje chico (SB-4); en el lector, ningún botón tapa el primer renglón. En la Mac, lo largo de la tabla y de la ficha (también lo escrito en sus campos) se corta con «…» en vez de partirse o salirse (MX-B, UX-3b) | `testFitsLargeTextAndFingers` |
 
 ### Las reglas de la casa (interoperabilidad)
@@ -190,15 +190,16 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 |---|---|---|
 | `.screen()` | Receta de pantalla raíz: papel, sin barra de navegación, destinos de libro y serie | Mesa, Biblioteca, Cuaderno |
 | `.formScreen()` | Receta de formulario: el papel de la app de fondo, no el gris del sistema; botones e interruptores en `accent` (con la marca, casi negra en claro, parecían texto) | Conexiones, Reglas, Editar datos, Buscar con otros datos |
-| `.pushedScreen(título)` | Receta de pantalla empujada u hoja: papel, título en línea, controles del contenido en `accent`; los botones de la barra de vidrio, en tinta como en iOS 26 | Ficha, serie, nota, Diario, Por revisar, Lector › herramientas, Sesión, Llevar a una nota, Traer de Calibre, Bienvenida |
+| `.pushedScreen(título)` | Receta de pantalla empujada u hoja: papel, título en línea, controles del contenido en `accent`; los botones de la barra de vidrio, en tinta como en iOS 26. `bar: false`: una hoja sin barra que se cierra con la ✕ de su encabezado (Ajustes, UX-6b) | Ficha, serie, nota, Diario, Por revisar, Lector › herramientas, Sesión, Llevar a una nota, Traer de Calibre, Bienvenida |
 | `.inlineTitle(título)` | Título pequeño en la barra (lo usan `.pushedScreen` y los formularios empujados) | Conexión |
 | `.sheetTitle(título)` | Título de una hoja con dos botones de texto en la barra: va debajo de ellos, en grande, porque en medio no cabe (UX-3a). En `.pushedScreen` es `sheet: true` | Editar datos, Buscar con otros datos, Portada |
 | `.screenContent()` | Margen `gutter`, aire `screenTop`/`screenBottom`, tinta | Todo contenido con scroll |
-| `ScreenHeading` | Título serif + acciones a la derecha y una línea finísima debajo (SD-3); sus acciones son `IconButton` o `AccentIconButton`, y con la letra más grande bajan bajo el título (SD-4) | Biblioteca, Cuaderno, Buscar, Ajustes |
+| `ScreenHeading` | Título serif + acciones a la derecha y una línea finísima debajo (SD-3); sus acciones son `IconButton` o `AccentIconButton` (en una hoja, su `CloseButton`), y con la letra más grande bajan bajo el título (SD-4) | Biblioteca, Cuaderno, Buscar, Ajustes |
 | `AdaptiveStack` | Lo que va lado a lado y, con la letra de accesibilidad de iOS (AX1–AX5), uno bajo otro; con el tamaño de siempre y en la Mac es el `HStack` de antes (SD-4) | Encabezados, conteo y orden, nombre y campo, opciones en fila, tarjeta y barras del lector |
 | `IconButton` | Ícono de acción en tinta que se toca en 44 aunque se dibuje chico (`.sizeTarget()`) | Engrane del Cuaderno, lista o portadas de la Biblioteca |
 | `PrimaryButton` | Acción principal en `action`, oscura en los dos modos, con filo finísimo (una por pantalla) | «Seguir leyendo», «Leer», estado vacío |
 | `TextAction` | Acción de texto en tinta, que se toca en 44 (las acciones no van en verde) | «Todo bien», «Ver los N subrayados», «Borrar recientes», «Crear nota» |
+| `UndoNotice` | Lo que acabo de hacer en lote, en una línea, con «Deshacer» a la derecha (abajo con la letra más grande) y una línea finísima debajo (UX-5) | Por revisar |
 | `CapsText` | Versalitas de interfaz: mayúsculas chicas, espaciadas (`Tracking.caps`) y con cifras exactas. Toda versalita sale de aquí | Fecha de la Mesa, conteos, rótulos |
 | `SectionHeader` | Rótulo de sección: `CapsText` y una línea finísima hasta la orilla; a la derecha, opcional, una acción de texto o un ✕ (`CloseButton`). El único rótulo de sección de la app (regla 3) | «Donde lo dejaste», secciones de la ficha y de Por revisar, vacíos, Sesión |
 | `CountLine` | El conteo de una lista en versalitas y, a la derecha, cómo se ordena | Biblioteca, Cuaderno |
@@ -236,7 +237,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `ScrubberBar` | Barra de avance del lector: riel fino, lo leído en tinta, perilla chica que crece al arrastrar; se toca en 44 pt de alto | Panel del lector |
 | `GuideShade` | Lectura guiada, el renglón (LG-B): el papel del libro al `Reader.guideShade` (72 %) sobre todo menos el renglón que lees; la guía viaja con `Motion.select` | Lector |
 | `LookupCard` | «Consultar» (SG-4): al elegir texto, la palabra en serif, su traducción al español con el traductor de Apple (sola si los idiomas ya están descargados; si no, botón «Traducir»), el primer párrafo de Wikipedia en el idioma del libro (`Reader.lookupLines` 5) y el diccionario del sistema; vidrio como la tarjeta del subrayado | Lector, barra de selección |
-| `SlitText` | La hendidura: el pedazo que se lee en `.bookTitle`; palabra por palabra (HE-A) con su letra de enfoque en `highlight`, fija al centro; por frase (HE-B), centrado | Hendidura |
+| `SlitText` | La hendidura: el pedazo que se lee en `.bookTitle`; palabra por palabra (HE-A) con su letra de enfoque en `highlight`, fija al centro; por frase (HE-B), centrado. El título del capítulo pasa solo, con su respiro, antes de la primera frase (UX-8b) | Hendidura |
 | `ChapterLine` | En continuo, bajo el pie: rayita corta (`Reader.chapterLine` 64) con la tinta del libro que se llena con lo leído del capítulo; quieta (SC-C) | Pie del lector |
 | `FooterPreview` | Muestra del pie: recorte chico de la parte de abajo de la página (papel, dos renglones fantasma y el pie tal cual, con su letra), sin nombre debajo (lo lee VoiceOver); filo de tinta y palomita si está elegido | Tarjeta del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido; en tinta si es la acción principal | Estilo de la hoja, tarjeta de un subrayado, barra de selección |
@@ -250,12 +251,12 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `TitleDetailRow` | Título en tinta y su detalle en gris debajo, en una fila de libreta | Calibre, Readwise, Por revisar, Apariencia |
 | `ChoiceMark` | La palomita verde de lo elegido (o el círculo vacío) | Duplicados de la Mac, opciones |
 | `LanguagePicker`, `StatusPicker` | Elegir idioma (con su nombre: «Español») y estado de lectura (`ReadingState`) iguales en el iPhone y la Mac | Editar datos, ficha de la Mac |
-| `SaveShelfAlert`, `RenameShelfAlert`, `DeleteShelfConfirmation` | Guardar, renombrar y borrar una estantería: las mismas palabras en el iPhone y la Mac | Biblioteca, estantería, barra lateral de la Mac |
+| `SaveShelfAlert`, `RenameShelfAlert`, `DeleteShelfConfirmation` | Guardar, renombrar y borrar una estantería: las mismas palabras en el iPhone y la Mac. El campo del nombre empieza vacío con el nombre propuesto (o el de ahora) de pista; vacío, se queda ese (UX-7) | Biblioteca, estantería, barra lateral de la Mac |
 | `.errorAlert`, `.noticeAlert` | Aviso de un solo botón: el título dice qué pasó en primera persona («No pude abrir el libro»), el botón a dónde vuelves («Volver a la ficha») | Todo aviso de error o de algo que terminó |
 | `LinkRow` | Fila de libreta (`Size.row`): título, valor, flecha y línea finísima debajo; con `marked` o `status`, su punto | «Por revisar», Ajustes |
 | `StatTrio` | Tres cifras grandes con su rótulo en versalitas, centradas | Diario |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z (en tinta; la columna entera se toca y se recorre con el dedo en 44 de ancho, como en Contactos) | — |
-| `MiniPlayer` | Reproductor sobre el dock | Raíz |
+| `MiniPlayer` | Reproductor sobre el dock; escondido hasta que haya audio (`Features.audiobook`, UX-8a) | Raíz (apagado) |
 | `BrandMark` | «GABINETE» en Cinzel, centrado (o a la izquierda) | Bienvenida, dentro de `DeskHeader` |
 | `DeskHeader` | Encabezado de la Mesa: «GABINETE» a la izquierda, la fecha de hoy en versalitas a la derecha y una línea finísima que acaba en un trazo verde (`Size.deskMark`); MT-F, 25 nov 2026 | Arriba de la Mesa |
 | `SectionLabel` | Mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`), solo para el número y el capítulo; las secciones van con `SectionHeader` | «Nº 7» en la ficha, el capítulo sobre la tarjeta del lector |
@@ -267,8 +268,8 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `NoteRow` | Nota: título serif, dos líneas, fecha y libros enlazados en `accent` | Cuaderno › Notas, ficha › Notas, «Llevar a una nota» |
 | `NoteBody` | Nota leída: título, párrafos `.prose`, citas con raya `accent`; `[[Libro]]` y «ir al pasaje» como enlaces | Nota |
 | `PressableStyle`, `TrailingIconLabelStyle` | Respuesta al toque; etiqueta con el ícono después («Recientes ⇅») | Todo botón del sistema; órdenes |
-| `ReaderPillButton` | Botón en cápsula del panel del lector; el destacado en tinta | «Guiada», «Escuchar» |
-| `PlayRingButton`, `EqualizerBars` | Reproducir con el avance en anillo; barras de audio sonando | Mini reproductor |
+| `ReaderPillButton` | Botón en cápsula del panel del lector; el destacado en tinta | «Escuchar» (apagado hasta el audiolibro; la lectura guiada va junto a «Aa») |
+| `PlayRingButton`, `EqualizerBars` | Reproducir con el avance en anillo; barras de audio sonando | Mini reproductor (apagado) |
 | `StatTrio` | Tres números en serif con su leyenda, que baja a un segundo renglón si no cabe («LIBROS TERMINADOS», UX-4c) | Sesión actual, resumen, ficha › Lectura, Diario |
 | `StageBar`, `StageLegend` | La sesión como barra de etapas; leyenda con minutos | Resumen al cerrar, ficha, Diario |
 | `StageChart` | Etapas en el tiempo, una fila por etapa (Swift Charts) | Sesión actual, una sesión pasada |
@@ -330,10 +331,12 @@ NavigationStack {
         .screenContent()
     }
     .background(Theme.sunken.ignoresSafeArea())                    // el papel hondo
-    .pushedScreen()
-    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Listo") { dismiss() } } }
+    .pushedScreen(bar: false)                                      // sin barra: la ✕ va en el encabezado
 }
 ```
+La ✕ para cerrar va en el encabezado, junto al título (`ScreenHeading { CloseButton(label: "Cerrar Ajustes", style: .glass) }`),
+y se va con él al deslizar: en la barra, la cápsula «Cerrar Ajustes» flotaba sobre las tarjetas
+y apretaba el título (UX-6b, 27 nov 2026).
 
 **Pantalla empujada u hoja (ficha, serie, herramientas del lector):**
 ```swift
@@ -391,6 +394,7 @@ en oscuro:
 | Parte | Qué es | Archivo |
 |---|---|---|
 | Barra lateral | Leer (Mesa, Cuaderno), la biblioteca por estado (todos, leyendo, por leer, leídos, por revisar, sin portada) con su cuenta, y Explorar por autor, serie, etiqueta o idioma | `MacLibraryWindow` |
+| Por revisar | La misma pantalla del iPhone (UX-5, 27 nov 2026): cada libro abre «Elige los datos»; «Completar los N muy probables» y «Elegir varios» › «Mantener los datos de N libros» resuelven en lote, con confirmación y «Deshacer». Antes solo se veía la lista en la tabla, sin manera de resolverla | `ReviewScreen` |
 | Tabla | `Table` nativa: ordenar por columna, elegir columnas (clic derecho en el encabezado; idioma, valoración, editorial, publicado e ISBN empiezan escondidas), selección múltiple, doble clic abre el libro, arrastrar archivos importa | `MacBookTable`, `MacBookRow` |
 | Búsqueda | En la barra de la ventana, con filtros como Calibre: `autor:` `serie:` `etiqueta:` `idioma:` `editorial:` `estado:` `isbn:` `título:` (`LibraryQuery`, con sus pruebas) | `MacBookTable` |
 | Ficha | `inspector` a la derecha: con un libro, su portada con «Seguir leyendo» (o «Empezar a leer», el mismo botón que el doble clic) y «Portada» (una imagen de tu Mac o una de internet, como en el iPhone), sus primeros subrayados y notas (`Lists.inspectorItems`; un clic abre el subrayado en su página o la nota en su hoja) y todos sus datos; con varios, lo que escribas se aplica a todos y lo que dejes en blanco no cambia (`BulkEdit`, con sus pruebas) | `MacBookInspector` |
@@ -482,7 +486,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testAccentActionGoesLast` | Decisión del 19 nov 2026: el ícono verde de un encabezado va siempre al final, a la derecha |
 | `testPushedScreensUseTheRecipe` | Decisión del 22 nov 2026: ninguna pantalla arma a mano su fondo, su título en línea ni el color de los botones de la barra (van en tinta, como en iOS 26); usa `.screen()`, `.pushedScreen()` o `.formScreen()` |
 | `testFormsUseThePaper` | Decisión del 19 nov 2026: todo `Form` lleva `.formScreen()`; desde el 27 nov 2026 la receta lo agrupa en la Mac y ninguna pantalla elige su estilo |
-| `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra |
+| `testNoPromisesOfFutureFeatures` | Decisión del 19 nov 2026: ningún texto dice «pronto» ni «próximamente»; lo que no funciona no se muestra. Desde UX-8a (27 nov 2026), tampoco en las capturas: lo que llega después vive tras `Features`, apagado en el código, y ningún botón visible tiene la acción vacía (el mini reproductor, «Guiada» y «Escuchar» no hacían nada) |
 | `testTextColorsAreReadable` | Decisión del 19 nov 2026: sobre `paper`, tinta y secundario ≥ 4,5 : 1; terciario y verde ≥ 3 : 1, en claro y oscuro |
 | `testPageTurnNeverFreezesOrJumps` | Auditoría del 24 nov 2026: al pasar la hoja, nada se queda quieto a media vuelta ni brinca al final (la vuelta usa la foto que ya dio WebKit; un cuadro tarde avanza a lo más `Reader.turnFrameCap`) |
 | `testLinesAreEvenlySpaced` | Decisión del 25 nov 2026: todos los renglones de un párrafo a la misma distancia, aunque el libro traiga su propio aire, letras de otra fuente o llamadas de nota |
@@ -503,6 +507,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testButtonsSayWhatTheyDo` | Regla 7 y SB-1: ningún botón dice solo «Cancelar», «OK», «Listo», «Cerrar», «Seguir»…; toda ✕ es `CloseButton` con su nombre |
 | `testWaitingSaysWhat` | Regla 7: ninguna pantalla enseña una ruedita sola; `LoadingLine` dice qué estoy haciendo |
 | `testSameWordsOnBothPlatforms` | Regla 8 (SD-3, 26 nov 2026): estados, acciones de la biblioteca, lo que haces con el texto, «Sin título» y la fecha corta salen de un solo lugar, y el iPhone y la Mac los usan |
+| `testTextsNeverRunTogether` | Regla 8 (UX-7 y UX-8b, 27 nov 2026): dos datos seguidos llevan algo en medio; un campo de un aviso empieza vacío con lo propuesto de pista («CorCortázar» al guardar un estante); la hendidura arma su texto bloque por bloque, con un salto entre el título del capítulo y su primera frase |
 | `testMacSaysTheNameOnce` | Regla 8 (MX-B, 26 nov 2026): en la Mac `ScreenHeading` y `DeskHeader` no repiten el título en el contenido (va en la barra de la ventana), el engrane de Ajustes solo existe en el iPhone y Ajustes de la Mac va en pestañas; la ventana no le pone nombre por fuera a la Mesa, el Cuaderno ni Buscar, así lo que se abre dentro dice el suyo (27 nov 2026) |
 | `ReadingStateTests` | Regla 8: lo que marcas manda y luego el avance; un nombre y un símbolo por estado; autores con « & » |
 
@@ -525,4 +530,4 @@ su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
 «Guiada», el tercer botón junto a buscar y «Aa» en la tarjeta de abajo, abre un menú:
 
 - **Renglón (LG-B):** lo demás en penumbra (`GuideShade`). Tocar baja un renglón; tocar en la orilla izquierda (`Reader.edgeZone`) lo regresa. En páginas la guía baja por la página y al pasar del último renglón la hoja da vuelta sola; en continuo la guía se queda a `Reader.guideAnchor` (38 %) de la pantalla y lo que sube es el texto. El círculo de vidrio con ✕ arriba a la derecha la quita.
-- **Hendidura (HE-B por frase, HE-A por palabra):** `SlitScreen`, el texto desde la página que ves hasta el fin del capítulo pasa por una ranura entre dos `Hairline`, con `Reader.slitContext` pedazos antes y después a `Emphasis.aside`. Frase o palabra se cambia arriba (`SegmentedChoice`); el ritmo, abajo, de 200 a 400 palabras/min (empieza en 260; la investigación no respalda más). Cada oración termina con un respiro. Tocar pausa; deslizar regresa o adelanta. Al cerrar, el libro queda donde ibas. El corte y los tiempos viven en `LectoraCore/Guided/Slit.swift`, con sus pruebas (`SlitTests`).
+- **Hendidura (HE-B por frase, HE-A por palabra):** `SlitScreen`, el texto desde la página que ves hasta el fin del capítulo pasa por una ranura entre dos `Hairline`, con `Reader.slitContext` pedazos antes y después a `Emphasis.aside`. Frase o palabra se cambia arriba (`SegmentedChoice`); el ritmo, abajo, de 200 a 400 palabras/min (empieza en 260; la investigación no respalda más). Cada oración termina con un respiro, y entre bloques (el título del capítulo y su primera frase, dos párrafos) hay un salto: nunca pasan juntos (UX-8b). Tocar pausa; deslizar regresa o adelanta. Al cerrar, el libro queda donde ibas. El corte y los tiempos viven en `LectoraCore/Guided/Slit.swift`, con sus pruebas (`SlitTests`).

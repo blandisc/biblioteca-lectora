@@ -133,7 +133,7 @@ final class LibraryStore: ObservableObject {
             case .alreadyHasLibrary:
                 "Esa carpeta ya tiene una biblioteca de Gabinete. Ábrela en vez de mover la tuya encima."
             case .incomplete(let copied, let expected):
-                "Solo se copiaron \(copied) de \(expected) elementos. Tu biblioteca sigue donde estaba."
+                "Solo copié \(copied) de \(expected) elementos. Tu biblioteca sigue donde estaba."
             }
         }
     }
@@ -422,7 +422,7 @@ final class LibraryStore: ObservableObject {
             return problem
         }
         if file.pathExtension.lowercased() == "pdf", (PDFDocument(url: file)?.pageCount ?? 0) == 0 {
-            return "No es un PDF que se pueda abrir."
+            return "No es un PDF que pueda abrir."
         }
         return nil
     }
@@ -849,6 +849,68 @@ final class LibraryStore: ObservableObject {
     /// «Mantener mis datos»: sale de la bandeja sin cambiar nada.
     func dismissReview(_ bookID: UUID) {
         setReview(bookID, candidates: nil)
+    }
+
+    // MARK: Por revisar en lote (UX-5)
+
+    /// Lo que hace falta para deshacer un lote de «Por revisar».
+    struct ReviewUndo {
+        /// Las opciones que tenía cada libro en «Por revisar».
+        let reviews: [UUID: [MetadataCandidate]]
+        /// Lo que ya se había completado solo antes, para dejarlo como estaba.
+        let filledBefore: [UUID: FilledRecord]
+        /// Los que cambiaron en este lote: se deshacen dato por dato.
+        let completed: [UUID]
+    }
+
+    /// «Completar los muy probables»: a cada libro se le llena lo que le falta con su mejor
+    /// opción (y la portada si no tenía), como cuando se completa solo, y sale de «Por revisar».
+    /// Lo que ya tenía no cambia; queda en «Lo que completé solo» para deshacerlo dato por dato.
+    func completeSafeReviews(_ ids: [UUID]) async -> ReviewUndo {
+        var saved: [UUID: [MetadataCandidate]] = [:], before: [UUID: FilledRecord] = [:], completed: [UUID] = []
+        for id in ids {
+            guard let candidates = reviews[id], MetadataMatcher.isSafeSuggestion(candidates),
+                  let best = candidates.first, let book = book(id: id) else { continue }
+            var cover: Data?
+            if coverURL(for: book) == nil { cover = await service.cover(for: best, language: book.language, title: book.title) }
+            // Pudo cambiar mientras se bajaba la portada: se completa lo más reciente.
+            let current = self.book(id: id) ?? book
+            let filledIn = rules.apply(to: MetadataMatcher.fillMissing(current, from: best))
+            saved[id] = candidates
+            if let record = filled[id] { before[id] = record }
+            if filledIn != current || cover != nil, (try? update(filledIn, cover: cover)) != nil {
+                recordFilled(before: current, after: filledIn, addedCover: cover != nil)
+                completed.append(id)
+            }
+            setReview(id, candidates: nil)
+        }
+        return ReviewUndo(reviews: saved, filledBefore: before, completed: completed)
+    }
+
+    /// «Mantener los datos» de varios: salen de «Por revisar» sin cambiar nada.
+    func dismissReviews(_ ids: [UUID]) -> ReviewUndo {
+        var saved: [UUID: [MetadataCandidate]] = [:]
+        for id in ids {
+            guard let candidates = reviews[id] else { continue }
+            saved[id] = candidates
+            setReview(id, candidates: nil)
+        }
+        return ReviewUndo(reviews: saved, filledBefore: [:], completed: [])
+    }
+
+    /// Deshace un lote: lo completado vuelve a como estaba (si lo cambiaste después, se respeta
+    /// lo tuyo) y cada libro regresa a «Por revisar» con sus opciones.
+    func undo(_ batch: ReviewUndo) throws {
+        for id in batch.completed {
+            try undoAllFilled(for: id)
+            if let record = batch.filledBefore[id] {
+                filled[id] = record
+                persistFilled([id])
+            }
+        }
+        for (id, candidates) in batch.reviews where book(id: id) != nil {
+            setReview(id, candidates: candidates)
+        }
     }
 
     // MARK: Duplicados (CB-3)

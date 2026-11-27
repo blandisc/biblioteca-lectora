@@ -86,7 +86,6 @@ for mode in light dark; do
   shoot "editorial-$mode-note" 5 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen note
   shoot "editorial-$mode-highlights" 4 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen highlights
   shoot "editorial-$mode-settings" 4 -appearance.mode "$mode" -screenshot.tab notebook -screenshot.screen settings
-  shoot "editorial-$mode-listening" 4 -appearance.style editorial -appearance.mode "$mode" -screenshot.tab reading -screenshot.listening YES
 done
 
 # Lector: abre el libro más reciente (el Quijote).

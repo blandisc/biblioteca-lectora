@@ -120,6 +120,15 @@ public enum MetadataMatcher {
         return (a.editionCount ?? 0) > (b.editionCount ?? 0)
     }
 
+    /// «Completar los muy probables» en «Por revisar» (UX-5): la mejor opción es «Muy probable»
+    /// y nada dice lo contrario (otro título, otro autor, una guía, un ISBN de otro libro). Al
+    /// completarla solo se llena lo que le falta al libro (`fillMissing`), así que nada tuyo cambia.
+    public static func isSafeSuggestion(_ ranked: [MetadataCandidate]) -> Bool {
+        guard let best = ranked.first, best.confidence >= autoApplyThreshold else { return false }
+        let against: Set<MetadataCandidate.Note> = [.otherTitle, .otherAuthor, .notTheBook, .conflictingISBN]
+        return against.isDisjoint(with: best.notes ?? [])
+    }
+
     /// ¿Se aplica solo? Hace falta: confianza alta, título y autor seguros (o
     /// el mismo ISBN), y que no haya otro libro distinto casi igual de probable.
     public static func shouldAutoApply(_ ranked: [MetadataCandidate], for book: Book) -> Bool {

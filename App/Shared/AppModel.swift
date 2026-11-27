@@ -45,7 +45,7 @@ final class AppModel: ObservableObject {
         // Los subrayados de un libro que se juntó en otro (también en otro dispositivo) lo siguen.
         self.annotations.mergedIDs = { [weak library = self.library] id in library?.booksMerged(into: id) ?? [] }
         rebuildShelf()
-        if LaunchOptions.listening { listening = currentBook }
+        if Features.audiobook, LaunchOptions.listening { listening = currentBook }
     }
 
     /// Todos los libros, en el orden del catálogo.
@@ -185,7 +185,7 @@ final class AppModel: ObservableObject {
         seedSampleNotes()
         seedSampleSessions()
         rebuildShelf()
-        if LaunchOptions.listening { listening = currentBook }
+        if Features.audiobook, LaunchOptions.listening { listening = currentBook }
     }
 
     /// Sesiones de muestra de esta semana para las capturas de la Mesa y el diario.

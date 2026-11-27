@@ -352,4 +352,20 @@ final class MetadataLookupTests: XCTestCase {
         XCTAssertEqual(result.candidates.first?.authors, ["Mario Vargas Llosa"])
         XCTAssertTrue(result.candidates.first?.notes?.contains(.otherAuthor) ?? false)
     }
+
+    /// UX-5: en «Por revisar», «Completar los muy probables» solo toma la mejor opción si es
+    /// «Muy probable» y nada dice lo contrario.
+    func testSafeSuggestionIsVeryLikelyAndUncontested() {
+        func candidate(_ confidence: Double, _ notes: [MetadataCandidate.Note]) -> MetadataCandidate {
+            var candidate = MetadataCandidate(id: "c", source: .openLibrary, title: "Rayuela", confidence: confidence)
+            candidate.notes = notes
+            return candidate
+        }
+        XCTAssertTrue(MetadataMatcher.isSafeSuggestion([candidate(0.9, [.sameTitle, .sameAuthor])]))
+        XCTAssertFalse(MetadataMatcher.isSafeSuggestion([candidate(0.7, [.sameTitle, .sameAuthor])]), "«Probable» no basta")
+        XCTAssertFalse(MetadataMatcher.isSafeSuggestion([candidate(0.9, [.sameTitle, .otherAuthor])]), "otro autor")
+        XCTAssertFalse(MetadataMatcher.isSafeSuggestion([candidate(0.95, [.notTheBook])]), "una guía o un resumen")
+        XCTAssertFalse(MetadataMatcher.isSafeSuggestion([candidate(0.95, [.conflictingISBN])]), "tu ISBN es de otro libro")
+        XCTAssertFalse(MetadataMatcher.isSafeSuggestion([]), "sin opciones no hay nada que completar")
+    }
 }

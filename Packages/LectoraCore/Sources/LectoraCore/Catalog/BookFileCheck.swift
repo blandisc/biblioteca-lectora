@@ -17,14 +17,14 @@ public enum BookFileCheck {
             return (0...(window.count - marker.count)).contains { Array(window[$0..<$0 + marker.count]) == marker }
         }
         switch fileExtension.lowercased() {
-        case "epub": return has("PK\u{3}\u{4}", at: 0) ? nil : "No es un EPUB que se pueda abrir."
-        case "cbz": return has("PK\u{3}\u{4}", at: 0) ? nil : "No es un CBZ que se pueda abrir."
+        case "epub": return has("PK\u{3}\u{4}", at: 0) ? nil : "No es un EPUB que pueda abrir."
+        case "cbz": return has("PK\u{3}\u{4}", at: 0) ? nil : "No es un CBZ que pueda abrir."
         // Algunos PDF traen basura antes de la marca; los lectores aceptan hasta 1 KB.
-        case "pdf": return contains("%PDF-", within: 1024 + 5) ? nil : "No es un PDF que se pueda abrir."
-        case "mobi": return has("BOOKMOBI", at: 60) ? nil : "No es un MOBI que se pueda abrir."
-        case "azw3": return has("BOOKMOBI", at: 60) ? nil : "No es un AZW3 que se pueda abrir."
-        case "fb2": return contains("<FictionBook", within: 4096) ? nil : "No es un FB2 que se pueda abrir."
-        default: return "Ese formato no se puede leer."
+        case "pdf": return contains("%PDF-", within: 1024 + 5) ? nil : "No es un PDF que pueda abrir."
+        case "mobi": return has("BOOKMOBI", at: 60) ? nil : "No es un MOBI que pueda abrir."
+        case "azw3": return has("BOOKMOBI", at: 60) ? nil : "No es un AZW3 que pueda abrir."
+        case "fb2": return contains("<FictionBook", within: 4096) ? nil : "No es un FB2 que pueda abrir."
+        default: return "No puedo leer ese formato."
         }
     }
 }

@@ -35,7 +35,7 @@ struct RulesScreen: View {
             } header: {
                 Text("Nueva regla")
             } footer: {
-                Text("Sin importar mayúsculas ni acentos. Se aplican a los libros que importes y a los datos de internet.")
+                Text("Sin importar acentos ni mayúsculas. Se aplican a los libros que importes y a los datos de internet.")
             }
 
             if !rules.authors.isEmpty {

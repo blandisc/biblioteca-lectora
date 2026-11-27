@@ -238,13 +238,13 @@ final class RompelaTests: XCTestCase {
         XCTAssertEqual(BookFileCheck.problem(fileExtension: "epub", header: Data(), size: 0), "Está vacío.")
         XCTAssertNil(BookFileCheck.problem(fileExtension: "EPUB", header: zip, size: 100))
         XCTAssertNil(BookFileCheck.problem(fileExtension: "cbz", header: zip, size: 100))
-        XCTAssertEqual(BookFileCheck.problem(fileExtension: "epub", header: Data("hola".utf8), size: 4), "No es un EPUB que se pueda abrir.")
+        XCTAssertEqual(BookFileCheck.problem(fileExtension: "epub", header: Data("hola".utf8), size: 4), "No es un EPUB que pueda abrir.")
 
         XCTAssertNil(BookFileCheck.problem(fileExtension: "pdf", header: Data("%PDF-1.7".utf8), size: 8))
         let junk = Data(repeating: 0x20, count: 1024) + Data("%PDF-1.4".utf8)
         XCTAssertNil(BookFileCheck.problem(fileExtension: "pdf", header: junk, size: junk.count))
         let tooFar = Data(repeating: 0x20, count: 1025) + Data("%PDF-1.4".utf8)
-        XCTAssertEqual(BookFileCheck.problem(fileExtension: "pdf", header: tooFar, size: tooFar.count), "No es un PDF que se pueda abrir.")
+        XCTAssertEqual(BookFileCheck.problem(fileExtension: "pdf", header: tooFar, size: tooFar.count), "No es un PDF que pueda abrir.")
 
         let mobi = Data(repeating: 0, count: 60) + Data("BOOKMOBI".utf8)
         XCTAssertNil(BookFileCheck.problem(fileExtension: "mobi", header: mobi, size: mobi.count))

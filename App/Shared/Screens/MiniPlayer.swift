@@ -1,13 +1,14 @@
 import SwiftUI
 
 /// El mini reproductor vive sobre la barra de pestañas (iOS 26). En versiones
-/// anteriores no se muestra; el audio seguirá en la pantalla de bloqueo.
+/// anteriores no se muestra; el audio seguirá en la pantalla de bloqueo. Hasta que
+/// haya audio (`Features.audiobook`) no se muestra en ningún lado.
 struct MiniPlayerAccessory: ViewModifier {
     let book: ShelfBook?
 
     func body(content: Content) -> some View {
         #if os(iOS) && compiler(>=6.2)
-        if #available(iOS 26.0, *), let book {
+        if #available(iOS 26.0, *), Features.audiobook, let book {
             content.tabViewBottomAccessory { MiniPlayer(book: book) }
         } else {
             content
@@ -19,7 +20,7 @@ struct MiniPlayerAccessory: ViewModifier {
 }
 
 /// Portada, título, capítulo con barritas que se mueven mientras suena, pausa
-/// dentro de un anillo de avance y +30 s. Solo interfaz por ahora.
+/// dentro de un anillo de avance y +30 s. Solo interfaz por ahora: escondido tras `Features.audiobook`.
 struct MiniPlayer: View {
     let book: ShelfBook
     @State private var playing = true

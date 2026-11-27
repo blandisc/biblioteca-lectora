@@ -148,9 +148,43 @@ final class DesignRulesTests: XCTestCase {
 
     /// 19 nov 2026: «Pronto, también…» en Buscar y «IA en la nube · Próximamente» en
     /// Ajustes. Nada en la app promete lo que todavía no hace (ver `Features`).
+    ///
+    /// UX-8a (27 nov 2026): el mini reproductor, «Guiada» y «Escuchar» salían en las capturas
+    /// (`-screenshot.listening`) y no hacían nada. Lo que llega después vive tras `Features`,
+    /// apagado en el código para todos (no lo prende una opción de arranque), y ningún botón
+    /// visible tiene la acción vacía.
     func testNoPromisesOfFutureFeatures() {
         check(hits(#"(?i)"[^"]*\b(pronto|próximamente|coming soon)\b[^"]*""#, in: Self.sources("App")),
               "Texto que promete algo que no hace: escóndelo hasta que funcione")
+        let options = Self.ui.first { $0.path.hasSuffix("LaunchOptions.swift") }?.text ?? ""
+        let flags = options.components(separatedBy: "enum Features").dropFirst().first ?? ""
+        var problems = flags.components(separatedBy: "\n")
+            .filter { $0.contains("static ") && !$0.contains("= false") }
+            .map { "LaunchOptions.swift: \($0.trimmingCharacters(in: .whitespaces)) — lo que no funciona va apagado en el código" }
+        if flags.isEmpty { problems.append("LaunchOptions.swift: falta `enum Features`") }
+        // Un botón con la acción vacía solo dentro de un `if Features.…`, o en una pieza que solo se
+        // enseña desde ahí (el mini reproductor).
+        let planned = ["MiniPlayer(", "ReaderPillButton(", "\"headphones\""]
+        for file in Self.ui where !file.path.hasSuffix("Design/Components.swift") {
+            var depth = 0, gatedAt: [Int] = []
+            for (index, line) in file.lines.enumerated() {
+                let code = line.trimmingCharacters(in: .whitespaces)
+                if code.hasPrefix("//") { continue }
+                let opens = line.filter { $0 == "{" }.count, closes = line.filter { $0 == "}" }.count
+                if code.hasPrefix("if "), code.contains("Features."), opens > closes { gatedAt.append(depth) }
+                let gated = !gatedAt.isEmpty
+                let empty = line.range(of: #"(Button|ReaderPillButton|RoundIconButton|IconButton|TextAction)\b[^{]*\{\s*\}"#, options: .regularExpression) != nil
+                    && !line.contains("role: .cancel")
+                let isPlanned = planned.contains { line.contains($0) } && !code.hasPrefix("struct ")
+                let inPlannedPiece = file.path.hasSuffix("MiniPlayer.swift")
+                if !gated, (empty && !inPlannedPiece) || isPlanned {
+                    problems.append("\(file.path):\(index + 1): \(code.prefix(120))")
+                }
+                depth += opens - closes
+                while let last = gatedAt.last, depth <= last { gatedAt.removeLast() }
+            }
+        }
+        check(problems, "Se ve algo que no funciona: escóndelo tras `Features` (apagado) hasta que funcione")
     }
 
     /// 19 nov 2026: los formularios (Ajustes, Conexiones…) salían en el gris frío del
@@ -590,14 +624,15 @@ final class DesignRulesTests: XCTestCase {
         check(adaptive + grows + card, "Fila que no se acomoda con la letra más grande")
 
         // 4. Todo lo que se toca responde en 44: las acciones de un encabezado son IconButton o
-        //    AccentIconButton, y toda pieza con un botón usa una medida de 44 (o es grande de por sí).
+        //    AccentIconButton (o la ✕ de una hoja, `CloseButton`, UX-6b), y toda pieza con un botón
+        //    usa una medida de 44 (o es grande de por sí).
         var touch: [String] = []
         for file in Self.screens {
             var depth = 0
             for (index, line) in file.lines.enumerated() {
                 if depth == 0, line.contains("ScreenHeading(title:"), line.hasSuffix("{") { depth = 1; continue }
                 guard depth > 0 else { continue }
-                if line.contains("Button"), !line.contains("IconButton(") { touch.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces))") }
+                if line.contains("Button"), !line.contains("IconButton("), !line.contains("CloseButton(") { touch.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces))") }
                 depth += line.filter { $0 == "{" }.count - line.filter { $0 == "}" }.count
             }
         }
@@ -896,6 +931,36 @@ final class DesignRulesTests: XCTestCase {
         check(hits(#""[^"]*(No se pud|No se pued|Se guardó|Se juntó|Se completaron)"#, in: Self.ui) +
               hits(#""[^"]*(No se pud|No se pued)"#, in: Self.sources("Packages/LectoraCore/Sources")),
               "Voz impersonal: di qué hice yo («No pude guardar», «Junté»)")
+    }
+
+    /// Regla 8 (UX-7 y UX-8b, 27 nov 2026): dos textos nunca se pegan. Lo que tecleabas al
+    /// guardar un estante se pegaba a la búsqueda ya escrita («CorCortázar»), y en la hendidura
+    /// el título del capítulo a su primera frase («Capítulo IEn un lugar…»).
+    func testTextsNeverRunTogether() {
+        // Dos datos seguidos sin nada en medio: «\(capítulo)\(página)».
+        var problems = hits(#"\\\([\w.?!]+\)\\\("#, in: Self.ui)
+        // Lo que propongo en el campo de un aviso va como pista y el campo empieza vacío: escrito
+        // de antemano al abrirse el aviso (`onChange`), lo que tecleas se le pega.
+        let bound = try! NSRegularExpression(pattern: #"TextField\([^\n]*text: \$(\w+)\)"#)
+        for file in Self.ui {
+            for (index, line) in file.lines.enumerated() where line.contains(".alert(") {
+                let block = file.lines[index..<min(index + 6, file.lines.count)].joined(separator: "\n")
+                let names = bound.matches(in: block, range: NSRange(block.startIndex..., in: block)).compactMap {
+                    Range($0.range(at: 1), in: block).map { String(block[$0]) }
+                }
+                for name in names {
+                    problems += hits(#"\.onChange\(of:.*\b\#(name) = (?!"")"#, in: [file])
+                        .map { "\($0) — el campo «\(name)» se escribe solo al abrirse" }
+                }
+            }
+        }
+        // La hendidura arma su texto bloque por bloque, con un salto entre el título y el párrafo.
+        let reader = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
+        let slit = reader.components(separatedBy: "const slitFrom").dropFirst().first?.components(separatedBy: "\n}").first ?? ""
+        if slit.isEmpty || slit.contains(".toString()") || !slit.contains("slitTextOf") {
+            problems.append("reader.js: la hendidura toma el texto del rango tal cual y pega el título con su primera frase")
+        }
+        check(problems, "Dos textos pegados: sepáralos (un espacio, « · », un salto de renglón)")
     }
 
     /// Regla 7 y SB-1 de la casa: un botón dice qué hace. «Cancelar», «OK», «Listo», «Cerrar»

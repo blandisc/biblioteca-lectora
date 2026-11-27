@@ -83,6 +83,8 @@ struct SearchScreen: View {
                 #if DEBUG
                 // Capturas: `-screenshot.query palabra` escribe la búsqueda.
                 if let preset = UserDefaults.standard.string(forKey: "screenshot.query") { query = preset }
+                // `-screenshot.demo saveShelf` abre «Guardar como estante» con esa búsqueda.
+                if LaunchOptions.demo == "saveShelf" { savingShelf = query }
                 #endif
             }
             // Lo que buscaste queda entre tus recientes al dejar de escribir.

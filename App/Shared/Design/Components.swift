@@ -50,11 +50,19 @@ extension View {
     /// de la barra de vidrio («Listo», «Cancelar», «Editar») van en tinta, como en iOS 26;
     /// antes unas hojas los forzaban a verde y otras no (22 nov 2026).
     /// `sheet: true` en una hoja con dos botones de texto en la barra (ver `sheetTitle`).
-    func pushedScreen(_ title: String = "", sheet: Bool = false) -> some View {
-        self
+    /// `bar: false` en una hoja que se cierra con la ✕ de su encabezado (Ajustes, UX-6b): sin
+    /// barra, nada flota sobre el contenido al deslizar.
+    @ViewBuilder
+    func pushedScreen(_ title: String = "", sheet: Bool = false, bar: Bool = true) -> some View {
+        let screen = self
             .background(Theme.paper.ignoresSafeArea())
             .barTitle(title, large: sheet)
             .tint(Theme.accent)
+        #if os(iOS)
+        if bar { screen } else { screen.toolbar(.hidden, for: .navigationBar) }
+        #else
+        screen
+        #endif
     }
 
     /// Título pequeño, centrado en la barra (pantallas empujadas, hojas y formularios).
@@ -652,6 +660,25 @@ struct TextAction: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Lo que acabo de hacer en lote, con «Deshacer» a la derecha (UX-5): una línea en tinta
+/// secundaria, su acción en tinta y una línea finísima debajo. Con la letra más grande,
+/// «Deshacer» baja bajo el texto.
+struct UndoNotice: View {
+    let text: String
+    let undo: () -> Void
+
+    var body: some View {
+        AdaptiveStack(spacing: Theme.Space.l) {
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(Theme.secondaryInk)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            TextAction(title: "Deshacer", action: undo)
+        }
+        .overlay(alignment: .bottom) { Hairline() }
     }
 }
 
@@ -2374,34 +2401,38 @@ extension View {
 // MARK: - Estantes (CB-1): guardar, renombrar y borrar, iguales en el iPhone y la Mac
 
 /// «Guardar como estante»: pide el nombre, con uno propuesto a partir de la búsqueda.
+/// El campo empieza vacío y propone el nombre como pista (UX-7, 27 nov 2026): con el nombre
+/// ya escrito, lo que tecleabas se pegaba a la búsqueda («CorCortázar»). Vacío, se guarda
+/// con lo propuesto.
 struct SaveShelfAlert: ViewModifier {
     @Binding var query: String?
     let save: (SavedShelf) -> Void
     @State private var name = ""
 
     func body(content: Content) -> some View {
+        let suggested = SavedShelf.suggestedName(for: query ?? "")
         content
             .alert("Guardar como estante", isPresented: Binding(
                 get: { query != nil }, set: { if !$0 { query = nil } }
             )) {
-                TextField("Nombre", text: $name)
+                TextField(suggested, text: $name)
                 Button("Guardar estante") {
-                    if let query, !name.trimmingCharacters(in: .whitespaces).isEmpty {
-                        save(SavedShelf(name: name, query: query))
+                    let clean = name.trimmingCharacters(in: .whitespaces)
+                    if let query, !(clean.isEmpty ? suggested : clean).isEmpty {
+                        save(SavedShelf(name: clean.isEmpty ? suggested : clean, query: query))
                     }
                     query = nil
                 }
                 Button("Dejar sin guardar", role: .cancel) { query = nil }
             } message: {
-                Text("Se llena solo con los libros que cumplan «\(query ?? "")».")
+                Text("Se llena solo con los libros que cumplan «\(query ?? "")». Escribe su nombre o deja «\(suggested)».")
             }
-            .onChange(of: query) { _, new in
-                if let new { name = SavedShelf.suggestedName(for: new) }
-            }
+            .onChange(of: query) { _, _ in name = "" }
     }
 }
 
-/// «Renombrar estante»: el nombre de ahora para cambiarlo.
+/// «Renombrar estante»: el nombre de ahora como pista y el campo vacío, para que lo nuevo
+/// no se pegue a lo de antes (UX-7). Vacío, se queda como está.
 struct RenameShelfAlert: ViewModifier {
     @Binding var shelf: SavedShelf?
     let save: (SavedShelf) -> Void
@@ -2412,7 +2443,7 @@ struct RenameShelfAlert: ViewModifier {
             .alert("Renombrar el estante", isPresented: Binding(
                 get: { shelf != nil }, set: { if !$0 { shelf = nil } }
             )) {
-                TextField("Nombre", text: $name)
+                TextField(shelf?.name ?? "", text: $name)
                 Button("Guardar nombre") {
                     let clean = name.trimmingCharacters(in: .whitespaces)
                     if var renamed = shelf, !clean.isEmpty {
@@ -2423,9 +2454,7 @@ struct RenameShelfAlert: ViewModifier {
                 }
                 Button("Dejar como está", role: .cancel) { shelf = nil }
             }
-            .onChange(of: shelf) { _, new in
-                if let new { name = new.name }
-            }
+            .onChange(of: shelf) { _, _ in name = "" }
     }
 }
 

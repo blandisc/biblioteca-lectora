@@ -54,7 +54,7 @@ enum CabinetLocation {
             #if os(iOS)
             return "En este iPhone"
             #else
-            return "En este Mac"
+            return "En esta Mac"
             #endif
         }
         let path = cabinet.standardizedFileURL.path

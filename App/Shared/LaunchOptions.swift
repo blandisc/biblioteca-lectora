@@ -11,7 +11,7 @@ enum LaunchOptions {
     static var book: String? { UserDefaults.standard.string(forKey: "screenshot.book") }
     /// Abrir el lector con los controles escondidos.
     static var hidesReaderChrome: Bool { UserDefaults.standard.bool(forKey: "screenshot.hideChrome") }
-    /// Mostrar el mini reproductor como si sonara el libro actual.
+    /// Mostrar el mini reproductor como si sonara el libro actual (solo con `Features.audiobook`).
     static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
     /// Pantalla empujada: en la Biblioteca, `review` («Por revisar»), `detail` (ficha
     /// del primer libro, o del de `-screenshot.book`), `edit` (la ficha con «Escribir a mano» abierto) o `shelf` (el primer estante); en el Cuaderno, `note` (la primera nota), `highlights` o
@@ -35,9 +35,10 @@ enum LaunchOptions {
     static var cabinet: String? { UserDefaults.standard.string(forKey: "screenshot.cabinet") }
 }
 
-/// Lo que todavía no funciona no se muestra: nada en la app promete algo que no hace.
+/// Lo que todavía no funciona no se muestra: nada en la app promete algo que no hace, ni
+/// siquiera en las capturas (UX-8a, 27 nov 2026: el mini reproductor y «Escuchar» salían con
+/// `-screenshot.listening` y no hacían nada). Se prende aquí, en el código, cuando funcione.
 enum Features {
-    /// Audiolibro (Escuchar, Guiada, mini reproductor): llega en la fase C.
-    /// Las capturas lo enseñan para revisar su diseño.
-    static var audiobook: Bool { LaunchOptions.listening }
+    /// Audiolibro («Escuchar» y el mini reproductor): llega en la fase C. Apagado para todos.
+    static let audiobook = false
 }

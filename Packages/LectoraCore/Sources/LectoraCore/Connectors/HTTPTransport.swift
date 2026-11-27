@@ -26,7 +26,7 @@ public enum ConnectorError: LocalizedError, Equatable, Sendable {
     public var errorDescription: String? {
         switch self {
         case .badKey: "La llave no funciona. Revisa que la copiaste completa."
-        case .rateLimited: "El servicio pidió esperar un momento. Se reintenta solo."
+        case .rateLimited: "El servicio pidió esperar un momento. Vuelvo a intentarlo solo."
         case .server(let status, let message): "El servicio respondió \(status): \(message)"
         case .unexpected(let message): message
         }

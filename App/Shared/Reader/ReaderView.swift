@@ -801,12 +801,10 @@ private struct BottomPanel: View {
             // La página va pegada a su barra, no a media fila de ella.
             .padding(.top, -Theme.Size.tapBleed)
 
+            // «Escuchar» llega con el audiolibro; la lectura guiada ya está arriba, junto a «Aa».
             if Features.audiobook {
-                HStack(spacing: Theme.Space.s) {
-                    ReaderPillButton(title: "Guiada", systemImage: "text.viewfinder") {}
-                    ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
-                }
-                .padding(.top, Theme.Space.s)
+                ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
+                    .padding(.top, Theme.Space.s)
             }
         }
         .buttonStyle(.plain)

@@ -13,14 +13,30 @@ struct CandidatesRef: Hashable {
     var searchesFirst = false
 }
 
-/// «Por revisar»: los libros cuyos datos de internet no fueron seguros.
+/// «Por revisar»: los libros cuyos datos de internet no fueron seguros. Se resuelven uno
+/// por uno o en lote (UX-5): completar de una vez los muy probables (solo se llena lo que
+/// falta) o elegir varios y mantener sus datos. Todo lote pide confirmación y se deshace.
+/// Es la misma pantalla en el iPhone y en la Mac.
 struct ReviewScreen: View {
     @EnvironmentObject private var model: AppModel
+    /// Elegir varios para mantener sus datos.
+    @State private var choosing = false
+    @State private var chosen = Set<UUID>()
+    @State private var confirming: ReviewBatch?
+    @State private var working = false
+    /// Lo último que hice en lote, para deshacerlo.
+    @State private var lastBatch: (text: String, undo: LibraryStore.ReviewUndo)?
+    @State private var errorMessage: String?
 
     private var pending: [ShelfBook] {
         model.library.reviews.keys
             .compactMap { model.shelfBook(id: $0.uuidString) }
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
+    /// Los que se pueden completar sin preguntar uno por uno.
+    private var safe: [UUID] {
+        pending.compactMap(\.bookID).filter { MetadataMatcher.isSafeSuggestion(model.library.reviews[$0] ?? []) }
     }
 
     var body: some View {
@@ -34,33 +50,143 @@ struct ReviewScreen: View {
                         .foregroundStyle(Theme.secondaryInk)
                         .padding(.top, Theme.Space.xs)
                 }
+                if let lastBatch {
+                    UndoNotice(text: lastBatch.text) { undo(lastBatch.undo) }
+                        .padding(.top, Theme.Space.l)
+                        .transition(.opacity)
+                }
                 if !model.library.pendingLookup.isEmpty {
                     waiting.padding(.top, Theme.Space.l)
+                }
+                if working {
+                    LoadingLine(text: "Completando los libros muy probables…")
+                        .padding(.top, Theme.Space.l)
                 }
                 if pending.isEmpty && filled.isEmpty {
                     EmptyState(title: "Todo en orden", message: "No hay libros pendientes de revisar.")
                 } else if !pending.isEmpty {
+                    bulkActions.padding(.top, Theme.Space.s)
                     LazyVStack(spacing: 0) {
                         ForEach(pending) { book in
-                            if let id = book.bookID {
-                                NavigationLink(value: CandidatesRef(bookID: id)) {
-                                    BookRow(book: book, detail: detail(for: id)) {
-                                        Image(systemName: "chevron.right").foregroundStyle(Theme.tertiaryInk)
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }
+                            if let id = book.bookID { row(book, id) }
                         }
                     }
-                    .padding(.top, Theme.Space.l)
+                    if choosing {
+                        SecondaryButton(title: keepTitle(chosen.count), systemImage: "checkmark") {
+                            confirming = .keep(Array(chosen))
+                        }
+                        .disabled(chosen.isEmpty)
+                        .padding(.top, Theme.Space.l)
+                    }
                 }
                 if !filled.isEmpty { filledSection }
             }
+            .animation(Theme.Motion.standard, value: lastBatch?.text)
             .screenContent()
         }
         .pushedScreen()
+        .disabled(working)
+        .confirmationDialog(confirming?.title ?? "", isPresented: Binding(
+            get: { confirming != nil }, set: { if !$0 { confirming = nil } }
+        ), titleVisibility: .visible, presenting: confirming) { batch in
+            Button(batch.action) { run(batch) }
+            Button("Dejarlos por revisar", role: .cancel) {}
+        } message: { batch in
+            Text(batch.message)
+        }
+        .errorAlert("No pude deshacer el cambio", message: $errorMessage, back: "Volver a la revisión")
+        #if DEBUG
+        // Capturas: `-screenshot.demo reviewConfirm` pide confirmar «Completar los muy probables»,
+        // `reviewDone` los completa (y enseña «Deshacer»), `reviewChoose` elige el primero y
+        // `reviewKeep` mantiene sus datos.
+        .task {
+            try? await Task.sleep(for: .seconds(1))
+            let first = pending.prefix(1).compactMap(\.bookID)
+            switch LaunchOptions.demo {
+            case "reviewConfirm": confirming = .completeSafe(safe)
+            case "reviewDone": run(.completeSafe(safe))
+            case "reviewChoose": choosing = true; chosen = Set(first)
+            case "reviewKeep": run(.keep(first))
+            default: break
+            }
+        }
+        #endif
     }
 
+    /// Completar los muy probables y elegir varios, sobre la lista.
+    private var bulkActions: some View {
+        AdaptiveStack(spacing: Theme.Space.l) {
+            if !choosing, !safe.isEmpty {
+                TextAction(title: safe.count == 1 ? "Completar el muy probable" : "Completar los \(safe.count) muy probables") {
+                    confirming = .completeSafe(safe)
+                }
+            }
+            Spacer(minLength: 0)
+            if choosing {
+                TextAction(title: chosen.count == pending.count ? "Quitar la elección" : "Elegir todos") {
+                    chosen = chosen.count == pending.count ? [] : Set(pending.compactMap(\.bookID))
+                }
+            }
+            TextAction(title: choosing ? "Terminar de elegir" : "Elegir varios") {
+                withAnimation(Theme.Motion.standard) {
+                    choosing.toggle()
+                    chosen = []
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func row(_ book: ShelfBook, _ id: UUID) -> some View {
+        if choosing {
+            Button {
+                if chosen.contains(id) { chosen.remove(id) } else { chosen.insert(id) }
+            } label: {
+                BookRow(book: book, detail: detail(for: id)) { ChoiceMark(selected: chosen.contains(id)) }
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(chosen.contains(id) ? .isSelected : [])
+        } else {
+            NavigationLink(value: CandidatesRef(bookID: id)) {
+                BookRow(book: book, detail: detail(for: id)) {
+                    Image(systemName: "chevron.right").foregroundStyle(Theme.tertiaryInk)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func keepTitle(_ count: Int) -> String {
+        count == 0 ? "Elige los libros que se quedan como están" : "Mantener los datos de \(count.counted("libro", "libros"))"
+    }
+
+    private func run(_ batch: ReviewBatch) {
+        switch batch {
+        case .completeSafe(let ids):
+            working = true
+            Task {
+                let undo = await model.library.completeSafeReviews(ids)
+                working = false
+                lastBatch = (undo.completed.isEmpty
+                    ? "Ya tenían todo: dejé \(undo.reviews.count.counted("libro", "libros")) como estaban."
+                    : "Completé \(undo.completed.count.counted("libro", "libros")) con sus datos muy probables; los ves en «Lo que completé solo».", undo)
+            }
+        case .keep(let ids):
+            let undo = model.library.dismissReviews(ids)
+            choosing = false
+            chosen = []
+            lastBatch = ("Dejé \(undo.reviews.count.counted("libro", "libros")) con sus datos de siempre.", undo)
+        }
+    }
+
+    private func undo(_ batch: LibraryStore.ReviewUndo) {
+        do {
+            try model.library.undo(batch)
+            lastBatch = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
     private var filled: [ShelfBook] {
         model.library.filled
             .sorted { $0.value.date > $1.value.date }
@@ -113,6 +239,41 @@ struct ReviewScreen: View {
         }
         let count = candidates.count.counted("opción", "opciones")
         return "\(count) · \(best.verdict)"
+    }
+}
+
+/// Lo que se hace en lote en «Por revisar», con lo que dice su confirmación.
+enum ReviewBatch: Hashable {
+    case completeSafe([UUID])
+    case keep([UUID])
+
+    private var count: String {
+        switch self {
+        case .completeSafe(let ids), .keep(let ids): ids.count.counted("libro", "libros")
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .completeSafe: "¿Completar \(count) con sus datos muy probables?"
+        case .keep: "¿Mantener los datos de \(count)?"
+        }
+    }
+
+    var message: String {
+        switch self {
+        case .completeSafe:
+            "Solo lleno lo que les falta (autor, año, editorial, ISBN, sinopsis, portada): lo que ya tienen no cambia. Puedes deshacerlo aquí mismo o dato por dato en «Lo que completé solo»."
+        case .keep:
+            "Salen de «Por revisar» sin cambiar nada. Puedes deshacerlo aquí mismo."
+        }
+    }
+
+    var action: String {
+        switch self {
+        case .completeSafe: "Completar \(count)"
+        case .keep: "Mantener los datos de \(count)"
+        }
     }
 }
 

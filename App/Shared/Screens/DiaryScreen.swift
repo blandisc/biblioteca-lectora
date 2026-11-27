@@ -328,7 +328,7 @@ struct SessionScreen: View {
                     }
                 }
             } else {
-                EmptyState(title: "Sesión no encontrada", message: "Puede que aún no llegue de tu otro dispositivo.")
+                EmptyState(title: "No encontré la sesión", message: "Puede que aún no llegue de tu otro dispositivo.")
                     .screenContent()
             }
         }
