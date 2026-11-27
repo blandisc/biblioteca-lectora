@@ -942,19 +942,58 @@ final class DesignRulesTests: XCTestCase {
         if value("pageMarginTop") < value("tapTarget") + value("chromeEdge") {
             duo.append("Reader.pageMarginTop: sin isla, los botones de arriba tapan el primer renglón")
         }
-        //     Abierto, la pantalla es ancha: el texto no cruza de orilla a orilla (`screenContent` y
-        //     `formScreen` se quedan en `Size.screenMeasure`; solo Mesa y Biblioteca usan todo el ancho,
-        //     por sus portadas) y la cuadrícula pone las columnas que quepan, no portadas enormes.
-        let recipes = Self.ui.first { $0.path.hasSuffix("Design/Components.swift") }!.text
-        for recipe in ["func screenContent(", "func formScreen("] {
-            let body = recipes.components(separatedBy: recipe).dropFirst().first?.components(separatedBy: "\n    }").first ?? ""
-            if !body.contains(".measured(") { duo.append("\(recipe)…): no se queda en Size.screenMeasure") }
+        //     Ninguna pantalla pregunta qué aparato es: todas leen la forma de la ventana
+        //     (`WindowLayout`) y usan las piezas comunes. Ni banderas del Duo ni clase de tamaño en las
+        //     pantallas (la Mesa en dos columnas preguntaba `horizontalSizeClass`).
+        //     (Las otras opciones del lector, `Duo.` en Debug, no preguntan el aparato: cambian la decisión.)
+        for file in Self.screens {
+            for (index, line) in file.lines.enumerated() where !line.trimmingCharacters(in: .whitespaces).hasPrefix("//") {
+                if line.contains("horizontalSizeClass") || (file.path.contains("/Screens/") && line.contains("Duo.")) {
+                    duo.append("\(file.path):\(index + 1): pregunta el aparato; usa WindowLayout y las piezas de Layout.swift")
+                }
+            }
         }
+        //     El texto no cruza de orilla a orilla ni el pliegue: `screenContent` y `formScreen` se
+        //     quedan en el renglón cómodo (`ReadingColumn`); solo Mesa, Biblioteca y cada página de un
+        //     pliego (`Spread`) usan todo el ancho, por sus portadas.
+        let recipes = Self.ui.first { $0.path.hasSuffix("Design/Components.swift") }!.text
+        let layout = Self.ui.first { $0.path.hasSuffix("Design/Layout.swift") }?.text ?? ""
+        let content = recipes.components(separatedBy: "struct ScreenContent").dropFirst().first?.components(separatedBy: "\n}").first ?? ""
+        if !content.contains("ReadingColumn(active: !wide)") { duo.append("ScreenContent: no se queda en el renglón cómodo") }
+        let form = recipes.components(separatedBy: "func formScreen(").dropFirst().first?.components(separatedBy: "\n    }").first ?? ""
+        if !form.contains(".readingColumn()") { duo.append("formScreen: no se queda en el renglón cómodo") }
+        if !layout.contains("widthBeforeFold(") { duo.append("ReadingColumn: el renglón cruza el pliegue") }
         let wide = hits(#"\.screenContent\(wide: true\)"#, in: Self.ui)
-            .filter { !$0.hasPrefix("App/Shared/Screens/MesaScreen.swift") && !$0.hasPrefix("App/Shared/Screens/LibraryScreen.swift") }
-        duo += wide.map { "\($0) — a todo lo ancho solo Mesa y Biblioteca" }
-        if !recipes.contains("Theme.Size.gridColumns(fitting: width") {
-            duo.append("CoverGrid: columnas fijas; en una pantalla ancha las portadas crecen sin fin")
+            .filter { hit in !["MesaScreen.swift", "LibraryScreen.swift", "Design/Layout.swift"].contains { hit.hasPrefix("App/Shared/") && hit.contains($0) } }
+        duo += wide.map { "\($0) — a todo lo ancho solo Mesa, Biblioteca y las páginas de un pliego" }
+        //     La cuadrícula pone las columnas que quepan por ancho y por alto (`CoverColumns`): en una
+        //     ventana baja se ve un libro entero, no tres portadas enormes.
+        if !recipes.contains("Theme.Size.gridColumns(fitting: width, height: window.size.height") {
+            duo.append("CoverGrid: columnas fijas o sin mirar el alto; en una pantalla baja no se ve un libro entero")
+        }
+        //     Lo que en un iPhone es una hoja, con el pliegue se abre en una página y se cierra con
+        //     `SheetDismiss` (con `dismiss` el panel no se iría).
+        for file in Self.ui where file.text.contains(".sidePanel(") {
+            for name in ["MetadataEditorView", "CoverPickerSheet", "SettingsScreen", "ReaderToolsSheet", "SessionSummarySheet"]
+            where file.text.contains("\(name)(") {
+                let owner = Self.ui.first { $0.text.contains("struct \(name):") }
+                if let owner, owner.text.contains("@Environment(\\.dismiss)") {
+                    duo.append("\(owner.path): \(name) se abre como panel y se cierra con dismiss; usa SheetDismiss")
+                }
+            }
+        }
+        //     En el lector, la lectura guiada sigue la página del renglón (con dos páginas, la otra en
+        //     penumbra) y la serie de la ficha no deja un «·» colgando al partirse.
+        let readerJS = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
+        if !readerJS.contains("visiblePages(") { duo.append("reader.js: la guía no sabe en qué página va el renglón") }
+        if !(Self.screens.first { $0.path.hasSuffix("BookDetailScreen.swift") }?.text.contains("DotLine(") ?? false) {
+            duo.append("BookDetailScreen: la serie se une con « · » a mano; usa DotLine")
+        }
+        //     Una hoja enseña su título aunque iOS ponga la hora al costado, y sus dos salidas se miden
+        //     contra el ancho de verdad (en el Duo cerrado «Ir a la biblioteca» se iba al «•••»).
+        if !recipes.contains("struct LargeSheetTitle") { duo.append("Sin LargeSheetTitle: el título de una hoja se esconde junto a la franja") }
+        if !(pieces.first { $0.name == "SheetActions" }?.body.contains("fitsInBar") ?? false) {
+            duo.append("SheetActions: no mide si sus dos botones caben en la barra")
         }
         //     Cada hoja y cada pantalla completa del iPhone declara `duoBars()`: iOS le pregunta a lo
         //     que va hasta arriba de cada presentación, y una que no lo diga regresa la franja (DUO-1).
@@ -1189,7 +1228,10 @@ final class DesignRulesTests: XCTestCase {
         // Auditoría 3: con «Series» elegido la Biblioteca seguía enseñando «Por revisar 3», libros que no
         // eran los del filtro. Lo que cuenta toda la biblioteca solo va en «Todos».
         let library = Self.screens.first { $0.path.hasSuffix("Screens/LibraryScreen.swift") }?.text ?? ""
-        check(library.contains("if filter == .all, !model.library.reviews.isEmpty") ? [] : ["LibraryScreen: «Por revisar» con un filtro elegido"],
+        //     Ronda 0 del Duo: los estantes («Cortázar 3») salían bajo «0 libros» con otro filtro.
+        var whole = library.contains("if filter == .all, !model.library.reviews.isEmpty") ? [] : ["LibraryScreen: «Por revisar» con un filtro elegido"]
+        if !library.contains("if filter == .all {\n                                ForEach(model.library.shelves)") { whole.append("LibraryScreen: estantes con un filtro elegido") }
+        check(whole,
               "Un número de toda la biblioteca bajo un filtro: va solo en «Todos»")
     }
 

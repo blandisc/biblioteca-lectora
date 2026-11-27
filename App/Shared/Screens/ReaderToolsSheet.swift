@@ -16,7 +16,8 @@ struct ReaderToolsSheet: View {
     @State var part: Part
     @ObservedObject private var annotations = AnnotationStore.shared
     @ObservedObject private var library = LibraryStore.shared
-    @Environment(\.dismiss) private var dismiss
+    /// Cierra la hoja o, en un pliego, su panel (`SidePanel`).
+    private let dismiss = SheetDismiss()
     @State private var query = ""
     @FocusState private var searchFocused: Bool
     @State private var recents: [RecentSearches.Item] = []

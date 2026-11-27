@@ -102,8 +102,9 @@ struct RootView: View {
                 showsWelcome = true
             }
             // Al cerrar el libro, el resumen de la sesión.
-            .sheet(item: $sessions.justFinished) { session in
-                SessionSummarySheet(session: session).environmentObject(model).duoBars()
+            // En un pliego, en la página derecha, con la Mesa a la vista.
+            .sidePanel(item: $sessions.justFinished) { session in
+                SessionSummarySheet(session: session).environmentObject(model)
             }
             .noticeAlert("No añadí todos tus libros", message: $model.importReport, back: "Ver mis libros")
             // Un archivo de `.lectora` que no pude leer: lo digo una vez, en el iPhone y en la Mac.
@@ -113,6 +114,7 @@ struct RootView: View {
                 ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
                     .bookOpeningDestination(in: opening, enabled: book.fromCover)
                     .duoBars()
+                    .measuresWindow()
             }
             #else
             // El libro se abre en su propia ventana (MG-1).
@@ -122,6 +124,8 @@ struct RootView: View {
                 model.openBook = nil
             }
             #endif
+            // La forma de la ventana (pliegue, baja, franja), para todo lo de adentro y sus hojas.
+            .measuresWindow()
     }
 
     @ViewBuilder
@@ -164,7 +168,7 @@ private struct WelcomeCover: ViewModifier {
 
     func body(content: Content) -> some View {
         #if os(iOS)
-        content.fullScreenCover(isPresented: $isPresented) { WelcomeScreen().environmentObject(model).duoBars() }
+        content.fullScreenCover(isPresented: $isPresented) { WelcomeScreen().environmentObject(model).duoBars().measuresWindow() }
         #else
         // Mide lo que mide su paso (`Theme.Mac.welcome` de ancho), sin pasar de la ventana más chica.
         content.sheet(isPresented: $isPresented) { WelcomeScreen().environmentObject(model).duoBars() }

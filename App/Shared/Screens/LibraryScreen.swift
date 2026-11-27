@@ -15,6 +15,8 @@ struct LibraryScreen: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// Dónde termina el renglón del conteo y el orden: el índice A–Z empieza debajo.
     @State private var letterIndexTop: CGFloat = 0
+    @Environment(\.windowLayout) private var window
+    private var stripAir: CGFloat { window.strip == .trailing ? Theme.Space.s : 0 }
     private static let contentSpace = "biblioteca"
 
     private var books: [ShelfBook] {
@@ -60,7 +62,8 @@ struct LibraryScreen: View {
     var body: some View {
         let books = self.books
         let indexed = showsLetterIndex(books)
-        return NavigationStack(path: $path) {
+        // Con el Duo abierto y acostado, la biblioteca a la izquierda y el libro que tocas a la derecha.
+        return FoldSplit(path: $path) {
             ScrollViewReader { scroller in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -119,12 +122,15 @@ struct LibraryScreen: View {
                                 .padding(.top, Theme.Space.l)
                             }
 
-                            // Estantes (CB-1): búsquedas guardadas que se llenan solas.
-                            ForEach(model.library.shelves) { shelf in
-                                NavigationLink(value: ShelfRef(id: shelf.id)) {
-                                    LinkRow(title: shelf.name, value: "\(model.library.books.filter(shelf.contains).count)")
+                            // Estantes (CB-1): búsquedas guardadas que se llenan solas. Solo en «Todos», como
+                            // Por revisar: con un filtro, «Cortázar» salía bajo «0 libros» como si fuera del filtro.
+                            if filter == .all {
+                                ForEach(model.library.shelves) { shelf in
+                                    NavigationLink(value: ShelfRef(id: shelf.id)) {
+                                        LinkRow(title: shelf.name, value: "\(model.library.books.filter(shelf.contains).count)")
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             }
 
                             if model.shelf.isEmpty {
@@ -142,6 +148,7 @@ struct LibraryScreen: View {
                             }
                         }
                         .padding(.trailing, indexed ? Theme.Space.letterIndex : 0)
+                        .padding(.trailing, indexed ? stripAir : 0)
                     }
                     .screenContent(wide: true)
                     .coordinateSpace(.named(Self.contentSpace))
@@ -151,6 +158,8 @@ struct LibraryScreen: View {
                         LetterIndex { letter in jump(to: letter, in: books, scroller) }
                         .frame(maxHeight: .infinity)
                         .padding(.top, letterIndexTop)
+                        // Junto a la franja de la hora (Duo cerrado), su aire: las letras iban pegadas a ella.
+                        .padding(.trailing, stripAir)
                     }
                 }
             }
@@ -160,6 +169,9 @@ struct LibraryScreen: View {
             .onChange(of: LibraryFilter.options(for: model.shelf)) { _, options in
                 if !options.contains(filter) { filter = .all }
             }
+        } placeholder: {
+            FoldPlaceholder(title: "Elige un libro",
+                            message: "Toca un libro a la izquierda y aquí ves su ficha, sin dejar tu biblioteca.")
         }
     }
 

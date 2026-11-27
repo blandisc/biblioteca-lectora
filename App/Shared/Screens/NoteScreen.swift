@@ -100,7 +100,7 @@ struct NoteScreen: View {
                     .foregroundStyle(Theme.ink)
             }
             .gutter()
-            .measured(Theme.Size.screenMeasure)
+            .readingColumn()
             .padding(.top, Theme.Space.l)
         } else {
             ScrollView {

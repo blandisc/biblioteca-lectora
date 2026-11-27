@@ -52,22 +52,6 @@ extension View {
         #endif
     }
 
-    /// En el iPhone, lo más ancho que crece algo (con su margen), centrado: en una pantalla
-    /// ancha (el Duo abierto) el texto no cruza de orilla a orilla. `nil`, todo el ancho.
-    /// En la Mac no cambia nada: ahí la ventana ya mide lo suyo.
-    @ViewBuilder
-    func measured(_ width: CGFloat?) -> some View {
-        #if os(iOS)
-        if let width {
-            frame(maxWidth: width).frame(maxWidth: .infinity)
-        } else {
-            self
-        }
-        #else
-        self
-        #endif
-    }
-
     /// Receta de formulario (Ajustes, Conexiones, Reglas, Editar datos): el mismo papel
     /// que el resto de la app, no el gris frío del sistema. Sus botones en tinta, como toda
     /// acción (regla 1: «Elegir de Fotos» y «Elegir archivo» salían en verde); los interruptores
@@ -78,8 +62,8 @@ extension View {
             // se salían de la ventana de Ajustes y cortaban sus nombres (27 nov 2026).
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
-            // En el iPhone Duo abierto, los campos no cruzan toda la pantalla.
-            .measured(Theme.Size.screenMeasure)
+            // En una pantalla ancha (el Duo abierto), los campos en el renglón cómodo, nunca sobre el pliegue.
+            .readingColumn()
             .background(Theme.paper.ignoresSafeArea())
             .tint(Theme.ink)
             .toggleStyle(AccentSwitchStyle())
@@ -119,9 +103,13 @@ extension View {
     @ViewBuilder
     fileprivate func barTitle(_ title: String, large: Bool) -> some View {
         #if os(iOS)
-        self
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(large ? .large : .inline)
+        if large {
+            modifier(LargeSheetTitle(title: title))
+        } else {
+            self
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+        }
         #else
         if title.isEmpty { self } else { self.navigationTitle(title) }
         #endif
@@ -134,25 +122,73 @@ extension View {
 
     /// Contenedor de una pantalla con scroll: margen, aire arriba y abajo.
     /// En una pantalla ancha del iPhone (el Duo abierto, un iPhone acostado) el texto no corre
-    /// de orilla a orilla: la pantalla se queda en `Size.screenMeasure`, centrada, como el libro
-    /// en la Mac. `wide: true` solo donde mandan las portadas (Mesa y Biblioteca): ahí la
-    /// cuadrícula usa todo el ancho y pone más columnas. Ningún iPhone de pie llega a la medida.
+    /// de orilla a orilla: se queda en el renglón cómodo (`ReadingColumn`, unas 68 letras),
+    /// centrado, y nunca sobre el pliegue. `wide: true` solo donde mandan las portadas (Mesa y
+    /// Biblioteca) y en cada página de un pliego (`Spread`): ahí se usa todo el ancho.
+    /// En una ventana baja (un iPhone acostado, el Duo cerrado acostado) arriba deja menos aire.
     func screenContent(wide: Bool = false) -> some View {
-        self
+        modifier(ScreenContent(wide: wide))
+    }
+}
+
+private struct ScreenContent: ViewModifier {
+    let wide: Bool
+    @Environment(\.windowLayout) private var window
+
+    func body(content: Content) -> some View {
+        content
             .frame(maxWidth: .infinity, alignment: .leading)
             .foregroundStyle(Theme.ink)
             .gutter()
-            .measured(wide ? nil : Theme.Size.screenMeasure)
-            .padding(.top, Theme.Space.screenTop)
+            .modifier(ReadingColumn(active: !wide))
+            .padding(.top, window.isShort ? Theme.Space.s : Theme.Space.screenTop)
             .padding(.bottom, Theme.Space.screenBottom)
     }
 }
 
-private struct ScreenTitleFont: ViewModifier {
-    @ScaledMetric(relativeTo: .largeTitle) private var size = Theme.Letter.screenTitle
+#if os(iOS)
+/// El título grande de una hoja con dos botones de texto (`sheetTitle`). Con una franja del sistema
+/// al costado (el Duo cerrado), iOS no dibuja el título grande: la hoja se quedaba sin nombre
+/// («Editar datos», «Portada», ronda 0). Ahí el título va arriba del contenido, en la misma letra.
+private struct LargeSheetTitle: ViewModifier {
+    let title: String
+    @Environment(\.windowLayout) private var window
 
     func body(content: Content) -> some View {
-        content.font(.screenTitle(size))
+        if window.strip != nil {
+            content
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .principal) { Color.clear.frame(width: 0, height: 0).accessibilityHidden(true) } }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    Text(title)
+                        .screenTitleFont()
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .gutter()
+                        .padding(.bottom, Theme.Space.s)
+                        .background(Theme.paper)
+                        .accessibilityAddTraits(.isHeader)
+                }
+        } else {
+            content
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.large)
+        }
+    }
+}
+#endif
+
+private struct ScreenTitleFont: ViewModifier {
+    @ScaledMetric(relativeTo: .largeTitle) private var regular = Theme.Letter.screenTitle
+    @ScaledMetric(relativeTo: .title2) private var short = Theme.Letter.screenTitleShort
+    @Environment(\.windowLayout) private var window
+
+    /// En una ventana baja (un iPhone acostado, el Duo cerrado acostado) el título
+    /// es más chico: el encabezado se comía media pantalla y no se veía ni un libro entero.
+    func body(content: Content) -> some View {
+        let size = window.isShort ? short : regular
+        return content.font(.screenTitle(size))
     }
 }
 
@@ -161,6 +197,7 @@ private struct ScreenTitleFont: ViewModifier {
 struct ScreenHeading<Trailing: View>: View {
     let title: String
     @ViewBuilder var trailing: Trailing
+    @Environment(\.windowLayout) private var window
 
     var body: some View {
         #if os(macOS)
@@ -172,7 +209,7 @@ struct ScreenHeading<Trailing: View>: View {
             .navigationTitle(title)
             .toolbar { ToolbarItemGroup(placement: .primaryAction) { trailing } }
         #else
-        VStack(alignment: .leading, spacing: Theme.Space.l) {
+        VStack(alignment: .leading, spacing: window.isShort ? Theme.Space.s : Theme.Space.l) {
             // Con la letra más grande el título se queda con todo el ancho y las acciones bajan
             // a su renglón: antes se partía a media palabra («Bibliotec / a»).
             AdaptiveStack(rowAlignment: .center) {
@@ -192,10 +229,12 @@ struct ScreenHeading<Trailing: View>: View {
     }
 }
 
-/// Lo que va lado a lado y se apila, uno bajo otro, con la letra de accesibilidad de iOS
-/// (AX1 a AX5): títulos con sus acciones, un conteo y su orden, un nombre y su campo, las
-/// opciones de una fila. Así nada se sale de la pantalla ni se corta a media palabra (SD-4).
-/// Con el tamaño de siempre (y en la Mac) es un `HStack` igual al de antes.
+/// Lo que va lado a lado y, con la letra de accesibilidad de iOS (AX1 a AX5), se apila uno bajo
+/// otro **si no cabe**: títulos con sus acciones, un conteo y su orden, un nombre y su campo, las
+/// opciones de una fila. Así nada se sale de la pantalla ni se corta a media palabra (SD-4), y en
+/// una pantalla ancha (el Duo abierto, un iPhone acostado) lo que sí cabe sigue en su renglón: antes
+/// se apilaba por el tamaño de letra aunque sobraran 600 puntos (ronda 0). Con el tamaño de siempre
+/// (y en la Mac) es un `HStack` igual al de antes.
 struct AdaptiveStack<Content: View>: View {
     var rowAlignment: VerticalAlignment = .center
     var columnAlignment: HorizontalAlignment = .leading
@@ -204,10 +243,14 @@ struct AdaptiveStack<Content: View>: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        let layout = typeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: columnAlignment, spacing: spacing))
-            : AnyLayout(HStackLayout(alignment: rowAlignment, spacing: spacing))
-        layout { content }
+        if typeSize.isAccessibilitySize {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: rowAlignment, spacing: spacing) { content }
+                VStack(alignment: columnAlignment, spacing: spacing) { content }
+            }
+        } else {
+            HStack(alignment: rowAlignment, spacing: spacing) { content }
+        }
     }
 }
 
@@ -843,6 +886,24 @@ extension CountLine {
     }
 }
 
+/// Datos de un renglón separados por « · » («Fundación · libro 1»): si no caben en uno, cada
+/// dato baja entero a su renglón y el punto se va. Nunca queda un «·» colgando al final
+/// («Fundación ·» / «libro 1» con la letra más grande, iPhone Duo ronda 0).
+struct DotLine: View {
+    let parts: [String]
+    var alignment: HorizontalAlignment = .leading
+
+    var body: some View {
+        let parts = parts.filter { !$0.isEmpty }
+        ViewThatFits(in: .horizontal) {
+            Text(parts.joined(separator: " · ")).lineLimit(1)
+            VStack(alignment: alignment, spacing: Theme.Space.xxs) {
+                ForEach(parts, id: \.self) { Text($0) }
+            }
+        }
+    }
+}
+
 extension CountLine where Trailing == EmptyView {
     init(text: String) {
         self.init(text: text) { EmptyView() }
@@ -1047,15 +1108,17 @@ struct DuplicateMark: View {
 struct CoverGrid<Content: View>: View {
     @ViewBuilder var content: Content
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.windowLayout) private var window
     /// El ancho que tiene la cuadrícula: en una pantalla ancha caben más columnas.
     @State private var width: CGFloat = 0
 
     /// Con la letra más grande, dos columnas: en tres, los títulos se partían («Fic-cion…»).
-    /// En una pantalla ancha (el iPhone Duo abierto), las que quepan sin que una portada pase
-    /// de `Size.coverCellWidest` (`Size.gridColumns(fitting:large:)`).
+    /// En una pantalla ancha (el iPhone Duo abierto) o baja (acostado), las que hagan falta para que
+    /// ninguna portada pase de `Size.coverCellWidest` de ancho ni de `Window.coverHeightShare` del alto
+    /// de la ventana (`Size.gridColumns(fitting:height:large:)`).
     private var columns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: Theme.Space.l, alignment: .top),
-              count: Theme.Size.gridColumns(fitting: width, large: typeSize.isAccessibilitySize))
+              count: Theme.Size.gridColumns(fitting: width, height: window.size.height, large: typeSize.isAccessibilitySize))
     }
 
     var body: some View {
@@ -1594,11 +1657,26 @@ struct SheetActions: ViewModifier {
     let confirm: SheetAction?
     var quiet = false
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// El ancho de la hoja: en una angosta (el Duo cerrado, con su franja) no caben los dos.
+    @State private var width: CGFloat = 0
+
+    #if os(iOS)
+    /// Si los dos botones caben en la barra con el aire que iOS les deja (`Window.barTextSlack`):
+    /// si no, iOS escondía el segundo en su «•••» aun con la letra de siempre («Ir a la biblioteca»
+    /// en el Duo cerrado, ronda 0).
+    private var fitsInBar: Bool {
+        guard let leave, let confirm, width > 0 else { return true }
+        let font = UIFont.preferredFont(forTextStyle: .body)
+        let titles = [leave.title, confirm.title].map { ($0 as NSString).size(withAttributes: [.font: font]).width }
+        return titles.reduce(0, +) + Theme.Window.barTextSlack <= width
+    }
+    #endif
 
     func body(content: Content) -> some View {
         #if os(iOS)
-        let below = typeSize.isAccessibilitySize
+        let below = typeSize.isAccessibilitySize || !fitsInBar
         content
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .toolbar {
                 if let leave {
                     ToolbarItem(placement: .cancellationAction) { BarButton(leave.title, action: leave.action) }
@@ -2110,19 +2188,13 @@ struct CabinetArt: View {
             .font(.footnote)
             .foregroundStyle(tint)
             .frame(width: Theme.Size.artTreeIcon)
-            Text(title)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Theme.ink)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .layoutPriority(1)
-            // Si no cabe, lo primero que se corta es la nota, nunca el nombre ni la cifra.
-            if let note {
-                Text(note)
-                    .font(.caption)
-                    .foregroundStyle(Theme.secondaryInk)
-                    .lineLimit(1)
+            // Si la nota no cabe junto al nombre, baja entera a su renglón: antes se cortaba
+            // («forma de Ca…», «también para Obsi…», iPhone Duo cerrado).
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Theme.Space.s) { nodeTitle(title); nodeNote(note) }
+                VStack(alignment: .leading, spacing: Theme.Space.xxs) { nodeTitle(title); nodeNote(note) }
             }
+            .layoutPriority(1)
             Spacer(minLength: Theme.Space.s)
             if let figure {
                 Text(figure)
@@ -2131,6 +2203,26 @@ struct CabinetArt: View {
                     .foregroundStyle(Theme.ink)
                     .fixedSize()
             }
+        }
+    }
+}
+
+private extension CabinetArt {
+    func nodeTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(Theme.ink)
+            .lineLimit(1)
+            .truncationMode(.middle)
+    }
+
+    @ViewBuilder
+    func nodeNote(_ note: String?) -> some View {
+        if let note {
+            Text(note)
+                .font(.caption)
+                .foregroundStyle(Theme.secondaryInk)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -3312,16 +3404,30 @@ struct FooterPreview: View {
 
 /// Lectura guiada (LG-B): todo menos el renglón que lees queda en penumbra,
 /// con el papel del libro encima. La guía viaja con un resorte corto.
+/// Dónde va el renglón: su alto y, con dos páginas, el ancho de la página donde está (`nil`, todo
+/// el ancho): la guía aclara un solo renglón aunque haya otro a la misma altura en la otra página.
+struct GuideBand: Equatable {
+    let rows: ClosedRange<CGFloat>
+    var across: ClosedRange<CGFloat>? = nil
+}
+
 struct GuideShade: View {
-    let band: ClosedRange<CGFloat>
+    let band: GuideBand
     let paper: Color
 
     var body: some View {
         GeometryReader { proxy in
+            let rows = band.rows
+            let across = band.across ?? 0...proxy.size.width
             VStack(spacing: 0) {
-                paper.frame(height: max(0, band.lowerBound))
-                Color.clear.frame(height: band.upperBound - band.lowerBound)
-                paper.frame(height: max(0, proxy.size.height - band.upperBound))
+                paper.frame(height: max(0, rows.lowerBound))
+                HStack(spacing: 0) {
+                    paper.frame(width: max(0, across.lowerBound))
+                    Color.clear.frame(width: max(0, across.upperBound - across.lowerBound))
+                    paper.frame(width: max(0, proxy.size.width - across.upperBound))
+                }
+                .frame(height: rows.upperBound - rows.lowerBound)
+                paper.frame(height: max(0, proxy.size.height - rows.upperBound))
             }
             .opacity(Theme.Reader.guideShade)
         }

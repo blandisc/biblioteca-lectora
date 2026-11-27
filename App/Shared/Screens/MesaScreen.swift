@@ -9,32 +9,35 @@ struct MesaScreen: View {
     /// Capturas automáticas: `-screenshot.screen diary` abre el diario (en la Mac, con
     /// `-screenshot.tab desk`). Se abre ya puesta la Mesa: empezar en `true` no empujaba nada en la Mac.
     @State private var showsDiary = false
-    @Environment(\.dynamicTypeSize) private var typeSize
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    #else
-    private let sizeClass: UserInterfaceSizeClass? = nil
-    #endif
+    @Environment(\.windowLayout) private var window
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    DeskHeader()
-                        .padding(.bottom, Theme.Space.xl)
-                    Group {
-                        if let book = model.currentBook {
-                            current(book)
-                        } else {
+            Group {
+                if let book = model.currentBook {
+                    // El libro que lees y, de acompañante, tu semana y la mesa: una bajo otra en un
+                    // iPhone; lado a lado acostado; en el Duo abierto, cada una en su página.
+                    Spread(measured: false) {
+                        DeskHeader()
+                            .padding(.bottom, window.isShort ? Theme.Space.l : Theme.Space.xl)
+                        reading(book)
+                    } trailing: {
+                        beside
+                    }
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            DeskHeader()
+                                .padding(.bottom, Theme.Space.xl)
                             // Con tu biblioteca todavía en iCloud no ofrezco añadir: la Biblioteca dice
                             // «Bajando tu biblioteca» y aquí también (auditoría 4).
                             LibraryEmptyState(kind: LibraryEmptyKind(waitingForCloud: model.library.waitingForCloud,
                                                                      cloudGaveUp: model.library.cloudGaveUp),
                                               add: { model.addBooks() }, welcome: { model.welcomeRequested = true })
                         }
+                        .screenContent(wide: true)
                     }
                 }
-                .screenContent(wide: true)
             }
             // Portadas nítidas: filo fino y sombra larga y tenue (ME-1).
             .environment(\.crispCovers, true)
@@ -52,24 +55,6 @@ struct MesaScreen: View {
                 showsDiary = true
             }
             #endif
-        }
-    }
-
-    /// El libro que lees y, debajo, tu semana y la mesa. Con DUO-3B (falta decidirlo) y una
-    /// pantalla ancha (el Duo abierto), lo segundo va a la derecha, sin bajar a buscarlo.
-    @ViewBuilder
-    private func current(_ book: ShelfBook) -> some View {
-        // Con la letra más grande, una columna: en dos, el título se cortaba («Don Quijote de la Manc…»).
-        if Duo.deskInTwoColumns && sizeClass == .regular && !typeSize.isAccessibilitySize {
-            HStack(alignment: .top, spacing: Theme.Space.xxxl) {
-                reading(book).frame(maxWidth: .infinity, alignment: .leading)
-                beside.frame(maxWidth: .infinity, alignment: .leading)
-            }
-        } else {
-            VStack(alignment: .leading, spacing: 0) {
-                reading(book)
-                beside.padding(.top, Theme.Space.xxl)
-            }
         }
     }
 
@@ -95,7 +80,8 @@ struct MesaScreen: View {
     private func reading(_ book: ShelfBook) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Button(action: model.continueReading) {
-                ShelfCover(book: book).frame(width: Theme.Size.coverHero)
+                // En una ventana baja, más chica: la portada no empuja «Seguir leyendo» fuera de la vista.
+                ShelfCover(book: book).frame(width: window.isShort ? Theme.Size.coverHeroShort : Theme.Size.coverHero)
             }
             .buttonStyle(PressableStyle())
             .bookOpeningSource(in: opening)

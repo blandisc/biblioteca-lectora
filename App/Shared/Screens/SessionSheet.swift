@@ -106,7 +106,8 @@ struct SessionCard: View {
 struct SessionSummarySheet: View {
     let session: ReadingSession
     @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
+    /// Cierra la hoja o, en un pliego, su panel (`SidePanel`).
+    private let dismiss = SheetDismiss()
     @State private var notice: String?
     @State private var writing: NoteRef?
     @Environment(\.dynamicTypeSize) private var typeSize

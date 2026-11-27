@@ -9,7 +9,8 @@ import UniformTypeIdentifiers
 struct MetadataEditorView: View {
     let book: Book
     @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
+    /// Cierra la hoja o, en un pliego, su panel (`SidePanel`).
+    private let dismiss = SheetDismiss()
 
     @State private var draft: Book
     @State private var authors: String

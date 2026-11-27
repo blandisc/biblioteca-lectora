@@ -10,6 +10,8 @@ struct SearchScreen: View {
     @State private var query = ""
     @FocusState private var focused: Bool
     @State private var recents: [RecentSearches.Item] = []
+    /// Lo que abres desde los resultados (en el pliego, en la página derecha).
+    @State private var path = NavigationPath()
     /// «Ver los 12 subrayados»: de inicio solo los primeros.
     @State private var showsAllHighlights = false
     /// «Guardar como estante» con esta búsqueda (CB-1).
@@ -51,7 +53,8 @@ struct SearchScreen: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Con el Duo abierto y acostado, los resultados a la izquierda y lo que tocas a la derecha.
+        FoldSplit(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: SearchWording.title)
@@ -94,6 +97,9 @@ struct SearchScreen: View {
                 guard !Task.isCancelled else { return }
                 remember()
             }
+        } placeholder: {
+            FoldPlaceholder(title: "Lo que encuentres",
+                            message: "Toca un libro, un subrayado o una nota a la izquierda y aquí lo ves, sin perder tu búsqueda.")
         }
     }
 

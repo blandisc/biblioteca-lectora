@@ -66,19 +66,33 @@ enum LaunchOptions {
     static let frozenSearches: [(text: String, count: Int)] = [("Cortázar", 3), ("Fundación", 3)]
 }
 
-/// Lo que falta decidir para el iPhone Duo (propuesta del 27 nov 2026). Hasta que Fernando
-/// elija, todo queda como en cualquier iPhone; cada opción se prueba solo en Debug, con su
-/// argumento de arranque. Al decidir, la elegida se prende aquí y nada más.
+/// Lo que falta decidir para el iPhone Duo (ronda 1, 27 nov 2026). Lo recomendado ya es lo que
+/// ves; la otra opción de cada decisión se prueba solo en Debug, con su argumento de arranque, para
+/// retratarlas lado a lado. Al decidir, la que no se eligió se borra de aquí y nada más: el resto
+/// lo deciden las piezas comunes por el espacio que hay (`WindowLayout`), no estas banderas.
 enum Duo {
-    /// DUO-1B: en la pantalla de afuera, las pestañas abajo y la hora arriba, como en cualquier
-    /// iPhone, en vez de la franja al costado que pone iOS (`-duo.bars below`). Ver `duoBars()`.
+    /// D1 · cerrado: la franja de la hora y las pestañas al costado, como la pone iOS (recomendado).
+    /// D1-B, las pestañas abajo y la hora arriba, como en cualquier iPhone (`-duo.bars below`).
     static var barsBelow: Bool { chosen("duo.bars", "below") }
-    /// DUO-2B: con el Duo abierto, el libro en una sola columna centrada (`Size.readingMeasure`),
-    /// como en la Mac, en vez de dos páginas lado a lado (`-duo.book column`).
-    static var bookInOneColumn: Bool { chosen("duo.book", "column") }
-    /// DUO-3B: con el Duo abierto, la Mesa en dos columnas: el libro a la izquierda y tu
-    /// semana y la mesa a la derecha (`-duo.desk two`).
-    static var deskInTwoColumns: Bool { chosen("duo.desk", "two") }
+    /// D2 · abierto y acostado: dos páginas, una a cada lado del pliegue (recomendado). D2-B, una
+    /// página con la otra de margen, como en continuo (`-duo.book page`).
+    static var bookOnePage: Bool { chosen("duo.book", "page") }
+    /// D2 · en continuo, el texto en la página izquierda y la derecha de margen (recomendado).
+    /// D2-C2, al revés: el margen a la izquierda (`-duo.margin left`).
+    static var marginOnLeft: Bool { chosen("duo.margin", "left") }
+    /// D2 · abierto de pie: una página alta con renglón cómodo; el pliegue pasa por ella como en
+    /// cualquier concha (recomendado). D2-F, el libro solo arriba del pliegue y las herramientas
+    /// abajo, como en una mesa (`-duo.tall top`).
+    static var bookAboveFold: Bool { chosen("duo.tall", "top") }
+    /// D3 · abierto y acostado, lista | detalle en Biblioteca, Cuaderno y Buscar (recomendado).
+    /// D3-A, una sola página que empuja la siguiente, como hoy en el iPhone (`-duo.panes one`).
+    static var onePane: Bool { chosen("duo.panes", "one") }
+    /// D4 · abierto y acostado, las hojas en una página con la otra a la vista (recomendado).
+    /// D4-A, la hoja de iOS al centro, encima del pliegue (`-duo.tools sheet`).
+    static var toolsAsSheets: Bool { chosen("duo.tools", "sheet") }
+    /// D5 · pantalla baja: el pie del libro en un solo renglón (recomendado). D5-A, la tarjeta de
+    /// siempre (`-duo.footer card`).
+    static var footerCard: Bool { chosen("duo.footer", "card") }
 
     private static func chosen(_ key: String, _ value: String) -> Bool {
         #if DEBUG

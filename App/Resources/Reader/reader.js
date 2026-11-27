@@ -185,11 +185,23 @@ const applyStyle = () => {
     if (style.columns && renderer.getAttribute('max-column-count') !== String(style.columns)) {
         renderer.setAttribute('max-column-count', String(style.columns))
     }
+    // El pliego (iPhone, 27 nov 2026): la app dice el aire de cada lado (lo que ocupa el sistema),
+    // el lomo y el renglón en letras. La caja del libro queda centrada en la ventana (en el Duo
+    // abierto, su lomo cae en el pliegue), el renglón mide unas 68 letras de la letra que elegiste
+    // (`measureEms`) y cada página deja medio lomo a cada lado: margen igual en todo iPhone.
+    if (style.pageGap) {
+        const em = 16 * (style.fontScale ?? 1)
+        style.maxInlineSize = Math.round(style.measureEms * em) + (style.flow === 'scrolled' ? 0 : style.pageGap)
+        document.body.style.boxSizing = 'border-box'
+        document.body.style.padding = `${style.sideTop ?? 0}px ${style.sideTrailing ?? 0}px ${style.sideBottom ?? 0}px ${style.sideLeading ?? 0}px`
+        if (renderer.getAttribute('gap') !== '0%') renderer.setAttribute('gap', '0%')
+        if (renderer.getAttribute('page-gap') !== String(style.pageGap)) renderer.setAttribute('page-gap', String(style.pageGap))
+    }
     renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
     // Margen del texto fijo en puntos (no un porcentaje del ancho), igual en páginas y
     // en continuo y en cualquier iPhone. foliate lo pide como fracción: en páginas el
     // margen es la fracción del ancho; en continuo, fracción ÷ (1 − fracción).
-    if (style.textMargin) {
+    if (style.textMargin && !style.pageGap) {
         const m = style.textMargin / Math.max(window.innerWidth, 1)
         const g = style.flow === 'scrolled' ? m / (1 + m) : m
         const gap = `${(g * 100).toFixed(4)}%`
@@ -452,12 +464,21 @@ const postMarks = () => post('marks', { cfis: bookmarkCFIs.filter(isOnPage) })
 let lastRange = null
 let guide = null // { top, height, pending } — dónde está la guía, en puntos de la pantalla
 
-// Los renglones que se ven ahora, de arriba abajo, en puntos de la pantalla.
+// Cuántas páginas se ven a la vez (dos en un pliego: el iPhone Duo abierto y acostado) y
+// cuánto mide cada una: la guía va renglón por renglón en una página y luego en la otra.
+const visiblePages = renderer => renderer && !renderer.scrolled ? Math.max(1, renderer.heads?.length ?? 1) : 1
+// Los renglones que se ven ahora, página por página y de arriba abajo, en puntos de la pantalla.
+// Con dos páginas, dos renglones a la misma altura son dos renglones, uno en cada página: antes
+// se juntaban en uno y la guía iluminaba los dos a la vez.
 const visibleLines = () => {
     const renderer = view?.renderer
     if (!renderer) return []
     const rects = []
     const height = window.innerHeight
+    const pages = visiblePages(renderer)
+    // Las páginas van dentro de la caja del libro (la app le deja aire a los lados).
+    const book = view.getBoundingClientRect()
+    const pageWidth = book.width / pages
     for (const { doc } of renderer.getContents()) {
         const frame = doc?.defaultView?.frameElement
         if (!frame || !doc.body) continue
@@ -474,15 +495,17 @@ const visibleLines = () => {
                 if (r.width < 1 || r.height < 1) continue
                 const top = r.top + box.top, left = r.left + box.left
                 if (left < -1 || left + r.width > window.innerWidth + 1 || top < 0 || top + r.height > height) continue
-                rects.push({ top, bottom: top + r.height })
+                const page = Math.min(pages - 1, Math.max(0, Math.floor((left + r.width / 2 - book.left) / pageWidth)))
+                rects.push({ top, bottom: top + r.height, left: book.left + page * pageWidth,
+                             right: book.left + (page + 1) * pageWidth, page })
             }
         }
     }
-    rects.sort((a, b) => a.top - b.top)
+    rects.sort((a, b) => a.page - b.page || a.top - b.top)
     const lines = []
     for (const r of rects) {
         const last = lines[lines.length - 1]
-        if (last && r.top < last.bottom - (r.bottom - r.top) / 2) {
+        if (last && last.page === r.page && r.top < last.bottom - (r.bottom - r.top) / 2) {
             last.top = Math.min(last.top, r.top)
             last.bottom = Math.max(last.bottom, r.bottom)
         } else lines.push({ ...r })
@@ -490,7 +513,7 @@ const visibleLines = () => {
     return lines
 }
 
-const postGuide = () => post('guide', guide ? { top: guide.top, height: guide.height } : {})
+const postGuide = () => post('guide', guide ? { top: guide.top, height: guide.height, left: guide.left, right: guide.right } : {})
 
 // En continuo el texto sube con una curva corta; la guía se queda quieta.
 const glide = delta => new Promise(resolve => {
@@ -513,7 +536,7 @@ const placeOnPage = index => {
     const lines = visibleLines()
     if (!lines.length) { guide = { ...guide, top: null }; return postGuide() }
     const line = lines[index < 0 ? lines.length - 1 : Math.min(index, lines.length - 1)]
-    guide = { top: line.top, height: line.bottom - line.top }
+    guide = { top: line.top, height: line.bottom - line.top, left: line.left, right: line.right, page: line.page }
     postGuide()
 }
 
@@ -949,11 +972,11 @@ window.lectora = {
             await glide(target.top - guide.top)
             return
         }
-        const current = lines.findIndex(l => Math.abs(l.top - guide.top) < 2)
+        const current = lines.findIndex(l => l.page === (guide.page ?? 0) && Math.abs(l.top - guide.top) < 2)
         const next = current + dir
         if (next >= 0 && next < lines.length) {
             const line = lines[next]
-            guide = { top: line.top, height: line.bottom - line.top }
+            guide = { top: line.top, height: line.bottom - line.top, left: line.left, right: line.right, page: line.page }
             return postGuide()
         }
         guide = { ...guide, pending: dir > 0 ? 0 : -1 }

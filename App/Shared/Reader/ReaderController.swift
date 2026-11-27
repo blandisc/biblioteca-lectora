@@ -104,7 +104,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// Lectura guiada, el renglón (LG-B): si está puesta y dónde va la guía
     /// (arriba y alto, en puntos de la vista del libro). `nil` mientras se busca.
     @Published private(set) var guiding = false
-    @Published private(set) var guideBand: ClosedRange<CGFloat>?
+    @Published private(set) var guideBand: GuideBand?
     /// Nueva posición, ya asentada (un instante después de pasar página).
     var onPositionSettled: ((Location) -> Void)?
     private var settleTask: Task<Void, Never>?
@@ -302,6 +302,16 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         #endif
     }
 
+    /// La caja del libro en la ventana (iPhone): el aire de cada lado y abajo, y cuántas páginas.
+    struct PageBox: Equatable {
+        var leading: CGFloat = 0
+        var trailing: CGFloat = 0
+        var bottom: CGFloat = 0
+        var columns = 1
+    }
+    /// La pone el lector (`ReaderView.pageBox`) antes de cada `setScrolled`.
+    var pageBox: PageBox?
+
     /// Páginas o continuo. Se guarda para mandarlo cuando el lector esté listo.
     func setScrolled(_ scrolled: Bool) {
         let changed = isReady && flowScript != nil && scrolled != isScrolled
@@ -309,10 +319,13 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         updateCurl()
         #if os(iOS)
         let curl = "true" // en el iPhone la página se dobla; en la Mac se desliza
-        // En una pantalla ancha (el Duo abierto) van dos páginas lado a lado, como un libro
-        // abierto; con DUO-2B, una columna centrada como en la Mac (falta decidirlo).
-        let measure = Duo.bookInOneColumn
-            ? ", maxInlineSize: \(Int(Theme.Size.readingMeasure)), columns: \(Theme.Mac.readingColumns)" : ""
+        // El pliego (`ReaderView.pageBox`): el aire de cada lado, el lomo, cuántas páginas y el
+        // renglón en letras. En un iPhone, una página con margen igual a los dos lados; en el Duo
+        // abierto y acostado, dos páginas centradas en el pliegue.
+        let box = pageBox ?? PageBox()
+        let measure = ", pageGap: \(Int(2 * Theme.Reader.textMargin)), measureEms: \(Theme.Reader.lineEms), "
+            + "sideLeading: \(Int(box.leading)), sideTrailing: \(Int(box.trailing)), sideBottom: \(Int(box.bottom)), "
+            + "columns: \(box.columns)"
         #else
         let curl = "false"
         // En la Mac el renglón no se estira con la ventana: una columna centrada de unas 66
@@ -623,7 +636,11 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             evaluate("window.lectora.addHighlight(\(Self.js(cfi)))")
         case "guide":
             if let top = body["top"] as? Double, let height = body["height"] as? Double {
-                guideBand = CGFloat(top)...CGFloat(top + height)
+                // La página donde está el renglón (con dos páginas, solo esa se aclara).
+                let across = (body["left"] as? Double).flatMap { left in
+                    (body["right"] as? Double).map { CGFloat(left)...CGFloat($0) }
+                }
+                guideBand = GuideBand(rows: CGFloat(top)...CGFloat(top + height), across: across)
             } else {
                 guideBand = nil
             }

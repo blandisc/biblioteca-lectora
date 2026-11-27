@@ -20,6 +20,9 @@ struct SlitScreen: View {
     let controller: ReaderController
     let paper: Color
     let ink: Color
+    /// La forma de la ventana: en un pliego, la ranura en la página izquierda y los controles en la
+    /// derecha. Antes la palabra que se lee caía justo en el pliegue (ronda 0).
+    var window = WindowLayout()
     let close: () -> Void
 
     @AppStorage(ReaderKeys.slitUnit) private var unit: Slit.Unit = .phrase
@@ -38,26 +41,30 @@ struct SlitScreen: View {
     private var showsControls: Bool { !playing || finished }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                CloseButton(label: "Terminar la hendidura", style: .glass) { leave() }
-                Spacer()
+        Group {
+            if let fold = window.verticalFold {
+                HStack(spacing: 0) {
+                    VStack(spacing: 0) {
+                        closeRow
+                        Spacer(minLength: 0)
+                        slit.padding(.horizontal, Theme.Reader.textMargin)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(width: fold.position - window.leading)
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        controlBar
+                    }
+                }
+            } else {
+                VStack(spacing: 0) {
+                    closeRow
+                    Spacer(minLength: 0)
+                    slit
+                    Spacer(minLength: 0)
+                    controlBar
+                }
             }
-            .padding(.horizontal, Theme.Reader.chromeInset)
-            .opacity(showsControls ? Theme.Emphasis.rest : 0)
-            .allowsHitTesting(showsControls)
-            .accessibilityHidden(!showsControls)
-
-            Spacer(minLength: 0)
-            slit
-            Spacer(minLength: 0)
-
-            controls
-                .padding(.horizontal, Theme.Reader.textMargin)
-                .padding(.bottom, Theme.Space.l)
-                .opacity(showsControls ? Theme.Emphasis.rest : 0)
-                .allowsHitTesting(showsControls)
-                .accessibilityHidden(!showsControls)
         }
         .animation(Theme.Motion.standard, value: showsControls)
         .foregroundStyle(ink)
@@ -84,6 +91,26 @@ struct SlitScreen: View {
         .task { await load(nextChapter: false) }
         .task(id: playing) { await run() }
         .onChange(of: unit) { _, _ in rechunk() }
+    }
+
+    private var closeRow: some View {
+        HStack {
+            CloseButton(label: "Terminar la hendidura", style: .glass) { leave() }
+            Spacer()
+        }
+        .padding(.horizontal, Theme.Reader.chromeInset)
+        .opacity(showsControls ? Theme.Emphasis.rest : 0)
+        .allowsHitTesting(showsControls)
+        .accessibilityHidden(!showsControls)
+    }
+
+    private var controlBar: some View {
+        controls
+            .padding(.horizontal, Theme.Reader.textMargin)
+            .padding(.bottom, Theme.Space.l)
+            .opacity(showsControls ? Theme.Emphasis.rest : 0)
+            .allowsHitTesting(showsControls)
+            .accessibilityHidden(!showsControls)
     }
 
     /// La ranura: lo de antes en tenue, el pedazo entre dos filos y lo que sigue en tenue.

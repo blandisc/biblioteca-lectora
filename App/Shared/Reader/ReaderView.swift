@@ -29,6 +29,11 @@ struct ReaderView: View {
     @State private var slitting = false
     /// Lo que ocupan arriba la isla y la hora: los botones de arriba suben hacia ellas (`chromeTop`).
     @State private var safeTop: CGFloat = 0
+    /// La forma de la ventana (pliegue, baja, franja): de ella sale el pliego del libro.
+    @Environment(\.windowLayout) private var window
+    /// Lo más que ha ocupado el sistema a cada lado con esta forma de ventana: el libro no se
+    /// reacomoda cuando la franja de la hora aparece o se va con los controles (ronda 0, R1).
+    @State private var sides = SideReserve()
     #if DEBUG
     @State private var demoStarted = false
     #endif
@@ -87,21 +92,66 @@ struct ReaderView: View {
         max(Theme.Reader.chromeEdge - safeTop, -Theme.Reader.chromeLift)
     }
 
+    /// El pliego del libro (iPhone): una página o dos, y el aire de cada lado (`ReaderSpread`).
+    private var spread: ReaderSpread {
+        let em = Theme.Reader.pageEm * scale * Self.systemTextScale
+        return ReaderSpread.make(window: window, safeLeading: sides.leading, safeTrailing: sides.trailing,
+                                 textMargin: Theme.Reader.textMargin, minColumn: Theme.Reader.minLineEms * em,
+                                 twoPages: flow == .paged && !Duo.bookOnePage)
+    }
+
+    /// Con el pliegue de arriba abajo y una sola página, el texto va en una y la otra es su margen.
+    private var textPageOnly: (leading: CGFloat, trailing: CGFloat)? {
+        spread.onePage(in: window, textOnRight: Duo.marginOnLeft)
+    }
+
+    /// La caja del libro en la ventana: el aire de cada lado, abajo y cuántas páginas.
+    private var pageBox: ReaderController.PageBox {
+        let sides = textPageOnly ?? (spread.leading, spread.trailing)
+        var bottom: CGFloat = 0
+        // D2-F (para decidir): con el Duo abierto de pie, el libro solo arriba del pliegue.
+        if Duo.bookAboveFold, flow == .paged, let fold = window.fold, fold.axis == .horizontal {
+            bottom = window.size.height - fold.position + fold.width / 2
+        }
+        return .init(leading: sides.leading, trailing: sides.trailing, bottom: bottom, columns: spread.pages)
+    }
+
+    /// La página donde van las herramientas (la tarjeta, la barra de lo elegido, la del subrayado),
+    /// en un pliego: la derecha con dos páginas, o la de margen con una. `nil`: todo el ancho.
+    private var toolsPage: ToolsPage? {
+        guard let fold = window.verticalFold else { return nil }
+        let marginOnRight = textPageOnly != nil && !Duo.marginOnLeft
+        if spread.pages == 2 || marginOnRight {
+            return ToolsPage(edge: .trailing, width: window.size.width - window.trailing - fold.position)
+        }
+        if textPageOnly != nil { return ToolsPage(edge: .leading, width: fold.position - window.leading) }
+        return nil
+    }
+
     /// La página y lo que se le pone encima mientras lees.
     private var page: some View {
         ZStack {
             palette.background.ignoresSafeArea()
                 .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { safeTop = $0 }
             // Tu página entra con un fundido corto cuando el libro ya se acomodó.
-            // En continuo el texto corre hasta la orilla de arriba de la pantalla.
+            // En continuo el texto corre hasta la orilla de arriba de la pantalla. A los lados llega
+            // a la orilla de la ventana: el aire de cada lado lo pone el pliego (`pageBox`), igual a
+            // los dos lados, y así el lomo cae en el pliegue aunque aparezca la franja de la hora.
             ReaderWebView(controller: controller)
-                .ignoresSafeArea(edges: flow == .scrolled ? [.top, .bottom] : .bottom)
+                .ignoresSafeArea(edges: flow == .scrolled ? [.top, .bottom, .horizontal] : [.bottom, .horizontal])
                 // El renglón (LG-B): lo demás en penumbra, en las mismas medidas que el libro.
                 .overlay {
                     if let band = controller.guideBand {
                         GuideShade(band: band, paper: palette.background)
-                            .ignoresSafeArea(edges: flow == .scrolled ? [.top, .bottom] : .bottom)
+                            .ignoresSafeArea(edges: flow == .scrolled ? [.top, .bottom, .horizontal] : [.bottom, .horizontal])
                             .transition(.opacity)
+                    }
+                }
+                // Con una sola página en un pliego, la otra es su margen: el capítulo y cuánto llevas.
+                .overlay {
+                    if let tools = toolsPage, textPageOnly != nil, controller.isSettled {
+                        ReaderMarginPage(title: title, location: controller.folioLocation, ink: palette.textColor)
+                            .onToolsPage(tools)
                     }
                 }
                 .animation(Theme.Motion.standard, value: controller.guideBand == nil)
@@ -145,8 +195,9 @@ struct ReaderView: View {
         // Siempre un modo, nunca `nil`: con `nil` iOS deja puesto el último y el lector se
         // quedaba en claro (o en oscuro) aunque cambiara el sistema (UX-1b).
         .preferredColorScheme(palette.scheme)
-        .sheet(item: $tools) { part in
-            ReaderToolsSheet(controller: controller, bookID: bookID, part: part).duoBars()
+        // Índice, buscar y marcas: en un pliego, en la página derecha con el libro a la vista.
+        .sidePanel(item: $tools) { part in
+            ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
         }
         // Tras ir a un resultado: anterior y siguiente sin abrir otra vez la lista.
         .overlay(alignment: .bottom) {
@@ -161,6 +212,7 @@ struct ReaderView: View {
                               onClose: { withAnimation(Theme.Motion.standard) { controller.clearSearch() } })
                     .padding(.horizontal, Theme.Reader.chromeInset)
                     .padding(.bottom, Theme.Reader.chromeInset)
+                    .onToolsPage(toolsPage)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -173,6 +225,7 @@ struct ReaderView: View {
                         .onTapGesture { showsSession = false }
                         .accessibilityHidden(true)
                     SessionCard(tracker: session, bookTitle: catalogTitle) { showsSession = false }
+                        .onToolsPage(toolsPage)
                         // Entra donde estaba la tarjeta, creciendo apenas desde abajo; se va bajando.
                         .transition(.asymmetric(
                             insertion: .opacity.combined(with: .scale(scale: Theme.Emphasis.pressedScale, anchor: .bottom))
@@ -201,7 +254,7 @@ struct ReaderView: View {
         }
         .overlay {
             if slitting {
-                SlitScreen(controller: controller, paper: palette.background, ink: palette.textColor) {
+                SlitScreen(controller: controller, paper: palette.background, ink: palette.textColor, window: window) {
                     withAnimation(Theme.Motion.standard) { slitting = false }
                 }
                 .transition(.opacity)
@@ -232,8 +285,9 @@ extension ReaderView {
     /// Lo último del cuerpo del lector: subrayados, selección, notas y avisos.
     fileprivate func tail(_ content: some View) -> some View {
         content
-        .sheet(isPresented: $showsAppearance) {
-            ReaderAppearanceSheet().duoBars()
+        // «Aa»: en un pliego, en la página derecha; el libro cambia a la vista mientras eliges.
+        .sidePanel(isPresented: $showsAppearance, closeLabel: "Volver al libro") {
+            ReaderAppearanceSheet()
         }
         .overlay(alignment: .bottom) {
             if let annotation = controller.tappedAnnotation {
@@ -246,6 +300,7 @@ extension ReaderView {
                     HighlightCard(annotation: annotation) { action in
                         act(on: annotation, action)
                     }
+                    .onToolsPage(toolsPage)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
@@ -261,6 +316,7 @@ extension ReaderView {
                     case .copy: controller.copySelection()
                     }
                 }
+                .onToolsPage(toolsPage)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -391,6 +447,11 @@ extension ReaderView {
             applyStyle()
         }
         .onChange(of: turnStyle) { _, _ in applyStyle() }
+        // Otra forma de ventana (abrir o cerrar el Duo, girar): el pliego se rehace.
+        .onChange(of: window) { old, new in
+            sides = old.size == new.size ? sides.growing(new) : SideReserve(new)
+            applyStyle()
+        }
     }
 
     /// Controles de vidrio al tocar el centro (los dos estilos). Sin controles,
@@ -403,7 +464,7 @@ extension ReaderView {
                              color: palette.textColor,
                              paper: flow == .scrolled ? palette.background : nil,
                              pagePaper: palette.background,
-                             options: footerOptions, footer: $footer) { EmptyView() }
+                             options: footerOptions, footer: $footer, footerPage: folioPage) { EmptyView() }
                 .transition(.opacity)
             }
             VStack(spacing: 0) {
@@ -433,6 +494,7 @@ extension ReaderView {
                 Spacer(minLength: 0)
                 if showsChrome {
                     BottomPanel(title: title, location: controller.location,
+                                compact: window.isShort && !Duo.footerCard,
                                 session: showsCounter ? controller.session : nil,
                                 onSession: openSession,
                                 onContents: { tools = .contents },
@@ -445,11 +507,24 @@ extension ReaderView {
                                 })
                         // Sube al aparecer; al irse se desvanece rápido en su lugar: así, al
                         // volverse «Esta sesión», nunca se leen las dos tarjetas encimadas.
+                        .onToolsPage(toolsPage)
                         .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity),
                                                 removal: .opacity.animation(Theme.Motion.exit)))
                 }
             }
         }
+    }
+
+    /// Dónde va el pie del libro en un pliego: bajo la página del texto (una sola) o bajo la de la
+    /// derecha (dos), nunca al centro, sobre el pliegue.
+    private var folioPage: ToolsPage? {
+        guard let fold = window.verticalFold else { return nil }
+        if textPageOnly != nil {
+            return Duo.marginOnLeft
+                ? ToolsPage(edge: .trailing, width: window.size.width - window.trailing - fold.position)
+                : ToolsPage(edge: .leading, width: fold.position - window.leading)
+        }
+        return toolsPage
     }
 
     /// Lo que diría el pie con cada opción: el dato grande y su leyenda
@@ -647,6 +722,9 @@ extension ReaderView {
     }
 
     private func applyStyle() {
+        #if os(iOS)
+        controller.pageBox = pageBox
+        #endif
         controller.setColors(text: palette.text, link: palette.link)
         controller.setFont(family: font.css, scale: scale * Self.systemTextScale)
         controller.setScrolled(flow == .scrolled)
@@ -703,6 +781,9 @@ enum GuideChoice {
 private struct BottomPanel: View {
     let title: String
     let location: ReaderController.Location?
+    /// En una ventana baja (un iPhone acostado, el Duo cerrado acostado), un solo renglón: la
+    /// tarjeta de tres tapaba un tercio de la página, y con la letra más grande, casi toda.
+    var compact = false
     let session: SessionTracker?
     let onSession: () -> Void
     let onContents: () -> Void
@@ -746,6 +827,52 @@ private struct BottomPanel: View {
     }
 
     var body: some View {
+        Group {
+            if compact { slim } else { card }
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.ink)
+        // Vidrio a `chromeInset` de la orilla y lo de adentro a `Reader.panelInset` del vidrio:
+        // empieza en la misma línea que el texto del libro (`Reader.textMargin`).
+        .padding(.horizontal, Theme.Reader.panelInset)
+        .padding(.vertical, compact ? 0 : Theme.Reader.panelInset)
+        // Lo de adentro no se asoma fuera del vidrio mientras la tarjeta crece.
+        .glassPanel(cornerRadius: Theme.Radius.panel, clipped: true)
+        // Todo el panel es suyo: un toque en su aire no llega a la página de abajo
+        // (que lo tomaría como «ocultar controles»).
+        .contentShape(Rectangle())
+        .onTapGesture {}
+        // En una ventana ancha, del ancho de la columna del libro y centrada.
+        .frame(maxWidth: Theme.Size.readingPanel)
+        .dynamicTypeSize(...Theme.Letter.readerChromeLargest)
+        .padding(.horizontal, Theme.Reader.chromeInset)
+    }
+
+    /// Un renglón: el capítulo, la barra, la página y las herramientas (`ReaderFooter` delgado).
+    private var slim: some View {
+        HStack(spacing: Theme.Space.l) {
+            Button(action: onContents) {
+                Text(heading.title)
+                    .font(.rowTitle)
+                    .lineLimit(1)
+                    .frame(minHeight: Theme.Size.tapTarget)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Índice")
+            .accessibilityValue(location?.chapter ?? title)
+            .layoutPriority(1)
+            scrubber.frame(minWidth: Theme.Size.tapTarget)
+            Text(position)
+                .font(.footnote)
+                .monospacedDigit()
+                .foregroundStyle(Theme.ink.opacity(Theme.Emphasis.glassText))
+                .lineLimit(1)
+                .layoutPriority(2)
+            tools
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 0) {
             // El capítulo, completo y con la letra del libro; encima, su número (o el
             // libro, si el capítulo no lo trae). Tocarlo abre el índice. Con la letra más
@@ -766,7 +893,26 @@ private struct BottomPanel: View {
             .accessibilityLabel("Índice")
             .accessibilityValue(location?.chapter ?? title)
 
-                // Buscar y letra, junto al capítulo: al alcance del pulgar y sin hacer crecer la tarjeta.
+                tools
+            }
+
+            scrubber
+
+            // La página (arrastrando: a cuál vas) y, a la derecha, las palabras de la
+            // sesión. Todo en gris y sin íconos: lo que manda es el capítulo.
+            // Con la letra más grande, una bajo otra («Pág. 1…» y «0 pal…» se cortaban).
+            positionLine
+
+            // «Escuchar» llega con el audiolibro; la lectura guiada ya está arriba, junto a «Aa».
+            if Features.audiobook {
+                ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
+                    .padding(.top, Theme.Space.s)
+            }
+        }
+    }
+
+    /// Buscar, letra y lectura guiada, junto al capítulo: al alcance del pulgar.
+    private var tools: some View {
                 HStack(spacing: Theme.Space.s) {
                     Button(action: onSearch) {
                         Image(systemName: "magnifyingglass")
@@ -788,9 +934,10 @@ private struct BottomPanel: View {
                     .menuStyle(.button)
                     .accessibilityLabel("Lectura guiada")
                 }
-            }
+    }
 
-            // Barra propia, fina y editorial: lo leído en tinta, una perilla chica.
+    /// Barra propia, fina y editorial: lo leído en tinta, una perilla chica.
+    private var scrubber: some View {
             ScrubberBar(value: fraction, enabled: location != nil,
                         onChange: { dragValue = $0 },
                         onEnd: {
@@ -804,10 +951,9 @@ private struct BottomPanel: View {
                 .sensoryFeedback(.selection, trigger: fraction.percentText) { _, _ in dragValue != nil }
                 .accessibilityLabel("Avance en el libro")
                 .accessibilityValue(position)
+    }
 
-            // La página (arrastrando: a cuál vas) y, a la derecha, las palabras de la
-            // sesión. Todo en gris y sin íconos: lo que manda es el capítulo.
-            // Con la letra más grande, una bajo otra («Pág. 1…» y «0 pal…» se cortaban).
+    private var positionLine: some View {
             AdaptiveStack(spacing: 0) {
                 Text(position)
                     .monospacedDigit()
@@ -837,29 +983,6 @@ private struct BottomPanel: View {
             .frame(minHeight: Theme.Size.tapTarget)
             // La página va pegada a su barra, no a media fila de ella.
             .padding(.top, -Theme.Size.tapBleed)
-
-            // «Escuchar» llega con el audiolibro; la lectura guiada ya está arriba, junto a «Aa».
-            if Features.audiobook {
-                ReaderPillButton(title: "Escuchar", systemImage: "headphones", prominent: true) {}
-                    .padding(.top, Theme.Space.s)
-            }
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(Theme.ink)
-        // Vidrio a `chromeInset` de la orilla y lo de adentro a `Reader.panelInset` del vidrio:
-        // empieza en la misma línea que el texto del libro (`Reader.textMargin`).
-        .padding(.horizontal, Theme.Reader.panelInset)
-        .padding(.vertical, Theme.Reader.panelInset)
-        // Lo de adentro no se asoma fuera del vidrio mientras la tarjeta crece.
-        .glassPanel(cornerRadius: Theme.Radius.panel, clipped: true)
-        // Todo el panel es suyo: un toque en su aire no llega a la página de abajo
-        // (que lo tomaría como «ocultar controles»).
-        .contentShape(Rectangle())
-        .onTapGesture {}
-        // En una ventana ancha, del ancho de la columna del libro y centrada.
-        .frame(maxWidth: Theme.Size.readingPanel)
-        .dynamicTypeSize(...Theme.Letter.readerChromeLargest)
-        .padding(.horizontal, Theme.Reader.chromeInset)
     }
 }
 
@@ -968,6 +1091,8 @@ private struct ReadingFolio<Counter: View>: View {
     /// Tocar el pie abre un globo con sus opciones, sin la tarjeta: la página sigue a la vista.
     let options: [FooterOption]
     @Binding var footer: ReaderFooter
+    /// En un pliego, la página bajo la que va el pie (nunca al centro, sobre el pliegue).
+    var footerPage: ToolsPage? = nil
     @State private var choosing = false
     /// El contador de palabras, en el mismo renglón que el pie.
     @ViewBuilder var counter: Counter
@@ -1022,6 +1147,7 @@ private struct ReadingFolio<Counter: View>: View {
                     FooterPicker(options: options, selection: $footer, paper: pagePaper, ink: color) { choosing = false }
                         .presentationCompactAdaptation(.popover)
                 }
+                .onToolsPage(footerPage)
                 HStack {
                     counter
                     Spacer()
@@ -1125,3 +1251,77 @@ private struct ReaderWebView: NSViewRepresentable {
     func updateNSView(_ webView: WKWebView, context: Context) {}
 }
 #endif
+
+// MARK: - El pliego del lector
+
+/// La página de un pliego donde va algo del lector: a la izquierda o a la derecha del pliegue y
+/// cuánto mide (sin lo que ocupa el sistema en su orilla).
+struct ToolsPage: Equatable {
+    let edge: HorizontalEdge
+    let width: CGFloat
+}
+
+extension View {
+    /// En un pliego, lo pone en su página (la tarjeta, el pie, la barra de lo elegido): nunca
+    /// centrado sobre el pliegue tapando el pie de las dos (ronda 0, R4). `nil`: como siempre.
+    @ViewBuilder
+    func onToolsPage(_ page: ToolsPage?) -> some View {
+        if let page {
+            frame(width: page.width)
+                .frame(maxWidth: .infinity, alignment: page.edge == .leading ? .leading : .trailing)
+        } else {
+            self
+        }
+    }
+}
+
+/// Lo más que ha ocupado el sistema a cada lado con esta forma de ventana (la franja de la hora
+/// aparece y se va con los controles): el libro guarda ese aire y no se reacomoda.
+struct SideReserve: Equatable {
+    var leading: CGFloat = 0
+    var trailing: CGFloat = 0
+
+    init() {}
+    init(_ window: WindowLayout) {
+        leading = window.leading
+        trailing = window.trailing
+    }
+
+    func growing(_ window: WindowLayout) -> SideReserve {
+        var next = self
+        next.leading = max(leading, window.leading)
+        next.trailing = max(trailing, window.trailing)
+        return next
+    }
+}
+
+/// La página de margen de un pliego con el libro en una sola página (en continuo o con la letra
+/// más grande): el libro y el capítulo arriba, y cuánto llevas, sobre el mismo papel. Abajo, la
+/// tarjeta y el pie, que van en esta página y no tapan el texto.
+private struct ReaderMarginPage: View {
+    let title: String
+    let location: ReaderController.Location?
+    let ink: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            CapsText(text: title, tone: ink.opacity(Theme.Emphasis.folio))
+            if let chapter = location?.chapter {
+                Text(chapter)
+                    .font(.bookTitle)
+                    .foregroundStyle(ink)
+                    .lineLimit(Theme.Size.labelLines)
+            }
+            if let done = location?.chapterDone {
+                ChapterLine(done: done, ink: ink)
+                    .padding(.top, Theme.Space.s)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Theme.Reader.textMargin)
+        .padding(.top, Theme.Reader.pageMarginTop)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
+    }
+}

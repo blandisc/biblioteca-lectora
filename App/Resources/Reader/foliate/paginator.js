@@ -429,6 +429,7 @@ export class Paginator extends HTMLElement {
     static observedAttributes = [
         'flow', 'gap', 'margin',
         'max-inline-size', 'max-block-size', 'max-column-count',
+        'page-gap', /* Gabinete: el lomo en puntos (ver #beforeRender) */
     ]
     #root = this.attachShadow({ mode: 'closed' })
     #observer = new ResizeObserver(() => this.render())
@@ -643,6 +644,9 @@ export class Paginator extends HTMLElement {
             case 'max-column-count':
                 this.#top.style.setProperty('--_' + name, value)
                 break
+            case 'page-gap':
+                this.render()
+                break
             case 'max-inline-size':
                 // needs explicit `render()` as it doesn't necessarily resize
                 this.#top.style.setProperty('--_' + name, value)
@@ -718,9 +722,14 @@ export class Paginator extends HTMLElement {
         //     f(x) = x / (1 + x).
         // But we want to keep the outer padding, and make the inner gap bigger.
         // So we apply the inverse, f⁻¹ = -x / (x - 1) to the column gap.
-        const gap = -g / (g - 1) * size
-
         const flow = this.getAttribute('flow')
+        // Gabinete (iPhone Duo): con `page-gap` el aire entre páginas va en puntos fijos, no en
+        // fracción del ancho. Cada página deja la mitad a cada lado: el lomo entre dos páginas mide
+        // `page-gap` y queda justo en medio de la caja (que la app centra en la ventana, en el pliegue).
+        // En continuo, la mitad a cada lado del renglón.
+        const fixedGap = parseFloat(this.getAttribute('page-gap'))
+        const gap = fixedGap > 0 ? (flow === 'scrolled' ? fixedGap / 2 : fixedGap) : -g / (g - 1) * size
+
         if (flow === 'scrolled') {
             // FIXME: vertical-rl only, not -lr
             this.setAttribute('dir', vertical ? 'rtl' : 'ltr')

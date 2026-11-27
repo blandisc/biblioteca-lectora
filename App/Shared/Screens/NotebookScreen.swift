@@ -33,7 +33,8 @@ struct NotebookScreen: View {
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
+        // Con el Duo abierto y acostado, la lista a la izquierda y la nota abierta a la derecha.
+        FoldSplit(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: "Cuaderno") {
@@ -65,13 +66,16 @@ struct NotebookScreen: View {
             }
             .screen()
             #if os(iOS)
-            .sheet(isPresented: $showsAccount) { SettingsScreen().duoBars() }
+            .sidePanel(isPresented: $showsAccount) { SettingsScreen() }
             #endif
             .sheet(item: $toNote) { highlight in
                 NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled)
                     .duoBars()
             }
             .onAppear(perform: openForScreenshots)
+        } placeholder: {
+            FoldPlaceholder(title: "Elige una nota",
+                            message: "Toca una nota o un subrayado a la izquierda y aquí lo lees o lo escribes, con tu lista a la vista.")
         }
     }
 

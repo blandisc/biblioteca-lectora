@@ -45,7 +45,8 @@ enum MetadataKeys {
 /// Cuenta, conexiones y apariencia. Se abre desde el Cuaderno.
 struct SettingsScreen: View {
     @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
+    /// Cierra la hoja o, en un pliego, su panel (`SidePanel`).
+    private let dismiss = SheetDismiss()
     @ObservedObject private var connectors = ConnectorsStore.shared
     @AppStorage(SessionKeys.counter) private var showsCounter = true
     @AppStorage(SessionKeys.summary) private var showsSummary = true

@@ -136,6 +136,36 @@ enum Theme {
     // medidas con nombre también caen en la escala (SD-1, 26 nov 2026: 28, 10, 14 y 20 se
     // fueron al paso más cercano); lo vigilan `sistema-base.json` y `testSpacingKeepsTheHouseScale`.
 
+    // MARK: La ventana (iPhone Duo y cualquier iPhone)
+
+    /// La forma de la ventana (`WindowLayout`): con qué medidas una pantalla es un libro abierto, es
+    /// baja o tiene una franja del sistema al costado. Nunca se pregunta qué aparato es.
+    enum Window {
+        /// Si los dos lados de la ventana miden al menos esto, es un libro abierto con pliegue a la
+        /// mitad del lado largo (el iPhone Duo abierto: 669 × 951). Ningún iPhone de una pantalla
+        /// llega: el más ancho mide 440.
+        static let foldMinSide: CGFloat = 600
+        /// Menos alto que esto, la ventana es baja (un iPhone acostado: 402 a 440; el Duo cerrado
+        /// acostado: 466): encabezado de un renglón, el pie del libro delgado, portadas por alto.
+        static let shortHeight: CGFloat = 500
+        /// Lo que el sistema ocupa de un lado más que del otro para que sea una franja al costado
+        /// (la hora y las pestañas del Duo cerrado, unos 84): las muescas de un iPhone acostado, iguales
+        /// a los dos lados, no cuentan.
+        static let stripMin: CGFloat = 24
+        /// Lo más angosta que queda una página de un pliego (o una columna junto al pliegue): con
+        /// menos, todo va en una sola página.
+        static let minPage: CGFloat = 280
+        /// En una ventana baja (sin pliegue), lo que se lleva la primera de dos columnas lado a lado.
+        static let sideBySideShare: CGFloat = 0.45
+        /// Lo más alta que es una portada de cuadrícula, como parte del alto de la ventana: en una
+        /// pantalla baja caben más columnas en vez de portadas que se comen la pantalla.
+        static let coverHeightShare: CGFloat = 0.4
+        /// Lo que deja iOS alrededor de dos botones de texto en una barra (sus orillas, su vidrio y
+        /// el aire entre ellos). Si no cabe, iOS esconde el segundo en su «•••»: entonces baja al pie
+        /// (`.sheetActions`). Medido: en un iPhone 17 Pro sobran 114 y caben; en el Duo cerrado, 94 y no.
+        static let barTextSlack: CGFloat = 104
+    }
+
     enum Space {
         /// Medio paso, solo dentro de piezas chicas (dos renglones de una fila, un selector).
         static let xxs: CGFloat = 2 // sistema-base: ignora medio paso dentro de piezas chicas; nunca entre bloques
@@ -159,6 +189,9 @@ enum Theme {
         /// del índice (44) menos el margen (24), y aire. Sin esto las letras pisaban el orden y la
         /// orilla de las filas (auditoría 1, 27 nov 2026).
         static let letterIndex: CGFloat = 24
+        /// El lomo de un libro abierto (el iPhone Duo abierto): lo que se deja libre a los dos lados
+        /// del pliegue, en total. Nada se dibuja ahí: ni texto, ni portadas, ni hojas.
+        static let fold: CGFloat = 48
         /// Margen lateral de toda pantalla. Igual a la izquierda y a la derecha, y el mismo
         /// del texto del libro (`Reader.textMargin`).
         static let gutter: CGFloat = 24
@@ -247,6 +280,8 @@ enum Theme {
         /// Alto de botones; ancho de botones redondos.
         static let control: CGFloat = 46
         static let coverHero: CGFloat = 132
+        /// La portada de la Mesa en una ventana baja (un iPhone acostado, el Duo cerrado acostado).
+        static let coverHeroShort: CGFloat = 88
         static let coverDetail: CGFloat = 168
         static let coverRow: CGFloat = 40
         static let coverMini: CGFloat = 26
@@ -265,13 +300,20 @@ enum Theme {
         static let coverCellWidestLarge: CGFloat = 240
 
         /// Columnas de la cuadrícula de portadas para un ancho: al menos las de siempre
-        /// (`gridColumns`, o `gridColumnsLarge` con la letra más grande) y más si caben
-        /// portadas de hasta `coverCellWidest`, con `Space.l` entre ellas.
-        static func gridColumns(fitting width: CGFloat, large: Bool) -> Int {
+        /// (`gridColumns`, o `gridColumnsLarge` con la letra más grande) y las que hagan falta para
+        /// que ninguna portada pase de `coverCellWidest` de ancho ni de `Window.coverHeightShare` del
+        /// alto de la ventana (`height`, 0 si no se sabe), con `Space.l` entre ellas (`CoverColumns`).
+        /// En la Mac, como siempre: las que quepan de `coverCellWidest`.
+        static func gridColumns(fitting width: CGFloat, height: CGFloat = 0, large: Bool) -> Int {
             let fewest = large ? Size.gridColumnsLarge : Size.gridColumns
             let widest = large ? Size.coverCellWidestLarge : Size.coverCellWidest
+            #if os(macOS)
             guard width > 0 else { return fewest }
             return max(fewest, Int((width + Space.l) / (widest + Space.l)))
+            #else
+            return CoverColumns.count(width: width, height: height, fewest: fewest, widest: widest, gap: Space.l,
+                                      heightShare: Window.coverHeightShare, aspect: coverAspect)
+            #endif
         }
         static let coverCaptionLinesLarge = 3
         /// Columnas de las letras en «Aa» (una sola con la letra más grande).
@@ -344,10 +386,11 @@ enum Theme {
         /// Lo más ancha que es una tarjeta de vidrio del lector: la columna del libro con el aire
         /// de adentro de la tarjeta. En la Mac la tarjeta ya no cruza toda la ventana (auditoría).
         static let readingPanel: CGFloat = readingMeasure + 2 * Reader.panelInset
-        /// Lo más ancha que es una pantalla de texto en el iPhone (ficha, nota, Cuaderno, Diario,
-        /// Ajustes…): el renglón del libro con el margen de pantalla a cada lado. En el iPhone Duo
-        /// abierto el texto ya no cruza toda la pantalla; ningún iPhone de pie llega a esta medida.
-        static let screenMeasure: CGFloat = readingMeasure + 2 * Space.gutter
+        /// Un renglón cómodo de pantalla (ficha, nota, Cuaderno, Diario, Ajustes…) se mide en letras,
+        /// no en puntos: unas 68 letras del texto normal (7,4 pt cada una en promedio con el tamaño de
+        /// siempre); crece con el tamaño de texto de iOS (`ReadingColumn`). En el Duo abierto de pie el
+        /// renglón ya no corre 100 letras; ningún iPhone de pie llega a esta medida.
+        static let readingLine: CGFloat = 504
         /// Proporción de toda portada: ancho entre alto (2 : 3).
         static let coverAspect: CGFloat = 2.0 / 3.0
         /// Niveles de sangría del índice del libro; más hondo ya no se mete.
@@ -454,6 +497,14 @@ enum Theme {
         /// en todo iPhone; el contenido de la tarjeta de abajo empieza en la misma línea
         /// (`chromeInset` + `panelInset`).
         static let textMargin: CGFloat = 24
+        /// El renglón del libro, en letras de la letra que elegiste (unas 68: 32 veces su alto), en
+        /// el iPhone y el Duo; con más ancho, aire a los lados o dos páginas, nunca renglones de 100.
+        static let lineEms = 32.0
+        /// Lo más angosta que queda una columna del libro (unas 35 letras): si dos páginas no caben
+        /// así (la letra más grande), el libro va en una sola página.
+        static let minLineEms = 16.0
+        /// La letra del libro antes de tu tamaño: la de la página web (16 px), que «Aa» escala.
+        static let pageEm: CGFloat = 16
         /// Lo de adentro de la tarjeta de abajo, a esto del vidrio: así su contenido empieza
         /// en la misma línea que el texto del libro.
         static let panelInset: CGFloat = textMargin - chromeInset
@@ -600,6 +651,8 @@ enum Theme {
         static let secondary = 0.75
         /// Texto callado sobre el vidrio del lector: el gris fijo se pierde ahí.
         static let glassText = 0.8
+        /// La página de al lado mientras un panel ocupa la otra (`SidePanel`): se sigue viendo.
+        static let panelShade = 0.12
         /// Riel de la barra de avance: tinta tenue que sí se ve sobre el vidrio.
         static let scrubberTrack = 0.25
         /// Al tocar: se hunde un poco y se apaga apenas, sin cambiar de color.
@@ -668,6 +721,8 @@ extension Theme {
     enum Letter {
         /// El título de pantalla con el tamaño de texto de siempre; crece con él (`.largeTitle`).
         static let screenTitle: CGFloat = 30
+        /// El título de pantalla en una ventana baja: crece con el texto (`.title2`).
+        static let screenTitleShort: CGFloat = 22
         /// Hasta dónde crece la letra dentro de una forma de medida fija (los dibujos de Ajustes,
         /// los círculos de 44 del lector): más grande ya no cabría en ella.
         static let fixedShapeLargest: DynamicTypeSize = .xxxLarge

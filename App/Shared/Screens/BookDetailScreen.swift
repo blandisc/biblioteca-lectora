@@ -9,16 +9,20 @@ struct BookDetailScreen: View {
     @State private var editing = false
     @State private var searching = false
     @State private var choosingCover = false
+    @Environment(\.windowLayout) private var window
 
     /// Datos al día: después de editar, la ficha se actualiza sola.
     private var live: ShelfBook { model.shelfBook(id: book.id) ?? book }
     private var record: Book? { model.book(for: live) }
 
     var body: some View {
-        ScrollView {
+        // La ficha como pliego: el libro (portada, título y «Empezar a leer») y sus datos. Una bajo
+        // otra en un iPhone; acostado, lado a lado (el botón ya no queda fuera de la vista); en el
+        // Duo abierto, cada una en su página, nunca la portada sobre el pliegue.
+        Spread(spacing: Theme.Space.xl) {
             VStack(spacing: Theme.Space.l) {
                 ShelfCover(book: live)
-                    .frame(width: Theme.Size.coverDetail)
+                    .frame(width: window.isShort ? Theme.Size.coverHeroShort : Theme.Size.coverDetail)
                     .padding(.top, Theme.Space.l)
                 VStack(spacing: Theme.Space.xs) {
                     // Número de ficha, como el id de Calibre que da nombre a la carpeta.
@@ -32,7 +36,8 @@ struct BookDetailScreen: View {
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)
                     if let series = live.series {
-                        Text(live.seriesIndex.flatMap(ShelfBook.number).map { "\(series) · libro \($0)" } ?? series)
+                        DotLine(parts: [series] + (live.seriesIndex.flatMap(ShelfBook.number).map { ["libro \($0)"] } ?? []),
+                                alignment: .center)
                             .font(.subheadline)
                             .foregroundStyle(Theme.secondaryInk)
                     }
@@ -50,10 +55,11 @@ struct BookDetailScreen: View {
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryInk)
                 }
-
+            }
+        } trailing: {
+            VStack(spacing: Theme.Space.l) {
                 if let record {
                     BookFacts(book: record)
-                        .padding(.top, Theme.Space.s)
                 }
 
                 readingSection
@@ -62,7 +68,6 @@ struct BookDetailScreen: View {
                     .padding(.top, Theme.Space.l)
                 highlightsSection
             }
-            .screenContent()
         }
         .pushedScreen()
         .toolbar {
@@ -89,11 +94,13 @@ struct BookDetailScreen: View {
             default: break
             }
         }
-        .sheet(isPresented: $editing) {
-            if let record { MetadataEditorView(book: record).duoBars() }
+        // En un pliego, en una página: la ficha sigue a la vista o, si la ficha es la página
+        // derecha (lista | detalle), en esa misma.
+        .sidePanel(isPresented: $editing) {
+            if let record { MetadataEditorView(book: record) }
         }
-        .sheet(isPresented: $choosingCover) {
-            if let id = live.bookID { CoverPickerSheet(bookID: id).duoBars() }
+        .sidePanel(isPresented: $choosingCover) {
+            if let id = live.bookID { CoverPickerSheet(bookID: id) }
         }
     }
 }
@@ -185,7 +192,8 @@ extension BookDetailScreen {
 struct CoverPickerSheet: View {
     let bookID: UUID
     @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
+    /// Cierra la hoja o, en un pliego, su panel (`SidePanel`).
+    private let dismiss = SheetDismiss()
     @State private var options: [URL] = []
     @State private var choice: CoverChoiceRow.Option?
     @State private var loading = true
