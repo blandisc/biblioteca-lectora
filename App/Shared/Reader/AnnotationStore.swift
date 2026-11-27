@@ -52,7 +52,10 @@ final class AnnotationStore: ObservableObject {
     /// Guarda un subrayado nuevo o actualiza uno existente (mismo `id`).
     func save(_ annotation: Annotation) throws {
         let before = self.annotation(id: annotation.id)
-        let changes = annotation.changes(clock: clock)
+        // Solo lo que cambió: cambiar el color aquí no pisa la nota que se escribió en otro dispositivo (RB-3).
+        let previous = Dictionary((before?.changes(clock: clock) ?? []).map { ($0.field, $0.value) }, uniquingKeysWith: { a, _ in a })
+        let changes = annotation.changes(clock: clock).filter { previous[$0.field] != $0.value }
+        guard !changes.isEmpty else { return }
         try log.append(changes)
         state.apply(changes)
         revision += 1

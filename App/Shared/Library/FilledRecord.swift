@@ -36,12 +36,12 @@ enum FilledField: String, Codable, CaseIterable, Hashable {
     func value(in book: Book) -> String? {
         let text: String?
         switch self {
-        case .authors: text = book.authors.joined(separator: " & ")
+        case .authors: text = ListText.join(book.authors, separator: " & ")
         case .published: text = book.published
         case .publisher: text = book.publisher
         case .language: text = book.language
         case .series: text = book.series.map { name in book.seriesIndex.map { "\(name) #\(ShelfBook.number($0))" } ?? name }
-        case .tags: text = book.tags.joined(separator: ", ")
+        case .tags: text = ListText.join(book.tags, separator: ", ")
         case .isbn: text = book.identifiers["isbn"]
         case .summary: text = book.summary
         case .cover: text = nil
@@ -52,16 +52,21 @@ enum FilledField: String, Codable, CaseIterable, Hashable {
     /// Devuelve el campo a como estaba.
     func restore(_ old: String?, in book: inout Book) {
         switch self {
-        case .authors: book.authors = old?.components(separatedBy: " & ") ?? []
+        case .authors: book.authors = old.map { ListText.split($0, separator: " & ") } ?? []
         case .published: book.published = old
         case .publisher: book.publisher = old
         case .language: book.language = old
         case .series:
             guard let old else { book.series = nil; book.seriesIndex = nil; return }
-            let parts = old.components(separatedBy: " #")
-            book.series = parts[0]
-            book.seriesIndex = parts.count > 1 ? Double(parts[1]) : nil
-        case .tags: book.tags = old?.components(separatedBy: ", ") ?? []
+            // El último « #» separa el número: una serie puede llevar «#» en su nombre.
+            if let mark = old.range(of: " #", options: .backwards) {
+                book.series = String(old[..<mark.lowerBound])
+                book.seriesIndex = Book.sanitizedSeriesIndex(Double(old[mark.upperBound...]))
+            } else {
+                book.series = old
+                book.seriesIndex = nil
+            }
+        case .tags: book.tags = old.map { ListText.split($0, separator: ", ") } ?? []
         case .isbn: book.identifiers["isbn"] = old
         case .summary: book.summary = old
         case .cover: break

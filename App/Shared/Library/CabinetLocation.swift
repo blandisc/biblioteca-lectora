@@ -1,4 +1,5 @@
 import Foundation
+import LectoraCore
 
 /// Dónde vive el Gabinete: una carpeta con la biblioteca (forma de Calibre) y
 /// las notas (Markdown), una al lado de la otra:
@@ -162,6 +163,15 @@ enum CloudFiles {
             guard small else { continue }
             let real = url.deletingLastPathComponent().appendingPathComponent(name)
             if !isDownloaded(real) { try? manager.startDownloadingUbiquitousItem(at: real) }
+        }
+    }
+}
+
+extension ChangeLogError: @retroactive LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .ownLogNotDownloaded:
+            "Tu biblioteca todavía se está bajando de iCloud. Espera un momento y vuelve a intentarlo."
         }
     }
 }
