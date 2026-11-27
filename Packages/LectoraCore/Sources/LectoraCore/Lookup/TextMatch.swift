@@ -59,6 +59,51 @@ enum TextMatch {
         return max(jaccard, containment * 0.6)
     }
 
+    // MARK: Título completo
+
+    /// Cómo cuadra el título completo, con subtítulo y número de tomo.
+    enum TitleFit: Comparable {
+        /// Otro tomo: «Dune: tomo diez» / «Dune», «Fundación» / «Segunda fundación».
+        case otherVolume
+        /// Otro subtítulo, o palabras de más que no son un subtítulo.
+        case otherSubtitle
+        /// El mismo; a uno le puede faltar el subtítulo («Sapiens» / «Sapiens: De animales…»).
+        case same
+    }
+
+    /// Palabras que marcan un tomo: «tomo», «vol», «2», «II», «diez», «segunda»…
+    private static let volumeWords: Set<String> = [
+        "tomo", "tomos", "vol", "volumen", "volume", "libro", "book", "parte", "part", "entrega",
+        "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce",
+        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
+        "primero", "primera", "segundo", "segunda", "tercero", "tercera", "cuarto", "cuarta", "quinto", "quinta",
+        "first", "second", "third", "fourth", "fifth",
+    ]
+
+    static func isVolumeWord(_ word: String) -> Bool {
+        if volumeWords.contains(word) || word.allSatisfy(\.isNumber) { return true }
+        // Números romanos, salvo «i» (el pronombre de «I, Robot»).
+        return word != "i" && word.range(of: "^(x{0,3})(ix|iv|v?i{0,3})$", options: .regularExpression) != nil
+    }
+
+    /// Compara los títulos completos (sin series entre paréntesis): solo `same` permite
+    /// decir «Mismo título» y aplicar los datos sin preguntar.
+    static func titleFit(_ a: String, _ b: String) -> TitleFit {
+        let strip = { (text: String) in
+            text.replacingOccurrences(of: #"\s*[\(\[][^\)\]]*[\)\]]"#, with: "", options: .regularExpression)
+        }
+        let (left, right) = (strip(a), strip(b))
+        let x = Set(tokens(left)), y = Set(tokens(right))
+        let extraX = x.filter { word in !y.contains { close(word, $0) } }
+        let extraY = y.filter { word in !x.contains { close(word, $0) } }
+        if extraX.isEmpty && extraY.isEmpty { return .same }
+        if extraX.union(extraY).contains(where: isVolumeWord) { return .otherVolume }
+        guard extraX.isEmpty || extraY.isEmpty else { return .otherSubtitle }
+        // Palabras de más en uno solo: valen si son su subtítulo («Sapiens: De animales…»).
+        let (short, long) = extraX.isEmpty ? (x, right) : (y, left)
+        return Set(tokens(mainTitle(long))) == short ? .same : .otherSubtitle
+    }
+
     // MARK: Personas
 
     /// Palabras que identifican a una persona: sin iniciales ni partículas.

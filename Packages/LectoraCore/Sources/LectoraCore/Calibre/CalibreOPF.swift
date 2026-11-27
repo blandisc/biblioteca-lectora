@@ -41,7 +41,7 @@ public enum CalibreOPF {
         }
         if let series = book.series, !series.isEmpty {
             add(#"<meta name="calibre:series" content="\#(escape(series))"/>"#)
-            add(#"<meta name="calibre:series_index" content="\#(format(book.seriesIndex ?? 1))"/>"#)
+            add(#"<meta name="calibre:series_index" content="\#(format(Book.sanitizedSeriesIndex(book.seriesIndex) ?? 1))"/>"#)
         }
         if let rating = book.rating, rating > 0 {
             add(#"<meta name="calibre:rating" content="\#(format(rating * 2))"/>"#)
@@ -81,7 +81,7 @@ public enum CalibreOPF {
         for (scheme, value) in reader.identifiers {
             switch scheme.lowercased() {
             case "uuid": uuid = UUID(uuidString: value)
-            case "calibre": calibreID = Int(value)
+            case "calibre": calibreID = Book.sanitizedCalibreID(Double(value))
             case "": continue
             default: identifiers[ourScheme(scheme)] = value
             }
@@ -91,14 +91,14 @@ public enum CalibreOPF {
             title: title,
             authors: reader.authors,
             series: reader.meta["calibre:series"],
-            seriesIndex: reader.meta["calibre:series_index"].flatMap(Double.init),
+            seriesIndex: Book.sanitizedSeriesIndex(reader.meta["calibre:series_index"].flatMap(Double.init)),
             tags: reader.subjects,
             language: reader.languages.first.map(iso639_1),
             identifiers: identifiers,
             publisher: reader.publisher,
             published: reader.date.flatMap(ourDate),
             summary: reader.summary,
-            rating: reader.meta["calibre:rating"].flatMap(Double.init).map { $0 / 2 },
+            rating: reader.meta["calibre:rating"].flatMap(Double.init).flatMap { $0.isFinite && $0 >= 0 ? min($0, 10) / 2 : nil },
             calibreID: calibreID,
             addedAt: reader.meta["calibre:timestamp"].flatMap(parseTimestamp)
         )

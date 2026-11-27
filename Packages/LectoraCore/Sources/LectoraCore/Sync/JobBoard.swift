@@ -153,7 +153,7 @@ public struct JobBoard: Sendable {
             createdAt: Date(timeIntervalSince1970: fields[Field.createdAt]?.doubleValue ?? 0),
             claims: claims,
             done: fields[Field.done]?.boolValue ?? false,
-            attempts: Int(fields[Field.attempts]?.doubleValue ?? 0),
+            attempts: (fields[Field.attempts]?.doubleValue).flatMap { Int(exactly: $0.rounded()) }.map { max(0, $0) } ?? 0,
             lastError: fields[Field.lastError]?.stringValue,
             notBefore: fields[Field.notBefore]?.doubleValue.map(Date.init(timeIntervalSince1970:))
         )

@@ -12,13 +12,17 @@ public enum MetadataCleaner {
             book.authors = book.authors.map(collapseSpaces).filter { !$0.isEmpty }
             book.tags = cleanTags(book.tags)
             book.series = book.series.map(collapseSpaces).flatMap { $0.isEmpty ? nil : $0 }
-            if book.series == nil { book.seriesIndex = nil }
+            book.seriesIndex = book.series == nil ? nil : Book.sanitizedSeriesIndex(book.seriesIndex)
             book.published = book.published.map { cleanDate($0) ?? collapseSpaces($0) }
             if let isbn = book.identifiers["isbn"] { book.identifiers["isbn"] = cleanISBN(isbn) }
             return book
         }
         var title = cleanTitle(book.title, language: book.language.flatMap(cleanLanguage))
-        if title.isEmpty, let fileName { title = titleFromFileName(fileName) }
+        if title.isEmpty, let fileName {
+            // «a03.epub» o un hash no son títulos: mejor «Sin título», que va a «Por revisar».
+            let fromFile = titleFromFileName(fileName)
+            if looksLikeTitle(fromFile) { title = fromFile }
+        }
         // «Juego de tronos (Canción de hielo y fuego 1)»: la serie va en su campo.
         if let parsed = SeriesParser.split(title) {
             title = parsed.title
@@ -27,18 +31,29 @@ public enum MetadataCleaner {
                 book.seriesIndex = parsed.index
             }
         }
-        book.title = title.isEmpty ? "Sin título" : title
+        book.title = title.isEmpty ? untitled : title
         book.authors = cleanAuthors(book.authors)
         book.language = book.language.flatMap(cleanLanguage)
         book.published = book.published.flatMap(cleanDate)
         book.tags = Array(cleanTags(book.tags).prefix(8))
         book.series = book.series.map(collapseSpaces).flatMap { $0.isEmpty ? nil : $0 }
-        if book.series == nil { book.seriesIndex = nil }
+        book.seriesIndex = book.series == nil ? nil : Book.sanitizedSeriesIndex(book.seriesIndex)
         book.publisher = book.publisher.map(collapseSpaces).flatMap { $0.isEmpty ? nil : $0 }
         if let isbn = book.identifiers["isbn"] {
             book.identifiers["isbn"] = cleanISBN(isbn)
         }
         return book
+    }
+
+    /// El título de un libro que no trae ninguno.
+    public static let untitled = "Sin título"
+
+    /// Un nombre de archivo que parece título: dos o más palabras de solo letras
+    /// («cervantes don quijote»), no «a03», «b3» ni un hash.
+    static func looksLikeTitle(_ text: String) -> Bool {
+        let words = text.split { $0.isWhitespace || $0 == "-" }
+        guard !words.contains(where: { word in word.contains(where: \.isNumber) && word.contains(where: \.isLetter) }) else { return false }
+        return words.filter { $0.count >= 2 && $0.allSatisfy { $0.isLetter || $0 == "'" || $0 == "." } }.count >= 2
     }
 
     /// Quita lo que las tiendas y los archivos le agregan al título.
@@ -80,6 +95,7 @@ public enum MetadataCleaner {
     }
 
     /// «Cortázar, Julio» → «Julio Cortázar»; sin repetidos ni «Desconocido».
+    /// «Anónimo» sí es un autor y se queda como viene.
     public static func cleanAuthors(_ authors: [String]) -> [String] {
         var seen = Set<String>()
         var result: [String] = []
@@ -93,7 +109,7 @@ public enum MetadataCleaner {
                 name = "\(parts[1]) \(parts[0])"
             }
             let key = name.lowercased()
-            guard !name.isEmpty, !["unknown", "desconocido", "anónimo"].contains(key), seen.insert(key).inserted else { continue }
+            guard !name.isEmpty, !["unknown", "desconocido"].contains(key), seen.insert(key).inserted else { continue }
             result.append(name)
         }
         return result

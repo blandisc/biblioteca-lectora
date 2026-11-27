@@ -34,9 +34,14 @@ public enum DuplicateFinder {
             while let up = parent[id], up != id { id = up }
             return id
         }
+        // Un grupo nunca junta una pareja descartada, aunque un tercero se parezca a los dos.
         func join(_ a: Book, _ b: Book) {
-            guard !dismissed.contains(Pair(a.id, b.id)) else { return }
-            parent[root(a.id)] = root(b.id)
+            let (left, right) = (root(a.id), root(b.id))
+            guard left != right, !dismissed.contains(where: { pair in
+                let ends = (root(pair.first), root(pair.second))
+                return ends == (left, right) || ends == (right, left)
+            }) else { return }
+            parent[left] = right
         }
         let byTitle = Dictionary(grouping: books.filter { !titleKey($0.title).isEmpty }) { titleKey($0.title) }
         for bucket in byTitle.values where bucket.count > 1 {

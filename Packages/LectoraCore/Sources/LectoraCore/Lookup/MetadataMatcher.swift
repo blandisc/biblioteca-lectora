@@ -32,6 +32,16 @@ public enum MetadataMatcher {
         if let subtitle = candidate.subtitle {
             title = max(title, TextMatch.titleSimilarity(bookTitle, candidate.title + ": " + subtitle))
         }
+        // «Mismo título» solo si cuadra completo: otro tomo u otro subtítulo es otro libro
+        // («Dune: tomo diez» no es «Dune») y va a «Por revisar».
+        // Con subtítulo propio, el candidato se compara completo; la obra original solo si es otro título.
+        let work = candidate.workTitle.flatMap { TextMatch.fold(TextMatch.mainTitle($0)) == TextMatch.fold(TextMatch.mainTitle(candidate.title)) ? nil : $0 }
+        let forms = [candidate.subtitle.map { candidate.title + ": " + $0 } ?? candidate.title, work].compactMap { $0 }
+        switch forms.map({ TextMatch.titleFit(bookTitle, $0) }).max() ?? .same {
+        case .otherVolume: title = min(title, 0.55)
+        case .otherSubtitle: title = min(title, 0.7)
+        case .same: break
+        }
         // Archivo sin autor: «cervantes don-quijote» trae el autor en el título.
         if book.authors.isEmpty, let author = candidate.authors.first {
             let words = Set(TextMatch.tokens(bookTitle)), withAuthor = Set(TextMatch.tokens(candidate.title + " " + author))

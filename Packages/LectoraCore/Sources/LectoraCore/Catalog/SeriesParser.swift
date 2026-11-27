@@ -27,7 +27,7 @@ public enum SeriesParser {
         guard series.range(of: notSeries, options: .regularExpression) == nil else { return nil }
         guard !main.isEmpty, series.count >= 2,
               series.rangeOfCharacter(from: .letters) != nil,
-              let index = Double(title[indexRange].replacingOccurrences(of: ",", with: ".")) else { return nil }
+              let index = Book.sanitizedSeriesIndex(Double(title[indexRange].replacingOccurrences(of: ",", with: "."))) else { return nil }
         return Result(title: main, series: series, index: index)
     }
 }
