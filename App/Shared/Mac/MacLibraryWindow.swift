@@ -51,13 +51,31 @@ enum MacSection: Hashable {
 /// y ficha, como Música o Fotos. Leer (Mesa y Cuaderno) vive en la misma barra lateral.
 struct MacLibraryWindow: View {
     @EnvironmentObject private var model: AppModel
-    @State private var section: MacSection? = {
+    @State private var section: MacSection? = { () -> MacSection? in
         // Capturas: `-screenshot.tab desk|notebook` abre en la Mesa o el Cuaderno.
         switch LaunchOptions.tab {
-        case "desk": .desk
-        case "notebook": .notebook
-        case "search": .search
-        default: .all
+        case "desk": return .desk
+        case "notebook": return .notebook
+        case "search": return .search
+        default:
+            #if DEBUG
+            // `-screenshot.section review|noCover|duplicates|finished|author:Nombre|series:Nombre|tag:Nombre`.
+            if let raw = UserDefaults.standard.string(forKey: "screenshot.section") {
+                let parts = raw.split(separator: ":", maxSplits: 1).map(String.init)
+                switch (parts[0], parts.count > 1 ? parts[1] : "") {
+                case ("review", _): return .review
+                case ("noCover", _): return .noCover
+                case ("duplicates", _): return .duplicates
+                case ("finished", _): return .finished
+                case ("reading", _): return .reading
+                case ("author", let name): return .author(name)
+                case ("series", let name): return .series(name)
+                case ("tag", let name): return .tag(name)
+                default: break
+                }
+            }
+            #endif
+            return .all
         }
     }()
 

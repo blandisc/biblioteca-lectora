@@ -8,6 +8,7 @@ import SwiftUI
 /// Arrastrar archivos a la ventana los importa; doble clic abre el libro.
 struct MacBookTable: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.openSettings) private var openSettings
     @ObservedObject var library: LibraryStore
     let section: MacSection
 
@@ -60,6 +61,18 @@ struct MacBookTable: View {
             #if DEBUG
             // Capturas: `-screenshot.demo macOne` abre con un libro elegido; `macMany`, con tres.
             .task {
+                // `-screenshot.pick Título` elige los libros cuyo título lo contiene; `-screenshot.size 900x600` cambia la ventana.
+                if let size = UserDefaults.standard.string(forKey: "screenshot.size")?.split(separator: "x").compactMap({ Double($0) }), size.count == 2 {
+                    NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: size[0], height: size[1]))
+                }
+                if LaunchOptions.screen == "settings" {
+                    openSettings()
+                }
+                if let pick = UserDefaults.standard.string(forKey: "screenshot.pick") {
+                    try? await Task.sleep(for: .seconds(1))
+                    selection = Set(rows.filter { $0.title.localizedCaseInsensitiveContains(pick) }.map(\.id))
+                    return
+                }
                 guard let demo = LaunchOptions.demo, demo.hasPrefix("mac") else { return }
                 try? await Task.sleep(for: .seconds(1))
                 selection = Set(rows.prefix(demo == "macMany" ? 3 : 1).map(\.id))
