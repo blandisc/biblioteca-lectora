@@ -355,6 +355,9 @@ final class DesignRulesTests: XCTestCase {
         let screensAndPieces = Self.sources("App").filter { !$0.path.hasSuffix("Library/Connectors.swift") }
         check(hits(#"\* *100\b(?!.*percentNumber)"#, in: screensAndPieces).filter { !$0.contains("var percentNumber") },
               "Porcentaje armado a mano: usa valor.percentText")
+        // UX-4a (26 nov 2026): el Diario decía «Noviembre De 2026». En español el mes va en minúscula.
+        check(hits(#"\.capitalized"#, in: Self.sources("App")),
+              "Mayúsculas a cada palabra (.capitalized): «noviembre de 2026» va en minúscula")
     }
 
     /// 18 nov 2026: el avance que manda el lector (fraction, progress) puede ser NaN
@@ -499,6 +502,10 @@ final class DesignRulesTests: XCTestCase {
     func testCapsComeFromThePieces() {
         check(hits(#"Tracking\.caps|textCase\(\.uppercase\)"#, in: Self.screens),
               "Versalitas armadas a mano: usa CapsText, SectionHeader o CountLine")
+        // UX-1c (26 nov 2026): el rótulo en árabe salía con sus letras separadas. Todo espaciado
+        // sale de `.spaced(_:_:)`, que no separa las escrituras que unen sus letras.
+        check(hits(#"\.tracking\(|\.kerning\("#, in: Self.ui).filter { !$0.contains("tracking(text.isSpaceable") },
+              "Letras espaciadas a mano: usa .spaced(cantidad, texto), que respeta el árabe y el hebreo")
     }
 
     /// Regla 3 (SD-2, 26 nov 2026): toda sección se anuncia con `SectionHeader`, con su línea
@@ -595,6 +602,52 @@ final class DesignRulesTests: XCTestCase {
         let cell = pieces.first { $0.name == "MacCell" }?.body ?? ""
         if !cell.contains(".lineLimit(1)") || !cell.contains(".truncationMode(.tail)") { mac.append("MacCell: no corta con «…» en un renglón") }
         check(mac, "Celda de la tabla de la Mac sin cortar con «…»: usa MacCell")
+
+        // 6. UX-3b (26 nov 2026): en la ficha de la Mac un título largo se salía del campo. Todo
+        //    campo de la Mac corta con «…» (`.oneLine()`).
+        let fields = Self.ui.filter { $0.path.hasPrefix("App/Shared/Mac/") }.flatMap { file in
+            file.lines.indices.compactMap { index -> String? in
+                guard file.lines[index].contains("TextField(") else { return nil }
+                let statement = file.lines[index...min(index + 1, file.lines.count - 1)].joined()
+                return statement.contains(".oneLine()") || statement.contains("axis: .vertical") ? nil : "\(file.path):\(index + 1)"
+            }
+        }
+        check(fields, "Campo de la Mac que no corta con «…»: agrégale .oneLine()")
+
+        // 7. UX-2e: una portada cuadrada o apaisada se estiraba al llenar el marco 2∶3. Solo
+        //    `FittedCover` y la portada que ya es 2∶3 (`CoverView`) llenan; lo demás cabe entero.
+        let fill = hits(#"scaledToFill\(\)|aspectRatio\(contentMode: \.fill\)"#, in: Self.ui)
+            .filter { !$0.hasPrefix("App/Shared/Design/CoverView.swift") && !(owner(Int($0.split(separator: ":")[1]).map { $0 - 1 } ?? 0) == "FittedCover" && $0.hasPrefix(components.path)) }
+        check(fill, "Imagen que llena su marco y se recorta o estira: usa FittedCover")
+
+        // 8. UX-4c: «LIBROS TERMI…». La leyenda de StatTrio baja a un segundo renglón; los filtros
+        //    (UX-2b, «Si…») bajan enteros al renglón de abajo en vez de cortarse en la orilla.
+        var wrap: [String] = []
+        if !Self.piece("StatTrio").contains("labelLines") { wrap.append("StatTrio: su leyenda se corta en un renglón") }
+        if Self.piece("FilterBar").contains("ScrollView(.horizontal") || !Self.piece("FilterBar").contains("WrapRows") { wrap.append("FilterBar: las opciones se cortan en la orilla") }
+        check(wrap, "Texto que se corta en vez de bajar de renglón")
+
+        // 10. UX-3a: «Editar datos» no se veía: con dos botones de texto en la barra, iOS esconde el
+        //     título de en medio. Esas hojas usan `.sheetTitle` (o `.pushedScreen(…, sheet: true)`).
+        let hidden = Self.screens.flatMap { file in
+            file.lines.indices.compactMap { index -> String? in
+                let line = file.lines[index]
+                guard line.range(of: #"\.inlineTitle\("[^"]+"\)|\.pushedScreen\("[^"]+"\)"#, options: .regularExpression) != nil else { return nil }
+                let next = file.lines[index..<min(index + 10, file.lines.count)].joined()
+                return next.contains("cancellationAction") && next.contains("confirmationAction") ? "\(file.path):\(index + 1)" : nil
+            }
+        }
+        check(hidden, "Hoja con dos botones de texto y el título en medio, donde iOS lo esconde: usa .sheetTitle")
+
+        // 9. UX-1a: el primer renglón del libro quedaba bajo los botones de arriba. El aire de
+        //    arriba alcanza para el botón entero (`tapTarget` − `chromeLift`).
+        let theme9 = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }!.text
+        func value(_ name: String) -> Double {
+            guard let range = theme9.range(of: #"static let \#(name): CGFloat = [0-9.]+"#, options: .regularExpression) else { return 0 }
+            return Double(theme9[range].split(separator: " ").last ?? "") ?? 0
+        }
+        XCTAssertGreaterThanOrEqual(value("pageMarginTop"), value("tapTarget") - value("chromeLift"),
+                                    "Reader.pageMarginTop: los botones de arriba tapan el primer renglón")
     }
 
     /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
@@ -761,6 +814,10 @@ final class DesignRulesTests: XCTestCase {
         let interpolation = #"\\\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)"#
         check(hits(interpolation + #" (\#(nouns))\b(?![/a-z])"#, in: Self.sources("App")),
               "Cifra con su sustantivo armada a mano: usa n.counted(\"libro\", \"libros\")")
+        // UX-4d: «\(días) de \(total.counted("día", "días"))» decía «1 días de 7». El sustantivo
+        // concuerda con la primera cifra: «1 día de 7».
+        check(hits(interpolation + #" de \\\([^()]*\.counted\("#, in: Self.sources("App")),
+              "«x de y» con el sustantivo en la segunda cifra: va en la primera («1 día de 7»)")
     }
 
     // MARK: Las mismas palabras y la misma voz (SD-2 y SD-3, 26 nov 2026)
@@ -839,7 +896,8 @@ final class DesignRulesTests: XCTestCase {
         let phone = Self.ui.filter { $0.path.hasPrefix("App/Shared/Screens/") || $0.path.hasPrefix("App/Shared/Model/") }.map(\.text).joined()
         let reader = Self.ui.filter { $0.path.hasPrefix("App/Shared/Reader/") }
         var missing: [String] = []
-        for name in ["ReadingState", "LibraryAction.addBooks", "LibraryAction.findData", "BookFields", "BookSection", "StatusPicker", "LanguagePicker"] {
+        for name in ["ReadingState", "LibraryAction.addBooks", "LibraryAction.findData", "BookFields", "BookSection", "StatusPicker", "LanguagePicker",
+                     "SearchWording.title", "Duplicates.title", "BookFields.languageName"] {
             if !mac.contains(name) { missing.append("La Mac no usa \(name)") }
             if !phone.contains(name) { missing.append("El iPhone no usa \(name)") }
         }
@@ -847,6 +905,12 @@ final class DesignRulesTests: XCTestCase {
             missing.append("\(file) no usa SelectionAction")
         }
         check(missing, "Una plataforma nombra a su manera")
+        // UX-3c y UX-4f (26 nov 2026): la ficha decía «es» en vez de «Español», y Buscar se llamaba
+        // «Buscar», «Buscar en todo» y «Busca…» según dónde. Idiomas por BookFields.languageName;
+        // Buscar por SearchWording; «Posibles duplicados» por Duplicates.
+        check(hits(#"localizedString\(forLanguageCode|"(Buscar en todo|Buscar en el libro|Posibles duplicados|Posible duplicado)""#, in: Self.ui) +
+              hits(#"navigationTitle\("Buscar"\)|Label\("Buscar","#, in: Self.ui),
+              "Idioma, Buscar o duplicados nombrados a mano: usa BookFields.languageName, SearchWording o Duplicates")
         check(hits(#"\.day\(\)\.month\(\.abbreviated\)"#, in: Self.ui.filter { !$0.path.hasSuffix("Design/Components.swift") }),
               "Fecha corta armada a mano: usa fecha.esShort («3 oct 2024») o fecha.esDayMonth")
     }

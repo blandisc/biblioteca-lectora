@@ -34,18 +34,21 @@ struct CoverView: View {
             let width = proxy.size.width
             ZStack(alignment: .topLeading) {
                 if let image, let picture = CoverImaging.image(at: image) {
-                    Image(decorative: picture, scale: 1)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: width, height: proxy.size.height)
-                        .clipped()
+                    if Self.fills(picture) {
+                        Image(decorative: picture, scale: 1).resizable().scaledToFill()
+                            .frame(width: width, height: proxy.size.height)
+                            .clipped()
+                    } else {
+                        // Cuadrada o apaisada: entera, sin estirarse ni recortarse.
+                        FittedCover(image: Image(decorative: picture, scale: 1))
+                    }
                 } else {
                 style.background
                 VStack(alignment: style.illustration == .windmill ? .center : .leading, spacing: width * Theme.CoverArt.gap) {
                     if style.illustration == .windmill {
                         Text(author.uppercased())
                             .font(.system(size: width * Theme.CoverArt.authorTop)) // ds-exception: portada dibujada
-                            .tracking(Theme.CoverArt.authorTracking)
+                            .spaced(Theme.CoverArt.authorTracking, author)
                     }
                     Text(title)
                         .font(.system(size: width * Theme.CoverArt.title, design: .serif)) // ds-exception: portada dibujada
@@ -58,7 +61,7 @@ struct CoverView: View {
                     if style.illustration != .windmill {
                         Text(author.uppercased())
                             .font(.system(size: width * Theme.CoverArt.author)) // ds-exception: portada dibujada
-                            .tracking(Theme.CoverArt.authorTracking)
+                            .spaced(Theme.CoverArt.authorTracking, author)
                             .lineLimit(1)
                     }
                 }
@@ -97,6 +100,13 @@ struct CoverView: View {
                 x: 0, y: crisp ? Theme.CoverArt.crispShadowY : Theme.CoverArt.shadowY)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(title), de \(author)")
+    }
+
+    /// ¿La imagen es (casi) 2∶3? Entonces llena el marco; si no, cabe entera (UX-2e).
+    static func fills(_ picture: CGImage) -> Bool {
+        guard picture.height > 0 else { return true }
+        let aspect = CGFloat(picture.width) / CGFloat(picture.height)
+        return abs(aspect - Theme.Size.coverAspect) / Theme.Size.coverAspect <= Theme.CoverArt.fitTolerance
     }
 
     private var coverShape: UnevenRoundedRectangle {

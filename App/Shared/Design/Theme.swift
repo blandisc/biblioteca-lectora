@@ -347,6 +347,11 @@ enum Theme {
         static let rings: CGFloat = 0.5
         static let ringGap: CGFloat = 0.1
         static let ringDot: CGFloat = 0.07
+        /// Una portada que no es 2∶3 (cuadrada, apaisada) cabe entera en el marco, sin estirarse
+        /// ni recortarse, sobre ella misma desenfocada (UX-2e). Hasta `fitTolerance` de diferencia
+        /// llena el marco, como siempre; el desenfoque es esta fracción del ancho.
+        static let fitTolerance: CGFloat = 0.08
+        static let fitBlur: CGFloat = 0.12
     }
 
     // MARK: Lector
@@ -463,9 +468,10 @@ enum Theme {
         static let pageBack: CGFloat = 0.93
         /// La vibración al pasar a la página siguiente: muy ligera (0 a 1).
         static let turnHaptic: CGFloat = 0.45
-        /// Aire arriba del texto en páginas, bajo la orilla segura: arriba ya no va el
-        /// capítulo, así que el texto empieza justo debajo de la isla (antes 40, luego 12).
-        static let pageMarginTop: CGFloat = 16
+        /// Aire arriba del texto en páginas, bajo la orilla segura: el primer renglón queda
+        /// debajo de los botones de arriba (cerrar y marcador, que bajan `tapTarget` −
+        /// `chromeLift` de la orilla), nunca tapado por ellos (UX-1a; antes 16).
+        static let pageMarginTop: CGFloat = 48
         /// Abajo más aire: el pie y el contador van ahí, sobre la orilla del iPhone.
         static let pageMarginBottom: CGFloat = 64
         /// En continuo, el papel es sólido hasta la orilla del folio y después se

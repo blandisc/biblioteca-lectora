@@ -54,10 +54,10 @@ struct SearchScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ScreenHeading(title: "Buscar")
+                    ScreenHeading(title: SearchWording.title)
                     // Campo propio bajo el título: el del sistema (`.searchable`) quedaba
                     // escondido con la barra de navegación y no había dónde escribir.
-                    SearchField(prompt: "Libros, autores, subrayados y notas", text: $query, focused: $focused,
+                    SearchField(prompt: SearchWording.prompt, text: $query, focused: $focused,
                                 onSubmit: remember)
                         .padding(.top, Theme.Space.l)
                     if term.isEmpty {

@@ -35,6 +35,8 @@ struct ShelfBook: Identifiable, Hashable {
     var lastReadAt: Date? = nil
     /// En qué va: lo marcado a mano o, si no, el avance (igual que en la Mac).
     var state: ReadingState = .toRead
+    /// Parece estar dos veces en tu biblioteca (`DuplicateFinder`, como en la Mac): lleva su marca (UX-2d).
+    var possibleDuplicate = false
 
     var isReading: Bool { progress > 0 && progress < 1 }
     var isFinished: Bool { progress >= 1 }

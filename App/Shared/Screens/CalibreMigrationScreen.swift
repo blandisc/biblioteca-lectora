@@ -29,7 +29,7 @@ struct CalibreMigrationScreen: View {
                     case .review(let source, let plan): ReviewStep(plan: plan) { migrate(source: source, plan: plan) }
                     case .migrating:
                         let done = model.library.progress
-                        progress(title: done.map { "Trayendo \($0.done) de \($0.total.counted("libro", "libros"))…" } ?? "Trayendo…",
+                        progress(title: done.map { "Trayendo \($0.done.counted("libro", "libros")) de \($0.total)…" } ?? "Trayendo…",
                                  value: model.library.progressFraction)
                     case .done(let report): SummaryStep(report: report) { dismiss() }
                     }

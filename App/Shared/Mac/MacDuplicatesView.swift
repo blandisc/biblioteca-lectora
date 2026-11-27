@@ -39,7 +39,7 @@ struct MacDuplicatesView: View {
                 MacEmptyState(title: EmptyCopy.noDuplicates.title, message: EmptyCopy.noDuplicates.message, systemImage: "checkmark.circle")
             }
         }
-        .navigationTitle("Posibles duplicados")
+        .navigationTitle(Duplicates.title)
         .navigationSubtitle(groups.isEmpty ? "" : groups.count.counted("grupo", "grupos"))
         .confirmationDialog(confirmTitle, isPresented: Binding(
             get: { confirming != nil }, set: { if !$0 { confirming = nil } }

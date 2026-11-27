@@ -77,6 +77,8 @@ struct BookDetailScreen: View {
         .navigationDestination(isPresented: $searching) {
             if let id = live.bookID { CandidatesScreen(bookID: id, searchesFirst: true) }
         }
+        // Capturas: `-screenshot.screen edit` abre «Escribir a mano» sobre la ficha.
+        .onAppear { if LaunchOptions.screen == "edit" { editing = true } }
         .sheet(isPresented: $editing) {
             if let record { MetadataEditorView(book: record) }
         }
@@ -205,7 +207,7 @@ struct CoverPickerSheet: View {
                 }
                 .screenContent()
             }
-            .pushedScreen("Portada")
+            .pushedScreen("Portada", sheet: true)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Dejar la portada") { dismiss() }
@@ -257,7 +259,7 @@ private struct BookFacts: View {
         if let published = book.published { rows.append(("Publicado", published)) }
         if let publisher = book.publisher { rows.append(("Editorial", publisher)) }
         if let language = book.language {
-            rows.append(("Idioma", Locale(identifier: "es").localizedString(forLanguageCode: language)?.capitalized ?? language))
+            rows.append(("Idioma", BookFields.languageName(language)))
         }
         if let isbn = book.identifiers["isbn"] { rows.append(("ISBN", isbn)) }
         if !book.tags.isEmpty { rows.append(("Etiquetas", book.tags.joined(separator: ", "))) }

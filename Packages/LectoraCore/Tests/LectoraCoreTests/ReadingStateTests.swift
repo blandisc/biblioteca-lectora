@@ -28,4 +28,14 @@ final class ReadingStateTests: XCTestCase {
         XCTAssertEqual(1.counted("libro", "libros"), "1 libro")
         XCTAssertEqual(Set(SelectionAction.allCases.map(\.symbol)).count, SelectionAction.allCases.count)
     }
+
+    /// Regla 8 (UX-3c): un idioma se dice por su nombre, igual venga como venga el código.
+    func testLanguagesSayTheirName() {
+        for code in ["es", "ES", "es-MX", "es_ES", "spa"] {
+            XCTAssertEqual(BookFields.languageName(code), "Español", code)
+        }
+        XCTAssertEqual(BookFields.languageName("en"), "Inglés")
+        XCTAssertEqual(BookFields.languageName("ar"), "Árabe")
+        XCTAssertFalse(BookFields.languageName("zh").dropFirst().contains { $0.isUppercase }, "Mayúscula solo al principio")
+    }
 }

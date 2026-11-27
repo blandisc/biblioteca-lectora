@@ -1,3 +1,4 @@
+import LectoraCore
 import SwiftUI
 
 /// Raíz: dock nativo (Mesa, Biblioteca, Cuaderno) con la búsqueda aparte, el
@@ -35,7 +36,8 @@ struct RootView: View {
             .preferredColorScheme(mode.colorScheme)
             .task {
                 await model.seedForScreenshotsIfNeeded()
-                if LaunchOptions.opensFirstBook, let first = model.currentBook {
+                if LaunchOptions.opensFirstBook,
+                   let first = LaunchOptions.book.flatMap({ title in model.shelf.first { $0.title.contains(title) } }) ?? model.currentBook {
                     model.open(first)
                 }
                 // Primer arranque, con el Gabinete vacío (no en las capturas automáticas).
@@ -109,7 +111,7 @@ struct RootView: View {
                     .tabItem { Label("Cuaderno", systemImage: "note.text") }
                     .tag(Place.notebook)
                 SearchScreen()
-                    .tabItem { Label("Buscar", systemImage: "magnifyingglass") }
+                    .tabItem { Label(SearchWording.title, systemImage: "magnifyingglass") }
                     .tag(Place.search)
             }
         }

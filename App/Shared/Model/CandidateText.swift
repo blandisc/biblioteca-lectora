@@ -28,13 +28,8 @@ extension MetadataCandidate {
         }
         if notes.contains(.conflictingISBN) { parts.append("tu ISBN es de otro libro") }
         if notes.contains(.notTheBook) { parts.append("parece una guía o un resumen") }
-        if notes.contains(.otherLanguage), let language { parts.append("edición en \(Self.languageName(language))") }
+        if notes.contains(.otherLanguage), let language { parts.append("edición en \(BookFields.languageName(language).lowercased())") }
         let text = parts.joined(separator: ", ")
         return text.prefix(1).uppercased() + text.dropFirst()
-    }
-
-    /// «es» → «español».
-    static func languageName(_ code: String) -> String {
-        Locale(identifier: "es").localizedString(forLanguageCode: code) ?? code
     }
 }

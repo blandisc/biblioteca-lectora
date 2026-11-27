@@ -87,24 +87,24 @@ struct MacBookInspector: View {
             }
             annotations(of: book)
             Section(BookSection.book.rawValue) {
-                TextField("Título", text: $draft.title)
-                TextField("Autores", text: $draft.authors, prompt: Text("Sepáralos con &"))
-                TextField("Serie", text: $draft.series)
-                TextField("Número en la serie", text: $draft.seriesIndex)
+                TextField("Título", text: $draft.title).oneLine()
+                TextField("Autores", text: $draft.authors, prompt: Text("Sepáralos con &")).oneLine()
+                TextField("Serie", text: $draft.series).oneLine()
+                TextField("Número en la serie", text: $draft.seriesIndex).oneLine()
                 if SeriesIndexInput(draft.seriesIndex).isInvalid {
                     Text(SeriesIndexInput.hint).font(.footnote).foregroundStyle(Theme.secondaryInk)
                 }
             }
             Section(BookSection.edition.rawValue) {
-                TextField("Editorial", text: $draft.publisher)
-                TextField("Publicado", text: $draft.published, prompt: Text(BookFields.publishedPrompt))
-                TextField("ISBN", text: $draft.isbn)
+                TextField("Editorial", text: $draft.publisher).oneLine()
+                TextField("Publicado", text: $draft.published, prompt: Text(BookFields.publishedPrompt)).oneLine()
+                TextField("ISBN", text: $draft.isbn).oneLine()
                 LanguagePicker(code: $draft.language)
             }
             Section(BookSection.reading.rawValue) {
                 StatusPicker(status: $draft.status)
                 LabeledContent("Valoración") { RatingPicker(rating: $draft.rating) }
-                TextField("Etiquetas", text: $draft.tags, prompt: Text("Sepáralas con comas"))
+                TextField("Etiquetas", text: $draft.tags, prompt: Text("Sepáralas con comas")).oneLine()
             }
             Section(BookSection.summary.rawValue) {
                 // Con la letra y el fondo del resto de la ficha, no un recuadro blanco aparte.
@@ -213,19 +213,19 @@ struct MacBookInspector: View {
                     .foregroundStyle(Theme.secondaryInk)
             }
             Section(BookSection.book.rawValue) {
-                TextField("Autores", text: $draft.authors, prompt: Text(placeholder(BulkEdit.common(books) { BookFields.authorsText($0.authors) })))
-                TextField("Serie", text: $draft.series, prompt: Text(placeholder(BulkEdit.common(books) { $0.series ?? "" })))
+                TextField("Autores", text: $draft.authors, prompt: Text(placeholder(BulkEdit.common(books) { BookFields.authorsText($0.authors) }))).oneLine()
+                TextField("Serie", text: $draft.series, prompt: Text(placeholder(BulkEdit.common(books) { $0.series ?? "" }))).oneLine()
             }
             Section(BookSection.edition.rawValue) {
-                TextField("Editorial", text: $draft.publisher, prompt: Text(placeholder(BulkEdit.common(books) { $0.publisher ?? "" })))
+                TextField("Editorial", text: $draft.publisher, prompt: Text(placeholder(BulkEdit.common(books) { $0.publisher ?? "" }))).oneLine()
                 LanguagePicker(code: $draft.language, none: BulkEdit.common(books) { $0.language ?? "" }
                     .map { $0.isEmpty ? "Sin cambiar" : "Sin cambiar (\(BookFields.languageName($0)))" } ?? "Sin cambiar (\(BookFields.mixed.lowercased()))")
             }
             Section(BookSection.reading.rawValue) {
                 StatusPicker(status: $draft.status, keeps: "Sin cambiar")
-                TextField("Agregar etiquetas", text: $draft.tags, prompt: Text("Sepáralas con comas"))
+                TextField("Agregar etiquetas", text: $draft.tags, prompt: Text("Sepáralas con comas")).oneLine()
                 TextField("Quitar etiquetas", text: $draft.removeTags,
-                          prompt: Text(BookFields.tagsText(BulkEdit.sharedTags(books)).nonEmpty ?? "Sepáralas con comas"))
+                          prompt: Text(BookFields.tagsText(BulkEdit.sharedTags(books)).nonEmpty ?? "Sepáralas con comas")).oneLine()
             }
             buttons(count: books.count)
         }

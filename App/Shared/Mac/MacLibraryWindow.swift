@@ -19,8 +19,8 @@ enum MacSection: Hashable {
         switch self {
         case .desk: "Mesa"
         case .notebook: "Cuaderno"
-        case .search: "Buscar"
-        case .duplicates: "Posibles duplicados"
+        case .search: SearchWording.title
+        case .duplicates: Duplicates.title
         case .all: "Biblioteca"
         case .state(let state): state.group
         case .review: "Por revisar"
@@ -87,7 +87,7 @@ struct MacLibraryWindow: View {
             case .desk: MesaScreen().navigationTitle("Mesa")
             case .notebook: NotebookScreen().navigationTitle("Cuaderno")
             // Buscar en todo (SG-3): libros, subrayados y notas. La búsqueda de la tabla es solo de libros.
-            case .search: SearchScreen().navigationTitle("Buscar")
+            case .search: SearchScreen().navigationTitle(SearchWording.title)
             case .duplicates: MacDuplicatesView(library: model.library)
             default: MacBookTable(library: model.library, section: section ?? .all)
             }
@@ -122,7 +122,7 @@ private struct MacBatchBar: View {
                 Spacer()
                 Button("Cerrar aviso", action: close)
             } else {
-                Text("Buscando datos · \(progress.done) de \(progress.total.counted("libro", "libros"))")
+                Text("Buscando datos · \(progress.done.counted("libro", "libros")) de \(progress.total)")
                     .monospacedDigit()
                 ProgressView(value: Double(progress.done), total: Double(max(progress.total, 1)))
                     .frame(maxWidth: Theme.Mac.batchProgress)
@@ -158,7 +158,7 @@ private struct MacSidebar: View {
             Section("Leer") {
                 Label("Mesa", systemImage: "book").tag(MacSection.desk)
                 Label("Cuaderno", systemImage: "note.text").tag(MacSection.notebook)
-                Label("Buscar en todo", systemImage: "magnifyingglass").tag(MacSection.search)
+                Label(SearchWording.title, systemImage: "magnifyingglass").tag(MacSection.search)
             }
             Section("Biblioteca") {
                 item(.all, "books.vertical", rows.count)
@@ -173,7 +173,7 @@ private struct MacSidebar: View {
                 item(.noCover, "photo", rows.filter { !$0.hasCover }.count)
                 let duplicates = library.duplicateGroups().count
                 if duplicates > 0 || selection == .duplicates {
-                    item(.duplicates, "square.on.square", duplicates)
+                    item(.duplicates, Duplicates.symbol, duplicates)
                 }
             }
             if !library.shelves.isEmpty {

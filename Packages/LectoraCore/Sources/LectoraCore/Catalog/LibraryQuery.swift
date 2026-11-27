@@ -2,7 +2,10 @@ import Foundation
 
 /// La búsqueda de la tabla de la Mac (MG-1): texto libre y filtros con nombre, como en
 /// Calibre. `autor:cortázar serie:"el señor" etiqueta:historia idioma:es estado:leyendo`.
-/// Sin acentos ni mayúsculas: «cortazar» encuentra «Cortázar».
+/// Sin acentos ni mayúsculas: «cortazar» encuentra «Cortázar». Las palabras que siguen a un
+/// filtro son de ese filtro: `autor:julio cortázar` es el autor «Julio Cortázar» (UX-4e; antes
+/// «cortázar» se buscaba aparte y, en Buscar, no salía ningún subrayado). Para buscar texto
+/// junto con un filtro, las palabras van antes: `ciudad autor:cortázar`.
 public struct LibraryQuery: Equatable, Sendable {
     public enum Field: String, CaseIterable, Sendable {
         case author, series, tag, language, publisher, status, isbn, title
@@ -11,6 +14,15 @@ public struct LibraryQuery: Equatable, Sendable {
     public struct Filter: Equatable, Sendable {
         public var field: Field
         public var value: String
+        /// Las palabras que siguieron al filtro (`autor:julio cortázar` → «cortazar»): cada una
+        /// debe estar en el mismo dato o, si no, en el título, la serie o las etiquetas del libro.
+        public var more: [String] = []
+
+        public init(field: Field, value: String, more: [String] = []) {
+            self.field = field
+            self.value = value
+            self.more = more
+        }
     }
 
     /// Palabras sueltas: cada una debe aparecer en el título, el autor, la serie o las etiquetas.
@@ -37,6 +49,8 @@ public struct LibraryQuery: Equatable, Sendable {
                let field = Self.names[Self.fold(String(token[..<colon]))] {
                 let value = String(token[token.index(after: colon)...])
                 if !value.isEmpty { filters.append(Filter(field: field, value: Self.fold(value))) }
+            } else if !filters.isEmpty {
+                filters[filters.count - 1].more.append(Self.fold(token))
             } else {
                 words.append(Self.fold(token))
             }
@@ -44,16 +58,25 @@ public struct LibraryQuery: Equatable, Sendable {
     }
 
     public func matches(_ book: Book) -> Bool {
-        let haystack = Self.fold(([book.title, book.series ?? ""] + book.authors + book.tags).joined(separator: " "))
+        let haystack = Self.haystack(book)
         guard words.allSatisfy({ haystack.contains($0) }) else { return false }
         return matchesFilters(book)
+    }
+
+    static func haystack(_ book: Book) -> String {
+        fold(([book.title, book.series ?? ""] + book.authors + book.tags).joined(separator: " "))
     }
 
     /// Solo los filtros con nombre (`autor:`, `serie:`…): en Buscar, los subrayados se quedan
     /// con los de los libros que cumplen los filtros.
     public func matchesFilters(_ book: Book) -> Bool {
         filters.allSatisfy { filter in
-            Self.values(of: filter.field, in: book).contains { Self.fold($0).contains(filter.value) }
+            let values = Self.values(of: filter.field, in: book).map(Self.fold)
+            guard values.contains(where: { $0.contains(filter.value) }) else { return false }
+            guard !filter.more.isEmpty else { return true }
+            // Las palabras de más, en el mismo dato («Julio Cortázar» o «Cortázar, Julio») o en el libro.
+            let field = values.joined(separator: " "), book = Self.haystack(book)
+            return filter.more.allSatisfy { field.contains($0) || book.contains($0) }
         }
     }
 

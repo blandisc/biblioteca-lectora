@@ -113,9 +113,15 @@ public enum BookFields {
         text.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     }
 
-    /// El idioma con su nombre en español («Español», no «es»); lo que no se reconoce, tal cual.
+    /// El idioma con su nombre en español («Español», no «es»), igual en toda la app (UX-3c):
+    /// también «es-MX», «es_ES» o «spa» dicen «Español», y con mayúscula solo al principio
+    /// («Chino mandarín»). Lo que no se reconoce, tal cual.
     public static func languageName(_ code: String) -> String {
-        Locale(identifier: "es").localizedString(forLanguageCode: code)?.capitalized ?? code
+        let trimmed = code.trimmingCharacters(in: .whitespaces)
+        let base = trimmed.split(whereSeparator: { $0 == "-" || $0 == "_" }).first.map(String.init) ?? trimmed
+        guard let name = Locale(identifier: "es").localizedString(forLanguageCode: base.lowercased()), !base.isEmpty
+        else { return code }
+        return name.prefix(1).uppercased() + name.dropFirst()
     }
 
     /// Lo que dice un campo cuando los libros elegidos tienen valores distintos.
@@ -173,6 +179,22 @@ public enum LibraryAction: CaseIterable, Sendable {
     public static func findData(count: Int) -> String {
         count == 1 ? LibraryAction.findData.title : "Buscar datos de \(count.counted("libro", "libros"))"
     }
+}
+
+/// Buscar (UX-4f): el mismo nombre en la pestaña, el título, la barra de la Mac y lo que dice el
+/// campo vacío, que empieza igual («Buscar en…»), como «Buscar en el libro» dentro de un libro.
+public enum SearchWording {
+    public static let title = "Buscar"
+    public static let prompt = "Buscar en libros, subrayados y notas"
+    public static let inBook = "Buscar en el libro"
+}
+
+/// Los libros que parecen estar dos veces (CB-3, UX-2d): el mismo nombre y el mismo ícono en el
+/// filtro y la marca del iPhone y en la sección de la Mac (regla 8).
+public enum Duplicates {
+    public static let title = "Posibles duplicados"
+    public static let one = "Posible duplicado"
+    public static let symbol = "square.on.square"
 }
 
 /// Los rótulos del formulario de datos de un libro, iguales en la hoja del iPhone y en la

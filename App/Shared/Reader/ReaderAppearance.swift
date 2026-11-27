@@ -170,8 +170,8 @@ struct ReaderPalette: Equatable {
     var background: Color
     var text: String
     var link: String
-    /// Modo de la interfaz sobre la página; `nil` deja el de la app.
-    var scheme: ColorScheme?
+    /// Modo de la interfaz sobre la página (los botones y las hojas del lector).
+    var scheme: ColorScheme
 
     /// El color del texto para pintarlo en la app (muestras de «Aa»).
     var textColor: Color { Color(hex: UInt32(text.dropFirst(), radix: 16) ?? 0) } // ds-exception: paleta del lector
@@ -182,20 +182,72 @@ struct ReaderPalette: Equatable {
     static let night = ReaderPalette(background: Color(hex: 0x2B2420), text: "#E8D9C4", link: Theme.Green.css(dark: true), scheme: .dark) // ds-exception: paleta del lector
     static let black = ReaderPalette(background: Color(hex: 0x000000), text: "#BDB8AE", link: Theme.Green.css(dark: true), scheme: .dark) // ds-exception: paleta del lector
 
+    /// `appIsDark` es el modo que manda (`SystemAppearance.isDark(mode:)`). Los fondos de día
+    /// (Papel y Blanco) siguen al modo oscuro con su par de noche, como en Libros de Apple:
+    /// antes, con «Papel» elegido, el libro se quedaba en claro con iOS en oscuro (UX-1b).
+    /// Noche cálida y Negro son de noche siempre.
     static func resolve(_ theme: ReaderTheme, autoNight: Bool, appIsDark: Bool, now: Date = Date()) -> ReaderPalette {
         switch theme {
-        case .paper: return .paper
-        case .white: return .white
+        case .paper: return appIsDark ? .darkPaper : .paper
+        case .white: return appIsDark ? .black : .white
         case .night: return .night
         case .black: return .black
         case .auto:
             let hour = Calendar.current.component(.hour, from: now)
             if autoNight && (hour >= 20 || hour < 7) { return .night }
-            var palette = appIsDark ? ReaderPalette.darkPaper : .paper
-            palette.scheme = nil
-            return palette
+            return appIsDark ? .darkPaper : .paper
         }
     }
+}
+
+/// El claro u oscuro que manda en el lector: el de Ajustes › Apariencia o, con «Sistema», el
+/// de iOS (o de la Mac). Se lee de la escena o del sistema y no de la vista: el lector le pone su
+/// modo a su pantalla y, leído de ahí, se quedaba pegado en claro aunque iOS pasara a oscuro (UX-1b).
+@MainActor
+final class SystemAppearance: ObservableObject {
+    static let shared = SystemAppearance()
+    @Published private(set) var isSystemDark = false
+    #if os(iOS)
+    private var registration: (any UITraitChangeRegistration)?
+    #else
+    private var observer: NSObjectProtocol?
+    #endif
+
+    private init() {}
+
+    /// Oscuro según lo que elegiste en Apariencia.
+    func isDark(mode: AppearanceMode) -> Bool {
+        switch mode {
+        case .light: false
+        case .dark: true
+        case .system: isSystemDark
+        }
+    }
+
+    /// Empieza a seguir al sistema (una vez; el lector lo llama al abrir).
+    func start() {
+        #if os(iOS)
+        guard registration == nil,
+              let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
+        isSystemDark = scene.traitCollection.userInterfaceStyle == .dark
+        registration = scene.registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (scene: UIWindowScene, _: UITraitCollection) in
+            self?.isSystemDark = scene.traitCollection.userInterfaceStyle == .dark
+        }
+        #else
+        guard observer == nil else { return }
+        read()
+        observer = DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("AppleInterfaceThemeChangedNotification"), object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.read() }
+        }
+        #endif
+    }
+
+    #if os(macOS)
+    private func read() {
+        isSystemDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+    }
+    #endif
 }
 
 /// Hoja «Aa»: tipografía, páginas o continuo, tamaño, fondo y noche cálida automática.
@@ -208,7 +260,8 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.haptics) private var haptics = true
     @AppStorage(ReaderKeys.turn) private var turnStyle: ReaderTurnStyle = .matte
     /// El modo de la app: con «Automático», el tema sigue al claro u oscuro de iOS.
-    @Environment(\.colorScheme) private var appScheme
+    @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
+    @ObservedObject private var system = SystemAppearance.shared
     @Environment(\.dynamicTypeSize) private var typeSize
     /// El alto de la hoja «Aa»: el de su contenido. Para cambiarlo animado se pasa
     /// de un alto al otro (como al arrastrarla); asignado directo, iOS lo cambia de golpe.
@@ -222,13 +275,13 @@ struct ReaderAppearanceSheet: View {
     @State private var turnsFaded = false
 
     private var palette: ReaderPalette {
-        ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: appScheme == .dark)
+        ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: system.isDark(mode: mode))
     }
 
     var body: some View {
         sized
             // Toda la hoja toma el tema que eliges: papel, tinta y mosaicos.
-            .environment(\.colorScheme, palette.scheme ?? appScheme)
+            .environment(\.colorScheme, palette.scheme)
             .presentationBackground(palette.background)
             .animation(Theme.Motion.standard, value: theme)
             .animation(Theme.Motion.standard, value: font)

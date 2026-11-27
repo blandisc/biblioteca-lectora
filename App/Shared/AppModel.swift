@@ -67,7 +67,12 @@ final class AppModel: ObservableObject {
     }
 
     private func rebuildShelf() {
-        shelf = library.books.map { ShelfBook(book: $0, library: library) }
+        let duplicates = Set(library.duplicateGroups().joined().map(\.id))
+        shelf = library.books.map { book in
+            var shelfBook = ShelfBook(book: book, library: library)
+            shelfBook.possibleDuplicate = duplicates.contains(book.id)
+            return shelfBook
+        }
         shelfByID = Dictionary(uniqueKeysWithValues: shelf.map { ($0.id, $0) })
         recent = LibrarySort.recent.sorted(shelf)
     }

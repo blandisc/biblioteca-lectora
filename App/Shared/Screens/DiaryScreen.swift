@@ -21,7 +21,7 @@ struct DiaryScreen: View {
 
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var store = SessionStore.shared
-    @State private var part: Part = .week
+    @State private var part: Part = Part(rawValue: LaunchOptions.part ?? "") ?? .week
     /// Cuántas semanas, meses o años hacia atrás.
     @State private var offset = 0
 
@@ -114,7 +114,8 @@ struct DiaryScreen: View {
         let interval = monthInterval
         let period = all.between(interval.start, interval.end)
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            PeriodStepper(title: interval.start.es(.dateTime.month(.wide).year()).capitalized,
+            // «noviembre de 2026», en minúscula como se escribe en español (antes «Noviembre De 2026»).
+            PeriodStepper(title: interval.start.es(.dateTime.month(.wide).year()),
                           canGoForward: offset > 0, back: { offset += 1 }, forward: { offset -= 1 })
             PeriodTotal(period: period, days: calendar.range(of: .day, in: .month, for: interval.start)?.count ?? 30, calendar: calendar)
             MonthCalendar(days: period.days(from: interval.start, to: interval.end, calendar: calendar))
@@ -267,7 +268,7 @@ private struct PeriodStepper: View {
     }
 }
 
-/// «2 h 33 min» y «38 mil palabras · 6 sesiones · 5 de 7 días».
+/// «2 h 33 min» y «38 mil palabras · 6 sesiones · 5 días de 7» («1 día de 7», nunca «1 de 7 días»).
 private struct PeriodTotal: View {
     let period: ReadingPeriod
     let days: Int
@@ -277,7 +278,7 @@ private struct PeriodTotal: View {
         VStack(alignment: .leading, spacing: Theme.Space.xxs) {
             Text(ReadingFormat.duration(period.readingSeconds))
                 .screenTitleFont()
-            Text("\(period.words.counted("palabra", "palabras", shown: ReadingFormat.words(period.words))) · \(period.sessions.count.counted("sesión", "sesiones")) · \(period.days(calendar: calendar)) de \(days.counted("día", "días"))")
+            Text("\(period.words.counted("palabra", "palabras", shown: ReadingFormat.words(period.words))) · \(period.sessions.count.counted("sesión", "sesiones")) · \(period.days(calendar: calendar).counted("día", "días")) de \(days)")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
         }

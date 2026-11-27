@@ -126,7 +126,7 @@ struct ReaderToolsSheet: View {
 
     private var search: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            SearchField(prompt: "Buscar en el libro", text: $query, focused: $searchFocused,
+            SearchField(prompt: SearchWording.inBook, text: $query, focused: $searchFocused,
                         onSubmit: { controller.search(query) },
                         onClear: { controller.clearSearch() })
             if let progress = controller.searchProgress {

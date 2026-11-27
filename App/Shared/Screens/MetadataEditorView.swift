@@ -54,15 +54,17 @@ struct MetadataEditorView: View {
                     Text("Portada")
                 }
 
+                // Cada dato con su nombre arriba, también ya escrito: el campo del sistema solo
+                // enseñaba la pista y, lleno, no decía qué era (UX-3a).
                 Section(BookSection.book.rawValue) {
-                    TextField("Título", text: $draft.title)
-                    TextField("Autores (sepáralos con &)", text: $authors)
-                    TextField("Serie", text: Binding(
+                    LabeledField(label: "Título", text: $draft.title)
+                    LabeledField(label: "Autores", prompt: "Sepáralos con &", text: $authors)
+                    LabeledField(label: "Serie", text: Binding(
                         get: { draft.series ?? "" },
                         set: { draft.series = $0.isEmpty ? nil : $0 }
                     ))
                     if draft.series != nil {
-                        TextField("Número en la serie", text: $seriesIndex)
+                        LabeledField(label: "Número en la serie", text: $seriesIndex)
                             #if os(iOS)
                             .keyboardType(.decimalPad)
                             #endif
@@ -75,9 +77,9 @@ struct MetadataEditorView: View {
                 }
 
                 Section(BookSection.edition.rawValue) {
-                    TextField("Editorial", text: optional(\.publisher))
-                    TextField("Publicado (\(BookFields.publishedPrompt))", text: optional(\.published))
-                    TextField("ISBN", text: $isbn)
+                    LabeledField(label: "Editorial", text: optional(\.publisher))
+                    LabeledField(label: "Publicado", prompt: BookFields.publishedPrompt, text: optional(\.published))
+                    LabeledField(label: "ISBN", text: $isbn)
                     LanguagePicker(code: Binding(
                         get: { draft.language ?? "" },
                         set: { draft.language = $0.isEmpty ? nil : $0 }
@@ -91,7 +93,7 @@ struct MetadataEditorView: View {
                         Spacer()
                         RatingPicker(rating: $draft.rating)
                     }
-                    TextField("Etiquetas (sepáralas con comas)", text: $tags)
+                    LabeledField(label: "Etiquetas", prompt: "Sepáralas con comas", text: $tags)
                 }
 
                 Section(BookSection.summary.rawValue) {
@@ -100,7 +102,7 @@ struct MetadataEditorView: View {
                 }
             }
             .formScreen()
-            .inlineTitle("Editar datos")
+            .sheetTitle("Editar datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Dejar como está") { dismiss() }
@@ -128,9 +130,8 @@ struct MetadataEditorView: View {
     private var coverPreview: some View {
         if let newCover, let source = CGImageSourceCreateWithData(newCover as CFData, nil),
            let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
-            Image(decorative: image, scale: 1)
-                .resizable()
-                .aspectRatio(Theme.Size.coverAspect, contentMode: .fill)
+            FittedCover(image: Image(decorative: image, scale: 1))
+                .aspectRatio(Theme.Size.coverAspect, contentMode: .fit)
                 .coverShape()
         } else {
             CoverView(title: draft.title, author: authors, style: .generated(for: draft.title),

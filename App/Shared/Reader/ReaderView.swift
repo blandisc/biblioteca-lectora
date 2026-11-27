@@ -13,7 +13,7 @@ struct ReaderView: View {
     var startCFI: String? = nil
     @StateObject private var controller = ReaderController()
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var system = SystemAppearance.shared
     /// El tamaño de texto de iOS: la letra del libro lo sigue, sobre lo que elijas en «Aa».
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
@@ -43,7 +43,7 @@ struct ReaderView: View {
     @AppStorage(SessionKeys.counter) private var showsCounter = true
 
     private var palette: ReaderPalette {
-        ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: colorScheme == .dark)
+        ReaderPalette.resolve(theme, autoNight: autoNight, appIsDark: system.isDark(mode: mode))
     }
 
     /// Título del catálogo (el de `[[ ]]` en las notas); si no, el del archivo.
@@ -122,7 +122,9 @@ struct ReaderView: View {
         #if os(iOS)
         .statusBarHidden(!showsChrome)
         #endif
-        .preferredColorScheme(palette.scheme ?? mode.colorScheme)
+        // Siempre un modo, nunca `nil`: con `nil` iOS deja puesto el último y el lector se
+        // quedaba en claro (o en oscuro) aunque cambiara el sistema (UX-1b).
+        .preferredColorScheme(palette.scheme)
         .sheet(item: $tools) { part in
             ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
         }
@@ -293,6 +295,7 @@ extension ReaderView {
     fileprivate func lifecycle(_ content: some View) -> some View {
         content
         .onAppear {
+            SystemAppearance.shared.start()
             applyStyle()
             // Sin capturar la vista: el controlador no debe retenerse a sí mismo.
             let chrome = $showsChrome
@@ -728,7 +731,7 @@ private struct BottomPanel: View {
                         Image(systemName: "magnifyingglass")
                             .roundInGlass()
                     }
-                    .accessibilityLabel("Buscar en el libro")
+                    .accessibilityLabel(SearchWording.inBook)
                     Button(action: onAppearance) {
                         Text("Aa").roundInGlass()
                     }

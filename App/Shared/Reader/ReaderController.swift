@@ -554,7 +554,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                                fraction: fraction,
                                jumped: body["jumped"] as? Bool ?? false)
             settleTask?.cancel()
-            if let location {
+            // Abrir el libro no es leerlo (UX-1e): la posición se guarda hasta que tú lo
+            // mueves; antes, solo abrirlo ya decía «5 % leído».
+            if let location, body["moved"] as? Bool == true {
                 settleTask = Task { [weak self] in
                     try? await Task.sleep(for: Theme.Reader.positionSettle)
                     guard !Task.isCancelled else { return }

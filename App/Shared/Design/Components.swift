@@ -46,21 +46,29 @@ extension View {
     /// papel de fondo, título en línea y controles del contenido en `accent`. Los botones
     /// de la barra de vidrio («Listo», «Cancelar», «Editar») van en tinta, como en iOS 26;
     /// antes unas hojas los forzaban a verde y otras no (22 nov 2026).
-    func pushedScreen(_ title: String = "") -> some View {
+    /// `sheet: true` en una hoja con dos botones de texto en la barra (ver `sheetTitle`).
+    func pushedScreen(_ title: String = "", sheet: Bool = false) -> some View {
         self
             .background(Theme.paper.ignoresSafeArea())
-            .inlineTitle(title)
+            .barTitle(title, large: sheet)
             .tint(Theme.accent)
     }
 
     /// Título pequeño, centrado en la barra (pantallas empujadas, hojas y formularios).
     /// En la Mac, sin título no se pone uno vacío: el de `ScreenHeading` ya va en la barra (MX-B).
+    func inlineTitle(_ title: String) -> some View { barTitle(title, large: false) }
+
+    /// Título de una hoja con dos botones de texto en la barra («Dejar como está» y «Guardar
+    /// cambios»): va debajo de ellos, en grande, porque en medio no cabe y iOS lo escondía
+    /// (UX-3a, 26 nov 2026: «Editar datos» no se veía).
+    func sheetTitle(_ title: String) -> some View { barTitle(title, large: true) }
+
     @ViewBuilder
-    func inlineTitle(_ title: String) -> some View {
+    fileprivate func barTitle(_ title: String, large: Bool) -> some View {
         #if os(iOS)
         self
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(large ? .large : .inline)
         #else
         if title.isEmpty { self } else { self.navigationTitle(title) }
         #endif
@@ -188,7 +196,7 @@ struct BrandMark: View {
     var body: some View {
         Text("GABINETE")
             .font(.brandMark)
-            .tracking(Theme.Tracking.brandMark)
+            .spaced(Theme.Tracking.brandMark, "GABINETE")
             .foregroundStyle(Theme.ink)
             // La marca es una palabra: si no cabe se achica un poco, nunca se parte.
             .lineLimit(1)
@@ -245,11 +253,19 @@ struct SectionLabel: View {
     var body: some View {
         Text(text.uppercased())
             .font(.sectionLabel)
-            .tracking(Theme.Tracking.sectionLabel)
+            .spaced(Theme.Tracking.sectionLabel, text)
             .foregroundStyle(tone)
             // Un título largo (o la letra más grande) no se vuelve una columna de versalitas.
             .lineLimit(Theme.Size.labelLines)
             .accessibilityAddTraits(.isHeader)
+    }
+}
+
+extension View {
+    /// Letras espaciadas, solo si la escritura lo aguanta (`String.isSpaceable`). Todo
+    /// espaciado de la app pasa por aquí: un título en árabe queda junto, como se escribe.
+    func spaced(_ amount: CGFloat, _ text: String) -> some View {
+        tracking(text.isSpaceable ? amount : 0)
     }
 }
 
@@ -266,7 +282,7 @@ struct CapsText: View {
     var body: some View {
         Text(text.uppercased())
             .font(.caption.weight(.medium))
-            .tracking(Theme.Tracking.caps)
+            .spaced(Theme.Tracking.caps, text)
             .monospacedDigit()
             .foregroundStyle(tone)
             // Con la letra más grande baja de renglón en vez de cortarse.
@@ -690,6 +706,8 @@ struct SortMenu<Option: Hashable & Identifiable>: View {
 
 /// Filtros en texto (SD-3, 26 nov 2026): la elegida en tinta con un trazo verde debajo,
 /// las demás en gris; sin píldoras. Filtros de la Biblioteca y partes del Cuaderno.
+/// Lo que no cabe baja entero al renglón de abajo: antes corría de lado y el último se
+/// leía cortado en la orilla («Si…», UX-2b).
 struct FilterBar<Item: Hashable & Identifiable>: View {
     let items: [Item]
     @Binding var selection: Item
@@ -697,33 +715,68 @@ struct FilterBar<Item: Hashable & Identifiable>: View {
     @Namespace private var mark
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Theme.Space.xl) {
-                ForEach(items) { item in
-                    let selected = item == selection
-                    Button { withAnimation(Theme.Motion.select) { selection = item } } label: {
-                        Text(title(item))
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(selected ? Theme.ink : Theme.secondaryInk)
-                            .frame(minHeight: Theme.Size.tapTarget)
-                            .overlay(alignment: .bottomLeading) {
-                                if selected {
-                                    Capsule()
-                                        .fill(Theme.accent)
-                                        .frame(width: Theme.Size.tabMark.width, height: Theme.Size.tabMark.height)
-                                        .matchedGeometryEffect(id: "trazo", in: mark)
-                                }
+        WrapRows(spacing: Theme.Space.xl) {
+            ForEach(items) { item in
+                let selected = item == selection
+                Button { withAnimation(Theme.Motion.select) { selection = item } } label: {
+                    Text(title(item))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(selected ? Theme.ink : Theme.secondaryInk)
+                        .frame(minHeight: Theme.Size.tapTarget)
+                        .overlay(alignment: .bottomLeading) {
+                            if selected {
+                                Capsule()
+                                    .fill(Theme.accent)
+                                    .frame(width: Theme.Size.tabMark.width, height: Theme.Size.tabMark.height)
+                                    .matchedGeometryEffect(id: "trazo", in: mark)
                             }
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(selected ? .isSelected : [])
+                        }
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
             }
-            // El texto de la primera opción queda en el margen.
-            .padding(.horizontal, Theme.Space.gutter)
         }
-        .padding(.horizontal, -Theme.Space.gutter)
+    }
+}
+
+/// Acomoda en renglones, de izquierda a derecha: lo que no cabe pasa entero al siguiente.
+private struct WrapRows: Layout {
+    let spacing: CGFloat
+
+    private func rows(_ width: CGFloat, _ subviews: Subviews) -> [[(index: Int, size: CGSize)]] {
+        var rows: [[(index: Int, size: CGSize)]] = [[]]
+        var used: CGFloat = 0
+        for (index, view) in subviews.enumerated() {
+            let size = view.sizeThatFits(.unspecified)
+            if !rows[rows.count - 1].isEmpty && used + spacing + size.width > width {
+                rows.append([])
+                used = 0
+            }
+            used += (rows[rows.count - 1].isEmpty ? 0 : spacing) + size.width
+            rows[rows.count - 1].append((index, size))
+        }
+        return rows
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = rows(proposal.width ?? .infinity, subviews)
+        let width = rows.map { row in row.map(\.size.width).reduce(0, +) + spacing * CGFloat(max(row.count - 1, 0)) }.max() ?? 0
+        let height = rows.map { $0.map(\.size.height).max() ?? 0 }.reduce(0, +)
+        return CGSize(width: proposal.width ?? width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in rows(bounds.width, subviews) {
+            var x = bounds.minX
+            let height = row.map(\.size.height).max() ?? 0
+            for item in row {
+                subviews[item.index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(item.size))
+                x += item.size.width + spacing
+            }
+            y += height
+        }
     }
 }
 
@@ -795,8 +848,22 @@ struct CoverCell: View {
                         .font(.caption)
                         .foregroundStyle(Theme.secondaryInk)
                 }
+                if book.possibleDuplicate {
+                    DuplicateMark()
+                }
             }
         }
+    }
+}
+
+/// «Posible duplicado», bajo un libro que parece estar dos veces (UX-2d): el mismo nombre
+/// y el mismo ícono que la sección de la Mac (regla 8).
+struct DuplicateMark: View {
+    var body: some View {
+        Label(Duplicates.one, systemImage: Duplicates.symbol)
+            .font(.caption)
+            .foregroundStyle(Theme.secondaryInk)
+            .lineLimit(Theme.Size.labelLines)
     }
 }
 
@@ -839,6 +906,7 @@ struct BookRow<Trailing: View>: View {
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
                     .lineLimit(lines)
+                if book.possibleDuplicate { DuplicateMark() }
             }
             Spacer(minLength: 0)
             trailing
@@ -1028,6 +1096,12 @@ struct LetterIndex: View {
 }
 
 extension String {
+    /// ¿Se le pueden espaciar las letras? Solo a las latinas, griegas y cirílicas: el árabe, el
+    /// hebreo y las escrituras que unen sus letras se rompen espaciadas («الـف لـيـلـة», UX-1c).
+    var isSpaceable: Bool {
+        range(of: #"[^\P{L}\p{Latin}\p{Greek}\p{Cyrillic}]"#, options: .regularExpression) == nil
+    }
+
     /// Primera letra sin acentos, en mayúscula; la Ñ se respeta.
     var firstLetter: String {
         guard let first else { return "" }
@@ -1153,6 +1227,33 @@ struct FieldRow: View {
         .font(.body)
         .frame(minHeight: Theme.Size.row)
         .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+/// Un dato que se escribe en un formulario, con su nombre arriba aunque ya tenga valor
+/// (UX-3a): en el iPhone el campo del sistema solo enseña la pista y, lleno, no decía qué era.
+struct LabeledField: View {
+    let label: String
+    var prompt: String? = nil
+    @Binding var text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(Theme.secondaryInk)
+            TextField(label, text: $text, prompt: Text(prompt ?? label))
+                .foregroundStyle(Theme.ink)
+        }
+        .padding(.vertical, Theme.Space.xxs)
+    }
+}
+
+extension View {
+    /// Un renglón que, si no cabe, termina en «…» en vez de cortarse en seco: los campos y
+    /// valores de la ficha de la Mac (regla 9, UX-3b).
+    func oneLine() -> some View {
+        lineLimit(1).truncationMode(.tail)
     }
 }
 
@@ -1758,6 +1859,27 @@ struct CandidateRow: View {
     }
 }
 
+/// Una imagen de portada en su marco: entera, sin estirarse ni recortarse, sobre sí misma
+/// desenfocada (UX-2e). Una cuadrada o apaisada se ve completa; una 2∶3 llena el marco igual
+/// que antes. Toda portada que llega de fuera (internet, Fotos, un archivo) pasa por aquí.
+struct FittedCover: View {
+    let image: Image
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                image.resizable().scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    .blur(radius: proxy.size.width * Theme.CoverArt.fitBlur, opaque: true)
+                image.resizable().scaledToFit()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+            }
+        }
+        .clipped()
+    }
+}
+
 /// Portada de un candidato (de internet) con la tipográfica mientras carga o si no hay.
 struct CandidateCover: View {
     let candidate: MetadataCandidate
@@ -1765,7 +1887,7 @@ struct CandidateCover: View {
 
     var body: some View {
         AsyncImage(url: candidate.coverURL) { image in
-            image.resizable().scaledToFill()
+            FittedCover(image: image)
         } placeholder: {
             CoverView(title: candidate.title, author: candidate.authors.first ?? "",
                       style: .generated(for: candidate.title))
@@ -1881,13 +2003,13 @@ struct CoverChoiceCell: View {
         switch option {
         case .current(let url):
             if let picture = CoverImaging.image(at: url) {
-                Image(decorative: picture, scale: 1).resizable().scaledToFill()
+                FittedCover(image: Image(decorative: picture, scale: 1))
             } else {
                 Theme.field
             }
         case .remote(let url):
             AsyncImage(url: url) { image in
-                image.resizable().scaledToFill()
+                FittedCover(image: image)
             } placeholder: {
                 Theme.field.overlay { ProgressView() }
             }
@@ -1935,7 +2057,7 @@ struct NoteRow: View {
             }
             meta
                 .font(.caption.weight(.medium))
-                .tracking(Theme.Tracking.caps)
+                .spaced(Theme.Tracking.caps, note.bookLinks.joined())
                 .monospacedDigit()
                 .lineLimit(lines)
         }
@@ -2422,7 +2544,10 @@ struct StatTrio: View {
                         .foregroundStyle(Theme.ink)
                         .lineLimit(1)
                         .minimumScaleFactor(Theme.Emphasis.labelMinScale)
-                    CapsText(text: item.label)
+                    // En un tercio de pantalla, la leyenda larga baja a otro renglón: antes
+                    // «LIBROS TERMI…» se cortaba (UX-4c).
+                    CapsText(text: item.label, lines: Theme.Size.labelLines)
+                        .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .combine)
@@ -2917,9 +3042,26 @@ struct MonthCalendar: View {
         return (weekday + 5) % 7 // lunes primero
     }
 
+    /// Lunes a domingo de la primera semana del mes, para el renglón de los días (UX-4b).
+    private var weekdays: [Date] {
+        guard let first = days.first?.date,
+              let monday = Calendar.current.date(byAdding: .day, value: -leadingBlanks, to: first) else { return [] }
+        return (0..<7).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: monday) }
+    }
+
     var body: some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
         VStack(spacing: Theme.Space.s) {
+            // L M M J V S D, del lunes al domingo, como el renglón de la semana. En su propia
+            // rejilla: en la de los días, el domingo 1 tenía la misma identidad que el día 1 y lo borraba.
+            LazyVGrid(columns: columns, spacing: Theme.Space.s) {
+                ForEach(weekdays, id: \.self) { day in
+                    Text(day.es(.dateTime.weekday(.narrow)).uppercased())
+                        .font(.caption)
+                        .foregroundStyle(Theme.tertiaryInk)
+                        .accessibilityHidden(true)
+                }
+            }
             LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                 ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.frame(height: Theme.Size.dayCell) }
                 ForEach(days) { day in
@@ -3029,7 +3171,7 @@ struct ShareCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Text("GABINETE")
                 .font(.sectionLabel)
-                .tracking(Theme.Tracking.sectionLabel)
+                .spaced(Theme.Tracking.sectionLabel, "GABINETE")
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 Text(title).font(.rowTitle.weight(.medium))
                 Text(author).font(.footnote).opacity(Theme.Emphasis.secondary)

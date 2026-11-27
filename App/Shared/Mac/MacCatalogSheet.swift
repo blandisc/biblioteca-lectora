@@ -42,7 +42,7 @@ struct MacCatalogSheet: View {
     var body: some View {
         Form {
             Section {
-                TextField(fieldName, text: $name)
+                TextField(fieldName, text: $name).oneLine()
                     .onSubmit(apply)
                 if let existing {
                     Text("Ya existe «\(existing)»: los junto en \(oneField).")

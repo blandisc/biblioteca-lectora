@@ -28,6 +28,26 @@ final class LibraryAdminTests: XCTestCase {
         XCTAssertTrue(LibraryQuery("editorial:catedra autor:julio").matches(rayuela))
     }
 
+    /// UX-4e: `autor:julio cortázar` es el autor «Julio Cortázar», no «julio» más la palabra «cortázar».
+    func testWordsAfterAFilterBelongToIt() {
+        let query = LibraryQuery("autor:julio cortázar")
+        XCTAssertTrue(query.words.isEmpty, "Las palabras tras el filtro son del filtro")
+        XCTAssertEqual(query.filters, [LibraryQuery.Filter(field: .author, value: "julio", more: ["cortazar"])])
+        XCTAssertTrue(query.matches(bestiario))
+        XCTAssertTrue(query.matchesFilters(bestiario), "Así los subrayados de sus libros sí salen en Buscar")
+        var otro = bestiario
+        otro.authors = ["Julio Verne"]
+        XCTAssertFalse(query.matches(otro))
+        otro.authors = ["Cortázar, Julio"]
+        XCTAssertTrue(query.matches(otro), "En cualquier orden")
+        XCTAssertTrue(LibraryQuery("autor:\"julio cortázar\"").matches(bestiario), "Con comillas, igual")
+        XCTAssertTrue(LibraryQuery("autor:cortázar bestiario").matches(bestiario), "Lo de más puede ser el título")
+        XCTAssertFalse(LibraryQuery("autor:cortázar rayuela").matches(bestiario))
+        XCTAssertEqual(LibraryQuery("ciudad autor:cortázar").words, ["ciudad"], "Antes del filtro, palabra suelta")
+        XCTAssertFalse(LibraryQuery("autor:julio cortázar").matches(text: ["cualquier cita"]),
+                       "Sin palabras sueltas no se busca en el texto: salen todos los subrayados del autor")
+    }
+
     func testUnknownNameIsAWord() {
         // «hora:12» no es un filtro: se busca como texto.
         let query = LibraryQuery("hora:12")

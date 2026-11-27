@@ -273,8 +273,8 @@ struct CandidatePreview: View {
                         CompareRow(label: "Autor", new: preview.authors.first, old: book?.authors.first)
                         CompareRow(label: "Publicado", new: preview.published, old: book?.published)
                         CompareRow(label: "Editorial", new: preview.publisher, old: book?.publisher)
-                        CompareRow(label: "Idioma", new: preview.language.map(MetadataCandidate.languageName),
-                                   old: book?.language.map(MetadataCandidate.languageName))
+                        CompareRow(label: "Idioma", new: preview.language.map(BookFields.languageName),
+                                   old: book?.language.map(BookFields.languageName))
                         CompareRow(label: "ISBN", new: preview.identifiers["isbn"], old: book?.identifiers["isbn"])
                         CompareRow(label: "Serie", new: preview.series.map { name in
                             preview.seriesIndex.flatMap(ShelfBook.number).map { "\(name) · \($0)" } ?? name
@@ -374,7 +374,7 @@ struct OtherSearchSheet: View {
                 }
             }
             .formScreen()
-            .inlineTitle("Buscar con otros datos")
+            .sheetTitle("Buscar con otros datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cerrar la búsqueda") { dismiss() }

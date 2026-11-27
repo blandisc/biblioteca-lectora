@@ -48,7 +48,7 @@ struct LibraryScreen: View {
                         FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
                             .padding(.top, Theme.Space.s)
 
-                        CountLine(text: summary) {
+                        CountLine(text: summary(books)) {
                             SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
                         }
 
@@ -99,6 +99,10 @@ struct LibraryScreen: View {
             }
             .screen()
             .onAppear(perform: openScreenForScreenshots)
+            // Si el filtro elegido se queda sin libros y desaparece, vuelve a «Todos».
+            .onChange(of: LibraryFilter.options(for: model.shelf)) { _, options in
+                if !options.contains(filter) { filter = .all }
+            }
         }
     }
 
@@ -107,21 +111,24 @@ struct LibraryScreen: View {
         guard path.isEmpty else { return }
         switch LaunchOptions.screen {
         case "review": path.append(ReviewInboxRef())
-        case "detail": if let first = model.shelf.first { path.append(first) }
+        case "detail", "edit":
+            let wanted = LaunchOptions.book.flatMap { title in model.shelf.first { $0.title.contains(title) } }
+            if let first = wanted ?? model.shelf.first { path.append(first) }
         case "shelf": if let first = model.library.shelves.first { path.append(ShelfRef(id: first.id)) }
         default: break
         }
     }
 
-    private var summary: String {
+    /// Cuenta lo que ves: con un filtro, los libros de ese filtro (antes decía «9 libros»
+    /// con «Leyendo» elegido y uno solo a la vista, UX-2a).
+    private func summary(_ shown: [ShelfBook]) -> String {
         if let line = model.library.progressLine { return line }
         if !model.library.identifying.isEmpty {
             return "Buscando datos en internet…"
         }
-        let all = model.shelf
-        let inCloud = all.filter(\.inCloudOnly).count
-        let books = all.count.counted("libro", "libros")
-        return inCloud == 0 ? books : "\(books) · \(inCloud) en la nube"
+        let inCloud = shown.filter(\.inCloudOnly).count
+        let books = shown.count.counted("libro", "libros")
+        return inCloud == 0 || filter == .cloud ? books : "\(books) · \(inCloud) en la nube"
     }
 
     private func grid(_ items: [ShelfBook]) -> some View {

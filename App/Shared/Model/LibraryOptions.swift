@@ -33,12 +33,15 @@ enum LibraryFilter: Hashable, Identifiable {
     case state(ReadingState)
     case series
     case cloud
+    case duplicates
     var id: Self { self }
 
-    /// «Abandonados» sale solo si hay alguno, como «Posibles duplicados» en la Mac.
+    /// Los estados siempre; «Abandonados», «Series», «Sin descargar» y «Posibles duplicados»
+    /// solo si hay alguno, como en la Mac (antes salían vacíos y el último se cortaba).
     static func options(for books: [ShelfBook]) -> [LibraryFilter] {
-        [.all] + ReadingState.allCases.filter { $0 != .abandoned || books.contains { $0.state == .abandoned } }.map(LibraryFilter.state)
-            + [.series, .cloud]
+        let states = ReadingState.allCases.filter { $0 != .abandoned }.map(LibraryFilter.state)
+        let extra: [LibraryFilter] = [.state(.abandoned), .series, .cloud, .duplicates]
+        return [.all] + states + extra.filter { filter in books.contains(where: filter.includes) }
     }
 
     var title: String {
@@ -47,6 +50,7 @@ enum LibraryFilter: Hashable, Identifiable {
         case .state(let state): state.group
         case .series: "Series"
         case .cloud: "Sin descargar"
+        case .duplicates: Duplicates.title
         }
     }
 
@@ -56,6 +60,7 @@ enum LibraryFilter: Hashable, Identifiable {
         case .state(let state): book.state == state
         case .series: book.series != nil
         case .cloud: book.inCloudOnly
+        case .duplicates: book.possibleDuplicate
         }
     }
 }

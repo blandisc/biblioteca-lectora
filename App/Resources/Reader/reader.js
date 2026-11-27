@@ -194,7 +194,9 @@ let selecting = false
 const watchPull = doc => {
     let startY = null
     let edge = null
+    doc.addEventListener('wheel', touched, { passive: true })
     doc.addEventListener('touchstart', event => {
+        touched()
         const renderer = view?.renderer
         if (!renderer?.scrolled || event.touches.length > 1) { startY = event.touches[0]?.screenY ?? null; edge = null; return }
         startY = event.touches[0].screenY
@@ -295,9 +297,16 @@ const markChapter = doc => {
         if (titles.length > 3) return
     }
     if (!first || !titles.length || !titles.some(isTitleLike)) return
+    // La cursiva solo donde existe: el árabe o el hebreo inclinados a la fuerza se deforman (UX-1c).
+    const upright = el => /[^\P{L}\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}]/u.test(el.textContent)
     titles.forEach((el, i) => el.setAttribute('data-gabinete-chapter',
-        [i === 0 ? 'first' : '', i === titles.length - 1 ? 'last' : ''].join(' ').trim()))
-    if (/^[«"“¿¡(]?\p{L}/u.test(first.textContent.trim())) first.setAttribute('data-gabinete-drop', '')
+        [i === 0 ? 'first' : '', i === titles.length - 1 ? 'last' : '', upright(el) ? 'upright' : ''].join(' ').trim()))
+    // La capital solo en letras que no se unen y de izquierda a derecha: en árabe o hebreo,
+    // apartar la primera letra rompe la palabra y la manda al otro lado (UX-1c).
+    const ltr = doc.defaultView?.getComputedStyle(first).direction !== 'rtl'
+    if (ltr && /^[«"“¿¡(]?[\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}]/u.test(first.textContent.trim())) {
+        first.setAttribute('data-gabinete-drop', '')
+    }
 }
 
 const chapterCSS = ({ linkColor }) => `
@@ -308,6 +317,7 @@ const chapterCSS = ({ linkColor }) => `
         margin: 0 0 0.3em !important;
     }
     [data-gabinete-chapter~="first"] { margin-top: 1em !important; }
+    [data-gabinete-chapter~="upright"] { font-style: normal !important; letter-spacing: 0 !important; }
     [data-gabinete-chapter~="last"] { margin-bottom: 0 !important; padding-bottom: 1.4em !important; }
     [data-gabinete-chapter] * { font-style: inherit !important; font-weight: inherit !important; }
     [data-gabinete-chapter~="last"]::after {
@@ -332,6 +342,55 @@ let searchToken = 0
 
 // Cómo se llegó a la página: «jump» si fue por el índice, la barra o un enlace.
 let navigation = null
+
+// Abrir el libro no es avanzar (UX-1e): la posición se guarda hasta que tú lo mueves
+// (pasar la hoja, saltar, deslizar en continuo). Antes, solo abrirlo ya decía «5 % leído».
+let moved = false
+let touchedAt = 0
+const touched = () => { touchedAt = Date.now() }
+
+// Páginas de pantalla (UX-1d): «Pág. N de M» cambia con cada hoja. Cada capítulo ya
+// acomodado sabe cuántas pantallas mide; los demás se estiman con las letras por
+// pantalla de los que sí. Se vuelve a medir si cambia la letra, el margen o el tamaño.
+let screens = new Map()
+let screensLayout = ''
+const sectionSizes = () => (view?.book?.sections ?? []).map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
+const screensOf = (sizes, index) => {
+    if (screens.has(index)) return screens.get(index)
+    let size = 0, pages = 0
+    for (const [i, n] of screens) { size += sizes[i] ?? 0; pages += n }
+    const perScreen = pages && size ? size / pages : sizePerPage
+    return sizes[index] ? Math.max(1, Math.round(sizes[index] / perScreen)) : 0
+}
+// La página de pantalla (desde 1) de un lugar del libro y cuántas tiene en total. En
+// continuo no hay pantallas: cuentan las páginas del libro, las de las marcas «—— 24 ——».
+const pageAt = (index, fractionInSection) => {
+    const sizes = sectionSizes()
+    if (style.flow === 'scrolled') {
+        const before = sizes.slice(0, index).reduce((a, b) => a + b, 0)
+        const total = sizes.reduce((a, b) => a + b, 0)
+        return { page: Math.floor((before + fractionInSection * (sizes[index] ?? 0)) / sizePerPage) + 1,
+                 total: Math.max(1, Math.ceil(total / sizePerPage)) }
+    }
+    let before = 0, total = 0
+    sizes.forEach((_, i) => {
+        const n = screensOf(sizes, i)
+        if (i < index) before += n
+        total += n
+    })
+    const here = screensOf(sizes, index)
+    const page = before + Math.min(here, Math.floor(fractionInSection * here) + 1)
+    return { page, total: Math.max(total, page) }
+}
+const measureScreens = () => {
+    const renderer = view?.renderer
+    if (!renderer || renderer.scrolled) return
+    const layout = `${window.innerWidth}x${window.innerHeight}|${style.fontFamily}|${style.fontScale}|${style.margin}|${style.marginBottom}`
+    if (layout !== screensLayout) { screens = new Map(); screensLayout = layout }
+    const contents = renderer.getContents?.()?.[0]
+    const pages = renderer.pages - 2
+    if (contents && pages > 0) screens.set(contents.index, pages)
+}
 
 // Marcadores: la app manda sus CFI y aquí se ve cuáles caen en la página visible.
 // Se compara el punto del marcador con el principio y el final de la página, no
@@ -440,17 +499,24 @@ const onRelocate = ({ detail }) => {
         requestAnimationFrame(() => placeOnPage(from))
     }
     const chapter = chapterLeftOf(range)
+    measureScreens()
+    const renderer = view.renderer
+    const index = renderer?.getContents?.()?.[0]?.index ?? 0
+    const inSection = renderer && !renderer.scrolled && renderer.pages > 2
+        ? (renderer.page - 1) / (renderer.pages - 2) : (renderer?.scrolled ? renderer.start / Math.max(renderer.viewSize, 1) : 0)
+    const screen = pageAt(index, inSection)
     post('relocate', {
         // foliate da NaN en secciones de dos páginas (0 ÷ 0): no se manda.
         fraction: Number.isFinite(fraction) ? fraction : null,
         cfi,
         chapter: tocItem?.label ?? null,
         chapterHref: tocItem?.href ?? null,
-        current: location?.current ?? null,
+        // La página de pantalla (desde 0, como la ubicación de foliate) y cuántas hay.
+        current: screen.page - 1,
         // Si hay página antes o después (para no doblar la hoja en la portada o al final).
         atStart: view.renderer?.atStart ?? false,
         atEnd: view.renderer?.atEnd ?? false,
-        total: location?.total ?? null,
+        total: screen.total,
         excerpt: excerptOf(range),
         words: wordsOf(range),
         chapterLeft: chapter?.words ?? null,
@@ -458,6 +524,7 @@ const onRelocate = ({ detail }) => {
         chapterDone: chapter?.done ?? null,
         bookLeft: bookLeftOf(location, chapter),
         jumped: navigation === 'jump',
+        moved,
     })
     navigation = null
     pageCFI = cfi
@@ -733,6 +800,8 @@ window.lectora = {
     },
 
     async open(url, lastLocation) {
+        moved = false
+        screens = new Map()
         view?.close?.()
         view?.remove()
         view = document.createElement('foliate-view')
@@ -744,6 +813,8 @@ window.lectora = {
         view.addEventListener('show-annotation', onShowAnnotation)
         try {
             await view.open(url)
+            // En continuo, deslizar con el dedo (o la rueda en la Mac) es avanzar.
+            view.renderer?.addEventListener('scroll', () => { if (Date.now() - touchedAt < 1500) moved = true })
             const { book } = view
             post('opened', {
                 title: typeof book.metadata?.title === 'string'
@@ -758,8 +829,8 @@ window.lectora = {
             post('error', { message: String(error?.message ?? error) })
         }
     },
-    next: () => view?.next(),
-    prev: () => view?.prev(),
+    next: () => { moved = true; return view?.next() },
+    prev: () => { moved = true; return view?.prev() },
 
     // Lectura guiada, el renglón. `anchor`: en continuo, a qué altura de la pantalla
     // (0 a 1) se queda la guía.
@@ -830,6 +901,7 @@ window.lectora = {
     // principio del texto que se mandó.
     slitGoTo(offset) {
         if (!slitStart) return
+        moved = true
         const { doc, index, rest } = slitStart
         const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
         let left = offset
@@ -853,6 +925,7 @@ window.lectora = {
         const renderer = view?.renderer
         if (!renderer) return false
         const before = pageCFI
+        moved = true
         const animated = renderer.hasAttribute('animated')
         renderer.removeAttribute('animated')
         const relocated = new Promise(resolve => {
@@ -879,8 +952,8 @@ window.lectora = {
         })
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     },
-    goTo: target => { navigation = 'jump'; return view?.goTo(target) },
-    goToFraction: fraction => { navigation = 'jump'; return view?.goToFraction(fraction) },
+    goTo: target => { navigation = 'jump'; moved = true; return view?.goTo(target) },
+    goToFraction: fraction => { navigation = 'jump'; moved = true; return view?.goToFraction(fraction) },
     // Busca en todo el libro y manda los resultados (con su capítulo y el texto alrededor).
     async search(query) {
         const token = ++searchToken
@@ -888,7 +961,7 @@ window.lectora = {
         const text = (query ?? '').trim()
         if (!view || text.length < 2) { post('searchResults', { query: text, results: [] }); return }
         const results = []
-        // La página de cada resultado, contada como el pie del libro (sizePerPage letras).
+        // La página de cada resultado, contada como el pie del libro (`pageAt`).
         const sizes = view.book.sections.map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
         const sizeTotal = sizes.reduce((a, b) => a + b, 0) || 1
         try {
@@ -906,10 +979,11 @@ window.lectora = {
                     if (results.length >= 300) break
                     const before = sizes.slice(0, result.index ?? 0).reduce((a, b) => a + b, 0)
                     const at = before + (item.at ?? 0) * (sizes[result.index ?? 0] ?? 0)
+                    const { page } = pageAt(result.index ?? 0, item.at ?? 0)
                     const entry = {
                         cfi: item.cfi, chapter: result.label ?? '',
                         pre: item.excerpt?.pre ?? '', match: item.excerpt?.match ?? text, post: item.excerpt?.post ?? '',
-                        page: Math.floor(at / sizePerPage) + 1, fraction: at / sizeTotal,
+                        page, fraction: at / sizeTotal,
                     }
                     results.push(entry)
                     found.push(entry)
