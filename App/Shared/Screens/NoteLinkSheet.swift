@@ -40,7 +40,7 @@ struct NoteLinkSheet: View {
             }
             .pushedScreen("Llevar a una nota")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Dejar el pasaje") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { BarButton("Dejar el pasaje") { dismiss() } }
             }
             .errorAlert("No pude guardar el pasaje", message: $errorMessage, back: "Elegir otra nota")
         }

@@ -24,10 +24,12 @@ struct SavedShelfScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ScreenHeading(title: shelf?.name ?? "Estante")
-                CountLine(text: "\(books.count.counted("libro", "libros")) · \(shelf?.query ?? "")")
+                // Lo que reúne, en palabras («de Asimov · serie Fundación»), no la búsqueda cruda.
+                CountLine(text: [books.count.counted("libro", "libros"), SavedShelf.describe(shelf?.query ?? "")]
+                    .filter { !$0.isEmpty }.joined(separator: " · "))
                 if books.isEmpty {
                     EmptyState(title: "Este estante está vacío",
-                               message: "Se llena solo con los libros que cumplen «\(shelf?.query ?? "")».")
+                               message: "Se llena solo con los libros \(SavedShelf.describe(shelf?.query ?? "")).")
                 } else {
                     LazyVStack(spacing: 0) {
                         ForEach(books) { book in
@@ -43,7 +45,7 @@ struct SavedShelfScreen: View {
         .pushedScreen()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Menu("Editar") {
+                BarMenu(title: "Editar") {
                     Button { renaming = shelf } label: { Label("Renombrar estante", systemImage: "character.cursor.ibeam") }
                     Button(role: .destructive) { deleting = shelf } label: {
                         Label("Borrar estante", systemImage: "trash")

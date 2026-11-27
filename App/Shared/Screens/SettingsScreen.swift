@@ -129,7 +129,7 @@ extension SettingsScreen {
                     }
                 }
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Volver a Ajustes") { macPage = nil } }
+                    ToolbarItem(placement: .cancellationAction) { BarButton("Volver a Ajustes") { macPage = nil } }
                 }
             }
             .environmentObject(model)
@@ -288,14 +288,16 @@ extension SettingsScreen {
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
             Button { confirmingTidy = true } label: { LinkRow(title: "Ordenar la biblioteca") }
+                // La pregunta sale de la fila que tocaste: puesta en la tarjeta, su flecha
+                // apuntaba al rótulo «Tu Gabinete».
+                .confirmationDialog("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy, titleVisibility: .visible) {
+                    Button("Ordenar la biblioteca") { tidyReport = model.library.tidy() }
+                    Button("Dejarla como está", role: .cancel) {}
+                } message: {
+                    Text("Reviso cada libro y muevo a su carpeta de Calibre (autor y título) los que no están donde deben. Solo muevo: no borro nada, y lo que no esté en el catálogo se queda donde está.")
+                }
         }
         .buttonStyle(.plain)
-        .confirmationDialog("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy, titleVisibility: .visible) {
-            Button("Ordenar la biblioteca") { tidyReport = model.library.tidy() }
-            Button("Dejarla como está", role: .cancel) {}
-        } message: {
-            Text("Reviso cada libro y muevo a su carpeta de Calibre («Autor/Título») los que no están donde deben. Solo muevo: no borro nada, y lo que no esté en el catálogo se queda donde está.")
-        }
     }
 
     /// Dónde vive el Gabinete: este dispositivo, iCloud Drive (con sus carpetas de en

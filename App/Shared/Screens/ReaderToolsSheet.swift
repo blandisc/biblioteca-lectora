@@ -51,7 +51,7 @@ struct ReaderToolsSheet: View {
             .pushedScreen(controller.title ?? "Libro")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Volver al libro") { dismiss() }
+                    BarButton("Volver al libro") { dismiss() }
                 }
             }
             .onAppear {

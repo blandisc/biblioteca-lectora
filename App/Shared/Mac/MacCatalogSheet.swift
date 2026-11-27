@@ -25,7 +25,11 @@ struct MacCatalogSheet: View {
     @State private var joined: Set<String> = []
     @State private var failed: [String] = []
 
-    private var trimmed: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    /// El campo empieza vacío con el nombre de ahora de pista (UX-7): vacío, se queda ese.
+    private var trimmed: String {
+        let typed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return typed.isEmpty ? target.value : typed
+    }
     private var lookalikes: [String] { CatalogRename.lookalikes(of: target.value, among: values.map(\.0)) }
     /// El valor que ya existe con el nombre escrito (fusión), si no es el mismo de antes.
     private var existing: String? {
@@ -37,19 +41,20 @@ struct MacCatalogSheet: View {
         return values.filter { names.contains($0.0) }.reduce(0) { $0 + $1.1 }
     }
     private var merges: Bool { existing != nil || !joined.isEmpty }
-    private var unchanged: Bool { trimmed.isEmpty || (trimmed == target.value && joined.isEmpty) }
+    private var unchanged: Bool { trimmed == target.value && joined.isEmpty }
 
     var body: some View {
         Form {
             Section {
-                TextField(fieldName, text: $name).oneLine()
+                // Vacío, con el nombre de ahora de pista: lo que escribes no se pega al de antes.
+                TextField(fieldName, text: $name, prompt: Text(target.value)).oneLine()
                     .onSubmit(apply)
                 if let existing {
                     Text("Ya existe «\(existing)»: los junto en \(oneField).")
                         .foregroundStyle(Theme.secondaryInk)
                 }
             } header: {
-                Text("«\(target.value)»")
+                Text("Renombrar o juntar «\(target.value)»")
             }
             if !lookalikes.isEmpty {
                 Section("Parecidos: ¿son el mismo?") {
@@ -71,8 +76,9 @@ struct MacCatalogSheet: View {
             }
         }
         .formScreen()
-        .frame(width: Theme.Mac.catalogSheet.width)
-        .frame(minHeight: Theme.Mac.catalogSheet.height)
+        .frame(width: Theme.Mac.catalogSheet)
+        // Mide lo que su contenido: con un alto fijo quedaban ~160 pt vacíos sobre los botones.
+        .fixedSize(horizontal: false, vertical: true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Dejar como está") { dismiss() }
@@ -82,10 +88,7 @@ struct MacCatalogSheet: View {
                     .disabled(unchanged)
             }
         }
-        .onAppear {
-            name = target.value
-            joined = Set(lookalikes)
-        }
+        .onAppear { joined = Set(lookalikes) }
     }
 
     private var fieldName: String {

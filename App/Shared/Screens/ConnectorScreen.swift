@@ -31,9 +31,10 @@ struct ConnectorScreen: View {
         .inlineTitle(connector.title)
         .errorAlert("No pude conectarme", message: $errorMessage, back: "Volver a la conexión")
         .confirmationDialog("¿Desconectar \(connector.title) de tu Gabinete?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
-            Button("Desconectar", role: .destructive) { store.disconnect(connector) }
+            Button("Desconectar \(connector.title)", role: .destructive) { store.disconnect(connector) }
+            Button("Seguir conectado", role: .cancel) {}
         } message: {
-            Text("Se borra la llave de tu Llavero. Lo que ya se mandó se queda allá y lo de Gabinete se queda aquí.")
+            Text("Borro tu llave del Llavero. Lo que ya mandé se queda en \(connector.title) y lo de tu Gabinete se queda aquí.")
         }
     }
 
@@ -57,15 +58,15 @@ struct ConnectorScreen: View {
             }
             .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty || connecting)
         } header: {
-            Text("Tu llave")
+            CapsText(text: "Tu llave")
         } footer: {
-            Text(connector.keyHelp + " Se guarda en tu Llavero de iCloud: la pones una vez y sirve en tu iPhone y tu Mac.")
+            Text(connector.keyHelp + " La guardo en tu Llavero de iCloud: la pones una vez y sirve en tu iPhone y tu Mac.")
         }
     }
 
     @ViewBuilder
     private var connectedSections: some View {
-        Section("Estado") {
+        Section {
             if let name = store.username(connector) {
                 LabeledContent("Cuenta", value: "@\(name)")
             }
@@ -79,6 +80,8 @@ struct ConnectorScreen: View {
             }
             Button("Sincronizar ahora") { Task { await store.sync() } }
                 .disabled(store.status[connector] == .syncing)
+        } header: {
+            CapsText(text: "Estado")
         }
         switch connector {
         case .readwise:
@@ -86,7 +89,7 @@ struct ConnectorScreen: View {
                 Toggle("Mandar mis subrayados", isOn: $readwiseSend)
                 Toggle("Traer los de otras fuentes", isOn: $readwiseReceive)
             } header: {
-                Text("Qué viaja")
+                CapsText(text: "Qué viaja")
             } footer: {
                 Text("Lo que llega de Readwise (Kindle, Apple Books…) aparece en tu Cuaderno; si el libro está en tu biblioteca, con él. Lo que nació en Gabinete no vuelve duplicado.")
             }
@@ -104,7 +107,7 @@ struct ConnectorScreen: View {
             Section {
                 Toggle("Marcar «Leído» al terminar", isOn: $hardcoverFinish)
             } header: {
-                Text("Qué viaja")
+                CapsText(text: "Qué viaja")
             } footer: {
                 Text("Tu calificación (las estrellas de la ficha) también viaja. Cada libro se busca en Hardcover una vez (por ISBN o título y autor) y su número queda en el catálogo como hardcover:…, también en el OPF.")
             }

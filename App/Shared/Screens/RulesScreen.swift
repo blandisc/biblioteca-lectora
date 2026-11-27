@@ -25,29 +25,35 @@ struct RulesScreen: View {
                     ForEach(Kind.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented) // ds-exception: control nativo de Form
-                TextField(kind == .author ? "Cuando diga (p. ej. Gabo)" : "Cuando diga (p. ej. Fiction)", text: $from)
+                // Cada campo con su nombre arriba y la pista adentro: en la Mac, sin borde, se leían
+                // como texto fijo.
+                LabeledField(label: "Cuando diga", prompt: kind == .author ? "Por ejemplo, Gabo" : "Por ejemplo, Fiction", text: $from)
                     .autocorrectionDisabled()
-                TextField(kind == .author ? "Cambiar por" : "Cambiar por (vacío: quitarla)", text: $to)
+                LabeledField(label: "Cambiar por", prompt: kind == .author ? "Por ejemplo, Gabriel García Márquez" : "Vacío: la quito", text: $to)
                     .autocorrectionDisabled()
                 Button("Agregar regla") { add() }
                     .disabled(from.trimmingCharacters(in: .whitespaces).isEmpty
                               || (kind == .author && to.trimmingCharacters(in: .whitespaces).isEmpty))
             } header: {
-                Text("Nueva regla")
+                CapsText(text: "Nueva regla")
             } footer: {
                 Text("Sin importar acentos ni mayúsculas. Se aplican a los libros que importes y a los datos de internet.")
             }
 
             if !rules.authors.isEmpty {
-                Section("Autores") {
+                Section {
                     ForEach(rules.authors) { rule in row(rule) }
                         .onDelete { remove(at: $0, kind: .author) }
+                } header: {
+                    CapsText(text: "Autores")
                 }
             }
             if !rules.tags.isEmpty {
-                Section("Etiquetas") {
+                Section {
                     ForEach(rules.tags) { rule in row(rule) }
                         .onDelete { remove(at: $0, kind: .tag) }
+                } header: {
+                    CapsText(text: "Etiquetas")
                 }
             }
             if !rules.isEmpty {

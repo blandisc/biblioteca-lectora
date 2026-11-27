@@ -45,7 +45,7 @@ struct ReviewScreen: View {
                 ScreenHeading(title: "Por revisar")
                 // La explicación solo si hay libros dudosos: sobre «Se completaron solos» confunde.
                 if !pending.isEmpty {
-                    Text("Encontré estos libros en internet, pero no estoy seguro de que sean los tuyos. Elige los datos correctos o conserva los que tienen.")
+                    Text(intro)
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryInk)
                         .padding(.top, Theme.Space.xs)
@@ -71,18 +71,23 @@ struct ReviewScreen: View {
                             if let id = book.bookID { row(book, id) }
                         }
                     }
-                    if choosing {
-                        SecondaryButton(title: keepTitle(chosen.count), systemImage: "checkmark") {
-                            confirming = .keep(Array(chosen))
-                        }
-                        .disabled(chosen.isEmpty)
-                        .padding(.top, Theme.Space.l)
-                    }
                 }
                 if !filled.isEmpty { filledSection }
             }
             .animation(Theme.Motion.standard, value: lastBatch?.text)
             .screenContent()
+        }
+        // «Mantener los datos de N libros» fijo abajo mientras eliges: al final de una lista
+        // larga no se veía y había que bajar hasta él.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if choosing, !pending.isEmpty {
+                BottomBar {
+                    SecondaryButton(title: keepTitle(chosen.count), systemImage: "checkmark") {
+                        confirming = .keep(Array(chosen))
+                    }
+                    .disabled(chosen.isEmpty)
+                }
+            }
         }
         .pushedScreen()
         .disabled(working)
@@ -156,6 +161,20 @@ struct ReviewScreen: View {
         }
     }
 
+    /// Lo de arriba dice lo que pasó con estos libros: los que encontré con dudas, los que no
+    /// encontré o los dos (decía «Encontré estos libros» sobre filas «No lo encontré»).
+    private var intro: String {
+        let ids = pending.compactMap(\.bookID)
+        let found = ids.filter { !(model.library.reviews[$0] ?? []).isEmpty }.count
+        if found == ids.count {
+            return "Encontré estos libros en internet, pero no estoy seguro de que sean los tuyos. Elige los datos correctos o conserva los que tienen."
+        }
+        if found == 0 {
+            return "No encontré estos libros en internet. Busca con otro título, autor o ISBN, escribe sus datos a mano o conserva los que tienen."
+        }
+        return "De algunos encontré datos en internet, pero no estoy seguro de que sean los tuyos; otros no los encontré. Abre cada uno para elegir sus datos o conservar los que tienen."
+    }
+
     private func keepTitle(_ count: Int) -> String {
         count == 0 ? "Elige los libros que se quedan como están" : "Mantener los datos de \(count.counted("libro", "libros"))"
     }
@@ -197,7 +216,8 @@ struct ReviewScreen: View {
     private var filledSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionHeader(title: "Lo que completé solo") {
-                TextAction(title: "Todo bien") { model.library.forgetAllFilled() }
+                // Dice qué pasa: los das por buenos y salen de la lista («Todo bien» no lo decía).
+                TextAction(title: "Darlos por buenos") { model.library.forgetAllFilled() }
             }
             Text("Datos que tomé de internet porque estaba seguro. Revísalos y deshaz lo que no quieras.")
                 .font(.subheadline)
@@ -459,7 +479,7 @@ struct CandidatePreview: View {
             .pushedScreen("Vista previa")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar la vista previa") { dismiss() }
+                    BarButton("Cerrar la vista previa") { dismiss() }
                 }
             }
         }
@@ -538,10 +558,10 @@ struct OtherSearchSheet: View {
             .sheetTitle("Buscar con otros datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar la búsqueda") { dismiss() }
+                    BarButton("Cerrar la búsqueda") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Buscar con estos datos") {
+                    BarButton("Buscar con estos datos") {
                         let trimmed = { (text: String) in text.trimmingCharacters(in: .whitespaces) }
                         onSearch(trimmed(title), trimmed(author).isEmpty ? nil : trimmed(author),
                                  trimmed(isbn).isEmpty ? nil : trimmed(isbn))

@@ -52,10 +52,10 @@ struct NoteScreen: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if editing {
-                        Button("Terminar la nota") { finishEditing() }
+                        BarButton("Terminar la nota") { finishEditing() }
                             .fontWeight(.semibold)
                     } else {
-                        Menu("Editar") {
+                        BarMenu(title: "Editar") {
                             Button { startEditing() } label: { Label("Escribir", systemImage: "pencil") }
                             if fileName != nil {
                                 Button(role: .destructive) { confirmingDelete = true } label: {
@@ -74,8 +74,9 @@ struct NoteScreen: View {
             .confirmationDialog("¿Borrar «\(note?.title ?? "esta nota")»?", isPresented: $confirmingDelete,
                                 titleVisibility: .visible) {
                 Button("Borrar nota", role: .destructive) { deleteNote() }
+                Button("Conservar la nota", role: .cancel) {}
             } message: {
-                Text("Se borra el archivo de Gabinete/Notas.")
+                Text("Borro su archivo de la carpeta Notas de tu Gabinete. Tus libros y subrayados se quedan.")
             }
             .errorAlert("No pude guardar la nota", message: $errorMessage, back: "Seguir editando")
             .onAppear(perform: load)
@@ -108,10 +109,11 @@ struct NoteScreen: View {
         }
     }
 
-    /// «Hoy · Notas/El silencio en Rulfo.md»
+    /// Cuándo la escribiste («Hoy»), no su archivo: «Notas/El silencio en Rulfo.md» es cosa del
+    /// disco, no de quien lee la nota.
     private var location: some View {
-        Text(fileName.map { "\(NoteRow.day(note?.modifiedAt ?? Date())) · \(CabinetLocation.notesFolder)/\($0).md" }
-             ?? "Nota nueva · se guarda en \(CabinetLocation.notesFolder)")
+        Text(fileName == nil ? "Nota nueva · la guardo en tu carpeta de notas"
+             : NoteRow.day(note?.modifiedAt ?? Date()))
             .font(.footnote)
             .foregroundStyle(Theme.tertiaryInk)
             .lineLimit(1)

@@ -70,9 +70,14 @@ struct MesaScreen: View {
             ThinProgress(value: book.progress)
                 .padding(.top, Theme.Space.xl)
             // Con la letra más grande, el avance y la nota uno bajo otro.
+            // Sin empezar y sin cálculo, no hay avance que decir: el renglón vacío se estiraba
+            // y apretaba la nota en una columna de cuatro renglones.
             AdaptiveStack(spacing: Theme.Space.xs) {
-                Text(progressLine(book))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                let line = progressLine(book)
+                if !line.isEmpty {
+                    Text(line)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 if let note = book.note { Text(note) }
             }
             .font(.footnote)

@@ -57,7 +57,7 @@ struct SearchScreen: View {
                     ScreenHeading(title: SearchWording.title)
                     // Campo propio bajo el título: el del sistema (`.searchable`) quedaba
                     // escondido con la barra de navegación y no había dónde escribir.
-                    SearchField(prompt: SearchWording.prompt, text: $query, focused: $focused,
+                    SearchField(prompt: SearchWording.prompt, shortPrompt: SearchWording.title, text: $query, focused: $focused,
                                 onSubmit: remember)
                         .padding(.top, Theme.Space.l)
                     if term.isEmpty {

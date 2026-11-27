@@ -37,6 +37,8 @@ struct BookDetailScreen: View {
                             .foregroundStyle(Theme.secondaryInk)
                     }
                 }
+                // Autor y serie centrados bajo el título, también cuando usan dos renglones.
+                .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
 
                 if live.file != nil {
@@ -66,7 +68,7 @@ struct BookDetailScreen: View {
         .toolbar {
             if record != nil {
                 ToolbarItem(placement: .primaryAction) {
-                    Menu("Editar") {
+                    BarMenu(title: "Editar") {
                         Button { editing = true } label: { Label("Escribir a mano", systemImage: "pencil") }
                         Button { searching = true } label: { Label(LibraryAction.findData.title, systemImage: LibraryAction.findData.symbol) }
                         Button { choosingCover = true } label: { Label("Elegir portada de internet", systemImage: "photo.on.rectangle") }
@@ -210,10 +212,10 @@ struct CoverPickerSheet: View {
             .pushedScreen("Portada", sheet: true)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Dejar la portada") { dismiss() }
+                    BarButton("Dejar la portada") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(saving ? "Guardando…" : "Usar esta portada") { save() }
+                    BarButton(saving ? "Guardando…" : "Usar esta portada") { save() }
                         .disabled(saving || !choosesRemote)
                 }
             }

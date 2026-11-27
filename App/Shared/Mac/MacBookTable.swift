@@ -44,13 +44,23 @@ struct MacBookTable: View {
             }
             .navigationTitle(section.title)
             .navigationSubtitle(rows.count.counted("libro", "libros"))
-            .searchable(text: $query, placement: .toolbar, prompt: "Buscar · autor: serie: etiqueta: idioma:")
+            // La pista en palabras; los filtros (`autor:`, `serie:`…) se ponen desde su menú.
+            .searchable(text: $query, placement: .toolbar, prompt: "Buscar en la biblioteca")
             .inspector(isPresented: $showsInspector) {
                 MacBookInspector(library: library, ids: selection.intersection(rows.map(\.id)))
                     .inspectorColumnWidth(min: Theme.Mac.inspectorMin, ideal: Theme.Mac.inspector)
             }
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
+                    // Los filtros de la búsqueda, con su nombre: elegir uno lo escribe en el buscador.
+                    Menu {
+                        ForEach(LibraryFilterHelp.all, id: \.token) { filter in
+                            Button("\(filter.title) (\(filter.token))") { query = LibraryFilterHelp.adding(filter.token, to: query) }
+                        }
+                    } label: {
+                        Label("Buscar por autor, serie, etiqueta…", systemImage: "line.3.horizontal.decrease.circle")
+                    }
+                    .help("Buscar solo en un dato: autor, serie, etiqueta, idioma, editorial, estado, ISBN o título")
                     Button { model.importing = true } label: { Label(LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) }
                         .help("\(LibraryAction.addBooks.title) (⌘O)")
                     Button { savingShelf = query } label: { Label("Guardar como estante", systemImage: "rectangle.stack.badge.plus") }
@@ -92,6 +102,8 @@ struct MacBookTable: View {
             }
     }
 
+    /// Las columnas se encogen hasta `Mac.narrowColumn` y cortan con «…»: con su mínimo de antes
+    /// la tabla no cabía junto a la ficha, corría de lado y la última se veía cortada sin «…».
     private func table(_ rows: [MacBookRow]) -> some View {
         Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
             Group {
@@ -102,53 +114,53 @@ struct MacBookTable: View {
                 .width(Theme.Mac.coverColumn)
                 .customizationID("portada")
                 TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in MacCell(text: row.title, role: .title) }
-                    .width(min: Theme.Mac.titleColumn)
+                    .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn)
                     .customizationID("titulo")
                 TableColumn("Autor", value: \MacBookRow.authorKey) { (row: MacBookRow) in MacCell(text: row.author) }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("autor")
                 TableColumn("Serie", value: \MacBookRow.seriesKey) { (row: MacBookRow) in MacCell(text: row.seriesLabel, role: .secondary) }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("serie")
                 TableColumn("Etiquetas", value: \MacBookRow.tagsKey) { (row: MacBookRow) in MacCell(text: row.tagsLabel, role: .secondary) }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("etiquetas")
             }
             Group {
                 TableColumn("Avance", value: \MacBookRow.progress) { (row: MacBookRow) in MacCell(text: row.progressLabel, role: .secondary) }
-                    .width(min: Theme.Mac.shortColumn)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
                     .customizationID("avance")
                 TableColumn("Estado", value: \MacBookRow.stateLabel) { (row: MacBookRow) in MacCell(text: row.stateLabel, role: .secondary) }
-                    .width(min: Theme.Mac.shortColumn)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
                     .customizationID("estado")
                 TableColumn("Formato", value: \MacBookRow.format) { (row: MacBookRow) in MacCell(text: row.format, role: .secondary) }
-                    .width(min: Theme.Mac.shortColumn)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
                     .customizationID("formato")
                 TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in MacCell(text: row.addedLabel, role: .secondary) }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("agregado")
             }
             Group {
                 TableColumn("Idioma", value: \MacBookRow.language) { (row: MacBookRow) in MacCell(text: row.language, role: .secondary) }
-                    .width(min: Theme.Mac.shortColumn)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
                     .customizationID("idioma")
                     .defaultVisibility(.hidden)
                 TableColumn("Valoración", value: \MacBookRow.rating) { (row: MacBookRow) in
                     MacCell(text: row.stars, role: .secondary).accessibilityLabel(row.starCount.counted("estrella", "estrellas"))
                 }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("valoracion")
                     .defaultVisibility(.hidden)
                 TableColumn("Editorial", value: \MacBookRow.publisherKey) { (row: MacBookRow) in MacCell(text: row.publisher, role: .secondary) }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("editorial")
                     .defaultVisibility(.hidden)
                 TableColumn("Publicado", value: \MacBookRow.published) { (row: MacBookRow) in MacCell(text: row.published, role: .secondary) }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("publicado")
                     .defaultVisibility(.hidden)
                 TableColumn("ISBN", value: \MacBookRow.isbn) { (row: MacBookRow) in MacCell(text: row.isbn, role: .secondary) }
-                    .width(min: Theme.Mac.column)
+                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
                     .customizationID("isbn")
                     .defaultVisibility(.hidden)
             }
@@ -175,6 +187,23 @@ struct MacBookTable: View {
                 MacBookRow(book: book, shelf: $0, hasCover: $0.coverImage != nil,
                            inReview: library.reviews[book.id] != nil)
             }
+        }
+    }
+
+    /// Los filtros que entiende la búsqueda, dichos en palabras para el menú de la barra.
+    enum LibraryFilterHelp {
+        struct Filter { let title: String; let token: String }
+        static let all = [
+            Filter(title: "Por autor", token: "autor:"), Filter(title: "Por serie", token: "serie:"),
+            Filter(title: "Por etiqueta", token: "etiqueta:"), Filter(title: "Por idioma", token: "idioma:"),
+            Filter(title: "Por editorial", token: "editorial:"), Filter(title: "Por estado", token: "estado:"),
+            Filter(title: "Por ISBN", token: "isbn:"), Filter(title: "Por título", token: "título:"),
+        ]
+
+        /// El filtro al final de lo escrito, separado por un espacio.
+        static func adding(_ token: String, to query: String) -> String {
+            let base = query.trimmingCharacters(in: .whitespaces)
+            return base.isEmpty ? token : "\(base) \(token)"
         }
     }
 

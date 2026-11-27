@@ -25,6 +25,11 @@ extension View {
             #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
             #endif
+            // Todo lo que se abre desde aquí (sus barras, sus hojas) lleva sus acciones en tinta:
+            // el «Editar» de la ficha y del estante salía en verde (regla 1). La pestaña elegida
+            // sigue en verde: la pinta el dock, que está afuera.
+            .tint(Theme.ink)
+            .toggleStyle(AccentSwitchStyle())
     }
 
     /// Margen lateral de pantalla, igual a ambos lados.
@@ -33,8 +38,9 @@ extension View {
     }
 
     /// Receta de formulario (Ajustes, Conexiones, Reglas, Editar datos): el mismo papel
-    /// que el resto de la app, no el gris frío del sistema. Sus botones y interruptores
-    /// en verde hoja: con la marca (casi negra en claro) parecían texto fijo.
+    /// que el resto de la app, no el gris frío del sistema. Sus botones en tinta, como toda
+    /// acción (regla 1: «Elegir de Fotos» y «Elegir archivo» salían en verde); los interruptores
+    /// prendidos sí en verde, porque dicen lo tuyo (`AccentSwitchStyle`).
     func formScreen() -> some View {
         self
             // En la Mac, agrupado como la ficha: con el estilo de columnas, Reglas y las conexiones
@@ -42,11 +48,13 @@ extension View {
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
             .background(Theme.paper.ignoresSafeArea())
-            .tint(Theme.accent)
+            .tint(Theme.ink)
+            .toggleStyle(AccentSwitchStyle())
     }
 
     /// Receta de pantalla empujada u hoja (ficha, serie, nota, Lector › herramientas…):
-    /// papel de fondo, título en línea y controles del contenido en `accent`. Los botones
+    /// papel de fondo, título en línea y controles del contenido en tinta (los interruptores,
+    /// en verde: `AccentSwitchStyle`). Los botones
     /// de la barra de vidrio («Listo», «Cancelar», «Editar») van en tinta, como en iOS 26;
     /// antes unas hojas los forzaban a verde y otras no (22 nov 2026).
     /// `sheet: true` en una hoja con dos botones de texto en la barra (ver `sheetTitle`).
@@ -57,7 +65,8 @@ extension View {
         let screen = self
             .background(Theme.paper.ignoresSafeArea())
             .barTitle(title, large: sheet)
-            .tint(Theme.accent)
+            .tint(Theme.ink)
+            .toggleStyle(AccentSwitchStyle())
         #if os(iOS)
         if bar { screen } else { screen.toolbar(.hidden, for: .navigationBar) }
         #else
@@ -309,14 +318,28 @@ struct SectionHeader<Trailing: View>: View {
     let title: String
     @ViewBuilder var trailing: Trailing
 
+    /// La acción de la derecha no se parte en renglones: si no cabe junto al rótulo,
+    /// baja a su propio renglón («Darlos por buenos» se partía en tres).
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Theme.Space.l) {
+                heading
+                trailing.fixedSize(horizontal: true, vertical: false)
+            }
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                heading
+                trailing
+            }
+        }
+    }
+
+    private var heading: some View {
         HStack(spacing: Theme.Space.l) {
             CapsText(text: title)
                 .layoutPriority(1)
                 .accessibilityAddTraits(.isHeader)
             Hairline()
                 .accessibilityHidden(true)
-            trailing
         }
     }
 }
@@ -689,6 +712,7 @@ struct UndoNotice: View {
 struct CountLine<Trailing: View>: View {
     let text: String
     @ViewBuilder var trailing: Trailing
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         // Con la letra más grande, el orden baja bajo el conteo («TÍT…» ya no se corta).
@@ -698,6 +722,9 @@ struct CountLine<Trailing: View>: View {
             trailing
         }
         .frame(minHeight: Theme.Size.tapTarget)
+        // Con la letra más grande el conteo es más alto que su renglón de 44 y quedaba pegado a
+        // los filtros de arriba: lleva su propio aire.
+        .padding(.top, typeSize.isAccessibilitySize ? Theme.Space.s : 0)
     }
 }
 
@@ -1102,11 +1129,13 @@ struct EmptyState: View {
 /// filas de arriba abajo (auditoría 1, 27 nov 2026).
 struct LetterIndex: View {
     let onSelect: (String) -> Void
-    private static let letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".map(String.init)
+    static let letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".map(String.init)
     /// De cuántas en cuántas letras se enseña, de más a menos, hasta que quepa.
     private static let strides = [1, 2, 3]
     @State private var height: CGFloat = 0
     @State private var current: String?
+    /// La letra en la que va VoiceOver.
+    @State private var spoken: String?
 
     /// Con la letra más grande (AX1 a AX5) el índice no cabe sin tapar las filas.
     static func shows(at size: DynamicTypeSize) -> Bool { !size.isAccessibilitySize }
@@ -1120,8 +1149,6 @@ struct LetterIndex: View {
                         Text(letters[index])
                             .font(.caption2.weight(.semibold)) // ds-exception: índice A–Z
                             .foregroundStyle(Theme.ink)
-                            .accessibilityAddTraits(.isButton)
-                            .accessibilityAction { onSelect(letters[index]) }
                     }
                 }
             }
@@ -1139,8 +1166,46 @@ struct LetterIndex: View {
             }
             .onEnded { _ in current = nil })
         .sensoryFeedback(.selection, trigger: current) { _, new in new != nil }
-        .accessibilityElement(children: .contain)
+        // Para VoiceOver es un solo control que se ajusta letra por letra, las 27, aunque se
+        // vea una de cada dos o tres: antes solo se alcanzaban las que se dibujaban.
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel("Índice alfabético")
+        .accessibilityValue(spoken ?? "Desliza hacia arriba o abajo para elegir una letra")
+        .accessibilityAdjustableAction { direction in
+            let at = spoken.flatMap(letters.firstIndex) ?? -1
+            let next = direction == .increment ? at + 1 : at - 1
+            guard letters.indices.contains(next) else { return }
+            spoken = letters[next]
+            onSelect(letters[next])
+        }
+    }
+}
+
+/// «Ir a la letra…»: con la letra más grande el índice A–Z no cabe a la orilla
+/// (`LetterIndex.shows`); este menú junto al orden salta a cualquier letra con libros.
+struct LetterJumpMenu: View {
+    /// Las letras que tienen algo, en orden.
+    let letters: [String]
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(letters, id: \.self) { letter in
+                Button(letter) { onSelect(letter) }
+            }
+        } label: {
+            HStack(spacing: Theme.Space.xs) {
+                CapsText(text: "Ir a la letra…", tone: Theme.ink)
+                Image(systemName: "textformat.abc")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Theme.ink)
+            }
+            .frame(minHeight: Theme.Size.tapTarget)
+            .contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Ir a la letra")
     }
 }
 
@@ -1181,6 +1246,21 @@ struct SecondaryButton: View {
     }
 }
 
+/// Lo que se queda fijo abajo de una lista mientras eliges («Mantener los datos de N libros»):
+/// sobre el papel, con su línea finísima arriba. Al final de una lista larga no se veía.
+struct BottomBar<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        content
+            .gutter()
+            .padding(.vertical, Theme.Space.s)
+            .frame(maxWidth: .infinity)
+            .background(Theme.paper.ignoresSafeArea(edges: .bottom))
+            .overlay(alignment: .top) { Hairline() }
+    }
+}
+
 /// Salida discreta: solo texto en tinta secundaria, centrado. Para «seguir sin
 /// hacer nada» bajo opciones que sí importan, sin competir con ellas.
 struct QuietButton: View {
@@ -1211,9 +1291,14 @@ struct LinkRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(spacing: Theme.Space.s) {
+        // El punto va a la altura del primer renglón del nombre: con la letra más grande, centrado
+        // en la fila, caía abajo a la izquierda, entre el nombre y su valor.
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
             if marked {
-                StatusDot(on: true)
+                Text(verbatim: " ")
+                    .frame(width: Theme.Size.statusDot)
+                    .overlay { StatusDot(on: true) }
+                    .accessibilityHidden(true)
             }
             // Con la letra más grande, el valor baja bajo el nombre (antes «Fuent / e  Open…»).
             AdaptiveStack(spacing: Theme.Space.s) {
@@ -1292,6 +1377,11 @@ struct LabeledField: View {
                 .font(.caption)
                 .foregroundStyle(Theme.secondaryInk)
             TextField(label, text: $text, prompt: Text(prompt ?? label))
+                .labelsHidden()
+                #if os(macOS)
+                // En la Mac un campo sin borde se leía como texto fijo (Reglas).
+                .textFieldStyle(.roundedBorder)
+                #endif
                 .foregroundStyle(Theme.ink)
         }
         .padding(.vertical, Theme.Space.xxs)
@@ -1306,6 +1396,46 @@ extension View {
     }
 }
 
+/// Un botón de texto de la barra («Dejar como está», «Guardar cambios», «Volver al libro»), en
+/// tinta: iOS los pintaba con el verde de la app aunque la pantalla fuera en tinta (regla 1).
+struct BarButton: View {
+    let title: String
+    let action: () -> Void
+
+    init(_ title: String, action: @escaping () -> Void) {
+        self.title = title
+        self.action = action
+    }
+
+    var body: some View {
+        Button(title, action: action).tint(Theme.ink)
+    }
+}
+
+/// El menú de la barra de una pantalla («Editar»), en tinta como los demás botones de la barra:
+/// iOS lo pintaba con el verde de la app (regla 1).
+struct BarMenu<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        Menu {
+            content
+        } label: {
+            Text(title).foregroundStyle(Theme.ink)
+        }
+        .tint(Theme.ink)
+    }
+}
+
+/// Un interruptor prendido se ve en verde (lo tuyo) aunque la pantalla vaya en tinta: lo usan
+/// `.formScreen()` y `.pushedScreen()`, así ningún interruptor elige su color a mano.
+struct AccentSwitchStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Toggle(configuration).tint(Theme.accent)
+    }
+}
+
 /// Interruptor en una fila de libreta, con el verde del sistema.
 struct ToggleRow: View {
     let title: String
@@ -1316,7 +1446,8 @@ struct ToggleRow: View {
             .font(.body)
             .foregroundStyle(Theme.ink)
             .tint(Theme.accent)
-            .frame(minHeight: Theme.Size.row)
+            // A la izquierda, como las demás filas: en la Mac la casilla quedaba al centro.
+            .frame(maxWidth: .infinity, minHeight: Theme.Size.row, alignment: .leading)
             .overlay(alignment: .bottom) { Hairline() }
     }
 }
@@ -2098,7 +2229,12 @@ struct NoteRow: View {
 
     private var preview: String {
         guard let match, !Found.terms(match).contains(where: { note.title.localizedStandardContains($0) }) else { return note.preview }
-        return Found.excerpt(note.text, around: match) ?? note.preview
+        return Found.excerpt(plainText, around: match) ?? note.preview
+    }
+
+    /// La nota sin su marcado, renglón por renglón: el pasaje encontrado decía «# Ideas sueltas…».
+    private var plainText: String {
+        note.text.components(separatedBy: .newlines).map(NoteMarkdown.plain).joined(separator: "\n")
     }
 
     var body: some View {
@@ -2455,7 +2591,8 @@ struct SaveShelfAlert: ViewModifier {
                 }
                 Button("Dejar sin guardar", role: .cancel) { query = nil }
             } message: {
-                Text("Se llena solo con los libros que cumplan «\(query ?? "")». Escribe su nombre o deja «\(suggested)».")
+                // Corto: en un iPhone chico, con la búsqueda entera y el nombre, no cabía.
+                Text("Se llena solo con esta búsqueda. Vacío, lo llamo «\(suggested)».")
             }
             .onChange(of: query) { _, _ in name = "" }
     }
@@ -2756,6 +2893,12 @@ struct SessionLine: View {
     let action: () -> Void
 
     var body: some View {
+        // En la tarjeta del lector, nada hasta la primera palabra: «0 palabras ›» al abrir el
+        // libro parecía un error.
+        if compact && tracker.words == 0 { EmptyView() } else { line }
+    }
+
+    private var line: some View {
         Button(action: action) {
             HStack(spacing: Theme.Space.s) {
                 // Sin punto: el verde solo en el dato, las palabras de esta sesión.
@@ -3388,15 +3531,19 @@ struct SearchResultRow: View {
 /// Campo de búsqueda sobre `field`, con lupa y botón para borrar.
 struct SearchField: View {
     let prompt: String
+    /// Con la letra más grande, la pista corta («Buscar»): la larga no cabía y el campo la achicaba
+    /// mientras la lupa crecía.
+    var shortPrompt: String? = nil
     @Binding var text: String
     var focused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
     var onClear: () -> Void = {}
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         HStack(spacing: Theme.Space.s) {
             Image(systemName: "magnifyingglass").foregroundStyle(Theme.tertiaryInk)
-            TextField(prompt, text: $text)
+            TextField(typeSize.isAccessibilitySize ? shortPrompt ?? prompt : prompt, text: $text)
                 .focused(focused)
                 .submitLabel(.search)
                 .autocorrectionDisabled()

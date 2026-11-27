@@ -5,6 +5,10 @@ import UniformTypeIdentifiers
 /// Traer tu biblioteca de Calibre (una sola vez): elegir la carpeta, ver qué
 /// llega, traerlo y el resumen. Calibre no se toca: se copia (arquitectura D3).
 struct CalibreMigrationScreen: View {
+    /// El botón del final dice a dónde vuelves: la hoja se cierra sobre donde la abriste
+    /// («Ver mi biblioteca» volvía a la bienvenida o a Ajustes).
+    var finishTitle = "Volver a Ajustes"
+
     enum Step {
         case choose
         case reading
@@ -31,7 +35,7 @@ struct CalibreMigrationScreen: View {
                         let done = model.library.progress
                         progress(title: done.map { "Trayendo \($0.done.counted("libro", "libros")) de \($0.total)…" } ?? "Trayendo…",
                                  value: model.library.progressFraction)
-                    case .done(let report): SummaryStep(report: report) { dismiss() }
+                    case .done(let report): SummaryStep(report: report, finishTitle: finishTitle) { dismiss() }
                     }
                 }
                 .screenContent()
@@ -39,7 +43,7 @@ struct CalibreMigrationScreen: View {
             .pushedScreen("Traer de Calibre")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    if !isMigrating { Button("Cerrar la importación") { dismiss() } }
+                    if !isMigrating { BarButton("Cerrar la importación") { dismiss() } }
                 }
             }
             .fileImporter(isPresented: $choosing, allowedContentTypes: [.folder]) { result in
@@ -65,7 +69,7 @@ struct CalibreMigrationScreen: View {
             } else {
                 LoadingLine(text: title)
             }
-            Text("Puedes dejar la app abierta; no cierres esta hoja.")
+            Text("Mantén Gabinete abierto hasta que termine: si sales de la app, puedo quedarme a medias.")
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
         }
@@ -106,7 +110,7 @@ private struct ChooseStep: View {
             SectionHeader("Una sola vez")
             Text("Elige la carpeta de tu biblioteca de Calibre, la que tiene metadata.db (en Calibre: botón Biblioteca › Abrir la carpeta).")
                 .font(.body)
-            Text("Se copian tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no se modifica. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
+            Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no se modifica. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             PrimaryButton(title: "Elegir la carpeta de Calibre", systemImage: "folder", action: choose)
@@ -147,6 +151,7 @@ private struct ReviewStep: View {
 /// Paso 3: cómo fue.
 private struct SummaryStep: View {
     let report: CalibreMigrationReport
+    let finishTitle: String
     let finish: () -> Void
 
     var body: some View {
@@ -173,7 +178,7 @@ private struct SummaryStep: View {
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             }
-            PrimaryButton(title: "Ver mi biblioteca", fillsWidth: true, action: finish)
+            PrimaryButton(title: finishTitle, fillsWidth: true, action: finish)
         }
     }
 }

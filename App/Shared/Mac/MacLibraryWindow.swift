@@ -21,7 +21,8 @@ enum MacSection: Hashable {
         case .notebook: "Cuaderno"
         case .search: SearchWording.title
         case .duplicates: Duplicates.title
-        case .all: "Biblioteca"
+        // El mismo nombre en la barra lateral y en la barra de la ventana (decía «Biblioteca»).
+        case .all: "Todos los libros"
         case .state(let state): state.group
         case .review: "Por revisar"
         case .noCover: "Sin portada"
@@ -278,7 +279,7 @@ private struct MacSidebar: View {
     }
 
     private func item(_ section: MacSection, _ symbol: String, _ count: Int) -> some View {
-        Label(section == .all ? "Todos los libros" : section.title, systemImage: symbol)
+        Label(section.title, systemImage: symbol)
             .badge(count)
             .tag(section)
             .contextMenu {

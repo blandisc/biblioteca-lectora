@@ -51,12 +51,12 @@ struct MetadataEditorView: View {
                     }
                     .padding(.vertical, Theme.Space.xs)
                 } header: {
-                    Text("Portada")
+                    CapsText(text: "Portada")
                 }
 
                 // Cada dato con su nombre arriba, también ya escrito: el campo del sistema solo
                 // enseñaba la pista y, lleno, no decía qué era (UX-3a).
-                Section(BookSection.book.rawValue) {
+                Section {
                     LabeledField(label: "Título", text: $draft.title)
                     LabeledField(label: "Autores", prompt: "Sepáralos con &", text: $authors)
                     LabeledField(label: "Serie", text: Binding(
@@ -74,9 +74,11 @@ struct MetadataEditorView: View {
                                 .foregroundStyle(Theme.secondaryInk)
                         }
                     }
+                } header: {
+                    CapsText(text: BookSection.book.rawValue)
                 }
 
-                Section(BookSection.edition.rawValue) {
+                Section {
                     LabeledField(label: "Editorial", text: optional(\.publisher))
                     LabeledField(label: "Publicado", prompt: BookFields.publishedPrompt, text: optional(\.published))
                     LabeledField(label: "ISBN", text: $isbn)
@@ -84,9 +86,11 @@ struct MetadataEditorView: View {
                         get: { draft.language ?? "" },
                         set: { draft.language = $0.isEmpty ? nil : $0 }
                     ))
+                } header: {
+                    CapsText(text: BookSection.edition.rawValue)
                 }
 
-                Section(BookSection.reading.rawValue) {
+                Section {
                     StatusPicker(status: Binding(get: { draft.readingStatus }, set: { draft.readingStatus = $0 ?? .toRead }))
                     HStack {
                         Text("Valoración")
@@ -94,21 +98,25 @@ struct MetadataEditorView: View {
                         RatingPicker(rating: $draft.rating)
                     }
                     LabeledField(label: "Etiquetas", prompt: "Sepáralas con comas", text: $tags)
+                } header: {
+                    CapsText(text: BookSection.reading.rawValue)
                 }
 
-                Section(BookSection.summary.rawValue) {
+                Section {
                     TextEditor(text: optional(\.summary))
                         .frame(minHeight: Theme.Size.textEditor)
+                } header: {
+                    CapsText(text: BookSection.summary.rawValue)
                 }
             }
             .formScreen()
             .sheetTitle("Editar datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Dejar como está") { dismiss() }
+                    BarButton("Dejar como está") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar cambios", action: save)
+                    BarButton("Guardar cambios", action: save)
                         .disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty
                                   || (draft.series != nil && seriesInput.isInvalid))
                 }

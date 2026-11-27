@@ -139,11 +139,13 @@ enum ReaderFont: String, CaseIterable, Identifiable {
         }
     }
 
+    /// La muestra «Aa» de cada letra, del mismo tamaño en las cuatro: `fixedSize` porque una
+    /// fuente propia con `size:` crece con la letra de iOS y la del sistema no.
     func preview(size: CGFloat) -> Font {
         switch self {
         case .newYork: .system(size: size, design: .serif) // ds-exception: fuente del lector
-        case .charter: .custom("Charter", size: size) // ds-exception: fuente del lector
-        case .iowan: .custom("Iowan Old Style", size: size) // ds-exception: fuente del lector
+        case .charter: .custom("Charter", fixedSize: size) // ds-exception: fuente del lector
+        case .iowan: .custom("Iowan Old Style", fixedSize: size) // ds-exception: fuente del lector
         case .sans: .system(size: size) // ds-exception: fuente del lector
         }
     }
@@ -376,14 +378,18 @@ struct ReaderAppearanceSheet: View {
                     ForEach(ReaderFont.allCases) { item in
                         Button { font = item } label: {
                             HStack(spacing: Theme.Space.s) {
+                                // La muestra mide lo mismo en los cuatro mosaicos: el mismo tamaño
+                                // en la misma caja, crezca o no el nombre de al lado.
                                 Text("Aa")
                                     .font(item.preview(size: Theme.Space.xl))
                                     .lineLimit(1)
-                                    .layoutPriority(1)
+                                    .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                                // Nombre y detalle en dos renglones si no caben («Clásica y compa…»).
                                 VStack(alignment: .leading, spacing: 0) {
-                                    Text(item.name).font(.subheadline.weight(.medium)).lineLimit(labelLines)
-                                    Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk).lineLimit(labelLines)
+                                    Text(item.name).font(.subheadline.weight(.medium)).lineLimit(Theme.Size.labelLines)
+                                    Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk).lineLimit(Theme.Size.labelLines)
                                 }
+                                .fixedSize(horizontal: false, vertical: true)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, Theme.Space.l)
@@ -438,8 +444,9 @@ struct ReaderAppearanceSheet: View {
                             Text(item.title)
                                 .font(.caption)
                                 .foregroundStyle(item == theme ? Theme.ink : Theme.secondaryInk)
-                                .lineLimit(labelLines)
-                                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+                                // Dos renglones antes que achicarse: «Noche cálida» salía más chica que las demás.
+                                .lineLimit(Theme.Size.labelLines)
+                                .multilineTextAlignment(typeSize.isAccessibilitySize ? .leading : .center)
                         }
                         .frame(maxWidth: .infinity, alignment: typeSize.isAccessibilitySize ? .leading : .center)
                     }
@@ -467,7 +474,6 @@ struct ReaderAppearanceSheet: View {
         .padding([.horizontal, .top], Theme.Space.xl)
     }
 
-    private var labelLines: Int { typeSize.isAccessibilitySize ? Theme.Size.labelLines : 1 }
 
     private var swatchLayout: AnyLayout {
         typeSize.isAccessibilitySize ? AnyLayout(HStackLayout(spacing: Theme.Space.l)) : AnyLayout(VStackLayout(spacing: Theme.Space.s))

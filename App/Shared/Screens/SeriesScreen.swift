@@ -14,10 +14,7 @@ struct SeriesScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ScreenHeading(title: series.name)
-                Text(books.count.counted("libro", "libros"))
-                    .font(.footnote)
-                    .foregroundStyle(Theme.secondaryInk)
-                    .padding(.top, Theme.Space.xs)
+                CountLine(text: books.count.counted("libro", "libros"))
                 LazyVStack(spacing: 0) {
                     ForEach(books) { book in
                         NavigationLink(value: book) {

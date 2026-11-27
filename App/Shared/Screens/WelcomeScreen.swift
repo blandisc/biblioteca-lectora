@@ -97,18 +97,18 @@ struct WelcomeScreen: View {
             .toolbar {
                 if step != .hello {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button(Self.backTitle, action: goBack)
+                        BarButton(Self.backTitle, action: goBack)
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button(Self.skipTitle) { seen = true }.foregroundStyle(Theme.secondaryInk)
+                    BarButton(Self.skipTitle) { seen = true }.foregroundStyle(Theme.secondaryInk)
                 }
             }
             #endif
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { useFolder(folder) }
             }
-            .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
+            .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen(finishTitle: "Seguir con la bienvenida").environmentObject(model) }
             .sheet(isPresented: $connectingReadwise) {
                 NavigationStack { ConnectorScreen(connector: .readwise) }
             }

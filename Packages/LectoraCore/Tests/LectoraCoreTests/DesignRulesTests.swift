@@ -545,6 +545,28 @@ final class DesignRulesTests: XCTestCase {
     func testOnlyPiecesPaintTheAccent() {
         check(hits(#"Theme\.accent"#, in: Self.screens),
               "Verde en una pantalla: las acciones van en tinta (TextAction) y lo tuyo sale de una pieza")
+        // Auditoría de medios (27 nov 2026): las recetas teñían de verde todo botón de su contenido
+        // («Elegir de Fotos», «Elegir archivo»). Las acciones van en tinta; los interruptores
+        // prendidos, en verde, por su pieza (`AccentSwitchStyle`).
+        let components = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }!.text
+        var recipes: [String] = []
+        for name in ["func screen()", "func formScreen", "func pushedScreen"] {
+            let body = components.components(separatedBy: name).dropFirst().first?.components(separatedBy: "\n    }").first ?? ""
+            if body.contains("tint(Theme.accent)") || !body.contains("tint(Theme.ink)") || !body.contains("AccentSwitchStyle()") {
+                recipes.append("\(name): sus botones salen en verde (usa .tint(Theme.ink) y .toggleStyle(AccentSwitchStyle()))")
+            }
+        }
+        // Los botones de texto de una barra salían en verde: van con BarButton, en tinta.
+        let barButtons = Self.screens.filter { $0.path.hasPrefix("App/Shared/Screens/") }.flatMap { file in
+            file.lines.enumerated().compactMap { index, line -> String? in
+                guard line.contains("ToolbarItem(") else { return nil }
+                let near = file.lines[index..<min(index + 3, file.lines.count)].joined()
+                return near.range(of: #"(?<![A-Za-z])Button\("#, options: .regularExpression) != nil
+                    ? "\(file.path):\(index + 1): botón de la barra sin BarButton" : nil
+            }
+        }
+        check(recipes + barButtons + hits(#"Menu\("Editar"\)"#, in: Self.screens).map { "\($0) — usa BarMenu(title:)" },
+              "Una receta (o un menú de la barra) pinta de verde las acciones de su pantalla")
     }
 
     /// Regla 3, rótulos en versalitas: toda versalita sale de `CapsText` (o de una pieza
@@ -570,6 +592,15 @@ final class DesignRulesTests: XCTestCase {
             }
         }
         check(handMade, "Rótulo con su acción armado en un HStack: usa SectionHeader(title:) { acción }")
+        // Auditoría de medios (27 nov 2026): los formularios del iPhone (Editar datos, Reglas,
+        // Conexiones) anunciaban sus secciones con el gris del sistema. También van en versalitas.
+        let phone = Self.screens.filter { $0.path.hasPrefix("App/Shared/Screens/") }
+        let systemHeaders = hits(#"Section\(("|\w+\.\w+\.rawValue)"#, in: phone) + phone.flatMap { file in
+            zip(file.lines, file.lines.dropFirst()).compactMap { line, next in
+                line.contains("header: {") && next.trimmingCharacters(in: .whitespaces).hasPrefix("Text(") ? "\(file.path): \(next)" : nil
+            }
+        }
+        check(systemHeaders, "Sección de formulario con el rótulo del sistema: usa header: { CapsText(text:) }")
     }
 
     /// Regla 9 (SD-4, 26 nov 2026): con la letra más grande de iOS (AX5) nada se sale de la
@@ -599,6 +630,10 @@ final class DesignRulesTests: XCTestCase {
             problems.append("SettingsArt: su letra no tiene tope y el dibujo es de medida fija")
         }
         check(problems, "Ancho fijo con .fixedSize(): con la letra más grande se sale de la pantalla (usa .layoutPriority(1) o AdaptiveStack)")
+        // La acción de un rótulo de sección no se parte en renglones: baja entera si no cabe.
+        let header = pieces.first { $0.name == "SectionHeader" }?.body ?? ""
+        check(header.contains("ViewThatFits") && header.contains("trailing.fixedSize(horizontal: true") ? [] : ["SectionHeader"],
+              "La acción de SectionHeader se parte en renglones: debe bajar entera a su propio renglón cuando no cabe")
 
         // 2. Los títulos de pantalla crecen con la letra de iOS, y toda letra propia también.
         let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }!
@@ -636,7 +671,9 @@ final class DesignRulesTests: XCTestCase {
                 depth += line.filter { $0 == "{" }.count - line.filter { $0 == "}" }.count
             }
         }
-        let bigByNature: Set = ["PageSwatchPicker", "CoverChoiceCell", "SaveShelfAlert", "RenameShelfAlert", "DeleteShelfConfirmation"]
+        // Los de la barra del sistema (`BarButton`, `BarMenu`) los mide iOS: su cápsula ya es de 44.
+        let bigByNature: Set = ["PageSwatchPicker", "CoverChoiceCell", "SaveShelfAlert", "RenameShelfAlert", "DeleteShelfConfirmation",
+                                "BarButton", "BarMenu"]
         let measure = #"tapTarget|sizeTarget|accentButton|scrubberReach|Size\.control|Size\.row|IconTile|PrimaryButton|TextAction|CloseButton|roundInGlass"#
         for piece in pieces where !bigByNature.contains(piece.name) {
             let touches = piece.body.range(of: #"Button\s*[({]|\.onTapGesture|\.gesture\(|Menu \{"#, options: .regularExpression) != nil
@@ -746,7 +783,7 @@ final class DesignRulesTests: XCTestCase {
         let sheetMax = macHeight("sheetMax") ?? .infinity
         let macToolbar = 52.0 // la barra de la ventana: título y herramientas juntos
         if sheetMax + macToolbar > (macHeight("window") ?? 0) { mac12.append("Mac.sheetMax no cabe bajo la barra de la ventana más chica") }
-        for name in ["sheet", "settingsPage", "catalogSheet"] where (macHeight(name) ?? .infinity) > sheetMax {
+        for name in ["sheet", "settingsPage"] where (macHeight(name) ?? .infinity) > sheetMax {
             mac12.append("Mac.\(name) mide más que Mac.sheetMax")
         }
         mac12 += hits(#"Size\.macReader"#, in: Self.ui.filter { !$0.path.hasSuffix("LectoraApp.swift") })
@@ -765,6 +802,38 @@ final class DesignRulesTests: XCTestCase {
         }
         XCTAssertGreaterThanOrEqual(value("pageMarginTop"), value("tapTarget") - value("chromeLift"),
                                     "Reader.pageMarginTop: los botones de arriba tapan el primer renglón")
+
+        // 10. Auditoría de medios (27 nov 2026): en «Aa», «Noche cálida» se achicaba para caber y
+        //     «Clásica y compa…» se cortaba; las muestras «Aa» medían distinto con la letra grande.
+        //     Lo que no cabe usa dos renglones (nunca se achica) y cada muestra va en la misma caja.
+        let appearance = Self.ui.first { $0.path.hasSuffix("Reader/ReaderAppearance.swift") }!
+        var aa = hits(#"minimumScaleFactor"#, in: [appearance])
+        if !appearance.text.contains(#"Text("Aa")"#) || appearance.text.components(separatedBy: #"Text("Aa")"#)[1]
+            .prefix(400).range(of: "frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)") == nil {
+            aa.append("ReaderAppearance: la muestra «Aa» de cada letra no va en la misma caja")
+        }
+        // Una fuente propia con `size:` crece con la letra de iOS y la del sistema no: Charter salía
+        // enorme junto a un «Aa» chico de New York. La muestra usa `fixedSize:`.
+        aa += hits(#"\.custom\("[^"]+", size: size\)"#, in: [appearance])
+        check(aa, "Etiquetas que se achican o muestras de distinto tamaño en «Aa»")
+
+        // 11. Auditoría de medios: lo que flota sobre el libro no tapa media página con la letra más
+        //     grande (tope `Letter.readerChromeLargest`) y en una ventana ancha mide lo que la
+        //     columna del libro (`Size.readingPanel`), centrado; en la Mac la tarjeta cruzaba la ventana.
+        var floating: [String] = []
+        let readerView = Self.ui.first { $0.path.hasSuffix("Reader/ReaderView.swift") }!.text
+        for piece in ["private struct BottomPanel", "private struct HighlightCard", "private struct SelectionBar"] {
+            let body = readerView.components(separatedBy: piece).dropFirst().first?.components(separatedBy: "\nprivate struct").first ?? ""
+            if !body.contains("frame(maxWidth: Theme.Size.readingPanel)") || !body.contains("dynamicTypeSize(...Theme.Letter.readerChromeLargest)") {
+                floating.append("\(piece): sin tope de ancho o de letra")
+            }
+        }
+        // Las columnas de la tabla de la Mac se encogen y cortan con «…» antes que correr de lado.
+        let table = Self.ui.first { $0.path.hasSuffix("Mac/MacBookTable.swift") }?.text ?? ""
+        if table.contains(".width(min: Theme.Mac.column)") || table.contains(".width(min: Theme.Mac.shortColumn)") {
+            floating.append("MacBookTable: una columna no se encoge (usa min: Theme.Mac.narrowColumn, ideal: …)")
+        }
+        check(floating, "Lo que flota en el lector o la tabla de la Mac no cabe")
     }
 
     /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
@@ -994,7 +1063,9 @@ final class DesignRulesTests: XCTestCase {
         check(handMade, "Aviso armado a mano: usa .errorAlert o .noticeAlert")
         let titles = hits(#"(errorAlert|noticeAlert|\.alert|confirmationDialog)\("(Aviso|Nota|Error|Atención|Importación|[^" ]+|[^" ]+ [^" ]+)""#, in: Self.ui)
         check(titles, "Aviso cuyo título no dice qué pasó (tres palabras o más, nunca «Aviso» ni «Nota»)")
-        check(hits(#""[^"]*(No se pud|No se pued|Se guardó|Se juntó|Se completaron)"#, in: Self.ui) +
+        // Auditoría de medios (27 nov 2026): «Se borra el archivo», «Se borra la llave», «Se copian
+        // tus libros» seguían impersonales. Lo que hago lo digo yo: «Borro», «Copio», «La guardo».
+        check(hits(#""[^"]*(No se pud|No se pued|Se guardó|Se juntó|Se completaron|[Ss]e borra|[Ss]e copia|[Ss]e guarda en)"#, in: Self.ui) +
               hits(#""[^"]*(No se pud|No se pued)"#, in: Self.sources("Packages/LectoraCore/Sources")),
               "Voz impersonal: di qué hice yo («No pude guardar», «Junté»)")
     }
@@ -1020,6 +1091,20 @@ final class DesignRulesTests: XCTestCase {
                 }
             }
         }
+        // Auditoría de medios (27 nov 2026): renombrar un autor en la Mac abría con el nombre ya
+        // escrito. Ninguna hoja escribe su campo al aparecer: el nombre de ahora va de pista.
+        let anyField = try! NSRegularExpression(pattern: #"TextField\([^\n]*text: \$(\w+)"#)
+        for file in Self.ui {
+            let names = Set(anyField.matches(in: file.text, range: NSRange(file.text.startIndex..., in: file.text)).compactMap {
+                Range($0.range(at: 1), in: file.text).map { String(file.text[$0]) }
+            })
+            for (index, line) in file.lines.enumerated() where line.contains(".onAppear") {
+                let block = file.lines[index..<min(index + 4, file.lines.count)].joined(separator: "\n")
+                for name in names where block.range(of: #"\b\#(name) = (?!"")"#, options: .regularExpression) != nil {
+                    problems.append("\(file.path):\(index + 1): el campo «\(name)» se escribe solo al aparecer")
+                }
+            }
+        }
         // La hendidura arma su texto bloque por bloque, con un salto entre el título y el párrafo.
         let reader = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
         let slit = reader.components(separatedBy: "const slitFrom").dropFirst().first?.components(separatedBy: "\n}").first ?? ""
@@ -1027,6 +1112,21 @@ final class DesignRulesTests: XCTestCase {
             problems.append("reader.js: la hendidura toma el texto del rango tal cual y pega el título con su primera frase")
         }
         check(problems, "Dos textos pegados: sepáralos (un espacio, « · », un salto de renglón)")
+    }
+
+    /// Regla 8 (auditoría de medios, 27 nov 2026): a quien usa la app se le habla en palabras, no
+    /// con lo que entiende la máquina. El estante decía «3 LIBROS · AUTOR:ASIMOV SERIE:FUNDACIÓN»,
+    /// la nota «Notas/El silencio en Rulfo.md», el Cuaderno «EN NOTAS» y Buscar enseñaba
+    /// «# Ideas sueltas…» del Markdown.
+    func testPeopleReadWordsNotSyntax() {
+        var problems = hits(#"\.query ?\?\? ?""\)"#, in: Self.screens)
+            .filter { ($0.contains("Text(") || $0.contains("CountLine(") || $0.contains("message:")) && !$0.contains("describe(") }
+        problems += hits(#"\\\(CabinetLocation\.notesFolder\)/|\.md"|Gabinete/Notas|· en \\\(CabinetLocation"#, in: Self.screens)
+        // Lo que se enseña de una nota sale sin su marcado (`NoteMarkdown.plain`).
+        problems += hits(#"Found\.excerpt\(note\.text"#, in: Self.ui)
+        // El buscador de la Mac dice qué busca en palabras; los filtros están en su menú.
+        problems += hits(#"prompt: "[^"]*\w+:[ "]"#, in: Self.ui)
+        check(problems, "Sintaxis a la vista: dilo en palabras (SavedShelf.describe, la fecha, NoteMarkdown.plain)")
     }
 
     /// Regla 7 y SB-1 de la casa: un botón dice qué hace. «Cancelar», «OK», «Listo», «Cerrar»
@@ -1038,6 +1138,20 @@ final class DesignRulesTests: XCTestCase {
               "Botón que no dice qué hace: verbo y objeto («Guardar cambios», «Cerrar la consulta»)")
         check(hits(#"Image\(systemName: "xmark"\)"#, in: Self.screens),
               "✕ armada a mano: usa CloseButton, que se toca en 44 y dice qué cierra")
+        // Auditoría de medios (27 nov 2026): borrar una nota y desconectar Readwise no traían su
+        // botón para quedarse, y iOS ponía su «Cancelar». Toda pregunta lleva el suyo, con
+        // `role: .cancel` y diciendo qué conservas («Conservar la nota», «Seguir conectado»).
+        var noStay: [String] = []
+        for file in Self.ui {
+            for (index, line) in file.lines.enumerated() where line.contains(".confirmationDialog(") || line.contains(".alert(") {
+                let rest = file.lines[(index + 1)...].prefix(14)
+                let block = rest.prefix { !$0.contains("} message:") && !$0.contains(".confirmationDialog(") && !$0.contains(".alert(") }
+                if !block.joined().contains("role: .cancel") {
+                    noStay.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces).prefix(100))")
+                }
+            }
+        }
+        check(noStay, "Pregunta sin botón para quedarse: agrega Button(\"Conservar…\", role: .cancel)")
     }
 
     /// Regla 7: mientras algo tarda, digo qué estoy haciendo («Buscando portadas…»), no una

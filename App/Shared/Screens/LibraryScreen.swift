@@ -41,6 +41,17 @@ struct LibraryScreen: View {
         layout == .list && sort == .title && books.count >= Self.letterIndexMinimum && LetterIndex.shows(at: typeSize)
     }
 
+    /// Donde iría el índice A–Z pero la letra es tan grande que no cabe.
+    private func jumpsByLetter(_ books: [ShelfBook]) -> Bool {
+        layout == .list && sort == .title && books.count >= Self.letterIndexMinimum && !LetterIndex.shows(at: typeSize)
+    }
+
+    private func jump(to letter: String, in books: [ShelfBook], _ scroller: ScrollViewProxy) {
+        if let target = books.first(where: { $0.sortTitle.firstLetter == letter }) {
+            withAnimation(Theme.Motion.standard) { scroller.scrollTo(target.id, anchor: .top) }
+        }
+    }
+
     var body: some View {
         let books = self.books
         let indexed = showsLetterIndex(books)
@@ -64,6 +75,12 @@ struct LibraryScreen: View {
                         VStack(alignment: .leading, spacing: 0) {
                             CountLine(text: summary(books)) {
                                 SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
+                                // Con la letra más grande no hay índice A–Z: un menú salta a la letra.
+                                if jumpsByLetter(books) {
+                                    LetterJumpMenu(letters: LetterIndex.letters.filter { letter in books.contains { $0.sortTitle.firstLetter == letter } }) { letter in
+                                        jump(to: letter, in: books, scroller)
+                                    }
+                                }
                             }
                             .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.contentSpace)).maxY } action: { letterIndexTop = $0 }
 
@@ -106,11 +123,7 @@ struct LibraryScreen: View {
                 }
                 .overlay(alignment: .trailing) {
                     if indexed {
-                        LetterIndex { letter in
-                            if let target = books.first(where: { $0.sortTitle.firstLetter == letter }) {
-                                withAnimation(Theme.Motion.standard) { scroller.scrollTo(target.id, anchor: .top) }
-                            }
-                        }
+                        LetterIndex { letter in jump(to: letter, in: books, scroller) }
                         .frame(maxHeight: .infinity)
                         .padding(.top, letterIndexTop)
                     }
@@ -150,7 +163,11 @@ struct LibraryScreen: View {
             return "Buscando datos en internet…"
         }
         let inCloud = shown.filter(\.inCloudOnly).count
-        let books = shown.count.counted("libro", "libros")
+        var books = shown.count.counted("libro", "libros")
+        // En «Series» se ven pilas, no libros: «1 serie · 3 libros» (decía «3 libros» bajo una pila).
+        if filter == .series {
+            books = "\(Set(shown.compactMap(SeriesRef.init)).count.counted("serie", "series")) · \(books)"
+        }
         return inCloud == 0 || filter == .cloud ? books : "\(books) · \(inCloud) en la nube"
     }
 

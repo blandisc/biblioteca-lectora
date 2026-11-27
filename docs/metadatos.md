@@ -55,7 +55,7 @@ texto (tu versión con acentos no se cambia por una sin acentos).
 Como «Revisar metadatos descargados» de Calibre: cada dato que se completó
 solo queda anotado en `.lectora/completados.json`. En Por revisar › «Se
 completaron solos» ves dato por dato lo nuevo frente a lo de antes, con
-«Deshacer» por dato, «Deshacer todo» por libro y «Todo bien». Si cambiaste un
+«Deshacer» por dato, «Deshacer todo» por libro y «Darlos por buenos». Si cambiaste un
 dato después, deshacer respeta lo tuyo.
 
 ## Portadas para elegir

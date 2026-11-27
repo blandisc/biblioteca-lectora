@@ -94,6 +94,8 @@ enum Theme {
         static let titleColumn: CGFloat = 180
         static let shortColumn: CGFloat = 72
         static let column: CGFloat = 110
+        /// Lo más que se encoge una columna de la tabla antes de cortar con «…».
+        static let narrowColumn: CGFloat = 48
         /// Gabinete › Ajustes… (⌘,), en pestañas: el ancho; el alto es el de cada pestaña.
         static let settings: CGFloat = 560
         /// El alto de Reglas o de una conexión, abiertas desde una pestaña de Ajustes.
@@ -104,8 +106,9 @@ enum Theme {
         static let readingColumns = 1
         /// La barra de avance de «Buscar datos» en lote (CB-4).
         static let batchProgress: CGFloat = 220
-        /// Renombrar o fusionar un autor, una serie o una etiqueta (CB-2).
-        static let catalogSheet = CGSize(width: 420, height: 220)
+        /// Renombrar o fusionar un autor, una serie o una etiqueta (CB-2): su ancho; el alto es el
+        /// de su contenido (con 220 fijos sobraban ~160 pt vacíos).
+        static let catalogSheet: CGFloat = 420
         /// Lo más chica que puede ser la ventana de un libro.
         static let readerMin = CGSize(width: 520, height: 600)
         static let summary: CGFloat = 120
@@ -310,6 +313,9 @@ enum Theme {
         /// Lo más ancho que corre un renglón del libro (unas 66 letras): en una ventana ancha
         /// el texto se queda en esta medida, centrado, y no se estira de orilla a orilla (MX-B).
         static let readingMeasure: CGFloat = 640
+        /// Lo más ancha que es una tarjeta de vidrio del lector: la columna del libro con el aire
+        /// de adentro de la tarjeta. En la Mac la tarjeta ya no cruza toda la ventana (auditoría).
+        static let readingPanel: CGFloat = readingMeasure + 2 * Reader.panelInset
         /// Proporción de toda portada: ancho entre alto (2 : 3).
         static let coverAspect: CGFloat = 2.0 / 3.0
         /// Niveles de sangría del índice del libro; más hondo ya no se mete.
@@ -632,6 +638,9 @@ extension Theme {
         /// Los dibujos de Ajustes (`SettingsArt`) no crecen: son ilustraciones de medida fija
         /// y lo que dicen está también en sus filas y en lo que lee VoiceOver.
         static let drawingLargest: DynamicTypeSize = .large
+        /// Hasta dónde crece la letra de lo que flota sobre el libro (la tarjeta de abajo, la barra
+        /// de lo elegido, la tarjeta del subrayado): con AX5 la tarjeta tapaba casi media página.
+        static let readerChromeLargest: DynamicTypeSize = .accessibility1
     }
 }
 

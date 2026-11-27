@@ -171,14 +171,20 @@ struct ReaderView: View {
             }
         }
         .animation(Theme.Motion.sheet, value: showsSession)
-        // Con la guía puesta, tocar avanza el renglón; esto la quita. Abajo, junto al
-        // folio: arriba tapaba el primer renglón.
-        .overlay(alignment: .bottomTrailing) {
+        // Con la guía puesta, tocar avanza el renglón; esto la quita. Arriba a la izquierda, donde
+        // cierra todo lo del lector (el libro y la hendidura): antes iba abajo a la derecha y la
+        // hendidura arriba a la izquierda. El texto ya empieza debajo (`Reader.pageMarginTop`).
+        .overlay(alignment: .topLeading) {
             if controller.guiding && !showsChrome {
                 CloseButton(label: "Terminar el renglón", style: .glass) {
                     withAnimation(Theme.Motion.standard) { controller.stopGuide() }
                 }
                 .padding(.horizontal, Theme.Reader.chromeInset)
+                #if os(iOS)
+                .padding(.top, -Theme.Reader.chromeLift)
+                #else
+                .padding(.top, Theme.Space.s)
+                #endif
                 .transition(.opacity)
             }
         }
@@ -381,7 +387,7 @@ extension ReaderView {
     private var chrome: some View {
         ZStack {
             if !showsChrome {
-                ReadingFolio(title: title, location: controller.folioLocation, footerText: footerText,
+                ReadingFolio(title: title, location: controller.folioLocation, footerText: footerText, footerShorter: footerShorter,
                              color: palette.textColor,
                              paper: flow == .scrolled ? palette.background : nil,
                              pagePaper: palette.background,
@@ -471,6 +477,13 @@ extension ReaderView {
             return FooterOption(kind: kind, text: kind == .percent ? parts.value : "\(parts.value) \(short)",
                                 available: true)
         }
+    }
+
+    /// El pie más corto cuando el entero no cabe (con la letra más grande se cortaba en
+    /// «3 min para termin…»): primero «3 min para el capítulo», luego solo «3 min».
+    private var footerShorter: [String] {
+        guard footer != .percent, let parts = footerParts(footer) else { return [] }
+        return ["\(parts.value) \(parts.caption.replacingOccurrences(of: "para terminar", with: "para"))", parts.value]
     }
 
     /// El pie según lo que elegiste; si no hay con qué calcularlo, el porcentaje.
@@ -831,6 +844,9 @@ private struct BottomPanel: View {
         // (que lo tomaría como «ocultar controles»).
         .contentShape(Rectangle())
         .onTapGesture {}
+        // En una ventana ancha, del ancho de la columna del libro y centrada.
+        .frame(maxWidth: Theme.Size.readingPanel)
+        .dynamicTypeSize(...Theme.Letter.readerChromeLargest)
         .padding(.horizontal, Theme.Reader.chromeInset)
     }
 }
@@ -862,6 +878,8 @@ private struct HighlightCard: View {
         }
         .padding(Theme.Space.l)
         .glassPanel(cornerRadius: Theme.Radius.panel)
+        .frame(maxWidth: Theme.Size.readingPanel)
+        .dynamicTypeSize(...Theme.Letter.readerChromeLargest)
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Reader.chromeInset)
     }
@@ -894,6 +912,8 @@ private struct SelectionBar: View {
         }
         .padding(Theme.Space.s)
         .glassPanel(cornerRadius: Theme.Radius.panel)
+        .frame(maxWidth: Theme.Size.readingPanel)
+        .dynamicTypeSize(...Theme.Letter.readerChromeLargest)
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Reader.chromeInset)
     }
@@ -924,6 +944,8 @@ private struct ReadingFolio<Counter: View>: View {
     let title: String
     let location: ReaderController.Location?
     let footerText: String
+    /// Lo mismo, más corto, por si el entero no cabe en un renglón.
+    var footerShorter: [String] = []
     /// El color del texto del libro: el folio se lee sobre cualquier fondo
     /// (papel, noche cálida, negro), no con el gris de la app.
     let color: Color
@@ -954,9 +976,13 @@ private struct ReadingFolio<Counter: View>: View {
             ZStack {
                 Button { choosing = true } label: {
                     VStack(spacing: Theme.Space.xs) {
-                        Text(footerText)
-                            .monospacedDigit()
-                            .lineLimit(1)
+                        // El más largo que quepa entero en un renglón, nunca cortado.
+                        ViewThatFits(in: .horizontal) {
+                            Text(footerText)
+                            ForEach(footerShorter, id: \.self) { Text($0) }
+                        }
+                        .monospacedDigit()
+                        .lineLimit(1)
                         // En continuo, dónde vas en el capítulo: sin barra ni punto en la orilla.
                         if paper != nil, let done = location?.chapterDone {
                             ChapterLine(done: done, ink: color)

@@ -74,12 +74,13 @@ struct NotebookScreen: View {
         }
     }
 
-    /// «4 notas · en Gabinete/Notas» o el orden de los subrayados.
+    /// «4 notas» o el orden de los subrayados. Dónde viven las notas lo dice Ajustes › Tu Gabinete:
+    /// «4 NOTAS · EN NOTAS» se leía raro.
     @ViewBuilder
     private var summary: some View {
         switch part {
         case .notes:
-            CountLine(text: notes.count.counted("nota", "notas") + " · en \(CabinetLocation.notesFolder)")
+            CountLine(text: notes.count.counted("nota", "notas"))
         case .highlights:
             CountLine(text: highlights.count.counted("subrayado", "subrayados")) {
                 SortMenu(options: HighlightOrder.allCases, selection: $order) { $0.rawValue }
@@ -91,7 +92,7 @@ struct NotebookScreen: View {
     private var notesList: some View {
         if notes.isEmpty {
             EmptyState(title: "Sin notas todavía",
-                       message: "Escribe ideas, resúmenes o lo que te dejó un libro. Enlaza libros con [[ y lleva tus subrayados a una nota desde el lector. Cada nota es un archivo Markdown en Gabinete/Notas.",
+                       message: "Escribe ideas, resúmenes o lo que te dejó un libro. Enlaza libros con [[ y lleva tus subrayados a una nota desde el lector. Cada nota es un archivo de texto en la carpeta Notas de tu Gabinete, que abre también Obsidian.",
                        actionTitle: "Nota nueva", systemImage: "plus") { path.append(NoteRef.new()) }
         } else {
             LazyVStack(spacing: 0) {
