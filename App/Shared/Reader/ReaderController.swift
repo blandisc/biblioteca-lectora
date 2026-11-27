@@ -24,6 +24,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
 
     @Published private(set) var title: String?
+    /// El idioma del libro según el EPUB («en», «es-MX»…): de él salen la traducción y Wikipedia.
+    @Published private(set) var language: String?
+    /// Lo elegido para «Consultar» (SG-4): abre la tarjeta con traducción, Wikipedia y diccionario.
+    @Published var lookup: String?
 
     /// Una entrada del índice del libro.
     struct ContentsEntry: Identifiable, Equatable {
@@ -393,6 +397,19 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         }
     }
 
+    /// «Consultar»: suelta la selección y abre la tarjeta con lo elegido.
+    func lookUpSelection() {
+        webView?.evaluateJavaScript("window.lectora.takeSelection()") { [weak self] result, _ in
+            MainActor.assumeIsolated {
+                guard let text = (result as? [String: Any])?["text"] as? String else { return }
+                let term = WordLookup.term(from: text)
+                guard !term.isEmpty else { return }
+                self?.hasSelection = false
+                self?.lookup = term
+            }
+        }
+    }
+
     /// Suelta la selección sin hacer nada.
     func clearSelection() {
         evaluate("window.lectora.takeSelection()")
@@ -490,6 +507,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             }
         case "opened":
             title = body["title"] as? String
+            language = body["language"] as? String
             let entries = (body["toc"] as? [[String: Any]]) ?? []
             contents = entries.enumerated().compactMap { index, entry in
                 guard let label = entry["label"] as? String, !label.isEmpty else { return nil }
@@ -608,7 +626,10 @@ final class LectoraWebView: WKWebView {
         note.target = self
         let toNote = NSMenuItem(title: "Llevar a una nota", action: #selector(underlineToNote), keyEquivalent: "")
         toNote.target = self
+        let lookUp = NSMenuItem(title: "Consultar en Gabinete", action: #selector(lookUpSelection), keyEquivalent: "")
+        lookUp.target = self
         menu.insertItem(.separator(), at: 0)
+        menu.insertItem(lookUp, at: 0)
         menu.insertItem(toNote, at: 0)
         menu.insertItem(note, at: 0)
         menu.insertItem(underline, at: 0)
@@ -617,5 +638,6 @@ final class LectoraWebView: WKWebView {
     @objc private func underlineSelection() { controller?.highlightSelection() }
     @objc private func underlineWithNote() { controller?.highlightSelection(withNote: true) }
     @objc private func underlineToNote() { controller?.highlightSelection(toNote: true) }
+    @objc private func lookUpSelection() { controller?.lookUpSelection() }
     #endif
 }

@@ -355,6 +355,8 @@ enum Theme {
         static let openSettle: TimeInterval = 0.25
         /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
         static let highlightLines = 4
+        /// El resumen de Wikipedia en la tarjeta «Consultar».
+        static let lookupLines = 5
         /// Fundido: el mismo resorte que la hoja (con menos fuerza duraría más el
         /// momento sin texto a mitad del relevo). Es un relevo: el texto de antes
         /// se va en la primera `fadeSpan` de la vuelta y el nuevo llega en la última,

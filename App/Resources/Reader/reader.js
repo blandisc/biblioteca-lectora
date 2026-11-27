@@ -740,6 +740,7 @@ window.lectora = {
                     ? book.metadata.title
                     : Object.values(book.metadata?.title ?? {})[0] ?? null,
                 toc: flattenTOC(book.toc ?? []),
+                language: [].concat(book.metadata?.language ?? [])[0] ?? null,
             })
             applyStyle()
             await view.init({ lastLocation: lastLocation || null, showTextStart: !lastLocation })

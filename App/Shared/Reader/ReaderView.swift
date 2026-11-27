@@ -239,6 +239,7 @@ extension ReaderView {
                 SelectionBar { action in
                     switch action {
                     case .underline: controller.highlightSelection()
+                    case .lookUp: controller.lookUpSelection()
                     case .note: controller.highlightSelection(withNote: true)
                     case .toNote: controller.highlightSelection(toNote: true)
                     case .copy: controller.copySelection()
@@ -246,6 +247,24 @@ extension ReaderView {
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+        }
+        .overlay(alignment: .bottom) {
+            if let term = controller.lookup {
+                ZStack(alignment: .bottom) {
+                    // Tocar fuera cierra la tarjeta, como la del subrayado.
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { controller.lookup = nil }
+                        .accessibilityHidden(true)
+                    LookupCard(term: term, bookLanguage: controller.language) { controller.lookup = nil }
+                        .id(term)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+        }
+        .animation(Theme.Motion.standard, value: controller.lookup)
+        .onChange(of: controller.lookup) { _, term in
+            if term != nil { showsChrome = false }
         }
         .animation(Theme.Motion.standard, value: controller.hasSelection)
         .sensoryFeedback(.selection, trigger: controller.hasSelection)
@@ -516,7 +535,7 @@ extension ReaderView {
     }
 
     #if DEBUG
-    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|guide|slit|slitWord|contents`): pasa
+    /// Para revisar animaciones en video (`-screenshot.demo turns|flow|aa|guide|slit|slitWord|contents|lookup|selection`): pasa
     /// páginas o cambia de modo solo, sin tocar la pantalla. Solo en Debug.
     private func runDemo() {
         guard !demoStarted, let demo = LaunchOptions.demo else { return }
@@ -543,6 +562,12 @@ extension ReaderView {
                 guide(.slit(demo == "slit" ? .phrase : .word))
             case "contents":
                 tools = .contents
+            case "selection":
+                // La barra de selección, sin tener que elegir texto con el dedo.
+                controller.hasSelection = true
+            case "lookup":
+                // «Consultar» con la palabra de `-screenshot.query` (por omisión, «agency»).
+                controller.lookup = UserDefaults.standard.string(forKey: "screenshot.query") ?? "agency"
             case "bookmark":
                 // Marca el renglón de arriba (en continuo, hilo y cinta) y lo deja a la vista.
                 if currentBookmark == nil { toggleBookmark() }
@@ -854,7 +879,7 @@ private struct HighlightCard: View {
 /// Al seleccionar texto: una barra de vidrio abajo, en lugar del menú negro
 /// del sistema. «Subrayar», lo que más se usa, va primero y en tinta.
 private struct SelectionBar: View {
-    enum Action { case underline, note, toNote, copy }
+    enum Action { case underline, lookUp, note, toNote, copy }
     let perform: (Action) -> Void
 
     var body: some View {
@@ -863,6 +888,7 @@ private struct SelectionBar: View {
                 IconTile(symbol: "pencil.line", title: "Subrayar", prominent: true)
             }
             .buttonStyle(PressableStyle())
+            item(.lookUp, "Consultar", "character.book.closed")
             item(.note, "Nota", "square.and.pencil")
             item(.toNote, "A una nota", "note.text.badge.plus")
             item(.copy, "Copiar", "doc.on.doc")

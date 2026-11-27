@@ -205,6 +205,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `SessionLine` | La sesión en una línea verde que abre su tarjeta | Panel del lector |
 | `ScrubberBar` | Barra de avance del lector: riel fino, lo leído en tinta, perilla chica que crece al arrastrar; se toca en 44 pt de alto | Panel del lector |
 | `GuideShade` | Lectura guiada, el renglón (LG-B): el papel del libro al `Reader.guideShade` (72 %) sobre todo menos el renglón que lees; la guía viaja con `Motion.select` | Lector |
+| `LookupCard` | «Consultar» (SG-4): al elegir texto, la palabra en serif, su traducción al español con el traductor de Apple (sola si los idiomas ya están descargados; si no, botón «Traducir»), el primer párrafo de Wikipedia en el idioma del libro (`Reader.lookupLines` 5) y el diccionario del sistema; vidrio como la tarjeta del subrayado | Lector, barra de selección |
 | `SlitText` | La hendidura: el pedazo que se lee en `.bookTitle`; palabra por palabra (HE-A) con su letra de enfoque en `highlight`, fija al centro; por frase (HE-B), centrado | Hendidura |
 | `ChapterLine` | En continuo, bajo el pie: rayita corta (`Reader.chapterLine` 64) con la tinta del libro que se llena con lo leído del capítulo; quieta (SC-C) | Pie del lector |
 | `FooterPreview` | Muestra del pie: recorte chico de la parte de abajo de la página (papel, dos renglones fantasma y el pie tal cual, con su letra), sin nombre debajo (lo lee VoiceOver); filo de tinta y palomita si está elegido | Tarjeta del lector |
