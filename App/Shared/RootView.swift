@@ -30,6 +30,7 @@ struct RootView: View {
 
     var body: some View {
         tabs
+            .duoBars()
             .modifier(MiniPlayerAccessory(book: model.listening))
             .environmentObject(model)
             .environment(\.bookOpeningNamespace, opening)
@@ -60,6 +61,15 @@ struct RootView: View {
                 // Los que se importaron sin internet se buscan ahora.
                 await model.library.retryPendingLookups()
             }
+            #if DEBUG && os(iOS)
+            // Capturas: `-screenshot.turn landscape` gira la pantalla (y `-screenshot.turnAfter 8`, ya abierta).
+            .task {
+                guard let turn = LaunchOptions.turn else { return }
+                try? await Task.sleep(for: .seconds(LaunchOptions.turnAfter))
+                let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+                scene?.requestGeometryUpdate(.iOS(interfaceOrientations: turn == "landscape" ? .landscapeRight : .portrait))
+            }
+            #endif
             // Al volver a la app: lo que cambió en tus otros dispositivos (iCloud).
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
@@ -80,7 +90,7 @@ struct RootView: View {
             .onChange(of: welcomeSeen) { _, seen in if seen { showsWelcome = false } }
             // Al cerrar el libro, el resumen de la sesión.
             .sheet(item: $sessions.justFinished) { session in
-                SessionSummarySheet(session: session).environmentObject(model)
+                SessionSummarySheet(session: session).environmentObject(model).duoBars()
             }
             .noticeAlert("No añadí todos tus libros", message: $model.importReport, back: "Ver mis libros")
             // Un archivo de `.lectora` que no pude leer: lo digo una vez, en el iPhone y en la Mac.
@@ -89,6 +99,7 @@ struct RootView: View {
             .fullScreenCover(item: $model.openBook) { book in
                 ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
                     .bookOpeningDestination(in: opening, enabled: book.fromCover)
+                    .duoBars()
             }
             #else
             // El libro se abre en su propia ventana (MG-1).
@@ -140,10 +151,10 @@ private struct WelcomeCover: ViewModifier {
 
     func body(content: Content) -> some View {
         #if os(iOS)
-        content.fullScreenCover(isPresented: $isPresented) { WelcomeScreen().environmentObject(model) }
+        content.fullScreenCover(isPresented: $isPresented) { WelcomeScreen().environmentObject(model).duoBars() }
         #else
         // Mide lo que mide su paso (`Theme.Mac.welcome` de ancho), sin pasar de la ventana más chica.
-        content.sheet(isPresented: $isPresented) { WelcomeScreen().environmentObject(model) }
+        content.sheet(isPresented: $isPresented) { WelcomeScreen().environmentObject(model).duoBars() }
         #endif
     }
 }

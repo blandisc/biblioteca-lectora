@@ -82,10 +82,10 @@ struct BookDetailScreen: View {
         // Capturas: `-screenshot.screen edit` abre «Escribir a mano» sobre la ficha.
         .onAppear { if LaunchOptions.screen == "edit" { editing = true } }
         .sheet(isPresented: $editing) {
-            if let record { MetadataEditorView(book: record) }
+            if let record { MetadataEditorView(book: record).duoBars() }
         }
         .sheet(isPresented: $choosingCover) {
-            if let id = live.bookID { CoverPickerSheet(bookID: id) }
+            if let id = live.bookID { CoverPickerSheet(bookID: id).duoBars() }
         }
     }
 }

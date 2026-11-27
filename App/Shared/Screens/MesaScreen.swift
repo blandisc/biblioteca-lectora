@@ -9,6 +9,12 @@ struct MesaScreen: View {
     /// Capturas automáticas: `-screenshot.screen diary` abre el diario (en la Mac, con
     /// `-screenshot.tab desk`). Se abre ya puesta la Mesa: empezar en `true` no empujaba nada en la Mac.
     @State private var showsDiary = false
+    @Environment(\.dynamicTypeSize) private var typeSize
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #else
+    private let sizeClass: UserInterfaceSizeClass? = nil
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -25,7 +31,7 @@ struct MesaScreen: View {
                         }
                     }
                 }
-                .screenContent()
+                .screenContent(wide: true)
             }
             // Portadas nítidas: filo fino y sombra larga y tenue (ME-1).
             .environment(\.crispCovers, true)
@@ -46,7 +52,44 @@ struct MesaScreen: View {
         }
     }
 
+    /// El libro que lees y, debajo, tu semana y la mesa. Con DUO-3B (falta decidirlo) y una
+    /// pantalla ancha (el Duo abierto), lo segundo va a la derecha, sin bajar a buscarlo.
+    @ViewBuilder
     private func current(_ book: ShelfBook) -> some View {
+        // Con la letra más grande, una columna: en dos, el título se cortaba («Don Quijote de la Manc…»).
+        if Duo.deskInTwoColumns && sizeClass == .regular && !typeSize.isAccessibilitySize {
+            HStack(alignment: .top, spacing: Theme.Space.xxxl) {
+                reading(book).frame(maxWidth: .infinity, alignment: .leading)
+                beside.frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                reading(book)
+                beside.padding(.top, Theme.Space.xxl)
+            }
+        }
+    }
+
+    /// Tu semana y lo que espera en la mesa.
+    private var beside: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            weekSection
+
+            if !model.desk.isEmpty {
+                SectionHeader("En la mesa")
+                    .padding(.top, sessions.sessions.isEmpty ? 0 : Theme.Space.xxl)
+                    .padding(.bottom, Theme.Space.l)
+                CoverGrid {
+                    ForEach(model.desk.prefix(Theme.Size.gridColumns)) { item in
+                        NavigationLink(value: item) { CoverCell(book: item, caption: item.caption) }
+                            .buttonStyle(PressableStyle())
+                    }
+                }
+            }
+        }
+    }
+
+    private func reading(_ book: ShelfBook) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Button(action: model.continueReading) {
                 ShelfCover(book: book).frame(width: Theme.Size.coverHero)
@@ -93,21 +136,6 @@ struct MesaScreen: View {
                 }
             }
             .padding(.top, Theme.Space.xl)
-
-            weekSection
-                .padding(.top, Theme.Space.xxl)
-
-            if !model.desk.isEmpty {
-                SectionHeader("En la mesa")
-                    .padding(.top, Theme.Space.xxl)
-                    .padding(.bottom, Theme.Space.l)
-                CoverGrid {
-                    ForEach(model.desk.prefix(Theme.Size.gridColumns)) { item in
-                        NavigationLink(value: item) { CoverCell(book: item, caption: item.caption) }
-                            .buttonStyle(PressableStyle())
-                    }
-                }
-            }
         }
     }
 

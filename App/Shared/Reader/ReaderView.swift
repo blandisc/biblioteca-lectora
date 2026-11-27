@@ -27,6 +27,8 @@ struct ReaderView: View {
     @State private var showsAppearance = false
     /// La hendidura (HE) a la vista, sobre el libro.
     @State private var slitting = false
+    /// Lo que ocupan arriba la isla y la hora: los botones de arriba suben hacia ellas (`chromeTop`).
+    @State private var safeTop: CGFloat = 0
     #if DEBUG
     @State private var demoStarted = false
     #endif
@@ -77,10 +79,19 @@ struct ReaderView: View {
             })))
     }
 
+    /// Dónde van los botones de arriba (cerrar, marcador, terminar el renglón): suben
+    /// `Reader.chromeLift` hacia la isla, pero nunca más de lo que hay arriba. En una pantalla sin
+    /// isla ni hora arriba (el iPhone Duo cerrado lleva la hora al costado) quedan a
+    /// `Reader.chromeEdge` de la orilla: antes se salían por arriba, cortados a la mitad.
+    private var chromeTop: CGFloat {
+        max(Theme.Reader.chromeEdge - safeTop, -Theme.Reader.chromeLift)
+    }
+
     /// La página y lo que se le pone encima mientras lees.
     private var page: some View {
         ZStack {
             palette.background.ignoresSafeArea()
+                .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { safeTop = $0 }
             // Tu página entra con un fundido corto cuando el libro ya se acomodó.
             // En continuo el texto corre hasta la orilla de arriba de la pantalla.
             ReaderWebView(controller: controller)
@@ -135,7 +146,7 @@ struct ReaderView: View {
         // quedaba en claro (o en oscuro) aunque cambiara el sistema (UX-1b).
         .preferredColorScheme(palette.scheme)
         .sheet(item: $tools) { part in
-            ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
+            ReaderToolsSheet(controller: controller, bookID: bookID, part: part).duoBars()
         }
         // Tras ir a un resultado: anterior y siguiente sin abrir otra vez la lista.
         .overlay(alignment: .bottom) {
@@ -181,7 +192,7 @@ struct ReaderView: View {
                 }
                 .padding(.horizontal, Theme.Reader.chromeInset)
                 #if os(iOS)
-                .padding(.top, -Theme.Reader.chromeLift)
+                .padding(.top, chromeTop)
                 #else
                 .padding(.top, Theme.Space.s)
                 #endif
@@ -222,7 +233,7 @@ extension ReaderView {
     fileprivate func tail(_ content: some View) -> some View {
         content
         .sheet(isPresented: $showsAppearance) {
-            ReaderAppearanceSheet()
+            ReaderAppearanceSheet().duoBars()
         }
         .overlay(alignment: .bottom) {
             if let annotation = controller.tappedAnnotation {
@@ -290,6 +301,7 @@ extension ReaderView {
             NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
                 controller.notice = "Quedó en «\(saved.title)»."
             }
+            .duoBars()
         }
         .alert("Tu nota sobre el pasaje", isPresented: Binding(
             get: { controller.noteTarget != nil },
@@ -398,7 +410,7 @@ extension ReaderView {
                 if showsChrome {
                     TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() })
                         #if os(iOS)
-                        .padding(.top, -Theme.Reader.chromeLift)
+                        .padding(.top, chromeTop)
                         #else
                         // En la Mac, debajo de la barra de la ventana, no junto a sus botones.
                         .padding(.top, Theme.Space.s)

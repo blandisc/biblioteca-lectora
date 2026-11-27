@@ -121,7 +121,7 @@ struct LibraryScreen: View {
                         }
                         .padding(.trailing, indexed ? Theme.Space.letterIndex : 0)
                     }
-                    .screenContent()
+                    .screenContent(wide: true)
                     .coordinateSpace(.named(Self.contentSpace))
                 }
                 .overlay(alignment: .trailing) {

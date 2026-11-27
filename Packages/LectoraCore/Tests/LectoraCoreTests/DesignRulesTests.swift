@@ -332,7 +332,7 @@ final class DesignRulesTests: XCTestCase {
     /// Toda pantalla con scroll arma su contenido con `.screenContent()` (margen y aire del sistema).
     func testScrollingScreensUseTheRecipe() {
         let problems = Self.screens
-            .filter { $0.text.contains("ScrollView {") && !$0.text.contains(".screenContent()") }
+            .filter { $0.text.contains("ScrollView {") && !$0.text.contains(".screenContent(") }
             .map(\.path)
         check(problems, "Pantalla con scroll sin la receta .screenContent()")
     }
@@ -898,6 +898,53 @@ final class DesignRulesTests: XCTestCase {
             floating.append("MacBookTable: una columna no se encoge (usa min: Theme.Mac.narrowColumn, ideal: …)")
         }
         check(floating, "Lo que flota en el lector o la tabla de la Mac no cabe")
+
+        // 12. iPhone Duo (27 nov 2026). Cerrado, la hora va al costado y arriba no hay isla: los
+        //     botones de arriba del lector subían `chromeLift` y se salían por arriba, cortados.
+        //     Suben solo lo que hay de orilla segura (`chromeTop`), y aun sin isla dejan libre el
+        //     primer renglón.
+        var duo = hits(#"padding\(\.top, -Theme\.Reader\.chromeLift\)"#, in: Self.ui)
+            .map { "\($0) — sube aunque no haya isla: usa chromeTop" }
+        if !readerView.contains("max(Theme.Reader.chromeEdge - safeTop, -Theme.Reader.chromeLift)") {
+            duo.append("ReaderView.chromeTop: los botones de arriba no miran la orilla segura")
+        }
+        if value("pageMarginTop") < value("tapTarget") + value("chromeEdge") {
+            duo.append("Reader.pageMarginTop: sin isla, los botones de arriba tapan el primer renglón")
+        }
+        //     Abierto, la pantalla es ancha: el texto no cruza de orilla a orilla (`screenContent` y
+        //     `formScreen` se quedan en `Size.screenMeasure`; solo Mesa y Biblioteca usan todo el ancho,
+        //     por sus portadas) y la cuadrícula pone las columnas que quepan, no portadas enormes.
+        let recipes = Self.ui.first { $0.path.hasSuffix("Design/Components.swift") }!.text
+        for recipe in ["func screenContent(", "func formScreen("] {
+            let body = recipes.components(separatedBy: recipe).dropFirst().first?.components(separatedBy: "\n    }").first ?? ""
+            if !body.contains(".measured(") { duo.append("\(recipe)…): no se queda en Size.screenMeasure") }
+        }
+        let wide = hits(#"\.screenContent\(wide: true\)"#, in: Self.ui)
+            .filter { !$0.hasPrefix("App/Shared/Screens/MesaScreen.swift") && !$0.hasPrefix("App/Shared/Screens/LibraryScreen.swift") }
+        duo += wide.map { "\($0) — a todo lo ancho solo Mesa y Biblioteca" }
+        if !recipes.contains("Theme.Size.gridColumns(fitting: width") {
+            duo.append("CoverGrid: columnas fijas; en una pantalla ancha las portadas crecen sin fin")
+        }
+        //     Cada hoja y cada pantalla completa del iPhone declara `duoBars()`: iOS le pregunta a lo
+        //     que va hasta arriba de cada presentación, y una que no lo diga regresa la franja (DUO-1).
+        for file in Self.ui where !file.path.contains("/Mac/") {
+            var macOnly = 0
+            for (index, line) in file.lines.enumerated() {
+                let code = line.trimmingCharacters(in: .whitespaces)
+                if code.hasPrefix("#if os(macOS)") { macOnly += 1 }
+                if code.hasPrefix("#endif") || code.hasPrefix("#else"), macOnly > 0 { macOnly -= 1 }
+                guard macOnly == 0, !code.hasPrefix("//"),
+                      line.contains(".sheet(") || line.contains(".fullScreenCover(") else { continue }
+                var depth = 0, body = ""
+                for next in file.lines[index...] {
+                    body += next
+                    depth += next.filter { $0 == "{" }.count - next.filter { $0 == "}" }.count
+                    if depth <= 0 && next.contains("}") { break }
+                }
+                if !body.contains("duoBars()") { duo.append("\(file.path):\(index + 1): \(code.prefix(100))") }
+            }
+        }
+        check(duo, "No cabe en el iPhone Duo (cerrado o abierto)")
     }
 
     /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
@@ -922,7 +969,7 @@ final class DesignRulesTests: XCTestCase {
         // otro nombre. Toda medida de `Theme.Space` y todo margen del lector cae en la escala.
         let scale: Set<Double> = [0, 4, 8, 16, 24, 32, 48, 64]
         let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.lines ?? []
-        let margins = ["chromeInset", "chromeLift", "textMargin", "pageMarginTop", "pageMarginBottom", "folioFadeDrop", "topFade", "slitPadding"]
+        let margins = ["chromeInset", "chromeLift", "chromeEdge", "textMargin", "pageMarginTop", "pageMarginBottom", "folioFadeDrop", "topFade", "slitPadding"]
         let value = try! NSRegularExpression(pattern: #"static let (\w+): CGFloat = (-?[0-9.]+)"#)
         var inSpace = false
         for (index, line) in theme.enumerated() {

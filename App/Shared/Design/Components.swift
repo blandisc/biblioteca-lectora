@@ -37,6 +37,36 @@ extension View {
         padding(.horizontal, Theme.Space.gutter)
     }
 
+    /// DUO-1 · las barras en el iPhone Duo: en la pantalla de afuera iOS pone las pestañas y la
+    /// hora en una franja al costado. Con DUO-1B (`Duo.barsBelow`, falta decidirlo) vuelven abajo
+    /// y arriba, como en cualquier iPhone. iOS le pregunta a lo que va hasta arriba de cada
+    /// presentación: la raíz, el lector, la bienvenida y cada hoja lo declaran. En los demás
+    /// iPhone no hace nada.
+    @ViewBuilder
+    func duoBars() -> some View {
+        #if os(iOS) && compiler(>=6.4)
+        if Duo.barsBelow, #available(iOS 27.1, *) { toolbarVerticalBehavior(.disabled) } else { self }
+        #else
+        self // El Xcode de GitHub todavía no conoce el Duo: ahí no hay franja que quitar.
+        #endif
+    }
+
+    /// En el iPhone, lo más ancho que crece algo (con su margen), centrado: en una pantalla
+    /// ancha (el Duo abierto) el texto no cruza de orilla a orilla. `nil`, todo el ancho.
+    /// En la Mac no cambia nada: ahí la ventana ya mide lo suyo.
+    @ViewBuilder
+    func measured(_ width: CGFloat?) -> some View {
+        #if os(iOS)
+        if let width {
+            frame(maxWidth: width).frame(maxWidth: .infinity)
+        } else {
+            self
+        }
+        #else
+        self
+        #endif
+    }
+
     /// Receta de formulario (Ajustes, Conexiones, Reglas, Editar datos): el mismo papel
     /// que el resto de la app, no el gris frío del sistema. Sus botones en tinta, como toda
     /// acción (regla 1: «Elegir de Fotos» y «Elegir archivo» salían en verde); los interruptores
@@ -47,6 +77,8 @@ extension View {
             // se salían de la ventana de Ajustes y cortaban sus nombres (27 nov 2026).
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
+            // En el iPhone Duo abierto, los campos no cruzan toda la pantalla.
+            .measured(Theme.Size.screenMeasure)
             .background(Theme.paper.ignoresSafeArea())
             .tint(Theme.ink)
             .toggleStyle(AccentSwitchStyle())
@@ -100,11 +132,16 @@ extension View {
     }
 
     /// Contenedor de una pantalla con scroll: margen, aire arriba y abajo.
-    func screenContent() -> some View {
+    /// En una pantalla ancha del iPhone (el Duo abierto, un iPhone acostado) el texto no corre
+    /// de orilla a orilla: la pantalla se queda en `Size.screenMeasure`, centrada, como el libro
+    /// en la Mac. `wide: true` solo donde mandan las portadas (Mesa y Biblioteca): ahí la
+    /// cuadrícula usa todo el ancho y pone más columnas. Ningún iPhone de pie llega a la medida.
+    func screenContent(wide: Bool = false) -> some View {
         self
             .frame(maxWidth: .infinity, alignment: .leading)
             .foregroundStyle(Theme.ink)
             .gutter()
+            .measured(wide ? nil : Theme.Size.screenMeasure)
             .padding(.top, Theme.Space.screenTop)
             .padding(.bottom, Theme.Space.screenBottom)
     }
@@ -996,15 +1033,20 @@ struct DuplicateMark: View {
 struct CoverGrid<Content: View>: View {
     @ViewBuilder var content: Content
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// El ancho que tiene la cuadrícula: en una pantalla ancha caben más columnas.
+    @State private var width: CGFloat = 0
 
     /// Con la letra más grande, dos columnas: en tres, los títulos se partían («Fic-cion…»).
+    /// En una pantalla ancha (el iPhone Duo abierto), las que quepan sin que una portada pase
+    /// de `Size.coverCellWidest` (`Size.gridColumns(fitting:large:)`).
     private var columns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: Theme.Space.l, alignment: .top),
-              count: typeSize.isAccessibilitySize ? Theme.Size.gridColumnsLarge : Theme.Size.gridColumns)
+              count: Theme.Size.gridColumns(fitting: width, large: typeSize.isAccessibilitySize))
     }
 
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: Theme.Space.xl) { content }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
     }
 }
 

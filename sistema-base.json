@@ -29,7 +29,7 @@
     {
       "regla": "SB-2",
       "archivo": "App/Shared/Design/Theme.swift",
-      "patron": "static let (?:xxs|xs|s|l|xl|xxl|xxxl|hair|rowY|rowGap|buttonX|gutter|screenTop|screenBottom|chromeInset|chromeLift|textMargin|pageMarginTop|pageMarginBottom|folioFadeDrop|topFade|slitPadding): CGFloat = (-?\\d+(?:\\.\\d+)?)"
+      "patron": "static let (?:xxs|xs|s|l|xl|xxl|xxxl|hair|rowY|rowGap|buttonX|gutter|screenTop|screenBottom|chromeInset|chromeLift|chromeEdge|textMargin|pageMarginTop|pageMarginBottom|folioFadeDrop|topFade|slitPadding): CGFloat = (-?\\d+(?:\\.\\d+)?)"
     }
   ],
   "excepciones": [],

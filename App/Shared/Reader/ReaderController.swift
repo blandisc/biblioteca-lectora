@@ -309,7 +309,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         updateCurl()
         #if os(iOS)
         let curl = "true" // en el iPhone la página se dobla; en la Mac se desliza
-        let measure = ""
+        // En una pantalla ancha (el Duo abierto) van dos páginas lado a lado, como un libro
+        // abierto; con DUO-2B, una columna centrada como en la Mac (falta decidirlo).
+        let measure = Duo.bookInOneColumn
+            ? ", maxInlineSize: \(Int(Theme.Size.readingMeasure)), columns: \(Theme.Mac.readingColumns)" : ""
         #else
         let curl = "false"
         // En la Mac el renglón no se estira con la ventana: una columna centrada de unas 66

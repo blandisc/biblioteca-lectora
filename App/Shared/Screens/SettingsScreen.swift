@@ -72,7 +72,7 @@ struct SettingsScreen: View {
 
     var body: some View {
         pages
-        .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
+        .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model).duoBars() }
         .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
             switch result {
             case .success(let url): chosenFolder = url

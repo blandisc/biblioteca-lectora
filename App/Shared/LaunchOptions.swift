@@ -37,6 +37,34 @@ enum LaunchOptions {
     /// Con `-screenshot.screen welcome`, el paso de la bienvenida: `place`, `books` o `readwise`
     /// (`-screenshot.step place`).
     static var welcomeStep: String? { UserDefaults.standard.string(forKey: "screenshot.step") }
+    /// En el iPhone, girar la pantalla al arrancar: `landscape` o `portrait` (`-screenshot.turn landscape`).
+    /// Con `-screenshot.turnAfter <segundos>` gira ya puesta la pantalla, para revisar que al
+    /// cambiar de tamaño (girar, o abrir y cerrar el iPhone Duo) sigas en el mismo lugar.
+    static var turn: String? { UserDefaults.standard.string(forKey: "screenshot.turn") }
+    static var turnAfter: Double { UserDefaults.standard.double(forKey: "screenshot.turnAfter") }
+}
+
+/// Lo que falta decidir para el iPhone Duo (propuesta del 27 nov 2026). Hasta que Fernando
+/// elija, todo queda como en cualquier iPhone; cada opción se prueba solo en Debug, con su
+/// argumento de arranque. Al decidir, la elegida se prende aquí y nada más.
+enum Duo {
+    /// DUO-1B: en la pantalla de afuera, las pestañas abajo y la hora arriba, como en cualquier
+    /// iPhone, en vez de la franja al costado que pone iOS (`-duo.bars below`). Ver `duoBars()`.
+    static var barsBelow: Bool { chosen("duo.bars", "below") }
+    /// DUO-2B: con el Duo abierto, el libro en una sola columna centrada (`Size.readingMeasure`),
+    /// como en la Mac, en vez de dos páginas lado a lado (`-duo.book column`).
+    static var bookInOneColumn: Bool { chosen("duo.book", "column") }
+    /// DUO-3B: con el Duo abierto, la Mesa en dos columnas: el libro a la izquierda y tu
+    /// semana y la mesa a la derecha (`-duo.desk two`).
+    static var deskInTwoColumns: Bool { chosen("duo.desk", "two") }
+
+    private static func chosen(_ key: String, _ value: String) -> Bool {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: key) == value
+        #else
+        false
+        #endif
+    }
 }
 
 /// Lo que todavía no funciona no se muestra: nada en la app promete algo que no hace, ni

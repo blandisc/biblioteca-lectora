@@ -247,6 +247,22 @@ enum Theme {
         static let gridColumns = 3
         /// Con la letra más grande: dos columnas y el título bajo la portada en hasta tres renglones.
         static let gridColumnsLarge = 2
+        /// Lo más ancha que crece una portada de la cuadrícula (con la letra más grande,
+        /// `coverCellWidestLarge`). En una pantalla ancha (el iPhone Duo abierto, un iPhone
+        /// acostado) caben más columnas en vez de portadas enormes; en un iPhone de pie
+        /// siguen siendo tres (o dos), porque ninguna llega a esta medida.
+        static let coverCellWidest: CGFloat = 150
+        static let coverCellWidestLarge: CGFloat = 240
+
+        /// Columnas de la cuadrícula de portadas para un ancho: al menos las de siempre
+        /// (`gridColumns`, o `gridColumnsLarge` con la letra más grande) y más si caben
+        /// portadas de hasta `coverCellWidest`, con `Space.l` entre ellas.
+        static func gridColumns(fitting width: CGFloat, large: Bool) -> Int {
+            let fewest = large ? Size.gridColumnsLarge : Size.gridColumns
+            let widest = large ? Size.coverCellWidestLarge : Size.coverCellWidest
+            guard width > 0 else { return fewest }
+            return max(fewest, Int((width + Space.l) / (widest + Space.l)))
+        }
         static let coverCaptionLinesLarge = 3
         /// Columnas de las letras en «Aa» (una sola con la letra más grande).
         static let fontColumns = 2
@@ -318,6 +334,10 @@ enum Theme {
         /// Lo más ancha que es una tarjeta de vidrio del lector: la columna del libro con el aire
         /// de adentro de la tarjeta. En la Mac la tarjeta ya no cruza toda la ventana (auditoría).
         static let readingPanel: CGFloat = readingMeasure + 2 * Reader.panelInset
+        /// Lo más ancha que es una pantalla de texto en el iPhone (ficha, nota, Cuaderno, Diario,
+        /// Ajustes…): el renglón del libro con el margen de pantalla a cada lado. En el iPhone Duo
+        /// abierto el texto ya no cruza toda la pantalla; ningún iPhone de pie llega a esta medida.
+        static let screenMeasure: CGFloat = readingMeasure + 2 * Space.gutter
         /// Proporción de toda portada: ancho entre alto (2 : 3).
         static let coverAspect: CGFloat = 2.0 / 3.0
         /// Niveles de sangría del índice del libro; más hondo ya no se mete.
@@ -390,6 +410,10 @@ enum Theme {
         static let chromeInset: CGFloat = 16
         /// Los botones de arriba suben esto hacia la isla, sin tocarla.
         static let chromeLift: CGFloat = 8
+        /// Donde no hay isla ni hora arriba (el iPhone Duo cerrado lleva la hora al costado),
+        /// los botones de arriba no suben: quedan a esto de la orilla de la pantalla, sin
+        /// salirse (`ReaderView.chromeTop`).
+        static let chromeEdge: CGFloat = 4
         /// Pasar la hoja: la fuerza del resorte (`TurnMotion`) que la lleva hasta el
         /// final o de regreso; con 15, una vuelta desde quieta tarda unos 0,55 s y,
         /// al soltar, sigue con la velocidad del dedo (nunca más de `turnSpeedLimit`

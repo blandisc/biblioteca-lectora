@@ -101,9 +101,9 @@ struct WelcomeScreen: View {
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { useFolder(folder) }
             }
-            .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen(finishTitle: "Seguir con la bienvenida").environmentObject(model) }
+            .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen(finishTitle: "Seguir con la bienvenida").environmentObject(model).duoBars() }
             .sheet(isPresented: $connectingReadwise) {
-                NavigationStack { ConnectorScreen(connector: .readwise) }
+                NavigationStack { ConnectorScreen(connector: .readwise) }.duoBars()
             }
             .errorAlert("No pude usar esa carpeta", message: $errorMessage, back: "Elegir otra carpeta")
         }

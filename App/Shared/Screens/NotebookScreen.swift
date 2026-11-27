@@ -65,10 +65,11 @@ struct NotebookScreen: View {
             }
             .screen()
             #if os(iOS)
-            .sheet(isPresented: $showsAccount) { SettingsScreen() }
+            .sheet(isPresented: $showsAccount) { SettingsScreen().duoBars() }
             #endif
             .sheet(item: $toNote) { highlight in
                 NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled)
+                    .duoBars()
             }
             .onAppear(perform: openForScreenshots)
         }

@@ -372,7 +372,7 @@ struct CandidatesScreen: View {
             if searchesFirst { await research() }
         }
         .sheet(item: $previewing) { candidate in
-            CandidatePreview(bookID: bookID, candidate: candidate) { dismiss() }
+            CandidatePreview(bookID: bookID, candidate: candidate) { dismiss() }.duoBars()
         }
         .sheet(isPresented: $searchingOther) {
             if let record = model.library.book(id: bookID) {
@@ -382,10 +382,11 @@ struct CandidatesScreen: View {
                         unreachable = decision == .unreachable
                     }
                 }
+                .duoBars()
             }
         }
         .sheet(isPresented: $editing) {
-            if let record = model.library.book(id: bookID) { MetadataEditorView(book: record) }
+            if let record = model.library.book(id: bookID) { MetadataEditorView(book: record).duoBars() }
         }
     }
 

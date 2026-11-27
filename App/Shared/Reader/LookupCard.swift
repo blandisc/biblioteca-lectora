@@ -77,7 +77,7 @@ struct LookupCard: View {
                                 offer: $offersTranslation, result: $translation))
         #if os(iOS)
         .sheet(isPresented: $showsDictionary) {
-            DictionarySheet(term: term).ignoresSafeArea()
+            DictionarySheet(term: term).ignoresSafeArea().duoBars()
         }
         #endif
     }
