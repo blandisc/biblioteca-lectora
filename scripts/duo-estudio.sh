@@ -272,7 +272,7 @@ shoot() { # carpeta, nombre, pantalla (primary/primary-1), espera, argumentos…
 for mode in "${MODES[@]}"; do
   case $mode in
     iphone-vertical) device=$IPHONE; position=; display=; turn=(-screenshot.turn portrait) ;;
-    iphone-horizontal) device=$IPHONE; position=; display=; turn=(-screenshot.turn landscape) ;;
+    iphone-horizontal) device=$IPHONE; position=; display=; turn=(-screenshot.turn landscape -screenshot.turnAfter 3) ;;
     cerrado-vertical) device=$DUO; position=closed; orientation=portrait; display=primary; turn=() ;;
     cerrado-horizontal) device=$DUO; position=closed; orientation=landscapeLeft; display=primary; turn=() ;;
     abierto-vertical) device=$DUO; position=open; orientation=landscapeLeft; display=primary-1; turn=() ;;
