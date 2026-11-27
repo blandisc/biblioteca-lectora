@@ -92,6 +92,9 @@ enum Theme {
         static let rowCover = CGSize(width: 16, height: 24)
         static let coverColumn: CGFloat = 24
         static let titleColumn: CGFloat = 180
+        /// Lo más que crece el título con la ficha abierta: lo que sobra va a las otras columnas, que
+        /// antes quedaban bajo la ficha (auditoría 4).
+        static let titleColumnMax: CGFloat = 280
         static let shortColumn: CGFloat = 72
         static let column: CGFloat = 110
         /// Lo más que se encoge una columna de la tabla antes de cortar con «…».

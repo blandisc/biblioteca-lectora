@@ -109,7 +109,7 @@ struct ConnectorScreen: View {
             } header: {
                 CapsText(text: "Qué viaja")
             } footer: {
-                Text("Tu calificación (las estrellas de la ficha) también viaja. Busco cada libro en Hardcover una vez (por ISBN o título y autor) y su número queda en el catálogo como hardcover:…, también en el OPF.")
+                Text("Tu calificación (las estrellas de la ficha) también viaja. Busco cada libro en Hardcover una vez (por ISBN o título y autor) y guardo su número de Hardcover con los datos del libro, también los que abre Calibre.")
             }
         }
         Section {

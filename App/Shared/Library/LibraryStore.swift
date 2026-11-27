@@ -23,8 +23,12 @@ final class LibraryStore: ObservableObject {
         case unreadable(name: String, reason: String)
         /// Un archivo del libro sigue en iCloud sin bajar: no se junta hasta que llegue.
         case stillDownloading(title: String)
+        /// Otro trabajo de toda la biblioteca está corriendo (auditoría 4): «Ordenar», mover el
+        /// Gabinete, traer de Calibre o añadir libros.
+        case busy(LibraryWork)
         var errorDescription: String? {
             switch self {
+            case .busy(let work): work.reason
             case .stillDownloading(let title):
                 "Todavía estoy bajando de iCloud un archivo de «\(title)». Vuelve a intentarlo en un momento."
             case .unreadable(let name, let reason): "«\(name)» no entró a tu biblioteca. \(reason)"
@@ -105,7 +109,40 @@ final class LibraryStore: ObservableObject {
     /// Carpeta de la biblioteca (`Gabinete/Biblioteca`): cambia si eliges otra.
     @Published private(set) var root: URL
     /// Moviendo la biblioteca a otra carpeta.
-    @Published private(set) var moving = false
+    var moving: Bool { lock.current == .moving }
+    /// Un trabajo de toda la biblioteca a la vez (auditoría 4): mientras «Ordenar», mover el
+    /// Gabinete, traer de Calibre o añadir libros corre, lo demás de esa lista no empieza (y lo
+    /// que añades espera su turno). Lo que editas sí se guarda, sobre lo más reciente.
+    @Published private(set) var lock = WorkLock()
+    /// Por qué no puedo empezar otro de esos trabajos ahora (nil si puedo).
+    var busyReason: String? { lock.current?.reason }
+    /// Lo que espera a que se suelte el candado (lo que añadiste mientras ordenaba).
+    private var lockWaiters: [CheckedContinuation<Void, Never>] = []
+
+    /// Toma el candado, esperando a que termine el trabajo que lo tenga.
+    private func waitForLock(_ work: LibraryWork) async {
+        while !lock.begin(work) {
+            await withCheckedContinuation { lockWaiters.append($0) }
+        }
+    }
+
+    /// Toma el candado ya, o falla con el porqué.
+    private func takeLock(_ work: LibraryWork) throws {
+        if let current = lock.current { throw LibraryError.busy(current) }
+        _ = lock.begin(work)
+    }
+
+    private func releaseLock(_ work: LibraryWork) {
+        lock.end(work)
+        let waiting = lockWaiters
+        lockWaiters = []
+        waiting.forEach { $0.resume() }
+    }
+
+    /// Falla con el porqué si otro trabajo de toda la biblioteca está corriendo.
+    private func ensureIdle() throws {
+        if let current = lock.current { throw LibraryError.busy(current) }
+    }
     private var log: ChangeLog
     private let clock: HybridLogicalClock
     private var state = LibraryState()
@@ -175,11 +212,11 @@ final class LibraryStore: ObservableObject {
         CabinetLocation.startAccessing(destination)
         guard !CabinetLocation.hasLibrary(in: destination) else { throw LocationError.alreadyHasLibrary }
         try Self.checkMove(from: cabinet, to: destination)
+        // Un trabajo a la vez (auditoría 4): lo que añades espera a que termine.
+        try takeLock(.moving)
+        defer { releaseLock(.moving) }
         // Lo que se escribiera a medio camino se quedaría en la copia vieja.
         stopBatch()
-        _ = await lastImport?.value
-        moving = true
-        defer { moving = false }
         let source = cabinet
         let wasLocal = isLocal
         // Lo que sigue en iCloud se baja primero; si no termina, no se mueve nada (auditoría de medios).
@@ -191,6 +228,9 @@ final class LibraryStore: ObservableObject {
         retryWaitingFiles()
         SessionStore.shared.writePending()
         guard !hasWaitingFiles, !pendingWrites.has(SessionStore.pendingName) else { throw LocationError.pendingChanges }
+        // Lo que guardes mientras copio (la página, una sesión, una nota) se pasa a la copia antes
+        // de borrar la vieja (auditoría 4): se copia lo cambiado desde que empecé.
+        let started = Date().addingTimeInterval(-Self.catchUpMargin)
         let (copiedCount, expectedCount) = try await Task.detached(priority: .userInitiated) { () -> (Int, Int) in
             let manager = FileManager.default
             try manager.createDirectory(at: destination, withIntermediateDirectories: true)
@@ -198,13 +238,21 @@ final class LibraryStore: ObservableObject {
             for folder in [CabinetLocation.libraryFolder, CabinetLocation.notesFolder] {
                 let from = source.appendingPathComponent(folder), to = destination.appendingPathComponent(folder)
                 guard manager.fileExists(atPath: from.path) else { continue }
-                expected += LibraryStore.countItems(in: from)
                 try LibraryStore.coordinatedCopy(from: from, to: to)
+                try FolderCatchUp.sync(from: from, to: to, since: started)
+                expected += LibraryStore.countItems(in: from)
                 copied += LibraryStore.countItems(in: to)
             }
             return (copied, expected)
         }.value
-        guard copiedCount >= expectedCount else { throw LocationError.incomplete(copied: copiedCount, expected: expectedCount) }
+        // Exacta: ni de menos ni de más.
+        guard copiedCount == expectedCount else { throw LocationError.incomplete(copied: copiedCount, expected: expectedCount) }
+        // Lo último, ya sin soltar el hilo: nada de lo que guardas puede colarse entre esto y el cambio.
+        for folder in Self.catchUpFolders {
+            let from = source.appendingPathComponent(folder), to = destination.appendingPathComponent(folder)
+            guard FileManager.default.fileExists(atPath: from.path) else { continue }
+            try FolderCatchUp.sync(from: from, to: to, since: started)
+        }
         try CabinetLocation.remember(destination)
         open(cabinet: destination)
         if wasLocal {
@@ -214,15 +262,23 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    /// Lo que se escribe mientras se usa la app (registros, sesiones, notas): al mover, se
+    /// vuelve a pasar a la copia justo antes del cambio.
+    static let catchUpFolders = [CabinetLocation.libraryFolder + "/.lectora", CabinetLocation.notesFolder]
+    /// Margen para la hora de modificación de los archivos (el disco la redondea).
+    static let catchUpMargin: TimeInterval = 2
+
     /// Usa la biblioteca que ya está en esa carpeta (p. ej. la que creó tu Mac).
     func use(cabinet destination: URL) throws {
+        try ensureIdle()
         CabinetLocation.startAccessing(destination)
         try CabinetLocation.remember(destination)
         open(cabinet: destination)
     }
 
     /// Vuelve a la carpeta del dispositivo (no copia nada).
-    func useLocalCabinet() {
+    func useLocalCabinet() throws {
+        try ensureIdle()
         CabinetLocation.forget()
         open(cabinet: CabinetLocation.local)
     }
@@ -246,6 +302,12 @@ final class LibraryStore: ObservableObject {
         pendingCache = nil
         retryTask?.cancel()
         retryTask = nil
+        // Lo que esperaba a iCloud era de la anterior (auditoría 4): no se queda esperando aquí.
+        rereadTask?.cancel()
+        rereadTask = nil
+        repairTask?.cancel()
+        waitingForCloud = false
+        cloudGaveUp = false
         reload()
         refreshFromCloud()
     }
@@ -341,35 +403,62 @@ final class LibraryStore: ObservableObject {
     /// Algún registro sigue en iCloud sin bajar (también el tuyo, en el primer arranque): la
     /// biblioteca dice que está bajando en vez de «Todavía no hay libros» (auditoría 3).
     @Published private(set) var waitingForCloud = false
+    /// Esperé a iCloud y no bajó todo (auditoría 4): ya no digo «Bajando tu biblioteca» para
+    /// siempre; te enseño lo que llegó y puedes añadir libros. Vuelvo a leer al volver a la app.
+    @Published private(set) var cloudGaveUp = false
     private var rereadTask: Task<Void, Never>?
+    /// Ya te avisé en esta sesión de que iCloud no bajó todo.
+    private var cloudGaveUpNoticed = false
 
     /// Un registro sin bajar no es un registro vacío (auditoría 3): se pide, se vuelve a leer en
-    /// un momento y, mientras, no se quita nada de lo que ya tenías.
+    /// un momento y, mientras, no se quita nada de lo que ya tenías. Si después de esperar sigue
+    /// sin bajar, dejo de esperar y te lo digo una vez (auditoría 4).
     private func waitForLogs(_ notDownloaded: [URL]) {
-        waitingForCloud = !notDownloaded.isEmpty
         guard !notDownloaded.isEmpty else {
+            waitingForCloud = false
+            cloudGaveUp = false
             rereadTask?.cancel()
             rereadTask = nil
             return
         }
         notDownloaded.forEach(CloudFile.requestDownload)
         guard rereadTask == nil else { return }
+        waitingForCloud = true
+        cloudGaveUp = false
         let folder = root
         rereadTask = Task { [weak self] in
             for _ in 0..<CloudFiles.waitAttempts {
                 try? await Task.sleep(for: CloudFiles.settle)
-                guard !Task.isCancelled, let self, self.root == folder, self.waitingForCloud else { break }
+                guard !Task.isCancelled, let self, self.root == folder, self.waitingForCloud else { return }
                 self.reload()
             }
-            if !Task.isCancelled { self?.rereadTask = nil }
+            guard !Task.isCancelled, let self, self.root == folder else { return }
+            self.rereadTask = nil
+            self.giveUpOnCloud()
         }
     }
 
+    /// Esperé lo que podía: lo que bajó ya se ve; lo demás llega cuando vuelvas a la app.
+    private func giveUpOnCloud() {
+        guard waitingForCloud else { return }
+        waitingForCloud = false
+        cloudGaveUp = true
+        if !cloudGaveUpNoticed {
+            cloudGaveUpNoticed = true
+            notice = Self.cloudGaveUpNotice
+        }
+    }
+
+    static let cloudGaveUpNotice = "Todavía no baja de iCloud todo el registro de tu biblioteca. Te enseño lo que ya llegó "
+        + "y vuelvo a leerlo cuando regreses a la app, con conexión."
+
     private func apply(_ changes: [Change]?, notDownloaded: [URL] = []) {
         waitForLogs(notDownloaded)
-        // Lo que ya se ve se queda hasta que bajen todos; si no había nada, se enseña lo que sí bajó.
-        if !notDownloaded.isEmpty, !books.isEmpty { return }
         var fresh = LibraryState()
+        // Con algún registro sin bajar, lo que llegó se suma a lo que ya tenías (auditoría 4): se
+        // aplican los registros que sí bajaron, las reglas, los estantes y «Por revisar», y ningún
+        // libro se quita solo porque falta un registro.
+        if !notDownloaded.isEmpty { fresh = state }
         if let changes { fresh.apply(changes) }
         // Lo que espera a que tu registro baje también cuenta (auditoría 2).
         fresh.apply(pendingChanges)
@@ -380,7 +469,8 @@ final class LibraryStore: ObservableObject {
         state = fresh
         books = fresh.books()
         rebuildMergedInto()
-        repairPathCase()
+        // «Ordenar» ya corrige las rutas: no se cruzan dos correcciones a la vez (auditoría 4).
+        if lock.current != .tidying { repairPathCase() }
         // Estantes, reglas y «Por revisar» también pudieron cambiar en otro dispositivo.
         loadReviews()
     }
@@ -405,10 +495,10 @@ final class LibraryStore: ObservableObject {
 
     /// Guarda de una vez las rutas corregidas; un libro que cambió mientras tanto no se toca.
     private func recordRepairs(_ fixes: [UUID: String], from paths: [UUID: String]) {
-        let table = Dictionary(books.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         var changes: [Change] = []
         for (id, real) in fixes {
-            guard var book = table[id], book.filePath == paths[id] else { continue }
+            // Lo más reciente del registro, no la lista que se ve (puede esperar a armarse).
+            guard var book = current(id), book.filePath == paths[id] else { continue }
             let before = book
             book.filePath = real
             changes += book.changes(from: before, clock: clock)
@@ -420,7 +510,7 @@ final class LibraryStore: ObservableObject {
 
     /// La misma corrección para un solo libro, ya (al deshacer un cambio de carpeta).
     private func repairPathCase(of book: Book) {
-        guard var book = self.book(id: book.id), let path = book.filePath,
+        guard var book = current(book.id), let path = book.filePath,
               let real = FolderMove.repairedSpelling(of: path, in: root) else { return }
         book.filePath = real
         try? record(book)
@@ -453,7 +543,12 @@ final class LibraryStore: ObservableObject {
         let previous = lastImport
         let task = Task { @MainActor in
             _ = await previous?.value
-            return await self.runImport(urls)
+            // Mientras ordeno, muevo el Gabinete o traigo de Calibre, lo que añades espera su turno
+            // (auditoría 4): con una lista vieja, los duplicados y el número de Calibre salían mal.
+            await self.waitForLock(.importing)
+            let results = await self.runImport(urls)
+            self.releaseLock(.importing)
+            return results
         }
         lastImport = task
         return await task.value
@@ -585,8 +680,15 @@ final class LibraryStore: ObservableObject {
     /// carpeta y el archivo se renombran como lo haría Calibre.
     @discardableResult
     func update(_ edited: Book, cover newCover: Data? = nil, spelling index: SpellingIndex? = nil) throws -> Book {
-        guard let original = book(id: edited.id) else { throw LibraryError.bookNotFound }
+        // Mientras muevo el Gabinete, una carpeta que cambia de nombre se quedaría en la copia vieja.
+        if lock.current == .moving { throw LibraryError.busy(.moving) }
+        // Lo más reciente del registro (auditoría 4): mientras «Ordenar» corre, `books` espera a
+        // armarse y una copia vieja revertía lo que cambió después.
+        guard let original = current(edited.id) else { throw LibraryError.bookNotFound }
         var book = MetadataCleaner.clean(edited, manual: true)
+        // Dónde está el archivo lo sabe el catálogo, no la copia que editaste: si «Ordenar» lo movió
+        // mientras tanto, la edición no lo regresa a su carpeta vieja.
+        book.filePath = original.filePath
         // Los otros formatos se buscan con el nombre que tienen hoy en el disco, no con el de
         // una copia vieja (deshacer un cambio de autor los dejaba huérfanos, RB-5).
         let onDisk = Dictionary(original.extraFiles.map { (($0 as NSString).pathExtension.lowercased(), $0) },
@@ -680,7 +782,10 @@ final class LibraryStore: ObservableObject {
     }
 
     /// «Ordenando tu biblioteca…»: mientras corre, la fila de Ajustes lo dice y no se repite.
-    @Published private(set) var tidying = false
+    var tidying: Bool { lock.current == .tidying }
+    /// Cómo fue el último «Ordenar» (auditoría 4): vive aquí, no en Ajustes, así no se pierde si
+    /// sales de Ajustes antes de que termine. Ajustes lo enseña al volver y lo quita al cerrarlo.
+    @Published var tidyReport: TidyReport?
     /// Cada cuántos libros «Ordenar» suelta el hilo de la interfaz para que la app responda.
     static let tidyChunk = 40
 
@@ -688,31 +793,35 @@ final class LibraryStore: ObservableObject {
     /// con su archivo, portada y metadata.opf al día. Avisa de lo que falta y
     /// de lo que sobra, sin borrar nada. Con miles de libros no congela la app (auditoría 3):
     /// el disco se lee una vez por carpeta (`SpellingIndex`), los libros se vuelven a armar una
-    /// sola vez al final y cada `tidyChunk` libros la interfaz vuelve a responder.
+    /// sola vez al final y cada `tidyChunk` libros la interfaz vuelve a responder. Lo que cambias
+    /// mientras corre (aquí o en otro dispositivo) no se revierte: cada libro se vuelve a leer del
+    /// registro justo antes de ordenarlo (auditoría 4).
+    @discardableResult
     func tidy() async -> TidyReport {
         var report = TidyReport()
-        guard !tidying else { return report }
-        tidying = true
-        deferringBooks = true
+        guard lock.begin(.tidying) else { return report }
+        deferBooks()
         defer {
-            deferringBooks = false
-            books = state.books()
-            tidying = false
+            resumeBooks()
+            tidyReport = report
+            releaseLock(.tidying)
         }
         let manager = FileManager.default
         // Gemelas de una versión anterior (disco que distingue mayúsculas): se juntan primero y
         // el catálogo sigue a cada libro que cambió de carpeta.
         let joined = FolderMove.mergeTwinFolders(in: root)
-        for var book in books {
-            guard let folder = book.folderPath, let now = joined[folder], let path = book.filePath else { continue }
+        let ids = state.ids(of: .book)
+        for id in ids {
+            guard var book = current(id), let folder = book.folderPath, let now = joined[folder], let path = book.filePath else { continue }
             book.filePath = now + "/" + (path as NSString).lastPathComponent
-            try? record(book)
+            bulk { try? record(book) }
         }
-        books = state.books()
         let index = SpellingIndex(root: root)
-        for (number, book) in books.enumerated() {
+        for (number, id) in ids.enumerated() {
             if number % Self.tidyChunk == Self.tidyChunk - 1 { await Task.yield() }
-            guard let path = book.filePath, book.calibreID != nil else { continue }
+            // Lo de ahora, no lo de cuando empecé: lo que editaste o juntaste mientras tanto manda
+            // (un libro que se juntó en otro ya no está y no sale como «sin archivo»).
+            guard let book = current(id), let path = book.filePath, book.calibreID != nil else { continue }
             report.checked += 1
             guard CloudFile.isTaken(root.appendingPathComponent(path)) else {
                 report.missing.append(book.title)
@@ -720,10 +829,9 @@ final class LibraryStore: ObservableObject {
             }
             // Solo cuenta si de verdad cambió de lugar (un autor que solo cambia mayúsculas puede
             // quedarse en su carpeta si comparte disco con otros libros).
-            if let updated = try? update(book, spelling: index), updated.filePath != path { report.relocated += 1 }
+            if let updated = bulk({ try? update(book, spelling: index) }), updated.filePath != path { report.relocated += 1 }
         }
-        books = state.books()
-        let known = Set(books.compactMap(\.folderPath))
+        let known = Set(state.ids(of: .book).compactMap { current($0)?.folderPath })
         let authors = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
         for author in authors where !author.lastPathComponent.hasPrefix(".") && author.hasDirectoryPath {
             let titles = (try? manager.contentsOfDirectory(at: author, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
@@ -1221,6 +1329,8 @@ final class LibraryStore: ObservableObject {
     /// marcadores. Un archivo de un formato que ya tenía va a la Papelera (se puede recuperar).
     @discardableResult
     func merge(keep keepID: UUID, others otherIDs: [UUID]) throws -> MergeReport {
+        // Mientras ordeno, muevo o traigo de Calibre, no junto: lo haría sobre una lista vieja (auditoría 4).
+        try ensureIdle()
         guard var keep = book(id: keepID), let keepFolderPath = keep.folderPath else { throw LibraryError.bookNotFound }
         let keepFolder = root.appendingPathComponent(keepFolderPath, isDirectory: true)
         let others = otherIDs.compactMap { book(id: $0) }.filter { $0.id != keepID }
@@ -1660,15 +1770,33 @@ final class LibraryStore: ObservableObject {
         try appendToLog(changes)
         state.apply(changes)
         // En «Ordenar» y al traer de Calibre los libros se arman al final, no uno por uno (auditoría 3).
-        if !deferringBooks { books = state.books() }
+        // Lo que tú cambias mientras tanto sí se ve ya: no parece que no se guardó (auditoría 4).
+        if !deferringBooks.isActive || !bulkWriting { books = state.books() }
     }
 
-    /// Mientras es true, `record` no vuelve a armar `books` en cada libro.
-    private var deferringBooks = false
+    /// Cuántos trabajos piden armar `books` al final (auditoría 4, M4): el primero que termina no
+    /// los arma mientras otro sigue.
+    private var deferringBooks = DeferCount()
+    /// Lo escribe el trabajo largo mismo («Ordenar», traer de Calibre), no tú.
+    private var bulkWriting = false
+
+    private func deferBooks() { deferringBooks.begin() }
+
+    /// Termina uno; con el último, los libros se arman una vez.
+    private func resumeBooks() {
+        if deferringBooks.end() { books = state.books() }
+    }
+
+    /// Lo que el trabajo largo escribe por su cuenta (sin armar los libros en cada uno).
+    private func bulk<T>(_ body: () throws -> T) rethrows -> T {
+        bulkWriting = true
+        defer { bulkWriting = false }
+        return try body()
+    }
 
     /// El libro tal como quedó en el registro (también mientras `books` espera a armarse).
     private func current(_ id: UUID) -> Book? {
-        guard deferringBooks else { return book(id: id) }
+        guard deferringBooks.isActive else { return book(id: id) }
         guard !state.isDeleted(.book, id: id) else { return nil }
         return state.fields(of: .book, id: id).flatMap { Book(id: id, fields: $0) }
     }
@@ -1759,9 +1887,15 @@ extension LibraryStore {
     /// biblioteca de Calibre no se toca.
     func migrateFromCalibre(_ source: URL, plan: CalibreMigrationPlan,
                             annotations: AnnotationStore) async -> CalibreMigrationReport {
+        var report = CalibreMigrationReport()
+        // Un trabajo de toda la biblioteca a la vez (auditoría 4).
+        guard lock.begin(.migrating) else {
+            report.failed.append((title: "Tu biblioteca de Calibre", reason: busyReason ?? ""))
+            return report
+        }
+        defer { releaseLock(.migrating) }
         let accessing = source.startAccessingSecurityScopedResource()
         defer { if accessing { source.stopAccessingSecurityScopedResource() } }
-        var report = CalibreMigrationReport()
         report.alreadyHere = plan.alreadyHere.count
         report.withoutFiles = plan.withoutFiles.map(\.book.title)
         progress = (0, plan.toImport.count)
@@ -1772,11 +1906,8 @@ extension LibraryStore {
         // en cada uno: con miles de libros, la app no se congela (auditoría 3).
         let spelling = SpellingIndex(root: root)
         var usedIDs = Set(books.compactMap(\.calibreID))
-        deferringBooks = true
-        defer {
-            deferringBooks = false
-            books = state.books()
-        }
+        deferBooks()
+        defer { resumeBooks() }
         for (index, entry) in plan.toImport.enumerated() {
             if index % Self.tidyChunk == Self.tidyChunk - 1 { books = state.books() }
             var book = rules.apply(to: entry.book)
@@ -1814,7 +1945,7 @@ extension LibraryStore {
                     .filter { $0 != fileName }.sorted()
                 let hasCover = FileManager.default.fileExists(atPath: to.appendingPathComponent(CalibreLayout.coverFileName).path)
                 try writeOPF(book, hasCover: hasCover)
-                try record(book)
+                try bulk { try record(book) }
                 for highlight in entry.annotations {
                     try? annotations.save(Annotation(bookID: book.id, cfi: nil, quote: highlight.text, color: "pencil",
                                                      note: highlight.note, createdAt: highlight.createdAt ?? Date(),

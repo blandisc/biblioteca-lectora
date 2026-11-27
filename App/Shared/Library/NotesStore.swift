@@ -51,11 +51,11 @@ final class NotesStore: ObservableObject {
         notes.filter { $0.links(bookTitle: bookTitle) }
     }
 
-    /// Guarda una nota (nueva si `fileName` es nil). Una nota vacía (o solo «#») no se guarda;
-    /// si ya existía, se borra. Devuelve la nota guardada.
+    /// Guarda una nota (nueva si `fileName` es nil). Una nota vacía (o solo «#», o solo la marca
+    /// de su sesión) no se guarda; si ya existía, se borra. Devuelve la nota guardada.
     @discardableResult
     func save(text: String, fileName: String?) throws -> Note? {
-        if text.trimmingCharacters(in: CharacterSet(charactersIn: "#").union(.whitespacesAndNewlines)).isEmpty {
+        if NoteMarkdown.isBlank(text) {
             if let fileName { try delete(fileName: fileName) }
             return nil
         }

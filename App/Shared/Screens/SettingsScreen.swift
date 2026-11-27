@@ -54,7 +54,6 @@ struct SettingsScreen: View {
     @State private var choosingFolder = false
     @State private var migratingCalibre = false
     @State private var chosenFolder: URL?
-    @State private var tidyReport: LibraryStore.TidyReport?
     /// «Ordenar la biblioteca» mueve carpetas: primero dice qué va a hacer (UX-6a).
     @State private var confirmingTidy = false
     @State private var errorMessage: String?
@@ -95,7 +94,8 @@ struct SettingsScreen: View {
             Text(dialogMessage)
         }
         .noticeAlert("Ordené tu biblioteca", message: Binding(
-            get: { tidyReport.map(describe) }, set: { if $0 == nil { tidyReport = nil } }
+            // El informe vive en la biblioteca: si saliste de Ajustes mientras ordenaba, sale al volver.
+            get: { model.library.tidyReport.map(describe) }, set: { if $0 == nil { model.library.tidyReport = nil } }
         ), back: "Volver a Ajustes")
         .errorAlert("No pude mover tu Gabinete", message: $errorMessage, back: "Volver a Ajustes")
         .preferredColorScheme(mode.colorScheme)
@@ -282,20 +282,31 @@ extension SettingsScreen {
                     .frame(minHeight: Theme.Size.row)
             } else {
                 Button { choosingFolder = true } label: { LinkRow(title: "Mover a iCloud Drive u otra carpeta") }
+                    .disabled(busy)
                 if !model.library.isLocal {
-                    Button { model.library.useLocalCabinet() } label: { LinkRow(title: "Volver a la carpeta de este dispositivo") }
+                    Button { run { try model.library.useLocalCabinet() } } label: { LinkRow(title: "Volver a la carpeta de este dispositivo") }
+                        .disabled(busy)
                 }
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
+                .disabled(busy)
+            // Un trabajo de toda la biblioteca a la vez (auditoría 4): te digo por qué lo demás espera.
+            if let reason = model.library.busyReason, !model.library.moving, !model.library.tidying {
+                Text(reason)
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .padding(.vertical, Theme.Space.s)
+            }
             if model.library.tidying {
                 LoadingLine(text: "Ordenando tu biblioteca…")
                     .frame(minHeight: Theme.Size.row)
             } else {
                 Button { confirmingTidy = true } label: { LinkRow(title: "Ordenar la biblioteca") }
+                    .disabled(busy)
                     // La pregunta sale de la fila que tocaste: puesta en la tarjeta, su flecha
                     // apuntaba al rótulo «Tu Gabinete».
                     .confirmationDialog("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy, titleVisibility: .visible) {
-                        Button("Ordenar la biblioteca") { Task { tidyReport = await model.library.tidy() } }
+                        Button("Ordenar la biblioteca") { Task { await model.library.tidy() } }
                         Button("Dejarla como está", role: .cancel) {}
                     } message: {
                         Text("Reviso cada libro y muevo a su carpeta de Calibre (autor y título) los que no están donde deben. Solo muevo: no borro nada, y lo que no esté en el catálogo se queda donde está.")
@@ -304,6 +315,9 @@ extension SettingsScreen {
         }
         .buttonStyle(.plain)
     }
+
+    /// Otro trabajo de toda la biblioteca está corriendo: mover, traer de Calibre y ordenar esperan.
+    private var busy: Bool { model.library.busyReason != nil }
 
     /// Dónde vive el Gabinete: este dispositivo, iCloud Drive (con sus carpetas de en
     /// medio) u otra carpeta.

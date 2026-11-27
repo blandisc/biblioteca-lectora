@@ -197,32 +197,61 @@ public enum NoteMarkdown {
     public static func note(forSession id: UUID, in notes: [Note]) -> Note? {
         let wanted = id.uuidString.lowercased()
         return notes.first { note in
-            note.text.components(separatedBy: .newlines).contains { line in
-                guard isComment(line) else { return false }
-                let words = line.lowercased().replacingOccurrences(of: "<!--", with: " ").replacingOccurrences(of: "-->", with: " ")
-                    .split(whereSeparator: \.isWhitespace)
-                return words.count == 2 && words[0] == "gabinete:sesion" && words[1] == wanted
+            markerLines(note.text).contains { sessionID(inMarker: $0.line) == wanted }
+        }
+    }
+
+    /// El id (en minúsculas) de una línea que es la marca de una sesión, o nil.
+    static func sessionID(inMarker line: String) -> String? {
+        guard isComment(line) else { return nil }
+        let words = line.lowercased().replacingOccurrences(of: "<!--", with: " ").replacingOccurrences(of: "-->", with: " ")
+            .split(whereSeparator: \.isWhitespace)
+        return words.count == 2 && words[0] == "gabinete:sesion" ? String(words[1]) : nil
+    }
+
+    /// ¿Es la marca de una sesión? (Cualquier otro comentario es tuyo.)
+    public static func isSessionMarker(_ line: String) -> Bool {
+        sessionID(inMarker: line) != nil
+    }
+
+    /// Las marcas de sesión de la nota, con su renglón. Nunca dentro de un bloque de código
+    /// (```` ``` ```` o `~~~`): ahí lo que parece una marca es texto tuyo.
+    static func markerLines(_ text: String) -> [(index: Int, line: String)] {
+        var fence: String?
+        var found: [(Int, String)] = []
+        for (index, line) in text.components(separatedBy: "\n").enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if let open = fence {
+                if trimmed.hasPrefix(open) { fence = nil }
+                continue
             }
+            if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
+                fence = String(trimmed.prefix(3))
+                continue
+            }
+            if isSessionMarker(line) { found.append((index, line)) }
         }
+        return found
     }
 
-    /// Lo que se escribe en el editor: la nota sin sus comentarios (`<!-- … -->`, como la marca
-    /// de la sesión), que no se ven y no se deben poder borrar sin querer (auditoría 3: borrar la
-    /// marca hacía una segunda nota para la misma sesión). Devuelve también los comentarios, para
-    /// volver a ponerlos al guardar (`restoringComments`).
+    /// Lo que se escribe en el editor: la nota sin la marca de su sesión, que no se ve y no se
+    /// debe poder borrar sin querer (auditoría 3: borrar la marca hacía una segunda nota para la
+    /// misma sesión). Solo esa marca: tus comentarios y tus bloques de código se quedan como los
+    /// escribiste, en su lugar (auditoría 4). Devuelve también las marcas, para volver a ponerlas
+    /// al guardar (`restoringComments`).
     public static func editable(_ text: String) -> (text: String, comments: [String]) {
-        var kept: [String] = []
-        var comments: [String] = []
-        for line in text.components(separatedBy: "\n") {
-            if isComment(line) { comments.append(line.trimmingCharacters(in: .whitespaces)) } else { kept.append(line) }
-        }
-        return (kept.joined(separator: "\n"), comments)
+        let markers = markerLines(text)
+        guard !markers.isEmpty else { return (text, []) }
+        let hidden = Set(markers.map(\.index))
+        let kept = text.components(separatedBy: "\n").enumerated().filter { !hidden.contains($0.offset) }.map(\.element)
+        return (kept.joined(separator: "\n"), markers.map { $0.line.trimmingCharacters(in: .whitespaces) })
     }
 
-    /// Vuelve a poner los comentarios que se quitaron para editar: debajo del título (donde los
-    /// deja la nota de la sesión) o, sin título, al principio. Los que ya estén no se repiten.
+    /// Vuelve a poner las marcas que se quitaron para editar: debajo del título, donde la deja la
+    /// nota de la sesión, o, sin título, al principio. Las que ya estén no se repiten. Lo demás
+    /// de la nota no se mueve.
     public static func restoringComments(_ comments: [String], in text: String) -> String {
-        let present = Set(text.components(separatedBy: "\n").filter(isComment).map { $0.trimmingCharacters(in: .whitespaces) })
+        let present = Set(markerLines(text).map { $0.line.trimmingCharacters(in: .whitespaces) })
         let missing = comments.filter { !present.contains($0) }
         guard !missing.isEmpty else { return text }
         var lines = text.components(separatedBy: "\n")
@@ -231,10 +260,22 @@ public enum NoteMarkdown {
         return lines.joined(separator: "\n")
     }
 
+    /// Lo que se guarda al terminar de escribir. Si dejaste la nota vacía (o solo «#»), vacío:
+    /// la nota se borra aunque fuera la de una sesión; antes la marca volvía y la nota se quedaba
+    /// (auditoría 4, M2).
+    public static func savedText(_ text: String, restoring comments: [String]) -> String {
+        isBlank(text) ? "" : restoringComments(comments, in: text)
+    }
+
+    /// Una nota sin nada tuyo: vacía, solo «#» o solo la marca de su sesión.
+    public static func isBlank(_ text: String) -> Bool {
+        editable(text).text.trimmingCharacters(in: CharacterSet(charactersIn: "#").union(.whitespacesAndNewlines)).isEmpty
+    }
+
     /// El texto en que se busca: sin comentarios, así «sesion» o «gabinete» no encuentran las
-    /// notas de sesión por su marca escondida (auditoría 3).
+    /// notas de sesión por su marca escondida (auditoría 3). Los comentarios no se ven al leer.
     public static func searchText(_ text: String) -> String {
-        editable(text).text
+        text.components(separatedBy: "\n").filter { !isComment($0) }.joined(separator: "\n")
     }
 
     /// Un comentario de Markdown en un renglón (`<!-- … -->`): no se enseña.

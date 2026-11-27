@@ -565,7 +565,22 @@ final class DesignRulesTests: XCTestCase {
                     ? "\(file.path):\(index + 1): botón de la barra sin BarButton" : nil
             }
         }
-        check(recipes + barButtons + hits(#"Menu\("Editar"\)"#, in: Self.screens).map { "\($0) — usa BarMenu(title:)" },
+        // Auditoría 4 (27 nov 2026): en la Mac el menú de filtros de la barra salía verde sin ningún
+        // filtro puesto. Todo menú de la barra de la ventana va en tinta (`macToolbarInk`), en verde
+        // solo con un filtro puesto.
+        let macMenus = Self.screens.filter { $0.path.hasPrefix("App/Shared/Mac/") }.flatMap { file -> [String] in
+            var inToolbar = false
+            return file.lines.enumerated().compactMap { index, line -> String? in
+                if line.contains(".toolbar {") { inToolbar = true }
+                guard inToolbar, line.trimmingCharacters(in: .whitespaces).hasPrefix("Menu {") else { return nil }
+                let near = file.lines[index..<min(index + 12, file.lines.count)].joined()
+                return near.contains(".macToolbarInk(") ? nil : "\(file.path):\(index + 1): menú de la barra sin macToolbarInk"
+            }
+        }
+        if !components.contains("func macToolbarInk(active: Bool = false)") || !components.contains("tint(active ? Theme.accent : Theme.ink)") {
+            recipes.append("macToolbarInk: el control de la barra no va en tinta")
+        }
+        check(recipes + barButtons + macMenus + hits(#"Menu\("Editar"\)"#, in: Self.screens).map { "\($0) — usa BarMenu(title:)" },
               "Una receta (o un menú de la barra) pinta de verde las acciones de su pantalla")
     }
 
@@ -674,7 +689,7 @@ final class DesignRulesTests: XCTestCase {
         // Los de la barra del sistema (`BarButton`, `BarMenu`) los mide iOS: su cápsula ya es de 44.
         let bigByNature: Set = ["PageSwatchPicker", "CoverChoiceCell", "SaveShelfAlert", "RenameShelfAlert", "DeleteShelfConfirmation",
                                 "BarButton", "BarMenu"]
-        let measure = #"tapTarget|sizeTarget|accentButton|scrubberReach|Size\.control|Size\.row|IconTile|PrimaryButton|TextAction|CloseButton|roundInGlass"#
+        let measure = #"tapTarget|sizeTarget|accentButton|scrubberReach|Size\.control|Size\.row|IconTile|PrimaryButton|TextAction|QuietButton|CloseButton|roundInGlass"#
         for piece in pieces where !bigByNature.contains(piece.name) {
             let touches = piece.body.range(of: #"Button\s*[({]|\.onTapGesture|\.gesture\(|Menu \{"#, options: .regularExpression) != nil
             if touches && piece.body.range(of: measure, options: .regularExpression) == nil { touch.append("\(piece.name): se toca sin medir 44") }
@@ -1229,6 +1244,28 @@ final class DesignRulesTests: XCTestCase {
     /// ruedita sola. Las pantallas usan LoadingLine.
     func testWaitingSaysWhat() {
         check(hits(#"ProgressView\(\)"#, in: Self.screens), "Ruedita sola: usa LoadingLine(text: \"Buscando…\")")
+        // Auditoría 4 (27 nov 2026): con tu biblioteca todavía en iCloud, la Mesa decía «Todavía no hay
+        // libros» y ofrecía «Añadir libros» (la Biblioteca ya decía «Bajando tu biblioteca»): te llevaba
+        // a importar dos veces. Todo vacío de la biblioteca sale de `LibraryEmptyKind`, que sigue a
+        // iCloud: bajando no ofrece añadir; si dejé de esperar, ofrece añadir y volver a la bienvenida.
+        var empty = hits(#"EmptyCopy\.(noBooks|stillDownloading)"#, in: Self.screens)
+            .map { "\($0) — usa LibraryEmptyState o MacEmptyState(library:)" }
+        empty += hits(#"actionTitle: LibraryAction\.addBooks"#, in: Self.screens).map { "\($0) — «Añadir libros» de un vacío sale de LibraryEmptyKind" }
+        for name in ["MesaScreen.swift", "LibraryScreen.swift", "MacBookTable.swift"] {
+            let text = Self.screens.first { $0.path.hasSuffix(name) }?.text ?? ""
+            if !text.contains("LibraryEmptyKind(waitingForCloud:") || !text.contains("cloudGaveUp:") {
+                empty.append("\(name): su vacío no sigue a iCloud")
+            }
+        }
+        let kind = Self.piece("LibraryEmptyState")
+        if !kind.contains("if kind.offersAdd") || !kind.contains("EmptyCopy.openWelcome") {
+            empty.append("LibraryEmptyState: ofrece añadir mientras bajo tu biblioteca o no ofrece volver a la bienvenida")
+        }
+        let components = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }?.text ?? ""
+        if !components.contains("var offersAdd: Bool { self != .downloading }") {
+            empty.append("LibraryEmptyKind: bajando de iCloud ofrece añadir libros")
+        }
+        check(empty, "Un vacío de la biblioteca dice lo que pasa con iCloud (regla 7)")
     }
 
     /// Regla 8 (MX-B, 26 nov 2026): en la Mac cada cosa se nombra una vez. El nombre de la pantalla

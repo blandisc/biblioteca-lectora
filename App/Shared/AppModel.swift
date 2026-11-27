@@ -23,6 +23,8 @@ final class AppModel: ObservableObject {
     @Published var openBook: OpenBook?
     /// Resumen de una importación con duplicados o errores.
     @Published var importReport: String?
+    /// «Volver a la bienvenida» desde una biblioteca que no bajó de iCloud (auditoría 4): la raíz la abre.
+    @Published var welcomeRequested = false
     /// Libro que suena en el mini reproductor. Por ahora solo la interfaz: el audio llega con el modo audiolibro.
     @Published var listening: ShelfBook?
     private var observations: [AnyCancellable] = []

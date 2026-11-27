@@ -1262,7 +1262,8 @@ struct LetterJumpMenu: View {
             HStack(spacing: Theme.Space.xs) {
                 // Corto y con la flecha del orden: «Ir a la letra…» se partía en dos renglones con la
                 // letra más grande y su ícono de letras se dibujaba como un «Abc» enorme (auditoría 3).
-                CapsText(text: "A–Z", tone: Theme.ink)
+                // «Letra», no «A–Z»: junto a «TÍTULO ⇅» se leía como otro orden (auditoría 4).
+                CapsText(text: "Letra", tone: Theme.ink)
                 Image(systemName: "chevron.down")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Theme.ink)
@@ -1380,18 +1381,25 @@ struct LinkRow: View {
                         Text(value).foregroundStyle(Theme.secondaryInk).monospacedDigit()
                             .lineLimit(typeSize.isAccessibilitySize ? Theme.Size.labelLines : 1)
                     }
+                    // Con un valor, la flecha va pegada a él: con la letra más grande el «3» de «Por
+                    // revisar» bajaba a su renglón y la flecha se quedaba arriba, lejos (auditoría 4).
+                    if chevron, value != nil || status != nil { chevronMark }
                 }
             }
-            if chevron {
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Theme.tertiaryInk)
-            }
+            if chevron, value == nil, status == nil { chevronMark }
         }
         .font(.body)
         .frame(minHeight: Theme.Size.row)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+extension LinkRow {
+    fileprivate var chevronMark: some View {
+        Image(systemName: "chevron.right")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Theme.tertiaryInk)
     }
 }
 
@@ -2608,6 +2616,12 @@ enum EmptyCopy {
     /// no es una biblioteca vacía (auditoría 3).
     static let stillDownloading = (title: "Bajando tu biblioteca",
                                    message: "Ya le pedí a iCloud tu biblioteca. Tus libros aparecen aquí en cuanto baje; deja la app abierta y con conexión.")
+    /// Esperé a iCloud y tu biblioteca no llegó (auditoría 4): ya no digo que estoy bajando para
+    /// siempre; te dejo añadir libros o volver a la bienvenida.
+    static let cloudGaveUp = (title: "Tu biblioteca no ha bajado",
+                              message: "Le pedí a iCloud tu biblioteca y todavía no llega. Si ya tenías libros en otro aparato, aparecen aquí en cuanto baje; si es tu primer Gabinete, añade libros o vuelve a la bienvenida.")
+    /// Volver a la bienvenida desde una biblioteca que no bajó.
+    static let openWelcome = "Volver a la bienvenida"
     static func noMatch(_ what: String) -> (title: String, message: String) {
         ("Ningún libro aquí", "Ningún libro coincide con «\(what)».")
     }
@@ -2617,6 +2631,54 @@ enum EmptyCopy {
                                message: "No encontré dos libros con el mismo título y un autor parecido, ni con el mismo ISBN.")
     static let chooseBook = (title: "Elige un libro",
                              message: "Con varios elegidos, lo que cambies aquí lo aplico a todos.")
+}
+
+/// Cómo está una biblioteca sin libros respecto de iCloud (auditoría 4): bajando, ya no la
+/// espero, o de verdad vacía. Todo vacío de «no hay libros» sale de aquí, en el iPhone y la Mac.
+enum LibraryEmptyKind: Equatable {
+    /// Tu biblioteca sigue en iCloud: no es una vacía, y añadir libros los duplicaría.
+    case downloading
+    /// Esperé y no bajó: puedes añadir libros o volver a la bienvenida.
+    case cloudGaveUp
+    case noBooks
+
+    init(waitingForCloud: Bool, cloudGaveUp: Bool) {
+        self = waitingForCloud ? .downloading : cloudGaveUp ? .cloudGaveUp : .noBooks
+    }
+
+    var copy: (title: String, message: String) {
+        switch self {
+        case .downloading: EmptyCopy.stillDownloading
+        case .cloudGaveUp: EmptyCopy.cloudGaveUp
+        case .noBooks: EmptyCopy.noBooks
+        }
+    }
+
+    /// Solo se ofrece añadir libros cuando no estoy bajando la tuya.
+    var offersAdd: Bool { self != .downloading }
+}
+
+/// El vacío de una biblioteca sin libros en el iPhone: sigue a iCloud (`LibraryEmptyKind`). Mientras
+/// bajo tu biblioteca no ofrece «Añadir libros» (la Mesa lo ofrecía y se importaba dos veces).
+struct LibraryEmptyState: View {
+    let kind: LibraryEmptyKind
+    let add: () -> Void
+    var welcome: () -> Void = {}
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if kind.offersAdd {
+                EmptyState(title: kind.copy.title, message: kind.copy.message,
+                           actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol, action: add)
+            } else {
+                EmptyState(title: kind.copy.title, message: kind.copy.message)
+            }
+            if kind == .cloudGaveUp {
+                QuietButton(title: EmptyCopy.openWelcome, action: welcome)
+                    .padding(.top, Theme.Space.s)
+            }
+        }
+    }
 }
 
 #if os(macOS)
@@ -2647,6 +2709,8 @@ struct MacEmptyState: View {
     var systemImage = "books.vertical"
     var actionTitle: String? = nil
     var action: (() -> Void)? = nil
+    var secondaryTitle: String? = nil
+    var secondaryAction: (() -> Void)? = nil
 
     var body: some View {
         ContentUnavailableView {
@@ -2657,13 +2721,34 @@ struct MacEmptyState: View {
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
             }
+            if let secondaryTitle, let secondaryAction {
+                Button(secondaryTitle, action: secondaryAction)
+            }
         }
+    }
+}
+
+extension MacEmptyState {
+    /// El vacío de la biblioteca en la Mac, con la misma regla que el iPhone (`LibraryEmptyKind`).
+    init(library kind: LibraryEmptyKind, add: @escaping () -> Void, welcome: @escaping () -> Void) {
+        self.init(title: kind.copy.title, message: kind.copy.message,
+                  systemImage: kind == .downloading ? "icloud.and.arrow.down" : "books.vertical",
+                  actionTitle: kind.offersAdd ? LibraryAction.addBooks.title : nil, action: kind.offersAdd ? add : nil,
+                  secondaryTitle: kind == .cloudGaveUp ? EmptyCopy.openWelcome : nil,
+                  secondaryAction: kind == .cloudGaveUp ? welcome : nil)
     }
 }
 
 extension View {
     /// La acción principal en la Mac: el botón del sistema en el verde hondo de la acción, el
     /// mismo de `PrimaryButton` en los dos modos (regla 6), una por ventana.
+    /// Un control de la barra de la ventana en la Mac, en tinta (regla 1): el menú de filtros salía
+    /// verde sin ningún filtro puesto. En verde solo cuando hay uno puesto: es «dónde estás» (auditoría 4).
+    func macToolbarInk(active: Bool = false) -> some View {
+        tint(active ? Theme.accent : Theme.ink)
+            .foregroundStyle(active ? Theme.accent : Theme.ink)
+    }
+
     func macMainAction() -> some View {
         buttonStyle(.borderedProminent).tint(Theme.action)
     }

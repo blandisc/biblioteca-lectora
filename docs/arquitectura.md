@@ -58,7 +58,14 @@ nuestro queda fuera.
   abrir la app y traer de Calibre no se congelan aunque tengas miles de libros: el disco se lee
   una vez por carpeta (`SpellingIndex`), los libros se arman una vez al final y la corrección al
   abrir corre fuera del hilo de la interfaz (auditoría 3; `AuditoriaTresTests`, 5,000 libros y
-  1,500 autores en menos de 2 s).
+  1,500 autores leyendo la carpeta de los autores una sola vez, también al mover libros).
+- Mientras ordeno o muevo tu Gabinete, lo que cambias no se pierde ni se revierte: un solo
+  trabajo de toda la biblioteca a la vez («Ordenar», mover el Gabinete, traer de Calibre,
+  añadir libros; `WorkLock`): lo que añades espera su turno, lo demás te dice por qué espera;
+  cada libro se vuelve a leer del registro justo antes de ordenarlo, y lo que guardas mientras
+  copio el Gabinete (la página, una sesión, una nota) pasa a la copia antes de borrar la vieja
+  (auditoría 4; `AuditoriaCuatroTests`). Si iCloud no baja un registro, te enseño lo que sí
+  llegó y dejo de esperar con un aviso, sin quitar ningún libro.
 - Pendiente (A7, diseño): el registro crece con cada página asentada (4 cambios cada vez). La
   compactación sería que cada dispositivo reescriba solo su `<id>.jsonl` con el último cambio
   de cada campo y todas las lápidas (gana el último por campo, así que el estado no cambia),

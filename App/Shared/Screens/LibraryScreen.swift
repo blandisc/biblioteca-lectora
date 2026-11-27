@@ -74,7 +74,10 @@ struct LibraryScreen: View {
                         // Del conteo para abajo, todo deja libre la columna del índice A–Z.
                         VStack(alignment: .leading, spacing: 0) {
                             CountLine(text: summary(books)) {
-                                SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
+                                // Sin libros a la vista no hay nada que ordenar (auditoría 4).
+                                if !books.isEmpty {
+                                    SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
+                                }
                                 // Con la letra más grande no hay índice A–Z: un menú salta a la letra.
                                 if jumpsByLetter(books) {
                                     LetterJumpMenu(letters: LetterIndex.letters.filter { letter in books.contains { $0.sortTitle.firstLetter == letter } }) { letter in
@@ -104,11 +107,10 @@ struct LibraryScreen: View {
                                 .buttonStyle(.plain)
                             }
 
-                            if model.shelf.isEmpty, model.library.waitingForCloud {
-                                EmptyState(title: EmptyCopy.stillDownloading.title, message: EmptyCopy.stillDownloading.message)
-                            } else if model.shelf.isEmpty {
-                                EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
-                                           actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
+                            if model.shelf.isEmpty {
+                                LibraryEmptyState(kind: LibraryEmptyKind(waitingForCloud: model.library.waitingForCloud,
+                                                                         cloudGaveUp: model.library.cloudGaveUp),
+                                                  add: { model.importing = true }, welcome: { model.welcomeRequested = true })
                             } else if books.isEmpty {
                                 EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message,
                                            actionTitle: EmptyCopy.showAll) { filter = .all }

@@ -62,8 +62,18 @@ public enum FolderMove {
         let parent = destination.deletingLastPathComponent().deletingLastPathComponent()
         let wanted = destination.deletingLastPathComponent().lastPathComponent
         let bookName = destination.lastPathComponent
+        // La carpeta de la biblioteca no se vuelve a leer entera por cada libro (auditoría 4, B4):
+        // solo se miran los nombres de autor que cambiaron.
         defer {
-            for folder in [parent, oldAuthor, destination.deletingLastPathComponent(), from] { index?.forget(folder) }
+            if let index {
+                if oldAuthor.deletingLastPathComponent().standardizedFileURL.path == parent.standardizedFileURL.path {
+                    index.refresh([oldAuthor.lastPathComponent, wanted], in: parent)
+                } else {
+                    index.forget(parent)
+                    index.forget(oldAuthor)
+                }
+                for folder in [oldAuthor, destination.deletingLastPathComponent(), from] { index.forget(folder) }
+            }
         }
         // La carpeta de autor del libro, con el nombre que tiene en el disco.
         let ownName = oldAuthor.deletingLastPathComponent().standardizedFileURL.path == parent.standardizedFileURL.path
@@ -256,6 +266,15 @@ public final class SpellingIndex {
     private lazy var realRoot: String? = Self.realPath(root.path)
     /// Cuántas carpetas se han leído (para las pruebas: una vez cada una, no una por libro).
     public private(set) var listings = 0
+    /// Cuántos nombres se han leído en total (listar la carpeta con 1,500 autores cuenta 1,500).
+    public private(set) var entriesRead = 0
+    /// Cuántas veces se leyó cada carpeta.
+    private var listingsByFolder: [String: Int] = [:]
+
+    /// Cuántas veces se leyó esa carpeta (para las pruebas: la raíz, una sola vez).
+    public func listings(of folder: URL) -> Int {
+        listingsByFolder[folder.standardizedFileURL.path, default: 0]
+    }
 
     public init(root: URL) {
         self.root = root
@@ -270,6 +289,8 @@ public final class SpellingIndex {
         } else {
             listings += 1
             let names = (try? FileManager.default.contentsOfDirectory(atPath: key)) ?? []
+            entriesRead += names.count
+            listingsByFolder[key, default: 0] += 1
             table = Dictionary(grouping: names, by: { $0.lowercased() }).mapValues { $0.sorted() }
             folders[key] = table
             spellings[key.lowercased(), default: []].insert(key)
@@ -311,14 +332,39 @@ public final class SpellingIndex {
         }
     }
 
-    /// Olvida `root` y cada carpeta de la ruta `relative`.
+    /// Lo que cambió en la ruta `relative`: en cada carpeta se vuelve a mirar solo el nombre
+    /// siguiente de la ruta (sin listarla otra vez) y la última se olvida (auditoría 4, B4).
     public func forget(path relative: String) {
         var folder = root
-        forget(folder)
-        for part in relative.split(separator: "/") {
-            folder.appendPathComponent(String(part))
-            forget(folder)
+        let parts = relative.split(separator: "/").map(String.init)
+        for part in parts {
+            refresh([part], in: folder)
+            folder.appendPathComponent(part)
         }
+        forget(folder)
+    }
+
+    /// Vuelve a mirar en `folder` solo esos nombres (si ya estaba leída), sin listarla: lo que se
+    /// creó, se borró o cambió de mayúsculas. Lo que no se puede confirmar, se olvida.
+    public func refresh(_ names: [String], in folder: URL) {
+        let key = folder.standardizedFileURL.path
+        guard var table = folders[key] else { return }
+        guard let realFolder = Self.realPath(key) else { return forget(folder) }
+        let exists = { (entry: String) -> String? in
+            Self.realPath(folder.appendingPathComponent(entry).path)
+        }
+        for name in names {
+            let lower = name.lowercased()
+            // Los que ya conocía con esas letras siguen solo si están así en el disco.
+            var spelled = (table[lower] ?? []).filter { exists($0).map { ($0 as NSString).lastPathComponent } == $0 }
+            if let real = exists(name) {
+                guard (real as NSString).deletingLastPathComponent == realFolder else { return forget(folder) }
+                let actual = (real as NSString).lastPathComponent
+                if actual.lowercased() == lower, !spelled.contains(actual) { spelled.append(actual) }
+            }
+            table[lower] = spelled.isEmpty ? nil : spelled.sorted()
+        }
+        folders[key] = table
     }
 
     public func forgetAll() {

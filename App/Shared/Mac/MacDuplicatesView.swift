@@ -29,6 +29,9 @@ struct MacDuplicatesView: View {
                         Button("No son el mismo") { library.dismissDuplicates(group) }
                         Button("Juntar en uno…") { confirming = group }
                             .macMainAction()
+                            // Mientras ordeno, muevo o traigo de Calibre no junto, y te digo por qué (auditoría 4).
+                            .disabled(library.busyReason != nil)
+                            .help(library.busyReason ?? "")
                     }
                 }
             }

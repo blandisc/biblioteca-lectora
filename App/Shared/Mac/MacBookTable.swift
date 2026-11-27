@@ -20,7 +20,14 @@ struct MacBookTable: View {
     /// «Guardar como estante» con la búsqueda escrita (CB-1).
     @State private var savingShelf: String?
     @AppStorage("mac.ficha") private var showsInspector = true
+    /// Cada tabla guarda sus columnas aparte (auditoría 4): compartidas, la de la ficha abierta
+    /// tomaba los anchos de la ancha y lo de las columnas que no tiene se podía perder.
     @SceneStorage("mac.columnas") private var columns = TableColumnCustomization<MacBookRow>()
+    @SceneStorage("mac.columnas.ficha") private var narrowColumns = TableColumnCustomization<MacBookRow>()
+    /// El ancho que tiene la tabla, en pasos de `Mac.column`: al cambiar (la ventana, la ficha) la
+    /// tabla se vuelve a armar y reparte de nuevo sus columnas. Antes se quedaban con los anchos de
+    /// la primera vez y «Serie», «Estado» y «Formato» quedaban bajo la ficha (auditoría 4).
+    @State private var widthStep = 0
 
     var body: some View {
         let parsed = LibraryQuery(query)
@@ -31,11 +38,9 @@ struct MacBookTable: View {
             .overlay {
                 if rows.isEmpty {
                     if query.isEmpty {
-                        if library.books.isEmpty, library.waitingForCloud {
-                            MacEmptyState(title: EmptyCopy.stillDownloading.title, message: EmptyCopy.stillDownloading.message,
-                                          systemImage: "icloud.and.arrow.down")
-                        } else if library.books.isEmpty {
-                            MacEmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message)
+                        if library.books.isEmpty {
+                            MacEmptyState(library: LibraryEmptyKind(waitingForCloud: library.waitingForCloud, cloudGaveUp: library.cloudGaveUp),
+                                          add: { model.importing = true }, welcome: { model.welcomeRequested = true })
                         } else {
                             MacEmptyState(title: EmptyCopy.noMatch(section.title).title, message: EmptyCopy.noMatch(section.title).message,
                                           actionTitle: EmptyCopy.showAll, action: showAll)
@@ -46,7 +51,9 @@ struct MacBookTable: View {
                 }
             }
             .navigationTitle(section.title)
-            .navigationSubtitle(rows.count.counted("libro", "libros"))
+            // Si el orden es de una columna que no se ve (la tabla con la ficha no la tiene, o la
+            // escondiste), se dice en la barra: si no, el orden no tenía encabezado (auditoría 4).
+            .navigationSubtitle([rows.count.counted("libro", "libros"), hiddenSortLine].compactMap { $0 }.joined(separator: " · "))
             // La pista en palabras; los filtros (`autor:`, `serie:`…) se ponen desde su menú.
             .searchable(text: $query, placement: .toolbar, prompt: "Buscar en la biblioteca")
             .inspector(isPresented: $showsInspector) {
@@ -63,6 +70,7 @@ struct MacBookTable: View {
                     } label: {
                         Label("Buscar por autor, serie, etiqueta…", systemImage: "line.3.horizontal.decrease.circle")
                     }
+                    .macToolbarInk(active: !parsed.filters.isEmpty)
                     .help("Buscar solo en un dato: autor, serie, etiqueta, idioma, editorial, estado, ISBN o título")
                     Button { model.importing = true } label: { Label(LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) }
                         .help("\(LibraryAction.addBooks.title) (⌘O)")
@@ -113,25 +121,35 @@ struct MacBookTable: View {
     /// escondidas: una columna escondida seguía ocupando su ancho al repartir el de la tabla.
     @ViewBuilder
     private func table(_ rows: [MacBookRow]) -> some View {
-        Group {
-            if showsInspector {
-                Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
-                    leadColumns
-                    stateColumns
-                    extraColumns
-                }
-            } else {
-                Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
-                    leadColumns
-                    Group {
-                        lowColumns
+        ScrollViewReader { scroller in
+            Group {
+                if showsInspector {
+                    Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $narrowColumns) {
+                        leadColumns
                         stateColumns
-                        addedColumn
+                        extraColumns
                     }
-                    extraColumns
+                } else {
+                    Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
+                        leadColumns
+                        Group {
+                            lowColumns
+                            stateColumns
+                            addedColumn
+                        }
+                        extraColumns
+                    }
                 }
             }
+            .id(TableLayoutKey(inspector: showsInspector, widthStep: widthStep))
+            // Al volver a armarse (abrir o cerrar la ficha, cambiar el ancho), vuelve a lo elegido:
+            // antes regresaba arriba y perdías dónde ibas (auditoría 4).
+            .onChange(of: TableLayoutKey(inspector: showsInspector, widthStep: widthStep)) {
+                guard let id = rows.first(where: { selection.contains($0.id) })?.id else { return }
+                Task { @MainActor in scroller.scrollTo(id, anchor: .center) }
+            }
         }
+        .onGeometryChange(for: Int.self) { Int($0.size.width / Theme.Mac.column) } action: { widthStep = $0 }
         // De papel (MX-B): la tabla sobre el papel de Gabinete, sin franjas.
         .macPaper()
         .contextMenu(forSelectionType: UUID.self) { ids in
@@ -154,7 +172,7 @@ struct MacBookTable: View {
         .width(Theme.Mac.coverColumn)
         .customizationID("portada")
         TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in MacCell(text: row.title, role: .title) }
-            .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn)
+            .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn, max: showsInspector ? Theme.Mac.titleColumnMax : nil)
             .customizationID("titulo")
         TableColumn("Autor", value: \MacBookRow.authorKey) { (row: MacBookRow) in MacCell(text: row.author) }
             .width(min: Theme.Mac.nameColumn, ideal: Theme.Mac.column)
@@ -215,6 +233,39 @@ struct MacBookTable: View {
             .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
             .customizationID("isbn")
             .defaultVisibility(.hidden)
+    }
+
+    /// La clave con que se vuelve a armar la tabla.
+    private struct TableLayoutKey: Hashable {
+        let inspector: Bool
+        let widthStep: Int
+    }
+
+    /// Las columnas por las que se puede ordenar, con su nombre y su id de la tabla.
+    private static let sortColumns: [(key: PartialKeyPath<MacBookRow>, id: String, name: String)] = [
+        (\MacBookRow.coverKey, "portada", "Portada"), (\MacBookRow.titleKey, "titulo", "Título"),
+        (\MacBookRow.authorKey, "autor", "Autor"), (\MacBookRow.seriesKey, "serie", "Serie"),
+        (\MacBookRow.tagsKey, "etiquetas", "Etiquetas"), (\MacBookRow.progress, "avance", "Avance"),
+        (\MacBookRow.stateLabel, "estado", "Estado"), (\MacBookRow.format, "formato", "Formato"),
+        (\MacBookRow.added, "agregado", "Agregado"), (\MacBookRow.language, "idioma", "Idioma"),
+        (\MacBookRow.rating, "valoracion", "Valoración"), (\MacBookRow.publisherKey, "editorial", "Editorial"),
+        (\MacBookRow.published, "publicado", "Publicado"), (\MacBookRow.isbn, "isbn", "ISBN"),
+    ]
+    /// Las que no tiene la tabla con la ficha abierta.
+    private static let wideOnly: Set<String> = ["etiquetas", "avance", "agregado"]
+    /// Las que empiezan escondidas (`defaultVisibility(.hidden)`).
+    private static let startHidden: Set<String> = ["idioma", "valoracion", "editorial", "publicado", "isbn"]
+
+    /// «por Agregado» si la tabla está ordenada por una columna que no se ve.
+    private var hiddenSortLine: String? {
+        guard let order = sortOrder.first,
+              let column = Self.sortColumns.first(where: { $0.key == order.keyPath as PartialKeyPath<MacBookRow> }) else { return nil }
+        let customization = showsInspector ? narrowColumns : columns
+        let visibility = customization[visibility: column.id]
+        let hidden = (showsInspector && Self.wideOnly.contains(column.id)) || visibility == .hidden
+            || (Self.startHidden.contains(column.id) && visibility != .visible)
+        guard hidden else { return nil }
+        return "por \(column.name)" + (order.order == .reverse ? " (al revés)" : "")
     }
 
     /// Todos los libros como renglones, con su avance y si les falta portada o esperan revisión

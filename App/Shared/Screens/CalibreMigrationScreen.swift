@@ -30,7 +30,7 @@ struct CalibreMigrationScreen: View {
                     switch step {
                     case .choose: ChooseStep { choosing = true }
                     case .reading: progress(title: "Leyendo tu biblioteca de Calibre…", value: nil)
-                    case .review(let source, let plan): ReviewStep(plan: plan) { migrate(source: source, plan: plan) }
+                    case .review(let source, let plan): ReviewStep(plan: plan, busyReason: model.library.busyReason) { migrate(source: source, plan: plan) }
                     case .migrating:
                         let done = model.library.progress
                         progress(title: done.map { "Trayendo \($0.done.counted("libro", "libros")) de \($0.total)…" } ?? "Trayendo…",
@@ -121,6 +121,8 @@ private struct ChooseStep: View {
 /// Paso 2: lo que llega, antes de copiar nada.
 private struct ReviewStep: View {
     let plan: CalibreMigrationPlan
+    /// Otro trabajo de toda la biblioteca está corriendo (auditoría 4): traer espera.
+    var busyReason: String?
     let migrate: () -> Void
 
     var body: some View {
@@ -142,7 +144,13 @@ private struct ReviewStep: View {
             if plan.toImport.isEmpty {
                 EmptyState(title: "Nada nuevo que traer", message: "Todo lo que tiene esta biblioteca ya está en tu Gabinete.")
             } else {
+                if let busyReason {
+                    Text(busyReason)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
                 PrimaryButton(title: "Traer \(plan.toImport.count.counted("libro", "libros"))", fillsWidth: true, action: migrate)
+                    .disabled(busyReason != nil)
             }
         }
     }
