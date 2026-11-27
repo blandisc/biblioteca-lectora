@@ -37,7 +37,7 @@ public enum BatchLookup {
             case .apply: applied += 1
             case .review: review += 1
             case .notFound: notFound += 1
-            case .unreachable: done -= 1; pending += 1
+            case .unreachable, .busy: done -= 1; pending += 1
             case nil: break
             }
         }

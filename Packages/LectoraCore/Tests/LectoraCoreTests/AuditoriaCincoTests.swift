@@ -100,7 +100,8 @@ final class AuditoriaCincoTests: XCTestCase {
         XCTAssertTrue(exists("ajeno.md") && exists(".otro.md.icloud"), "Lo que no puso esta corrida no se toca")
         XCTAssertFalse(exists("borrada.md"), "Lo que borraste durante la copia no se queda")
         XCTAssertFalse(exists("\(book)/.cover.jpg.icloud"), "El marcador vacío no se copia")
-        XCTAssertTrue(pass.isComplete, "El marcador cuenta como el archivo que representa: \(pass)")
+        XCTAssertEqual(pass.present, pass.expected, "El marcador cuenta como el archivo que representa: \(pass)")
+        XCTAssertEqual(pass.extra, 2, "Lo ajeno no se toca, pero la cuenta lo ve (auditoría 6): la copia no es exacta")
         XCTAssertEqual(FolderCatchUp.snapshot(of: from), ["Borges", book, "\(book)/cover.jpg"])
     }
 
@@ -108,9 +109,8 @@ final class AuditoriaCincoTests: XCTestCase {
 
     func testFailedMoveCleansUpAndCountsOnce() throws {
         let move = body(of: "func move(toCabinet destination: URL) async throws {", in: store)
-        XCTAssertTrue(move.contains("for folder in created { try? FileManager.default.removeItem(at: folder) }"),
-                      "Si algo falla después de empezar a copiar, quito lo que esta corrida creó")
-        XCTAssertTrue(move.contains(".filter { !FileManager.default.fileExists(atPath: $0.path) }"), "Solo lo que no estaba")
+        // Auditoría 6: se copia a carpetas de trabajo y si falla se quitan solo esas.
+        XCTAssertTrue(move.contains("staged.discard()"), "Si algo falla después de empezar a copiar, quito lo que esta corrida creó")
         XCTAssertFalse(move.contains("countItems"), "Ni contar aparte: una nota nueva entre copiar y contar hacía fallar")
         XCTAssertTrue(move.contains("expected += pass.expected") && move.contains("copied += pass.present"))
         guard let catchBlock = move.range(of: "} catch {"), let open = move.range(of: "open(cabinet: destination)") else {
@@ -234,10 +234,10 @@ final class AuditoriaCincoTests: XCTestCase {
 
     func testMacTableRelaysOutOnceTheWidthSettles() {
         let table = source("MacBookTable.swift")
-        XCTAssertTrue(table.contains(".task(id: widthStep) {") && table.contains("try? await Task.sleep(for: Theme.Mac.relayoutPause)"),
-                      "Se rearma cuando el ancho se queda quieto")
+        XCTAssertTrue(table.contains(".task(id: TableLayoutKey(inspector: showsInspector, widthStep: widthStep)) {")
+                      && table.contains("try? await Task.sleep(for: Theme.Mac.relayoutPause)"), "Se rearma cuando el ancho se queda quieto")
         XCTAssertFalse(table.contains(".id(TableLayoutKey(inspector: showsInspector, widthStep: widthStep))"), "No a cada paso")
-        XCTAssertTrue(table.contains("rows.first { visibleRows.contains($0.id) }"), "Vuelve a la primera fila que veías")
+        XCTAssertTrue(table.contains("visible.anchor = currentRows().first { visible.ids.contains($0.id) }?.id"), "Vuelve a la primera fila que veías")
     }
 
     // MARK: B3 · Si no pude leer el registro, no se vacía la biblioteca
@@ -252,7 +252,7 @@ final class AuditoriaCincoTests: XCTestCase {
     func testAddingBooksWaitsForICloudEverywhere() {
         // Todo «Añadir libros» pasa por `addBooks()`, que no deja mientras bajo tu biblioteca.
         let model = source("AppModel.swift")
-        XCTAssertTrue(body(of: "func addBooks() {", in: model).contains("guard addBooksBlocked == nil else { return }"))
+        XCTAssertTrue(body(of: "func addBooks() {", in: model).contains("if let reason = addBooksBlocked {"))
         XCTAssertTrue(model.contains("library.waitingForCloud ? EmptyCopy.addWhileDownloading : nil"))
         var direct: [String] = []
         for file in DesignRulesTests.sources("App/Shared") {
@@ -262,13 +262,13 @@ final class AuditoriaCincoTests: XCTestCase {
             }
         }
         XCTAssertEqual(direct, [], "Ninguna entrada abre el selector por su cuenta")
-        XCTAssertTrue(source("LibraryScreen.swift").contains("if model.addBooksBlocked == nil {"), "El «+» no sale mientras bajo")
+        XCTAssertTrue(source("LibraryScreen.swift").contains(".disabled(model.addBooksBlocked != nil)"), "El «+» se apaga mientras bajo (auditoría 6)")
         XCTAssertTrue(source("MacBookTable.swift").contains(".disabled(library.waitingForCloud)"))
         XCTAssertTrue(source("LectoraApp.swift").contains(".disabled(model.addBooksBlocked != nil)"), "Archivo › Añadir libros… (⌘O)")
-        XCTAssertTrue(source("MacBookTable.swift").contains("guard !urls.isEmpty, model.addBooksBlocked == nil"), "Arrastrar tampoco")
+        XCTAssertTrue(source("MacBookTable.swift").contains("if let reason = model.addBooksBlocked {"), "Arrastrar tampoco (y dice por qué, auditoría 6)")
         // Y mientras bajo no digo «0 libros».
-        XCTAssertTrue(source("LibraryScreen.swift").contains("if !(model.shelf.isEmpty && model.library.waitingForCloud) {"))
-        XCTAssertTrue(source("MacBookTable.swift").contains("library.books.isEmpty && library.waitingForCloud ? nil"))
+        XCTAssertTrue(source("LibraryScreen.swift").contains("model.shelf.isEmpty && (model.library.waitingForCloud || model.library.cloudGaveUp)"))
+        XCTAssertTrue(source("MacBookTable.swift").contains("library.books.isEmpty && (library.waitingForCloud || library.cloudGaveUp) ? nil"))
     }
 
     func testCloudNoticeHasItsOwnWords() {

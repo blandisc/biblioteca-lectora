@@ -28,17 +28,22 @@ struct MacBookTable: View {
     /// tabla se vuelve a armar y reparte de nuevo sus columnas. Antes se quedaban con los anchos de
     /// la primera vez y «Serie», «Estado» y «Formato» quedaban bajo la ficha (auditoría 4).
     @State private var widthStep = 0
-    /// El ancho ya quieto (auditoría 5): la tabla se rearma una vez al terminar de cambiarlo, no a
-    /// cada paso mientras arrastras la orilla de la ventana.
-    @State private var settledStep = 0
-    /// Las filas que se ven ahora: al rearmarse, la tabla vuelve a la primera de ellas.
-    @State private var visibleRows = Set<UUID>()
+    /// El ancho (en pasos) con que se armó la tabla la última vez, también en otra sesión: si ahora
+    /// es más angosta, los anchos guardados de las columnas no caben (auditoría 6, U1).
+    @SceneStorage("mac.columnas.paso") private var savedStep = 0
+    /// Cómo está armada la tabla: con o sin ficha y con qué ancho ya quieto (auditorías 5 y 6). Se
+    /// rearma una sola vez cuando el ancho se queda quieto, también al abrir la ficha (antes se
+    /// rearmaba al abrirla y otra vez 350 ms después, al terminar de cambiar el ancho).
+    @State private var layout: TableLayoutKey?
+    /// Las filas que se ven ahora (auditoría 6, A2): en una caja que SwiftUI no observa. Como
+    /// `@State` de un conjunto, cada fila que entraba al desplazarte volvía a armar la vista entera.
+    @State private var visible = VisibleRows()
+    /// Las filas filtradas y ordenadas: se vuelven a calcular solo si cambia lo que las arma.
+    @State private var cache = RowCache()
 
     var body: some View {
         let parsed = LibraryQuery(query)
-        let rows = Self.rows(library: library, shelf: model.shelf)
-            .filter { section.contains($0) && parsed.matches($0.book) }
-            .sorted(using: sortOrder)
+        let rows = currentRows()
         table(rows)
             .overlay {
                 if rows.isEmpty {
@@ -59,7 +64,7 @@ struct MacBookTable: View {
             // Si el orden es de una columna que no se ve (la tabla con la ficha no la tiene, o la
             // escondiste), se dice en la barra: si no, el orden no tenía encabezado (auditoría 4).
             // Mientras bajo tu biblioteca de iCloud no digo «0 libros» (auditoría 5).
-            .navigationSubtitle([library.books.isEmpty && library.waitingForCloud ? nil : rows.count.counted("libro", "libros"), hiddenSortLine]
+            .navigationSubtitle([library.books.isEmpty && (library.waitingForCloud || library.cloudGaveUp) ? nil : rows.count.counted("libro", "libros"), hiddenSortLine]
                 .compactMap { $0 }.joined(separator: " · "))
             // La pista en palabras; los filtros (`autor:`, `serie:`…) se ponen desde su menú.
             .searchable(text: $query, placement: .toolbar, prompt: "Buscar en la biblioteca")
@@ -116,7 +121,12 @@ struct MacBookTable: View {
             #endif
             .saveShelfAlert(query: $savingShelf) { library.saveShelf($0) }
             .dropDestination(for: URL.self) { urls, _ in
-                guard !urls.isEmpty, model.addBooksBlocked == nil else { return false }
+                guard !urls.isEmpty else { return false }
+                // Mientras bajo tu biblioteca no los añado, pero te digo por qué (auditoría 6).
+                if let reason = model.addBooksBlocked {
+                    library.explain(EmptyCopy.addWhileDownloadingTitle, reason)
+                    return false
+                }
                 Task { await model.importBooks(urls) }
                 return true
             }
@@ -128,11 +138,28 @@ struct MacBookTable: View {
     /// («Formato» quedaba cortada sin «…» y la tabla corría de lado); el título cede antes que el
     /// autor y la serie, que no bajan de `Mac.nameColumn` (auditoría 3). Son dos tablas y no columnas
     /// escondidas: una columna escondida seguía ocupando su ancho al repartir el de la tabla.
+    /// Las filas de la sección, filtradas y ordenadas; de la caché si nada cambió.
+    private func currentRows() -> [MacBookRow] {
+        let key = RowCache.Key(books: library.books, shelf: model.shelf, reviews: library.reviews,
+                               section: section, query: query, sortOrder: sortOrder)
+        return cache.rows(for: key) {
+            let parsed = LibraryQuery(query)
+            return Self.rows(library: library, shelf: model.shelf)
+                .filter { section.contains($0) && parsed.matches($0.book) }
+                .sorted(using: sortOrder)
+        }
+    }
+
+    /// Como está armada ahora; hasta que el ancho se quede quieto la primera vez, la de ahora.
+    private var tableLayout: TableLayoutKey {
+        layout ?? TableLayoutKey(inspector: showsInspector, widthStep: widthStep)
+    }
+
     @ViewBuilder
     private func table(_ rows: [MacBookRow]) -> some View {
         ScrollViewReader { scroller in
             Group {
-                if showsInspector {
+                if tableLayout.inspector {
                     Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $narrowColumns) {
                         leadColumns
                         stateColumns
@@ -150,21 +177,36 @@ struct MacBookTable: View {
                     }
                 }
             }
-            .id(TableLayoutKey(inspector: showsInspector, widthStep: settledStep))
+            .id(tableLayout)
             // Al volver a armarse (abrir o cerrar la ficha, cambiar el ancho), vuelve a donde ibas:
-            // la primera fila que veías, o lo elegido (auditoría 4 y 5: antes regresaba arriba).
-            .onChange(of: TableLayoutKey(inspector: showsInspector, widthStep: settledStep)) {
-                let firstVisible = rows.first { visibleRows.contains($0.id) }?.id
+            // la primera fila que veías, o lo elegido (auditorías 4 y 5: antes regresaba arriba).
+            // La primera visible se anota antes de rearmar: al rearmarse, las celdas se van y vacían
+            // la lista antes de llegar aquí (auditoría 6).
+            .onChange(of: tableLayout) {
+                let firstVisible = visible.anchor
                 let chosen = rows.first { selection.contains($0.id) }?.id
                 guard let id = firstVisible ?? chosen else { return }
-                Task { @MainActor in scroller.scrollTo(id, anchor: firstVisible == nil ? .center : .top) }
+                // Solo de arriba abajo (auditoría 6): `.top` y `.center` tienen x = 0.5 y, con la tabla
+                // más ancha que la vista, la corrían de lado y no se veía el título.
+                Task { @MainActor in scroller.scrollTo(id, anchor: firstVisible == nil ? Self.middleLeading : .topLeading) }
             }
         }
         .onGeometryChange(for: Int.self) { Int($0.size.width / Theme.Mac.column) } action: { widthStep = $0 }
-        // Se rearma cuando el ancho se queda quieto, no a cada paso.
-        .task(id: widthStep) {
+        // Se rearma cuando el ancho (y la ficha) se quedan quietos, una sola vez, no a cada paso.
+        .task(id: TableLayoutKey(inspector: showsInspector, widthStep: widthStep)) {
             try? await Task.sleep(for: Theme.Mac.relayoutPause)
-            if !Task.isCancelled { settledStep = widthStep }
+            guard !Task.isCancelled else { return }
+            let next = TableLayoutKey(inspector: showsInspector, widthStep: widthStep)
+            guard next != layout else { return }
+            visible.anchor = currentRows().first { visible.ids.contains($0.id) }?.id
+            // Más angosta que la última vez: los anchos guardados dejaban la tabla más ancha que la
+            // vista, corrida de lado y sin título. Se vuelven a repartir; lo que escondiste se queda.
+            if next.widthStep < savedStep {
+                columns = Self.keepingVisibility(of: columns)
+                narrowColumns = Self.keepingVisibility(of: narrowColumns)
+            }
+            savedStep = next.widthStep
+            layout = next
         }
         // De papel (MX-B): la tabla sobre el papel de Gabinete, sin franjas.
         .macPaper()
@@ -189,8 +231,8 @@ struct MacBookTable: View {
         .customizationID("portada")
         TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in
             MacCell(text: row.title, role: .title)
-                .onAppear { visibleRows.insert(row.id) }
-                .onDisappear { visibleRows.remove(row.id) }
+                .onAppear { visible.ids.insert(row.id) }
+                .onDisappear { visible.ids.remove(row.id) }
         }
             .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn)
             .customizationID("titulo")
@@ -205,10 +247,10 @@ struct MacBookTable: View {
     @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
     private var lowColumns: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
         TableColumn("Etiquetas", value: \MacBookRow.tagsKey) { (row: MacBookRow) in MacCell(text: row.tagsLabel, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.narrowColumn, ideal: roomy ? Theme.Mac.column : Theme.Mac.shortColumn)
             .customizationID("etiquetas")
         TableColumn("Avance", value: \MacBookRow.progress) { (row: MacBookRow) in MacCell(text: row.progressLabel, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
+            .width(min: Theme.Mac.narrowColumn, ideal: roomy ? Theme.Mac.shortColumn : Theme.Mac.narrowColumn)
             .customizationID("avance")
     }
 
@@ -225,7 +267,7 @@ struct MacBookTable: View {
     @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
     private var addedColumn: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
         TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in MacCell(text: row.addedLabel, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.narrowColumn, ideal: roomy ? Theme.Mac.column : Theme.Mac.shortColumn)
             .customizationID("agregado")
     }
 
@@ -255,10 +297,54 @@ struct MacBookTable: View {
             .defaultVisibility(.hidden)
     }
 
+    /// Las mismas columnas a la vista, sin los anchos guardados.
+    static func keepingVisibility(of old: TableColumnCustomization<MacBookRow>) -> TableColumnCustomization<MacBookRow> {
+        var fresh = TableColumnCustomization<MacBookRow>()
+        for column in sortColumns { fresh[visibility: column.id] = old[visibility: column.id] }
+        return fresh
+    }
+
+    /// Una tabla angosta: las columnas de a lado piden poco y el título se queda con el espacio.
+    private var roomy: Bool { CGFloat(tableLayout.widthStep) * Theme.Mac.column >= Theme.Mac.roomyTable }
+
+    /// El renglón a media altura, pegado a la orilla de inicio (sin correr de lado).
+    static let middleLeading = UnitPoint(x: 0, y: 0.5)
+
     /// La clave con que se vuelve a armar la tabla.
     private struct TableLayoutKey: Hashable {
         let inspector: Bool
         let widthStep: Int
+    }
+
+    /// Las filas a la vista y la primera de ellas al rearmar. Una clase: cambiarla no vuelve a
+    /// armar la vista.
+    final class VisibleRows {
+        var ids = Set<UUID>()
+        var anchor: UUID?
+    }
+
+    /// Las filas ya filtradas y ordenadas, con lo que las armó. Comparar los arreglos de libros es
+    /// casi gratis si no cambiaron (comparten memoria); filtrar y ordenar miles de filas, no.
+    final class RowCache {
+        struct Key: Equatable {
+            let books: [Book]
+            let shelf: [ShelfBook]
+            let reviews: [UUID: [MetadataCandidate]]
+            let section: MacSection
+            let query: String
+            let sortOrder: [KeyPathComparator<MacBookRow>]
+        }
+
+        private var key: Key?
+        private var rows: [MacBookRow] = []
+
+        func rows(for key: Key, make: () -> [MacBookRow]) -> [MacBookRow] {
+            if key != self.key {
+                rows = make()
+                self.key = key
+            }
+            return rows
+        }
     }
 
     /// Las columnas por las que se puede ordenar, con su nombre y su id de la tabla.
@@ -280,9 +366,9 @@ struct MacBookTable: View {
     private var hiddenSortLine: String? {
         guard let order = sortOrder.first,
               let column = Self.sortColumns.first(where: { $0.key == order.keyPath as PartialKeyPath<MacBookRow> }) else { return nil }
-        let customization = showsInspector ? narrowColumns : columns
+        let customization = tableLayout.inspector ? narrowColumns : columns
         let visibility = customization[visibility: column.id]
-        let hidden = (showsInspector && Self.wideOnly.contains(column.id)) || visibility == .hidden
+        let hidden = (tableLayout.inspector && Self.wideOnly.contains(column.id)) || visibility == .hidden
             || (Self.startHidden.contains(column.id) && visibility != .visible)
         guard hidden else { return nil }
         return "por \(column.name)" + (order.order == .reverse ? " (al revés)" : "")

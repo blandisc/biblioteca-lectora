@@ -750,7 +750,7 @@ final class DesignRulesTests: XCTestCase {
         // bajan de `Mac.nameColumn` (el título cede antes).
         let macTable = Self.screens.first { $0.path.hasSuffix("Mac/MacBookTable.swift") }?.text ?? ""
         var columns: [String] = []
-        if !macTable.contains("if showsInspector {") { columns.append("MacBookTable: con la ficha abierta enseña todas las columnas") }
+        if !macTable.contains("if tableLayout.inspector {") { columns.append("MacBookTable: con la ficha abierta enseña todas las columnas") }
         if macTable.components(separatedBy: "min: Theme.Mac.nameColumn").count - 1 < 2 { columns.append("MacBookTable: autor y serie se encogen más que el título") }
         check(columns, "Tabla de la Mac que no cabe junto a la ficha")
 

@@ -160,8 +160,9 @@ public enum FolderMove {
     /// hay que corregir → la ruta real. Un libro cuyo autor no está en el disco con ninguna
     /// mayúscula se salta sin leer nada más. Sin estado de la app: se puede correr fuera del hilo
     /// de la interfaz (auditoría 3: con 5,000 libros sin bajar tardaba 18 s en el hilo principal).
-    public static func repairedSpellings<Key: Hashable>(of paths: [Key: String], in root: URL) -> [Key: String] {
-        let index = SpellingIndex(root: root)
+    public static func repairedSpellings<Key: Hashable>(of paths: [Key: String], in root: URL,
+                                                        index: SpellingIndex? = nil) -> [Key: String] {
+        let index = index ?? SpellingIndex(root: root)
         var result: [Key: String] = [:]
         for (key, path) in paths {
             if let real = repairedSpelling(of: path, in: root, index: index) { result[key] = real }
@@ -232,10 +233,14 @@ public enum FolderMove {
         return left.isEqual(right)
     }
 
-    /// Quita la carpeta si ya no tiene nada (aparte de `.DS_Store`).
-    public static func removeIfEmpty(_ folder: URL) {
+    /// Quita la carpeta si ya no tiene nada (aparte de `.DS_Store`). Con `index`, lo que leyó de
+    /// la carpeta de arriba se pone al día (auditoría 6, M6: seguía viendo la carpeta quitada y el
+    /// siguiente libro de ese autor entraba a una que ya no existe).
+    public static func removeIfEmpty(_ folder: URL, index: SpellingIndex? = nil) {
         guard let contents = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return }
-        if contents.allSatisfy({ $0 == ".DS_Store" }) { try? FileManager.default.removeItem(at: folder) }
+        guard contents.allSatisfy({ $0 == ".DS_Store" }), (try? FileManager.default.removeItem(at: folder)) != nil else { return }
+        index?.refresh([folder.lastPathComponent], in: folder.deletingLastPathComponent())
+        index?.forget(folder)
     }
 
     /// Junta lo del disco con lo de este dispositivo: solo las claves que cambiaron aquí se

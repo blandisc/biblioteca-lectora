@@ -75,7 +75,8 @@ final class NotesStore: ObservableObject {
         let quote = NoteMarkdown.quote(annotation.quote, bookTitle: bookTitle, annotationID: annotation.id)
         var text = fileName.flatMap { note(fileName: $0)?.text } ?? "# \(newTitle ?? bookTitle)\n"
         text = NoteMarkdown.appending(quote, to: text)
-        if let note = annotation.note, !note.isEmpty { text += "\n" + note + "\n" }
+        // Con el final de renglón de la nota (auditoría 6): una de Windows no se queda con renglones mezclados.
+        if let note = annotation.note, !note.isEmpty { text = NoteMarkdown.appendingParagraph(note, to: text) }
         return try save(text: text, fileName: fileName)
     }
 }

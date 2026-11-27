@@ -160,12 +160,16 @@ public enum NoteMarkdown {
     /// Texto plano de una línea: sin `#`, `>`, `[[ ]]`, enlaces ni énfasis.
     public static func plain(_ line: String) -> String {
         var text = line.trimmingCharacters(in: .whitespaces)
-        if isComment(text) { return "" }
+        // Las cercas de un bloque de código no son texto (auditoría 6: «``` código…» en el Cuaderno).
+        if isComment(text) || fence(line) != nil { return "" }
         while text.hasPrefix("#") || text.hasPrefix(">") {
             text.removeFirst()
             text = text.trimmingCharacters(in: .whitespaces)
         }
-        if text.hasPrefix("- ") || text.hasPrefix("* ") { text.removeFirst(2) }
+        // Los guiones y números de una lista, y la casilla de una tarea (auditoría 6).
+        if let marker = text.range(of: #"^(?:[-*+]|\d{1,9}[.)])\s+(?:\[[ xX]\]\s+)?"#, options: .regularExpression) {
+            text.removeSubrange(marker)
+        }
         // [[Título|texto]] → texto; [[Título]] → Título
         var output = ""
         var rest = text[...]
@@ -183,7 +187,7 @@ public enum NoteMarkdown {
             let label = output[open.upperBound..<middle.lowerBound]
             output.replaceSubrange(open.lowerBound..<close.upperBound, with: label)
         }
-        return output.replacingOccurrences(of: "**", with: "")
+        return output.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "`", with: "")
             .replacingOccurrences(of: "__", with: "")
             .trimmingCharacters(in: .whitespaces)
     }
@@ -221,20 +225,49 @@ public enum NoteMarkdown {
     /// termina sus renglones en «\r\n» (o «\r»), que para Swift es un solo carácter; partir solo en
     /// «\n» no la partía y la marca se veía en el editor. Al volver a juntarla se usa el mismo final.
     static func lines(_ text: String) -> (lines: [String], separator: String) {
-        var lines: [String] = []
+        let split = rows(text)
+        return (split.map(\.text), split.lazy.map(\.ending).first { !$0.isEmpty } ?? "\n")
+    }
+
+    /// Un renglón y con qué termina («» el último). Con renglones mezclados (unos «\r\n», otros
+    /// «\n») cada uno conserva el suyo al volver a juntarlos (auditoría 6, B1: todos quedaban con
+    /// el del primero y la nota cambiaba entera al guardar).
+    struct Row: Equatable {
+        var text: String
+        var ending: String
+    }
+
+    static func rows(_ text: String) -> [Row] {
+        var rows: [Row] = []
         var current = ""
-        var separator: String?
         for character in text {
             if character == "\r\n" || character == "\n" || character == "\r" {
-                lines.append(current)
+                rows.append(Row(text: current, ending: String(character)))
                 current = ""
-                if separator == nil { separator = String(character) }
             } else {
                 current.append(character)
             }
         }
-        lines.append(current)
-        return (lines, separator ?? "\n")
+        rows.append(Row(text: current, ending: ""))
+        return rows
+    }
+
+    /// Vuelve a juntar los renglones, cada uno con su final; el último no lleva final aunque lo
+    /// tuviera (así quitar el último renglón no deja uno de más).
+    static func joined(_ rows: [Row]) -> String {
+        rows.enumerated().map { $0.element.text + ($0.offset == rows.count - 1 ? "" : $0.element.ending) }.joined()
+    }
+
+    /// El final de renglón de la nota (el primero que usa; «\n» si no tiene).
+    public static func lineEnding(of text: String) -> String {
+        lines(text).separator
+    }
+
+    /// Añade un párrafo tuyo (la nota de un subrayado) al final, con el final de renglón de la nota
+    /// (auditoría 6, B1: se le ponía «\n» a una nota de Windows).
+    public static func appendingParagraph(_ paragraph: String, to text: String) -> String {
+        let ending = lineEnding(of: text)
+        return text + ending + lines(paragraph).lines.joined(separator: ending) + ending
     }
 
     /// Una cerca de bloque de código (CommonMark): tres o más «`» o «~» seguidas, con hasta tres
@@ -284,9 +317,8 @@ public enum NoteMarkdown {
         let markers = markerLines(text)
         guard !markers.isEmpty else { return (text, []) }
         let hidden = Set(markers.map(\.index))
-        let split = lines(text)
-        let kept = split.lines.enumerated().filter { !hidden.contains($0.offset) }.map(\.element)
-        return (kept.joined(separator: split.separator), markers.map { $0.line.trimmingCharacters(in: .whitespaces) })
+        let kept = rows(text).enumerated().filter { !hidden.contains($0.offset) }.map(\.element)
+        return (joined(kept), markers.map { $0.line.trimmingCharacters(in: .whitespaces) })
     }
 
     /// Vuelve a poner las marcas que se quitaron para editar: debajo del título, donde la deja la
@@ -296,10 +328,12 @@ public enum NoteMarkdown {
         let present = Set(markerLines(text).map { $0.line.trimmingCharacters(in: .whitespaces) })
         let missing = comments.filter { !present.contains($0) }
         guard !missing.isEmpty else { return text }
-        var (rows, separator) = lines(text)
-        let at = rows.first?.trimmingCharacters(in: .whitespaces).hasPrefix("#") == true ? 1 : 0
-        rows.insert(contentsOf: missing, at: at)
-        return rows.joined(separator: separator)
+        var split = rows(text)
+        let separator = lineEnding(of: text)
+        let at = split.first?.text.trimmingCharacters(in: .whitespaces).hasPrefix("#") == true ? 1 : 0
+        if at == split.count, at > 0 { split[at - 1].ending = separator }
+        split.insert(contentsOf: missing.map { Row(text: $0, ending: separator) }, at: at)
+        return joined(split)
     }
 
     /// Lo que se guarda al terminar de escribir. Si dejaste la nota vacía (o solo «#»), vacío:
@@ -317,8 +351,7 @@ public enum NoteMarkdown {
     /// El texto en que se busca: sin comentarios, así «sesion» o «gabinete» no encuentran las
     /// notas de sesión por su marca escondida (auditoría 3). Los comentarios no se ven al leer.
     public static func searchText(_ text: String) -> String {
-        let split = lines(text)
-        return split.lines.filter { !isComment($0) }.joined(separator: split.separator)
+        joined(rows(text).filter { !isComment($0.text) })
     }
 
     /// Un comentario de Markdown en un renglón (`<!-- … -->`): no se enseña.
@@ -332,6 +365,9 @@ public enum NoteMarkdown {
         case heading(String)
         case paragraph(String)
         case quote(String)
+        /// Un bloque de código (entre cercas ```` ``` ```` o `~~~`), tal cual, con sus renglones
+        /// (auditoría 6: se juntaba en un solo renglón como párrafo).
+        case code(String)
     }
 
     /// Divide el texto en bloques. Las líneas `>` seguidas forman una cita; las
@@ -346,8 +382,25 @@ public enum NoteMarkdown {
             paragraph = []
             quote = []
         }
+        var code: (mark: Character, length: Int, lines: [String])?
         for raw in lines(text).lines {
             let line = raw.trimmingCharacters(in: .whitespaces)
+            // Dentro de un bloque de código todo es suyo, hasta su cerca (como en `markerLines`).
+            if let open = code {
+                if let close = fence(raw), close.mark == open.mark, close.length >= open.length,
+                   close.info.allSatisfy({ $0 == " " || $0 == "\t" }) {
+                    blocks.append(.code(open.lines.joined(separator: "\n")))
+                    code = nil
+                } else {
+                    code?.lines.append(raw)
+                }
+                continue
+            }
+            if let start = fence(raw) {
+                flush()
+                code = (start.mark, start.length, [])
+                continue
+            }
             if line.isEmpty {
                 flush()
             } else if isComment(line) {
@@ -364,6 +417,8 @@ public enum NoteMarkdown {
             }
         }
         flush()
+        // Un bloque sin cerrar llega hasta el final de la nota (CommonMark).
+        if let open = code { blocks.append(.code(open.lines.joined(separator: "\n"))) }
         return blocks
     }
 

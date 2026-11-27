@@ -132,7 +132,11 @@ final class AppModel: ObservableObject {
     /// El único camino para elegir libros que añadir (auditoría 5): el «+» de la Biblioteca, el de
     /// la Mac, Archivo › Añadir libros…, los vacíos y «Seguir leyendo» sin libro pasan por aquí.
     func addBooks() {
-        guard addBooksBlocked == nil else { return }
+        // Nunca en silencio (auditoría 6): «Seguir leyendo» sin libro también llega aquí.
+        if let reason = addBooksBlocked {
+            library.explain(EmptyCopy.addWhileDownloadingTitle, reason)
+            return
+        }
         importing = true
     }
 

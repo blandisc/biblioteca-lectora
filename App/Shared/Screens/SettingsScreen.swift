@@ -289,7 +289,14 @@ extension SettingsScreen {
                 }
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
-                .disabled(busy)
+                .disabled(busy || model.addBooksBlocked != nil)
+            // Mientras bajo tu biblioteca de iCloud no traigo nada de Calibre (auditoría 6).
+            if let blocked = model.addBooksBlocked, !busy {
+                Text(blocked)
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+                    .padding(.vertical, Theme.Space.s)
+            }
             // Un trabajo de toda la biblioteca a la vez (auditoría 4): te digo por qué lo demás espera.
             if let reason = model.library.busyReason, !model.library.moving, !model.library.tidying {
                 Text(reason)

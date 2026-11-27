@@ -28,9 +28,11 @@ struct CalibreMigrationScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.xl) {
                     switch step {
-                    case .choose: ChooseStep { choosing = true }
+                    case .choose: ChooseStep(blocked: model.addBooksBlocked) { choosing = true }
                     case .reading: progress(title: "Leyendo tu biblioteca de Calibre…", value: nil)
-                    case .review(let source, let plan): ReviewStep(plan: plan, busyReason: model.library.busyReason) { migrate(source: source, plan: plan) }
+                    // Mientras bajo tu biblioteca de iCloud, el plan saldría de una lista a medias (auditoría 6).
+                    case .review(let source, let plan):
+                        ReviewStep(plan: plan, busyReason: model.library.busyReason ?? model.addBooksBlocked) { migrate(source: source, plan: plan) }
                     case .migrating:
                         let done = model.library.progress
                         progress(title: done.map { "Trayendo \($0.done.counted("libro", "libros")) de \($0.total)…" } ?? "Trayendo…",
@@ -103,6 +105,8 @@ struct CalibreMigrationScreen: View {
 
 /// Paso 1: qué hace la migración y elegir la carpeta.
 private struct ChooseStep: View {
+    /// Por qué no puedo traerla ahora (bajo tu biblioteca de iCloud).
+    var blocked: String?
     let choose: () -> Void
 
     var body: some View {
@@ -113,7 +117,13 @@ private struct ChooseStep: View {
             Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no la toco. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
+            if let blocked {
+                Text(blocked)
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
+            }
             PrimaryButton(title: "Elegir la carpeta de Calibre", systemImage: "folder", action: choose)
+                .disabled(blocked != nil)
         }
     }
 }

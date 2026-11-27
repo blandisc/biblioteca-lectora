@@ -68,7 +68,7 @@ final class AuditoriaCuatroTests: XCTestCase {
         let update = body(of: "func update(_ edited: Book, cover newCover: Data? = nil, spelling index: SpellingIndex? = nil) throws -> Book {", in: store)
         XCTAssertTrue(update.contains("guard let original = current(edited.id)"), "Se compara con lo más reciente del registro")
         XCTAssertTrue(update.contains("book.filePath = original.filePath"), "Una edición vieja no regresa el libro a su carpeta vieja")
-        XCTAssertTrue(update.contains("if lock.current == .moving { throw LibraryError.busy(.moving) }"))
+        XCTAssertTrue(update.contains("try ensureCanEdit()") && store.contains("if lock.current == .moving { throw LibraryError.busy(.moving) }"))
         let repairs = body(of: "private func recordRepairs(", in: store)
         XCTAssertTrue(repairs.contains("current(id)"), "Las correcciones al abrir tampoco usan la lista vieja")
         XCTAssertTrue(store.contains("if lock.current != .tidying { repairPathCase() }"))
@@ -119,7 +119,7 @@ final class AuditoriaCuatroTests: XCTestCase {
             return XCTFail("Mover pasa a la copia lo que cambió mientras copiaba")
         }
         XCTAssertTrue(copy.upperBound <= catchUp.lowerBound && last.upperBound <= remember.lowerBound)
-        XCTAssertTrue(move.contains("guard copiedCount == expectedCount"), "La copia se comprueba exacta")
+        XCTAssertTrue(move.contains("complete = complete && pass.isComplete"), "La copia se comprueba exacta (auditoría 6: ni de más)")
         XCTAssertFalse(move.contains("copiedCount >= expectedCount"))
     }
 

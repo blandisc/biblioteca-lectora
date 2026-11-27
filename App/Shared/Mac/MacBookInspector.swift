@@ -56,6 +56,9 @@ struct MacBookInspector: View {
                 many(books)
             }
         }
+        // De papel, como la tabla (auditoría 6): la ficha se veía con el gris del sistema.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .macPaper()
         .onAppear(perform: load)
         // M12: al cambiar de libro se guarda lo que dejaste escrito, como en Finder o Fotos;
         // antes se perdía sin aviso.

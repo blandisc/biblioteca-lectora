@@ -65,6 +65,7 @@ struct WelcomeScreen: View {
                         BooksStep(count: model.library.books.count,
                                   importing: model.library.progressLine,
                                   importFraction: model.library.progressFraction,
+                                  blocked: model.addBooksBlocked,
                                   calibre: { migratingCalibre = true },
                                   add: { if model.addBooksBlocked == nil { importingBooks = true } }) {
                             step = .readwise
@@ -203,6 +204,8 @@ private struct BooksStep: View {
     /// «Añadiendo 3 de 32…» si hay una importación en curso.
     let importing: String?
     let importFraction: Double?
+    /// Por qué no puedo traer ni añadir libros ahora (bajo tu biblioteca de iCloud, auditoría 6).
+    let blocked: String?
     let calibre: () -> Void
     let add: () -> Void
     let next: () -> Void
@@ -223,16 +226,23 @@ private struct BooksStep: View {
                     .font(.subheadline)
                     .foregroundStyle(Theme.secondaryInk)
             }
-            Button(action: calibre) {
-                OptionRow(systemImage: "books.vertical", title: "Traer mi biblioteca de Calibre",
-                          detail: "Libros, datos, portadas, series y subrayados. No toco Calibre.")
+            Group {
+                Button(action: calibre) {
+                    OptionRow(systemImage: "books.vertical", title: "Traer mi biblioteca de Calibre",
+                              detail: "Libros, datos, portadas, series y subrayados. No toco Calibre.")
+                }
+                Button(action: add) {
+                    OptionRow(systemImage: "plus", title: "Añadir archivos",
+                              detail: "Desde \(DeviceKind.current.files), iCloud Drive o donde los tengas.")
+                }
             }
             .buttonStyle(.plain)
-            Button(action: add) {
-                OptionRow(systemImage: "plus", title: "Añadir archivos",
-                          detail: "Desde \(DeviceKind.current.files), iCloud Drive o donde los tengas.")
+            .disabled(blocked != nil)
+            if let blocked {
+                Text(blocked)
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
             }
-            .buttonStyle(.plain)
             // Sin libros, la salida es discreta: lo importante es traerlos.
             if count == 0 {
                 QuietButton(title: "Empezar sin libros", action: next)

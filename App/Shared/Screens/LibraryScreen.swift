@@ -52,6 +52,11 @@ struct LibraryScreen: View {
         }
     }
 
+    /// Sin libros porque tu biblioteca no ha bajado de iCloud (bajando o ya dejé de esperar).
+    private var cloudEmpty: Bool {
+        model.shelf.isEmpty && (model.library.waitingForCloud || model.library.cloudGaveUp)
+    }
+
     var body: some View {
         let books = self.books
         let indexed = showsLetterIndex(books)
@@ -60,24 +65,35 @@ struct LibraryScreen: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         ScreenHeading(title: "Biblioteca") {
-                            IconButton(systemImage: layout == .covers ? "list.bullet" : "square.grid.2x2",
-                                       label: layout == .covers ? "Ver como lista" : "Ver portadas") {
-                                withAnimation(Theme.Motion.standard) { layout = layout == .covers ? .list : .covers }
+                            // Sin libros que ver mientras bajo (o dejé de esperar) no hay nada que acomodar.
+                            if !cloudEmpty {
+                                IconButton(systemImage: layout == .covers ? "list.bullet" : "square.grid.2x2",
+                                           label: layout == .covers ? "Ver como lista" : "Ver portadas") {
+                                    withAnimation(Theme.Motion.standard) { layout = layout == .covers ? .list : .covers }
+                                }
                             }
-                            // El único acento verde de la pantalla. Mientras bajo tu biblioteca de iCloud
-                            // no sale: el vacío dice por qué (auditoría 5).
-                            if model.addBooksBlocked == nil {
-                                AccentIconButton(systemImage: LibraryAction.addBooks.symbol, label: LibraryAction.addBooks.title) { model.addBooks() }
-                            }
+                            // El único acento verde de la pantalla. Mientras bajo tu biblioteca de iCloud se
+                            // ve apagado y abajo digo por qué (auditoría 6: escondido, no sabías por qué).
+                            AccentIconButton(systemImage: LibraryAction.addBooks.symbol, label: LibraryAction.addBooks.title) { model.addBooks() }.disabled(model.addBooksBlocked != nil)
                         }
 
-                        FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
-                            .padding(.top, Theme.Space.s)
+                        if !cloudEmpty {
+                            FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
+                                .padding(.top, Theme.Space.s)
+                        }
+                        // Con libros a la vista, el porqué del «+» apagado (sin libros lo dice el vacío).
+                        if let blocked = model.addBooksBlocked, !model.shelf.isEmpty {
+                            Text(blocked)
+                                .font(.footnote)
+                                .foregroundStyle(Theme.secondaryInk)
+                                .padding(.top, Theme.Space.s)
+                        }
 
                         // Del conteo para abajo, todo deja libre la columna del índice A–Z.
                         VStack(alignment: .leading, spacing: 0) {
                             // Mientras bajo tu biblioteca de iCloud no digo «0 libros» (auditoría 5): el vacío dice qué pasa.
-                            if !(model.shelf.isEmpty && model.library.waitingForCloud) {
+                            // Ni «0 libros» si dejé de esperar: el vacío dice que no ha bajado (auditoría 6).
+                            if !cloudEmpty {
                                 CountLine(text: summary(books)) {
                                     // Sin libros a la vista no hay nada que ordenar (auditoría 4).
                                     if !books.isEmpty {

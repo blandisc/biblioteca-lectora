@@ -87,9 +87,15 @@ final class AuditoriaTresTests: XCTestCase {
         for number in 0..<5_000 { table[10_000 + number] = "Nadie \(number)/Libro (\(number))/libro.epub" }
         // Uno guardado con otras mayúsculas: ese sí se corrige.
         table[1] = paths[1].lowercased()
+        // Sin medir el reloj (auditoría 6, B5: en una Mac ocupada fallaba): se cuenta lo que se lee
+        // del disco. Antes cada libro sin bajar volvía a leer la carpeta con los 300 autores.
+        let index = SpellingIndex(root: root)
         let start = Date()
-        let fixes = FolderMove.repairedSpellings(of: table, in: root)
-        XCTAssertLessThan(Date().timeIntervalSince(start), 2, "Antes: 5,000 libros sin bajar tardaban 18 s")
+        let fixes = FolderMove.repairedSpellings(of: table, in: root, index: index)
+        XCTAssertEqual(index.listings(of: root), 1, "La carpeta de los autores se lee una sola vez")
+        XCTAssertLessThanOrEqual(index.listings, 3, "Y casi nada más: la raíz y, si hace falta, el autor y el libro")
+        XCTAssertLessThanOrEqual(index.entriesRead, 300 + 10, "Se leen los nombres de los autores una vez")
+        XCTAssertLessThan(Date().timeIntervalSince(start), 30, "Solo un tope muy holgado, por si algo se cuelga")
         // En un disco que distingue mayúsculas (el iPhone) se corrige; en uno que no, ya se abre así.
         let sensitive = !FileManager.default.fileExists(atPath: root.appendingPathComponent(paths[1].lowercased()).path)
         XCTAssertEqual(fixes, sensitive ? [1: paths[1]] : [:], "Solo se corrige el que está con otras mayúsculas")
@@ -171,12 +177,31 @@ final class AuditoriaTresTests: XCTestCase {
         let pending = PendingWrites(directory: try tempDir())
         // Lo de antes (una lista entera) se sigue leyendo.
         pending.set(["antes"], "registro.json")
+        // Sin medir el reloj (auditoría 6, B5): cada guardado agrega su renglón al mismo archivo, sin
+        // reescribirlo (el archivo es el mismo de principio a fin y crece justo lo de su renglón) y
+        // sin tocar la lista de antes.
+        let legacy = pending.directory.appendingPathComponent("registro.json")
+        let legacyBefore = try Data(contentsOf: legacy)
+        // Del disco cada vez (los valores de `URL` se guardan en caché).
+        let attributes = { (url: URL) in (try? FileManager.default.attributesOfItem(atPath: url.path)) ?? [:] }
+        let fileNumber = { (url: URL) in attributes(url)[.systemFileNumber] as? NSNumber }
+        let linesFile = pending.directory.appendingPathComponent("registro.jsonl")
         let start = Date()
-        for number in 0..<2_000 { XCTAssertTrue(pending.appendLines(["página \(number)"], "registro.json")) }
-        XCTAssertLessThan(Date().timeIntervalSince(start), 2, "Cada guardado solo agrega su renglón")
+        var expectedSize = 0
+        var identity: NSNumber?
+        for number in 0..<2_000 {
+            XCTAssertTrue(pending.appendLines(["página \(number)"], "registro.json"))
+            expectedSize += try JSONEncoder().encode("página \(number)").count + 1
+            let size = (attributes(linesFile)[.size] as? NSNumber)?.intValue
+            if size != expectedSize { return XCTFail("Se reescribió la lista entera en el guardado \(number)") }
+            if identity == nil { identity = fileNumber(linesFile) } else if fileNumber(linesFile) != identity {
+                return XCTFail("Cada guardado debe agregar al mismo archivo, no reemplazarlo (\(number))")
+            }
+        }
+        XCTAssertEqual(try Data(contentsOf: legacy), legacyBefore, "La lista de antes no se reescribe")
+        XCTAssertLessThan(Date().timeIntervalSince(start), 30, "Solo un tope muy holgado, por si algo se cuelga")
         // Un renglón cortado (la app se cerró a media escritura) se salta; lo siguiente no se pega.
-        let lines = pending.directory.appendingPathComponent("registro.jsonl")
-        let handle = try FileHandle(forWritingTo: lines)
+        let handle = try FileHandle(forWritingTo: linesFile)
         _ = try handle.seekToEnd()
         try handle.write(contentsOf: Data("\"cort".utf8))
         try handle.close()

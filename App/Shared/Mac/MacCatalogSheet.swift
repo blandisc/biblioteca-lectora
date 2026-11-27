@@ -125,13 +125,7 @@ struct MacCatalogSheet: View {
         let final = existing ?? trimmed
         let change = library.rename(CatalogRename(field: target.field, from: sources, to: final))
         if change.refused != nil { return }
-        if !change.originals.isEmpty {
-            let library = library
-            undoManager?.registerUndo(withTarget: library) { store in
-                MainActor.assumeIsolated { store.restore(change) }
-            }
-            undoManager?.setActionName(merges ? "Juntar \(fieldNoun)" : "Renombrar \(fieldNoun)")
-        }
+        library.registerUndo(change, named: merges ? "Juntar \(fieldNoun)" : "Renombrar \(fieldNoun)", in: undoManager)
         guard change.failed.isEmpty else {
             failed = change.failed
             return

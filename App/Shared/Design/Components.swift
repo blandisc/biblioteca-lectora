@@ -357,6 +357,7 @@ struct CapsText: View {
 struct SectionHeader<Trailing: View>: View {
     let title: String
     @ViewBuilder var trailing: Trailing
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     /// La acción de la derecha no se parte en renglones: si no cabe junto al rótulo,
     /// baja a su propio renglón («Darlos por buenos» se partía en tres).
@@ -373,13 +374,25 @@ struct SectionHeader<Trailing: View>: View {
         }
     }
 
+    /// Con la letra más grande el rótulo ocupa dos renglones y la raya de al lado quedaba en un
+    /// pedacito (auditoría 6): ahí va debajo, a todo lo ancho.
+    @ViewBuilder
     private var heading: some View {
-        HStack(spacing: Theme.Space.l) {
-            CapsText(text: title)
-                .layoutPriority(1)
-                .accessibilityAddTraits(.isHeader)
-            Hairline()
-                .accessibilityHidden(true)
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                CapsText(text: title)
+                    .accessibilityAddTraits(.isHeader)
+                Hairline()
+                    .accessibilityHidden(true)
+            }
+        } else {
+            HStack(spacing: Theme.Space.l) {
+                CapsText(text: title)
+                    .layoutPriority(1)
+                    .accessibilityAddTraits(.isHeader)
+                Hairline()
+                    .accessibilityHidden(true)
+            }
         }
     }
 }
@@ -2469,6 +2482,13 @@ struct NoteBody: View {
                         .lineSpacing(Theme.Space.xs)
                 case .quote(let quote):
                     quoteView(quote)
+                case .code(let code):
+                    // Tal cual, renglón por renglón y sin enlaces: es tuyo (auditoría 6).
+                    Text(verbatim: code)
+                        .font(.code)
+                        .padding(Theme.Space.s)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
                 }
             }
         }
@@ -2623,8 +2643,11 @@ enum EmptyCopy {
     /// siempre; te dejo añadir libros o volver a la bienvenida.
     static let cloudGaveUp = (title: "Tu biblioteca no ha bajado",
                               message: "Le pedí a iCloud tu biblioteca y todavía no llega. Si ya tenías libros en otro aparato, aparecen aquí en cuanto baje; si es tu primer Gabinete, añade libros o vuelve a la bienvenida.")
-    /// Por qué no ofrezco añadir libros mientras bajo la tuya (auditoría 5).
-    static let addWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para añadir libros."
+    /// Por qué no añado ni traigo libros mientras bajo la tuya (auditorías 5 y 6), por ningún lado:
+    /// el «+», la bienvenida, Ajustes, Traer de Calibre, arrastrar y la biblioteca misma.
+    static let addWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para añadir libros o traer los de Calibre."
+    /// El título del aviso cuando tocaste algo que añade libros mientras bajo la tuya.
+    static let addWhileDownloadingTitle = "Todavía no puedo añadir libros"
     /// Volver a la bienvenida desde una biblioteca que no bajó.
     static let openWelcome = "Volver a la bienvenida"
     static func noMatch(_ what: String) -> (title: String, message: String) {
@@ -2635,7 +2658,7 @@ enum EmptyCopy {
     static let noDuplicates = (title: "Sin libros repetidos",
                                message: "No encontré dos libros con el mismo título y un autor parecido, ni con el mismo ISBN.")
     static let chooseBook = (title: "Elige un libro",
-                             message: "Elige uno en la tabla para ver y cambiar sus datos.")
+                             message: "Haz clic en uno de la tabla para ver y cambiar sus datos.")
 }
 
 /// Cómo está una biblioteca sin libros respecto de iCloud (auditoría 4): bajando, ya no la

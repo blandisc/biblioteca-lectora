@@ -68,7 +68,11 @@ public enum FolderCatchUp {
         public var touched = 0
         public var expected = 0
         public var present = 0
-        public var isComplete: Bool { present == expected }
+        /// Lo que quedó en `destination` sin estar en `source` (auditoría 6, B3: «ni de más» no se
+        /// comprobaba). En una copia que es toda de esta corrida, siempre 0 si salió bien.
+        public var extra = 0
+        /// Ni de menos ni de más.
+        public var isComplete: Bool { present == expected && extra == 0 }
     }
 
     /// Los nombres que hay en una carpeta (rutas relativas), contando un marcador de iCloud como
@@ -126,6 +130,8 @@ public enum FolderCatchUp {
             copied.remove(relative)
             pass.touched += 1
         }
+        // Lo que sobra al terminar (no se pudo quitar o no era de esta corrida).
+        pass.extra = entries(in: destination, keys: []).keys.filter { sourceEntries[$0] == nil }.count
         return pass
     }
 
@@ -194,6 +200,75 @@ public enum FolderCatchUp {
             result[relative] = Entry(values: values)
         }
         return result
+    }
+}
+
+/// Mover el Gabinete copia a carpetas de trabajo hermanas y solo al final las pone en su lugar
+/// (auditoría 6, M1). Antes se copiaba directo a `Biblioteca` y `Notas`: si iCloud bajaba ahí las
+/// de otro aparato a media copia, se contaban como de esta corrida y, si algo fallaba, se borraban.
+/// Las carpetas de trabajo son solo de esta corrida (nadie más conoce su nombre): todo lo que hay
+/// dentro es suyo y quitarlas nunca toca lo de otro.
+public struct StagedMove: Sendable {
+    public let destination: URL
+    public let folders: [String]
+    public let token: String
+
+    public init(destination: URL, folders: [String], token: String = UUID().uuidString) {
+        self.destination = destination
+        self.folders = folders
+        self.token = token
+    }
+
+    public enum Failure: Error, Equatable {
+        /// Mientras copiaba llegó a la carpeta otra con ese nombre (p. ej. de otro aparato): no se pisa.
+        case occupied(String)
+    }
+
+    /// La carpeta de trabajo de `folder` (`.gabinete-copia-<token>-Biblioteca`), escondida.
+    public func staging(_ folder: String) -> URL {
+        destination.appendingPathComponent(".gabinete-copia-\(token)-\(folder)", isDirectory: true)
+    }
+
+    /// Dónde va, mientras se copia, una ruta relativa al Gabinete («Biblioteca/.lectora»).
+    public func staged(_ relative: String) -> URL {
+        let parts = relative.split(separator: "/", maxSplits: 1).map(String.init)
+        let top = staging(parts[0])
+        return parts.count > 1 ? top.appendingPathComponent(parts[1]) : top
+    }
+
+    /// Pone cada carpeta de trabajo en su lugar, sin pisar nada, y devuelve las que puso. Si una ya
+    /// está ocupada, las que ya puso regresan a su carpeta de trabajo y falla: el destino queda
+    /// como estaba.
+    @discardableResult
+    public func place() throws -> [String] {
+        let manager = FileManager.default
+        var placed: [String] = []
+        for folder in folders where manager.fileExists(atPath: staging(folder).path) {
+            let target = destination.appendingPathComponent(folder, isDirectory: true)
+            do {
+                guard !CloudFile.isTaken(target) else { throw Failure.occupied(folder) }
+                // `moveItem` no reemplaza: si llegó justo ahora, también falla.
+                try manager.moveItem(at: staging(folder), to: target)
+                placed.append(folder)
+            } catch {
+                takeBack(placed)
+                if CloudFile.isTaken(target) { throw Failure.occupied(folder) }
+                throw error
+            }
+        }
+        return placed
+    }
+
+    /// Regresa a su carpeta de trabajo lo que `place` puso (solo eso: lo demás no es de esta corrida).
+    public func takeBack(_ placed: [String]) {
+        for folder in placed.reversed() {
+            try? FileManager.default.moveItem(at: destination.appendingPathComponent(folder, isDirectory: true), to: staging(folder))
+        }
+    }
+
+    /// Quita las carpetas de trabajo (solo esas: lo demás del destino no es de esta corrida).
+    public func discard() {
+        for folder in folders { try? FileManager.default.removeItem(at: staging(folder)) }
     }
 }
 
