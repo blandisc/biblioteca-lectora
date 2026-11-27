@@ -26,8 +26,11 @@ struct MesaScreen: View {
                         if let book = model.currentBook {
                             current(book)
                         } else {
-                            EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
-                                       actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
+                            // Con tu biblioteca todavía en iCloud no ofrezco añadir: la Biblioteca dice
+                            // «Bajando tu biblioteca» y aquí también (auditoría 4).
+                            LibraryEmptyState(kind: LibraryEmptyKind(waitingForCloud: model.library.waitingForCloud,
+                                                                     cloudGaveUp: model.library.cloudGaveUp),
+                                              add: { model.addBooks() }, welcome: { model.welcomeRequested = true })
                         }
                     }
                 }

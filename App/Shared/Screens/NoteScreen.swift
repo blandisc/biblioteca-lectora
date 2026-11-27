@@ -174,7 +174,8 @@ struct NoteScreen: View {
 
     private func save() {
         do {
-            let saved = try notes.save(text: NoteMarkdown.restoringComments(hidden, in: text), fileName: fileName)
+            // Vacía se borra, también la de una sesión: la marca no vuelve a una nota sin nada (auditoría 4).
+            let saved = try notes.save(text: NoteMarkdown.savedText(text, restoring: hidden), fileName: fileName)
             fileName = saved?.fileName
         } catch {
             errorMessage = error.localizedDescription

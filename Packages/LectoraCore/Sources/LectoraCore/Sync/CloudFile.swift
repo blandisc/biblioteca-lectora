@@ -110,6 +110,7 @@ public enum SideFile {
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try data.write(to: url, options: .atomic)
+            WriteJournal.shared.note(url)
         } catch {
             return .postponed
         }

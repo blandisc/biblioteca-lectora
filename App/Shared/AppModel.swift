@@ -23,6 +23,8 @@ final class AppModel: ObservableObject {
     @Published var openBook: OpenBook?
     /// Resumen de una importación con duplicados o errores.
     @Published var importReport: String?
+    /// «Volver a la bienvenida» desde una biblioteca que no bajó de iCloud (auditoría 4): la raíz la abre.
+    @Published var welcomeRequested = false
     /// Libro que suena en el mini reproductor. Por ahora solo la interfaz: el audio llega con el modo audiolibro.
     @Published var listening: ShelfBook?
     private var observations: [AnyCancellable] = []
@@ -118,6 +120,23 @@ final class AppModel: ObservableObject {
 
     func continueReading() {
         if let book = currentBook, open(book, fromCover: true) { return }
+        addBooks()
+    }
+
+    /// Por qué no puedo añadir libros ahora (nil si puedo): mientras bajo tu biblioteca de iCloud,
+    /// añadirlos los duplicaría (auditoría 5). Lo dicen el «+», la barra de la Mac y el menú.
+    var addBooksBlocked: String? {
+        library.waitingForCloud ? EmptyCopy.addWhileDownloading : nil
+    }
+
+    /// El único camino para elegir libros que añadir (auditoría 5): el «+» de la Biblioteca, el de
+    /// la Mac, Archivo › Añadir libros…, los vacíos y «Seguir leyendo» sin libro pasan por aquí.
+    func addBooks() {
+        // Nunca en silencio (auditoría 6): «Seguir leyendo» sin libro también llega aquí.
+        if let reason = addBooksBlocked {
+            library.explain(EmptyCopy.addWhileDownloadingTitle, reason)
+            return
+        }
         importing = true
     }
 

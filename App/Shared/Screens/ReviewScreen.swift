@@ -308,6 +308,8 @@ struct CandidatesScreen: View {
     @State private var editing = false
     @State private var searchingOther = false
     @State private var unreachable = false
+    /// Lo encontré pero no lo pude guardar: otro trabajo corre (mover el Gabinete). No es «sin conexión».
+    @State private var busyReason: String?
 
     private var book: ShelfBook? { model.shelfBook(id: bookID.uuidString) }
     private var candidates: [MetadataCandidate] { model.library.reviews[bookID] ?? [] }
@@ -329,6 +331,9 @@ struct CandidatesScreen: View {
                     if searching {
                         LoadingLine(text: "Buscando en internet…")
                             .padding(.vertical, Theme.Space.xl)
+                    } else if let busyReason {
+                        EmptyState(title: "Espera un momento",
+                                   message: "\(busyReason) En cuanto termine, lo vuelvo a buscar solo.")
                     } else if unreachable {
                         EmptyState(title: "Sin conexión",
                                    message: "No pude preguntar en internet. Lo intento de nuevo cuando vuelvas a abrir la app, o ahora:")
@@ -379,7 +384,7 @@ struct CandidatesScreen: View {
                 OtherSearchSheet(book: record) { title, author, isbn in
                     Task {
                         let decision = await model.library.search(title: title, author: author, isbn: isbn, for: bookID)
-                        unreachable = decision == .unreachable
+                        show(decision)
                     }
                 }
                 .duoBars()
@@ -391,8 +396,13 @@ struct CandidatesScreen: View {
     }
 
     private func research() async {
-        let decision = await model.library.identify(bookID, askAlways: true)
+        show(await model.library.identify(bookID, askAlways: true))
+    }
+
+    /// Sin conexión y ocupado son dos cosas (auditoría 6): cada una con sus palabras.
+    private func show(_ decision: MetadataService.Decision?) {
         unreachable = decision == .unreachable
+        busyReason = decision == .busy ? (model.library.busyReason ?? LibraryWork.moving.reason) : nil
     }
 }
 

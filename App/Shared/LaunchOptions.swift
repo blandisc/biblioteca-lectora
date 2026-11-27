@@ -42,6 +42,10 @@ enum LaunchOptions {
     /// cambiar de tamaño (girar, o abrir y cerrar el iPhone Duo) sigas en el mismo lugar.
     static var turn: String? { UserDefaults.standard.string(forKey: "screenshot.turn") }
     static var turnAfter: Double { UserDefaults.standard.double(forKey: "screenshot.turnAfter") }
+    /// Solo en DEBUG: la biblioteca como si iCloud no la hubiera bajado, para revisar esas
+    /// pantallas sin dejar marcadores a mano (auditoría 5): `downloading` («Bajando tu biblioteca»)
+    /// o `gaveUp` (ya no la espero). `-screenshot.cloud downloading`.
+    static var cloud: String? { UserDefaults.standard.string(forKey: "screenshot.cloud") }
 }
 
 /// Lo que falta decidir para el iPhone Duo (propuesta del 27 nov 2026). Hasta que Fernando

@@ -88,6 +88,12 @@ struct RootView: View {
             // Primer arranque: dónde vive tu Gabinete, tus libros y Readwise.
             .modifier(WelcomeCover(isPresented: $showsWelcome, model: model))
             .onChange(of: welcomeSeen) { _, seen in if seen { showsWelcome = false } }
+            // Tu biblioteca no bajó de iCloud: desde el vacío puedes volver a la bienvenida (auditoría 4).
+            .onChange(of: model.welcomeRequested) { _, asked in
+                guard asked else { return }
+                model.welcomeRequested = false
+                showsWelcome = true
+            }
             // Al cerrar el libro, el resumen de la sesión.
             .sheet(item: $sessions.justFinished) { session in
                 SessionSummarySheet(session: session).environmentObject(model).duoBars()
@@ -165,6 +171,6 @@ private struct LibraryNotice: ViewModifier {
     @ObservedObject var library: LibraryStore
 
     func body(content: Content) -> some View {
-        content.noticeAlert("No pude leer un archivo de tu Gabinete", message: $library.notice, back: "Volver a mi biblioteca")
+        content.noticeAlert(library.noticeTitle, message: $library.notice, back: "Volver a mi biblioteca")
     }
 }

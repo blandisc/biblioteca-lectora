@@ -49,6 +49,19 @@ nuestro queda fuera.
   (auditoría 2; `AuditoriaDosTests`). Un registro que iCloud no ha bajado no es uno vacío (la
   biblioteca dice «Bajando tu biblioteca» y vuelve a leer), mover el Gabinete primero escribe lo
   que esperaba y lo que espera solo crece renglón por renglón (auditoría 3).
+- Lo que guardas se guarda sobre lo de ahora: después de esperar a internet o a otro trabajo,
+  cada cambio vuelve a leer el libro y toca solo su dato (Hardcover revertía tus ediciones); si
+  no se pudo guardar, lo encontrado se queda pendiente o en «Por revisar», nunca se tira; y un
+  registro que no se pudo leer no vacía la biblioteca. Deshacer tampoco deja las cosas a medias
+  (auditoría 6): si otro trabajo de toda la biblioteca corre, no toco nada, te digo por qué y el
+  deshacer se queda para después; y regresa solo los datos que ese cambio tocó, sobre el libro de
+  ahora (`Book.revertingEdits`). Lo que se quedó sin guardar por un trabajo largo se busca de nuevo
+  en cuanto termina, y dice «espera», no «sin conexión». Mover el Gabinete no borra lo tuyo ni lo
+  de otro aparato: copia a carpetas de trabajo hermanas (`StagedMove`), todas de esa corrida, y
+  solo al final las pone en su lugar sin pisar lo que haya llegado; si falla quita solo esas para
+  que puedas volver a intentarlo; la copia se comprueba ni de menos ni de más, y su último repaso
+  va en segundo plano: lo que escribes mientras lo anota `WriteJournal` y se copia justo antes
+  del cambio (auditorías 5 y 6; `AuditoriaCincoTests`, `AuditoriaSeisTests`).
 - Una carpeta nunca tiene una gemela que solo cambia en mayúsculas: iCloud y la Mac no las
   distinguen y el iPhone sí. Si ya existe con otras mayúsculas, el libro entra a ella y el
   catálogo guarda el nombre que tiene en el disco (`FolderMove.createFolder`,
@@ -58,7 +71,14 @@ nuestro queda fuera.
   abrir la app y traer de Calibre no se congelan aunque tengas miles de libros: el disco se lee
   una vez por carpeta (`SpellingIndex`), los libros se arman una vez al final y la corrección al
   abrir corre fuera del hilo de la interfaz (auditoría 3; `AuditoriaTresTests`, 5,000 libros y
-  1,500 autores en menos de 2 s).
+  1,500 autores leyendo la carpeta de los autores una sola vez, también al mover libros).
+- Mientras ordeno o muevo tu Gabinete, lo que cambias no se pierde ni se revierte: un solo
+  trabajo de toda la biblioteca a la vez («Ordenar», mover el Gabinete, traer de Calibre,
+  añadir libros; `WorkLock`): lo que añades espera su turno, lo demás te dice por qué espera;
+  cada libro se vuelve a leer del registro justo antes de ordenarlo, y lo que guardas mientras
+  copio el Gabinete (la página, una sesión, una nota) pasa a la copia antes de borrar la vieja
+  (auditoría 4; `AuditoriaCuatroTests`). Si iCloud no baja un registro, te enseño lo que sí
+  llegó y dejo de esperar con un aviso, sin quitar ningún libro.
 - Pendiente (A7, diseño): el registro crece con cada página asentada (4 cambios cada vez). La
   compactación sería que cada dispositivo reescriba solo su `<id>.jsonl` con el último cambio
   de cada campo y todas las lápidas (gana el último por campo, así que el estado no cambia),

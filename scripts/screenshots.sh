@@ -27,6 +27,9 @@ xcrun simctl boot "$DEVICE" || true
 xcrun simctl bootstatus "$DEVICE" -b
 
 # SKIP_BUILD=1 reutiliza la app ya compilada en DERIVED.
+# Para revisar a mano lo que pasa con iCloud (solo en DEBUG): `-screenshot.cloud downloading`
+# abre con «Bajando tu biblioteca» y `-screenshot.cloud gaveUp` como si ya no la esperara
+# (p. ej. xcrun simctl launch <udid> <bundle> -screenshot.cloud downloading).
 [ -n "${SKIP_BUILD:-}" ] || xcodebuild -project Lectora.xcodeproj -scheme Lectora_iOS -configuration Debug \
   -destination "id=$DEVICE" -derivedDataPath "${DERIVED:-build/screens}" build CODE_SIGNING_ALLOWED=NO -quiet
 xcrun simctl install "$DEVICE" "${DERIVED:-build/screens}"/Build/Products/Debug-iphonesimulator/Gabinete.app

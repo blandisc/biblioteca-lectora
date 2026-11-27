@@ -167,14 +167,15 @@ struct SessionSummarySheet: View {
                 .init(value: ReadingFormat.duration(session.seconds(in: .immersed)), label: "inmersa"),
                 .init(value: session.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
             ])
-            // Del mismo ancho y en un renglón, o uno bajo otro: «Cerrar el resumen» se partía en dos.
+            // Del mismo ancho y en un renglón, o uno bajo otro. «Cerrar resumen» y no «Cerrar el resumen»: no
+            // cabía en medio ancho y con la letra de siempre iban uno bajo otro (auditoría 4).
             ButtonPair {
                 SecondaryButton(title: "Escribir sobre ella") {
                     do { writing = try SessionNote.open(session, bookTitle: book?.title ?? MetadataCleaner.untitled) } catch {
                         notice = error.localizedDescription
                     }
                 }
-                PrimaryButton(title: "Cerrar el resumen", fillsWidth: true) { dismiss() }
+                PrimaryButton(title: "Cerrar resumen", fillsWidth: true) { dismiss() }
             }
         }
     }

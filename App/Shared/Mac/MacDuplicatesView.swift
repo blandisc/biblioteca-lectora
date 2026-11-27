@@ -18,6 +18,10 @@ struct MacDuplicatesView: View {
             if let notice {
                 Text(notice).foregroundStyle(Theme.secondaryInk)
             }
+            // Por qué no junto ahora, a la vista y no solo al pasar el ratón (auditoría 5), como en Ajustes.
+            if let reason = library.busyReason, !groups.isEmpty {
+                Text(reason).font(.footnote).foregroundStyle(Theme.secondaryInk)
+            }
             ForEach(groups, id: \.first?.id) { group in
                 Section {
                     ForEach(group) { book in row(book, in: group) }
@@ -29,6 +33,9 @@ struct MacDuplicatesView: View {
                         Button("No son el mismo") { library.dismissDuplicates(group) }
                         Button("Juntar en uno…") { confirming = group }
                             .macMainAction()
+                            // Mientras ordeno, muevo o traigo de Calibre no junto, y te digo por qué (auditoría 4).
+                            .disabled(library.busyReason != nil)
+                            .help(library.busyReason ?? "")
                     }
                 }
             }

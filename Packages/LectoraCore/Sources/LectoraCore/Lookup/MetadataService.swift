@@ -20,6 +20,10 @@ public struct MetadataService: Sendable {
         case notFound
         /// No se pudo preguntar (sin internet o fuentes caídas): se intenta después.
         case unreachable
+        /// Lo encontré pero no lo guardé: otro trabajo de toda la biblioteca corre (mover el
+        /// Gabinete). Se queda pendiente y se repite en cuanto termine (auditoría 6: decía «sin
+        /// conexión» y solo se repetía al volver a abrir la app).
+        case busy
     }
 
     public struct Result: Sendable {

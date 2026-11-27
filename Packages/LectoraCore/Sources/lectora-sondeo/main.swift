@@ -103,6 +103,7 @@ for item in corpus {
     case .review: decision = "revisar"
     case .notFound: decision = "no está"
     case .unreachable: decision = "sin red"
+    case .busy: decision = "ocupado"
     }
     let status: String = problems.isEmpty ? "✅" : "❌ " + problems.joined(separator: "; ")
     let bestName: String = best.map { "\($0.title) — \($0.authors.first ?? "?")" } ?? "—"

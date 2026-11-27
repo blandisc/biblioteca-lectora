@@ -234,7 +234,10 @@ private struct MacSidebar: View {
             try? await Task.sleep(for: .seconds(3))
             guard let first = values(for: .author, rows).first?.0 else { return }
             if let name = UserDefaults.standard.string(forKey: "screenshot.query") {
-                library.rename(CatalogRename(field: .author, from: [first], to: name))
+                if let refused = library.rename(CatalogRename(field: .author, from: [first], to: name)).refused {
+                    library.explain("No renombré el autor", refused)
+                    return
+                }
                 selection = .author(name)
             } else {
                 renaming = .init(field: .author, value: first)
@@ -270,12 +273,12 @@ private struct MacSidebar: View {
     /// Los tomos 1, 2, 3…, con ⌘Z para deshacer.
     private func renumber(_ series: String) {
         let change = library.renumber(series: series)
-        guard !change.originals.isEmpty else { return }
-        let library = library
-        undoManager?.registerUndo(withTarget: library) { store in
-            MainActor.assumeIsolated { store.restore(change) }
+        // Si no pude (otro trabajo corre), te digo por qué en vez de no hacer nada (auditoría 6).
+        if let refused = change.refused {
+            library.explain("No renumeré los tomos", refused)
+            return
         }
-        undoManager?.setActionName("Renumerar tomos")
+        library.registerUndo(change, named: "Renumerar tomos", in: undoManager)
     }
 
     private func item(_ section: MacSection, _ symbol: String, _ count: Int) -> some View {
@@ -309,6 +312,7 @@ private struct MacSidebar: View {
                             Button("Renombrar o juntar…") { renaming = .init(field: field, value: value) }
                             if field == .series {
                                 Button("Renumerar tomos 1, 2, 3…") { renumber(value) }
+                                    .disabled(library.busyReason != nil)
                             }
                         }
                     }
@@ -322,6 +326,23 @@ private struct MacSidebar: View {
     private func values(_ all: [String]) -> [(String, Int)] {
         Dictionary(all.map { ($0, 1) }, uniquingKeysWith: +)
             .sorted { $0.key.localizedStandardCompare($1.key) == .orderedAscending }
+    }
+}
+
+extension LibraryStore {
+    /// ⌘Z de un cambio de toda la biblioteca (renombrar, juntar, renumerar). Deshacer nunca deja
+    /// las cosas a medias (auditoría 6): si otro trabajo corre, no toco nada, te digo por qué y el
+    /// deshacer se queda para cuando termine (se vuelve a anotar en cuanto acaba este intento).
+    func registerUndo(_ change: CatalogChange, named name: String, in undoManager: UndoManager?) {
+        guard let undoManager, !change.originals.isEmpty else { return }
+        undoManager.registerUndo(withTarget: self) { store in
+            MainActor.assumeIsolated {
+                guard let refused = store.restore(change) else { return }
+                store.explain("Todavía no deshice «\(name)»", refused + " Lo puedes deshacer con ⌘Z cuando termine.")
+                DispatchQueue.main.async { store.registerUndo(change, named: name, in: undoManager) }
+            }
+        }
+        undoManager.setActionName(name)
     }
 }
 #endif

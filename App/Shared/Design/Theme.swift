@@ -92,6 +92,16 @@ enum Theme {
         static let rowCover = CGSize(width: 16, height: 24)
         static let coverColumn: CGFloat = 24
         static let titleColumn: CGFloat = 180
+        /// Lo más que crecen el autor y la serie: lo que sobra en una ventana ancha va al título
+        /// (auditoría 5: con la ficha abierta el título se quedaba en 120 y cortado y la serie
+        /// crecía a 436).
+        static let nameColumnMax: CGFloat = 240
+        /// Debajo de este ancho de tabla, Etiquetas, Avance y Agregado piden poco y el título se
+        /// queda con el espacio (auditoría 6: a 1100 el título quedaba casi en su mínimo y cortado).
+        static let roomyTable: CGFloat = 1000
+        /// Cuánto espera la tabla a que dejes de cambiar el ancho antes de volver a repartir sus
+        /// columnas (auditoría 5): antes se rearmaba a cada paso y saltaba arriba.
+        static let relayoutPause: Duration = .milliseconds(350)
         static let shortColumn: CGFloat = 72
         static let column: CGFloat = 110
         /// Lo más que se encoge una columna de la tabla antes de cortar con «…».
@@ -684,6 +694,8 @@ extension Font {
     static let quote = Font.system(.body, design: .serif).italic()
     /// Sinopsis y textos largos del libro.
     static let prose = Font.system(.callout, design: .serif)
+    /// Un bloque de código de una nota: de ancho fijo y con sus renglones (auditoría 6).
+    static let code = Font.system(.callout, design: .monospaced)
     /// «GABINETE» arriba de la Mesa, como una inscripción.
     static let brandMark = Font.custom("Cinzel", size: 16, relativeTo: .footnote)
     /// Rótulo de sección en mayúsculas romanas («EN LA MESA»).

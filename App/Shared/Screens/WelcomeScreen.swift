@@ -25,6 +25,7 @@ struct WelcomeScreen: View {
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var connectors = ConnectorsStore.shared
     @AppStorage(WelcomeKeys.seen) private var seen = false
+    @Environment(\.dismiss) private var dismiss
     @State private var step: Step = {
         #if DEBUG
         // Capturas: `-screenshot.step place|books|readwise` abre la bienvenida en ese paso.
@@ -64,8 +65,9 @@ struct WelcomeScreen: View {
                         BooksStep(count: model.library.books.count,
                                   importing: model.library.progressLine,
                                   importFraction: model.library.progressFraction,
+                                  blocked: model.addBooksBlocked,
                                   calibre: { migratingCalibre = true },
-                                  add: { importingBooks = true }) {
+                                  add: { if model.addBooksBlocked == nil { importingBooks = true } }) {
                             step = .readwise
                         }
                         // Un selector de archivos por vista: este va aquí y el de la carpeta, arriba.
@@ -74,12 +76,12 @@ struct WelcomeScreen: View {
                     case .readwise:
                         ReadwiseStep(connected: connectors.isConnected(.readwise),
                                      connect: { connectingReadwise = true }) {
-                            seen = true
+                            finish()
                         }
                     }
                     #if os(macOS)
                     // La hoja de la Mac no enseña los botones de la barra: saltar y volver van al pie.
-                    WelcomeExits(back: step == .hello ? nil : goBack) { seen = true }
+                    WelcomeExits(back: step == .hello ? nil : goBack) { finish() }
                     #endif
                 }
                 .screenContent()
@@ -96,7 +98,7 @@ struct WelcomeScreen: View {
             #if os(iOS)
             // Con la letra más grande, «Ir a la biblioteca» baja al pie en vez de esconderse en «•••».
             .sheetActions(leave: step == .hello ? nil : SheetAction(title: Self.backTitle, action: goBack),
-                          confirm: SheetAction(title: Self.skipTitle) { seen = true }, quiet: true)
+                          confirm: SheetAction(title: Self.skipTitle) { finish() }, quiet: true)
             #endif
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { useFolder(folder) }
@@ -107,6 +109,14 @@ struct WelcomeScreen: View {
             }
             .errorAlert("No pude usar esa carpeta", message: $errorMessage, back: "Elegir otra carpeta")
         }
+    }
+
+    /// Toda salida cierra la bienvenida (auditoría 5): se anota que ya la viste y se cierra aquí
+    /// mismo. Antes se cerraba solo si «vista» cambiaba, y al volver a ella desde el vacío (ya vista)
+    /// ninguna salida la cerraba.
+    private func finish() {
+        seen = true
+        dismiss()
     }
 
     private func goBack() { step = Step(rawValue: step.rawValue - 1) ?? .hello }
@@ -194,6 +204,8 @@ private struct BooksStep: View {
     /// «Añadiendo 3 de 32…» si hay una importación en curso.
     let importing: String?
     let importFraction: Double?
+    /// Por qué no puedo traer ni añadir libros ahora (bajo tu biblioteca de iCloud, auditoría 6).
+    let blocked: String?
     let calibre: () -> Void
     let add: () -> Void
     let next: () -> Void
@@ -214,16 +226,23 @@ private struct BooksStep: View {
                     .font(.subheadline)
                     .foregroundStyle(Theme.secondaryInk)
             }
-            Button(action: calibre) {
-                OptionRow(systemImage: "books.vertical", title: "Traer mi biblioteca de Calibre",
-                          detail: "Libros, datos, portadas, series y subrayados. No toco Calibre.")
+            Group {
+                Button(action: calibre) {
+                    OptionRow(systemImage: "books.vertical", title: "Traer mi biblioteca de Calibre",
+                              detail: "Libros, datos, portadas, series y subrayados. No toco Calibre.")
+                }
+                Button(action: add) {
+                    OptionRow(systemImage: "plus", title: "Añadir archivos",
+                              detail: "Desde \(DeviceKind.current.files), iCloud Drive o donde los tengas.")
+                }
             }
             .buttonStyle(.plain)
-            Button(action: add) {
-                OptionRow(systemImage: "plus", title: "Añadir archivos",
-                          detail: "Desde \(DeviceKind.current.files), iCloud Drive o donde los tengas.")
+            .disabled(blocked != nil)
+            if let blocked {
+                Text(blocked)
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryInk)
             }
-            .buttonStyle(.plain)
             // Sin libros, la salida es discreta: lo importante es traerlos.
             if count == 0 {
                 QuietButton(title: "Empezar sin libros", action: next)
