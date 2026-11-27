@@ -32,3 +32,16 @@ public enum ListText {
         return items
     }
 }
+
+extension String {
+    /// A lo más `limit` letras, cortado entre palabras y con «…» (auditoría 7): la vista previa de
+    /// una nota se cortaba a media palabra y sin «…». Un texto que cabe se queda igual; una sola
+    /// palabra más larga que el límite sí se corta, también con «…».
+    public func clipped(to limit: Int) -> String {
+        guard count > limit, limit > 0 else { return self }
+        let head = prefix(limit)
+        let cut = self[head.endIndex].isWhitespace ? head[...] : head[..<(head.lastIndex(where: \.isWhitespace) ?? head.endIndex)]
+        let words = cut.trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: ",;:.-–—")))
+        return (words.isEmpty ? String(head) : words) + "…"
+    }
+}

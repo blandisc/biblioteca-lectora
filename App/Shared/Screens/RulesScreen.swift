@@ -65,7 +65,7 @@ struct RulesScreen: View {
                     // No mientras ordeno, muevo o traigo de Calibre (auditoría 5): te digo por qué.
                     .disabled(model.library.busyReason != nil)
                     if let reason = model.library.busyReason {
-                        Text(reason).font(.footnote).foregroundStyle(Theme.secondaryInk)
+                        ReasonLine(reason)
                     }
                 }
             }

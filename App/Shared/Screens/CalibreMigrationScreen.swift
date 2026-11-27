@@ -118,9 +118,7 @@ private struct ChooseStep: View {
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             if let blocked {
-                Text(blocked)
-                    .font(.footnote)
-                    .foregroundStyle(Theme.secondaryInk)
+                ReasonLine(blocked)
             }
             PrimaryButton(title: "Elegir la carpeta de Calibre", systemImage: "folder", action: choose)
                 .disabled(blocked != nil)
@@ -155,9 +153,7 @@ private struct ReviewStep: View {
                 EmptyState(title: "Nada nuevo que traer", message: "Todo lo que tiene esta biblioteca ya está en tu Gabinete.")
             } else {
                 if let busyReason {
-                    Text(busyReason)
-                        .font(.footnote)
-                        .foregroundStyle(Theme.secondaryInk)
+                    ReasonLine(busyReason)
                 }
                 PrimaryButton(title: "Traer \(plan.toImport.count.counted("libro", "libros"))", fillsWidth: true, action: migrate)
                     .disabled(busyReason != nil)

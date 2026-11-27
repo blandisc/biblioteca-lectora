@@ -102,6 +102,44 @@ enum CabinetLocation {
         accessing = url.startAccessingSecurityScopedResource() ? url : nil
     }
 
+    // MARK: Copias a medias (auditoría 7, M2)
+
+    private static let stagingKey = "gabinete.copias"
+
+    /// Anota que este aparato empieza a copiar el Gabinete a `destination` con ese token: si la
+    /// app se cierra a media copia, al abrirla sé dónde quedó la carpeta de trabajo y la quito.
+    static func rememberStaging(token: String, destination: URL) {
+        #if os(macOS)
+        let options: URL.BookmarkCreationOptions = [.withSecurityScope]
+        #else
+        let options: URL.BookmarkCreationOptions = []
+        #endif
+        guard let data = try? destination.bookmarkData(options: options, includingResourceValuesForKeys: nil, relativeTo: nil) else { return }
+        var saved = UserDefaults.standard.dictionary(forKey: stagingKey) as? [String: Data] ?? [:]
+        saved[token] = data
+        UserDefaults.standard.set(saved, forKey: stagingKey)
+    }
+
+    static func forgetStaging(tokens: some Sequence<String>) {
+        var saved = UserDefaults.standard.dictionary(forKey: stagingKey) as? [String: Data] ?? [:]
+        for token in tokens { saved[token] = nil }
+        UserDefaults.standard.set(saved, forKey: stagingKey)
+    }
+
+    /// Los movimientos que este aparato empezó y no terminó: su token y a dónde copiaba.
+    static func pendingStagings() -> [(token: String, destination: URL?)] {
+        let saved = UserDefaults.standard.dictionary(forKey: stagingKey) as? [String: Data] ?? [:]
+        #if os(macOS)
+        let options: URL.BookmarkResolutionOptions = [.withSecurityScope]
+        #else
+        let options: URL.BookmarkResolutionOptions = []
+        #endif
+        return saved.sorted { $0.key < $1.key }.map { token, data in
+            var stale = false
+            return (token, try? URL(resolvingBookmarkData: data, options: options, relativeTo: nil, bookmarkDataIsStale: &stale))
+        }
+    }
+
     // MARK: Migración
 
     /// Lectora guardaba la biblioteca en «Biblioteca Lectora»: pasa a «Gabinete/Biblioteca».

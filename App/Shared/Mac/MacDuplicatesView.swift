@@ -20,7 +20,7 @@ struct MacDuplicatesView: View {
             }
             // Por qué no junto ahora, a la vista y no solo al pasar el ratón (auditoría 5), como en Ajustes.
             if let reason = library.busyReason, !groups.isEmpty {
-                Text(reason).font(.footnote).foregroundStyle(Theme.secondaryInk)
+                ReasonLine(reason)
             }
             ForEach(groups, id: \.first?.id) { group in
                 Section {

@@ -914,7 +914,23 @@ final class DesignRulesTests: XCTestCase {
         }
         check(floating, "Lo que flota en el lector o la tabla de la Mac no cabe")
 
-        // 12. iPhone Duo (27 nov 2026). Cerrado, la hora va al costado y arriba no hay isla: los
+        // 12. Auditoría 7 (27 nov 2026): en Ajustes de la Mac el porqué de «Traer mi biblioteca de
+        //     Calibre» apagado se cortaba en un renglón, y la vista previa de una nota se cortaba a
+        //     media palabra y sin «…». Una razón de botón apagado siempre se lee completa
+        //     (`ReasonLine`, que baja de renglón también en un formulario de la Mac); un texto
+        //     cortado siempre termina en «…», entre palabras (`String.clipped(to:)`).
+        let reason = pieces.first { $0.name == "ReasonLine" }?.body ?? ""
+        var cut = hits(#"Text\((blocked|reason|busyReason|model\.addBooksBlocked|library\.busyReason|model\.library\.busyReason)\)"#, in: Self.ui)
+        if !reason.contains(".fixedSize(horizontal: false, vertical: true)") || !reason.contains(".lineLimit(nil)") {
+            cut.append("ReasonLine: no baja de renglón")
+        }
+        // Cortar a mano (`prefix(n)` y «…» pegado) parte la palabra; y la vista previa de las notas.
+        cut += hits(#"\.prefix\([^)]*\)\)? *\+ *"…""#, in: Self.ui)
+        let note = Self.sources("Packages/LectoraCore/Sources").first { $0.path.hasSuffix("Notes/Note.swift") }?.text ?? ""
+        if !note.contains(".clipped(to: Self.previewLetters)") { cut.append("Note.preview no corta entre palabras con «…»") }
+        check(cut, "Un texto que se lee a medias: la razón de algo apagado va entera (ReasonLine) y lo cortado, entre palabras y con «…» (clipped(to:))")
+
+        // 13. iPhone Duo (27 nov 2026). Cerrado, la hora va al costado y arriba no hay isla: los
         //     botones de arriba del lector subían `chromeLift` y se salían por arriba, cortados.
         //     Suben solo lo que hay de orilla segura (`chromeTop`), y aun sin isla dejan libre el
         //     primer renglón.

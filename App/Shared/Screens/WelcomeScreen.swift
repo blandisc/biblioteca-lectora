@@ -239,9 +239,7 @@ private struct BooksStep: View {
             .buttonStyle(.plain)
             .disabled(blocked != nil)
             if let blocked {
-                Text(blocked)
-                    .font(.footnote)
-                    .foregroundStyle(Theme.secondaryInk)
+                ReasonLine(blocked)
             }
             // Sin libros, la salida es discreta: lo importante es traerlos.
             if count == 0 {

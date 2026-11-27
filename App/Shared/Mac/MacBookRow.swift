@@ -23,13 +23,16 @@ struct MacBookRow: Identifiable {
     /// «EPUB · PDF» si tiene varios formatos (CB-3).
     var format: String { book.formats.joined(separator: " · ") }
     var progress: Double { shelf.progress }
-    var progressLabel: String { progress > 0 ? progress.percentText : "" }
+    /// Sin avance, «—»: una columna en blanco parecía rota (auditoría 7).
+    var progressLabel: String { progress > 0 ? progress.percentText : "—" }
     var rating: Double { book.rating ?? 0 }
     /// De 0 a 5 estrellas: una valoración negativa o rara de un OPF no cierra la app (B3).
     var stars: String { String(repeating: "★", count: starCount) }
     var starCount: Int { min(5, max(0, rating.safeInt ?? 0)) }
     var added: Date { book.addedAt ?? .distantPast }
     var addedLabel: String { book.addedAt?.esShort ?? "" }
+    /// En la tabla angosta: «26/11/26».
+    var addedShortLabel: String { book.addedAt?.esNumeric ?? "" }
     var publisher: String { book.publisher ?? "" }
     var published: String { book.published ?? "" }
     var isbn: String { book.identifiers["isbn"] ?? "" }

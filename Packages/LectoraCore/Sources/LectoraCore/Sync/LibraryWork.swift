@@ -248,7 +248,7 @@ public struct StagedMove: Sendable {
             do {
                 guard !CloudFile.isTaken(target) else { throw Failure.occupied(folder) }
                 // `moveItem` no reemplaza: si llegó justo ahora, también falla.
-                try manager.moveItem(at: staging(folder), to: target)
+                try Self.coordinatedMove(from: staging(folder), to: target)
                 placed.append(folder)
             } catch {
                 takeBack(placed)
@@ -260,15 +260,81 @@ public struct StagedMove: Sendable {
     }
 
     /// Regresa a su carpeta de trabajo lo que `place` puso (solo eso: lo demás no es de esta corrida).
+    /// Si no puede regresarla, la quita (auditoría 7, M6): es de esta corrida, y dejarla haría que
+    /// el destino pareciera un Gabinete a medias. Lo tuyo sigue en el origen.
     public func takeBack(_ placed: [String]) {
         for folder in placed.reversed() {
-            try? FileManager.default.moveItem(at: destination.appendingPathComponent(folder, isDirectory: true), to: staging(folder))
+            let target = destination.appendingPathComponent(folder, isDirectory: true)
+            do {
+                try Self.coordinatedMove(from: target, to: staging(folder))
+            } catch {
+                try? FileManager.default.removeItem(at: target)
+            }
         }
     }
 
     /// Quita las carpetas de trabajo (solo esas: lo demás del destino no es de esta corrida).
     public func discard() {
         for folder in folders { try? FileManager.default.removeItem(at: staging(folder)) }
+    }
+
+    /// Mueve una carpeta avisándole a iCloud y al proveedor de archivos (auditoría 7, B1): así
+    /// la ven moverse en vez de ver una que se borra y otra que aparece.
+    static func coordinatedMove(from source: URL, to target: URL) throws {
+        let coordinator = NSFileCoordinator()
+        var coordinationError: NSError?
+        var moveError: Error?
+        coordinator.coordinate(writingItemAt: source, options: .forMoving,
+                               writingItemAt: target, options: .forReplacing, error: &coordinationError) { from, to in
+            do {
+                try FileManager.default.moveItem(at: from, to: to)
+                coordinator.item(at: from, didMoveTo: to)
+            } catch {
+                moveError = error
+            }
+        }
+        if let error = coordinationError ?? moveError { throw error }
+    }
+
+    /// El principio del nombre de toda carpeta de trabajo.
+    public static let prefix = ".gabinete-copia-"
+    /// Lo que espero antes de quitar la carpeta de trabajo de una corrida que no es de este
+    /// aparato: otro aparato podría estar copiando ahora mismo al mismo lugar de iCloud.
+    public static let othersAge: TimeInterval = 24 * 60 * 60
+
+    /// El token de una carpeta de trabajo de una de esas carpetas, o nil si el nombre no es
+    /// exactamente `.gabinete-copia-<token>-<carpeta>` (con un token de verdad).
+    public static func token(ofLeftover name: String, folders: [String]) -> String? {
+        guard name.hasPrefix(prefix) else { return nil }
+        let rest = name.dropFirst(prefix.count)
+        let token = String(rest.prefix(36))
+        guard UUID(uuidString: token) != nil else { return nil }
+        let folder = rest.dropFirst(36)
+        guard folder.hasPrefix("-"), folders.contains(String(folder.dropFirst())) else { return nil }
+        return token
+    }
+
+    /// Quita las carpetas de trabajo que dejó un movimiento que no terminó (la app se cerró a
+    /// media copia, auditoría 7, M2): solo las de nombre exacto de trabajo; nada más del destino.
+    /// Las de `mine` (corridas de este aparato, que ya no corren) se van ya; las de otro aparato,
+    /// cuando llevan `othersAge` sin tocarse. Devuelve los nombres que quitó.
+    @discardableResult
+    public static func removeLeftovers(in destination: URL, folders: [String], mine: Set<String>,
+                                       now: Date = Date()) -> [String] {
+        let manager = FileManager.default
+        let names = (try? manager.contentsOfDirectory(atPath: destination.path)) ?? []
+        var removed: [String] = []
+        for name in names.sorted() {
+            guard let token = token(ofLeftover: name, folders: folders) else { continue }
+            let url = destination.appendingPathComponent(name, isDirectory: true)
+            if !mine.contains(token) {
+                let values = try? url.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey])
+                let touched = [values?.creationDate, values?.contentModificationDate].compactMap { $0 }.max() ?? now
+                guard now.timeIntervalSince(touched) >= othersAge else { continue }
+            }
+            if (try? manager.removeItem(at: url)) != nil { removed.append(name) }
+        }
+        return removed
     }
 }
 

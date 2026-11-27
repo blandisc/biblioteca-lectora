@@ -83,9 +83,7 @@ struct LibraryScreen: View {
                         }
                         // Con libros a la vista, el porqué del «+» apagado (sin libros lo dice el vacío).
                         if let blocked = model.addBooksBlocked, !model.shelf.isEmpty {
-                            Text(blocked)
-                                .font(.footnote)
-                                .foregroundStyle(Theme.secondaryInk)
+                            ReasonLine(blocked)
                                 .padding(.top, Theme.Space.s)
                         }
 
