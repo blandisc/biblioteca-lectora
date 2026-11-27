@@ -96,8 +96,8 @@ struct MacDuplicatesView: View {
         let newFormats = Set(others.flatMap(\.formats)).subtracting(keeper.formats).sorted()
         var lines = ["Se queda «\(keeper.title)» (\(keeper.formats.joined(separator: " · ")))."]
         if !newFormats.isEmpty { lines.append("Gana \(newFormats.joined(separator: " y ")) en su misma carpeta.") }
-        lines.append("Sus datos se completan con los de los otros, y sus subrayados y marcadores pasan a este.")
-        lines.append("Los archivos repetidos van a la Papelera, de donde se pueden recuperar.")
+        lines.append("Completo sus datos con los de los otros, y sus subrayados y marcadores pasan a este.")
+        lines.append("Los archivos repetidos van a la Papelera, de donde puedes recuperarlos.")
         return lines.joined(separator: " ")
     }
 

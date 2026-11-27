@@ -110,6 +110,9 @@ struct SessionSummarySheet: View {
     @State private var notice: String?
     @State private var writing: NoteRef?
     @Environment(\.dynamicTypeSize) private var typeSize
+    #if os(macOS)
+    @State private var contentHeight: CGFloat = Theme.Mac.sheetMax
+    #endif
 
     private var book: ShelfBook? { model.shelfBook(id: session.bookID.uuidString) }
 
@@ -119,11 +122,16 @@ struct SessionSummarySheet: View {
         ScrollView {
             summary
                 .screenContent()
+                #if os(macOS)
+                // Una hoja no tiene la barra de la ventana que deja su aire arriba.
+                .padding(.top, Theme.Space.screenTopInSheet)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+                #endif
         }
         .pushedScreen()
         #if os(macOS)
-        .contentMargins(.top, Theme.Space.screenTopInSheet, for: .scrollContent)
-        .frame(width: Theme.Mac.sheet.width, height: Theme.Mac.sheetMax)
+        // Mide lo que su contenido, sin pasar de la ventana más chica: a la altura fija quedaba medio vacía.
+        .frame(width: Theme.Mac.sheet.width, height: min(contentHeight, Theme.Mac.sheetMax))
         #endif
         .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.medium, .large])
         .presentationDragIndicator(.visible)
@@ -159,7 +167,8 @@ struct SessionSummarySheet: View {
                 .init(value: ReadingFormat.duration(session.seconds(in: .immersed)), label: "inmersa"),
                 .init(value: session.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
             ])
-            AdaptiveStack(spacing: Theme.Space.s) {
+            // Del mismo ancho y en un renglón, o uno bajo otro: «Cerrar el resumen» se partía en dos.
+            ButtonPair {
                 SecondaryButton(title: "Escribir sobre ella") {
                     do { writing = try SessionNote.open(session, bookTitle: book?.title ?? MetadataCleaner.untitled) } catch {
                         notice = error.localizedDescription

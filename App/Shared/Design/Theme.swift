@@ -96,6 +96,8 @@ enum Theme {
         static let column: CGFloat = 110
         /// Lo más que se encoge una columna de la tabla antes de cortar con «…».
         static let narrowColumn: CGFloat = 48
+        /// Lo más que se encogen el autor y la serie: el título cede antes que ellos (auditoría 3).
+        static let nameColumn: CGFloat = 88
         /// Gabinete › Ajustes… (⌘,), en pestañas: el ancho; el alto es el de cada pestaña.
         static let settings: CGFloat = 560
         /// El alto de Reglas o de una conexión, abiertas desde una pestaña de Ajustes.

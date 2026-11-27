@@ -556,20 +556,14 @@ struct OtherSearchSheet: View {
             }
             .formScreen()
             .sheetTitle("Buscar con otros datos")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    BarButton("Cerrar la búsqueda") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    BarButton("Buscar con estos datos") {
-                        let trimmed = { (text: String) in text.trimmingCharacters(in: .whitespaces) }
-                        onSearch(trimmed(title), trimmed(author).isEmpty ? nil : trimmed(author),
-                                 trimmed(isbn).isEmpty ? nil : trimmed(isbn))
-                        dismiss()
-                    }
-                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty && isbn.isEmpty)
-                }
-            }
+            .sheetActions(leave: SheetAction(title: "Cerrar la búsqueda") { dismiss() },
+                          confirm: SheetAction(title: "Buscar con estos datos",
+                                               disabled: title.trimmingCharacters(in: .whitespaces).isEmpty && isbn.isEmpty) {
+                let trimmed = { (text: String) in text.trimmingCharacters(in: .whitespaces) }
+                onSearch(trimmed(title), trimmed(author).isEmpty ? nil : trimmed(author),
+                         trimmed(isbn).isEmpty ? nil : trimmed(isbn))
+                dismiss()
+            })
         }
     }
 }

@@ -37,7 +37,7 @@ struct RulesScreen: View {
             } header: {
                 CapsText(text: "Nueva regla")
             } footer: {
-                Text("Sin importar acentos ni mayúsculas. Se aplican a los libros que importes y a los datos de internet.")
+                Text("Sin importar acentos ni mayúsculas. Las aplico a los libros que importes y a los datos de internet.")
             }
 
             if !rules.authors.isEmpty {

@@ -47,7 +47,7 @@ struct MacCatalogSheet: View {
         Form {
             Section {
                 // Vacío, con el nombre de ahora de pista: lo que escribes no se pega al de antes.
-                TextField(fieldName, text: $name, prompt: Text(target.value)).oneLine()
+                TextField(fieldName, text: $name, prompt: .fieldPrompt(target.value)).oneLine()
                     .onSubmit(apply)
                 if let existing {
                     Text("Ya existe «\(existing)»: los junto en \(oneField).")

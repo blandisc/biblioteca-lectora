@@ -210,15 +210,9 @@ struct CoverPickerSheet: View {
                 .screenContent()
             }
             .pushedScreen("Portada", sheet: true)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    BarButton("Dejar la portada") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    BarButton(saving ? "Guardando…" : "Usar esta portada") { save() }
-                        .disabled(saving || !choosesRemote)
-                }
-            }
+            .sheetActions(leave: SheetAction(title: "Dejar la portada") { dismiss() },
+                          confirm: SheetAction(title: saving ? "Guardando…" : "Usar esta portada",
+                                               disabled: saving || !choosesRemote) { save() })
         }
         .task {
             options = await model.library.coverOptions(for: bookID)

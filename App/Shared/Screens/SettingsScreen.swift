@@ -213,7 +213,7 @@ extension SettingsScreen {
 
     private var readingCard: some View {
         SettingsCard(title: "Lectura",
-                     help: "Cada sesión se anota en tu carpeta. Nada sale de tus dispositivos.",
+                     help: "Anoto cada sesión en tu carpeta. Nada sale de tus dispositivos.",
                      more: "Gabinete anota el tiempo, las palabras y cuánto sostuviste la atención en cada sesión.") {
             ReadingArt(counter: showsCounter, summary: showsSummary)
         } content: {
@@ -225,7 +225,7 @@ extension SettingsScreen {
     private var bookDataCard: some View {
         SettingsCard(title: "Datos de los libros",
                      help: "Portadas, sinopsis y datos salen de Open Library.",
-                     more: "Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.") {
+                     more: "Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también busco ahí.") {
             BookDataArt(source: googleKey.isEmpty ? "Open Library" : "Open Library y Google")
                 .id(Self.bookData)
         } content: {
@@ -268,8 +268,8 @@ extension SettingsScreen {
     /// que se hace con ella.
     private var cabinetSection: some View {
         SettingsCard(title: "Tu Gabinete",
-                     help: "Tus libros con la forma de Calibre y tus notas en Markdown.",
-                     more: "Dentro hay dos carpetas: Biblioteca, con la misma forma que una de Calibre (puedes abrirla en Calibre y restaurar la base de datos), y Notas, en Markdown. En iCloud Drive, tu iPhone y tu Mac usan la misma.") {
+                     help: "Tus libros con la forma de Calibre y tus notas como texto que abre también Obsidian.",
+                     more: "Dentro hay dos carpetas: Biblioteca, con la misma forma que una de Calibre (puedes abrirla en Calibre y restaurar la base de datos), y Notas, en texto que abre también Obsidian. En iCloud Drive, tu iPhone y tu Mac usan la misma.") {
             CabinetArt(place: place,
                        folder: model.library.isLocal ? "Gabinete" : model.library.cabinet.lastPathComponent,
                        books: model.library.books.count,

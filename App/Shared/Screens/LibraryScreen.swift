@@ -84,7 +84,8 @@ struct LibraryScreen: View {
                             }
                             .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.contentSpace)).maxY } action: { letterIndexTop = $0 }
 
-                            if !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
+                            // Solo en «Todos»: con un filtro, sus libros no son los que se ven (auditoría 3).
+                            if filter == .all, !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
                                 NavigationLink(value: ReviewInboxRef()) {
                                     // El número es lo que espera una decisión tuya; lo que se completó solo se
                                     // cuenta solo cuando no queda nada dudoso.

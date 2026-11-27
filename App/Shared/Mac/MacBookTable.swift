@@ -107,65 +107,29 @@ struct MacBookTable: View {
 
     /// Las columnas se encogen hasta `Mac.narrowColumn` y cortan con «…»: con su mínimo de antes
     /// la tabla no cabía junto a la ficha, corría de lado y la última se veía cortada sin «…».
+    /// Con la ficha abierta no caben todas: van solo título, autor, serie, estado y formato
+    /// («Formato» quedaba cortada sin «…» y la tabla corría de lado); el título cede antes que el
+    /// autor y la serie, que no bajan de `Mac.nameColumn` (auditoría 3). Son dos tablas y no columnas
+    /// escondidas: una columna escondida seguía ocupando su ancho al repartir el de la tabla.
+    @ViewBuilder
     private func table(_ rows: [MacBookRow]) -> some View {
-        Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
-            Group {
-                TableColumn(Text(Image(systemName: "photo")), value: \MacBookRow.coverKey) { (row: MacBookRow) in
-                    CoverView(title: row.title, author: row.author, style: row.shelf.cover, image: row.shelf.coverImage)
-                        .frame(width: Theme.Mac.rowCover.width, height: Theme.Mac.rowCover.height)
+        Group {
+            if showsInspector {
+                Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
+                    leadColumns
+                    stateColumns
+                    extraColumns
                 }
-                .width(Theme.Mac.coverColumn)
-                .customizationID("portada")
-                TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in MacCell(text: row.title, role: .title) }
-                    .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn)
-                    .customizationID("titulo")
-                TableColumn("Autor", value: \MacBookRow.authorKey) { (row: MacBookRow) in MacCell(text: row.author) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("autor")
-                TableColumn("Serie", value: \MacBookRow.seriesKey) { (row: MacBookRow) in MacCell(text: row.seriesLabel, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("serie")
-                TableColumn("Etiquetas", value: \MacBookRow.tagsKey) { (row: MacBookRow) in MacCell(text: row.tagsLabel, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("etiquetas")
-            }
-            Group {
-                TableColumn("Avance", value: \MacBookRow.progress) { (row: MacBookRow) in MacCell(text: row.progressLabel, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
-                    .customizationID("avance")
-                TableColumn("Estado", value: \MacBookRow.stateLabel) { (row: MacBookRow) in MacCell(text: row.stateLabel, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
-                    .customizationID("estado")
-                TableColumn("Formato", value: \MacBookRow.format) { (row: MacBookRow) in MacCell(text: row.format, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
-                    .customizationID("formato")
-                TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in MacCell(text: row.addedLabel, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("agregado")
-            }
-            Group {
-                TableColumn("Idioma", value: \MacBookRow.language) { (row: MacBookRow) in MacCell(text: row.language, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
-                    .customizationID("idioma")
-                    .defaultVisibility(.hidden)
-                TableColumn("Valoración", value: \MacBookRow.rating) { (row: MacBookRow) in
-                    MacCell(text: row.stars, role: .secondary).accessibilityLabel(row.starCount.counted("estrella", "estrellas"))
+            } else {
+                Table(rows, selection: $selection, sortOrder: $sortOrder, columnCustomization: $columns) {
+                    leadColumns
+                    Group {
+                        lowColumns
+                        stateColumns
+                        addedColumn
+                    }
+                    extraColumns
                 }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("valoracion")
-                    .defaultVisibility(.hidden)
-                TableColumn("Editorial", value: \MacBookRow.publisherKey) { (row: MacBookRow) in MacCell(text: row.publisher, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("editorial")
-                    .defaultVisibility(.hidden)
-                TableColumn("Publicado", value: \MacBookRow.published) { (row: MacBookRow) in MacCell(text: row.published, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("publicado")
-                    .defaultVisibility(.hidden)
-                TableColumn("ISBN", value: \MacBookRow.isbn) { (row: MacBookRow) in MacCell(text: row.isbn, role: .secondary) }
-                    .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
-                    .customizationID("isbn")
-                    .defaultVisibility(.hidden)
             }
         }
         // De papel (MX-B): la tabla sobre el papel de Gabinete, sin franjas.
@@ -179,6 +143,78 @@ struct MacBookTable: View {
         } primaryAction: { ids in
             open(ids)
         }
+    }
+
+    @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
+    private var leadColumns: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
+        TableColumn(Text(Image(systemName: "photo")), value: \MacBookRow.coverKey) { (row: MacBookRow) in
+            CoverView(title: row.title, author: row.author, style: row.shelf.cover, image: row.shelf.coverImage)
+                .frame(width: Theme.Mac.rowCover.width, height: Theme.Mac.rowCover.height)
+        }
+        .width(Theme.Mac.coverColumn)
+        .customizationID("portada")
+        TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in MacCell(text: row.title, role: .title) }
+            .width(min: Theme.Mac.column, ideal: Theme.Mac.titleColumn)
+            .customizationID("titulo")
+        TableColumn("Autor", value: \MacBookRow.authorKey) { (row: MacBookRow) in MacCell(text: row.author) }
+            .width(min: Theme.Mac.nameColumn, ideal: Theme.Mac.column)
+            .customizationID("autor")
+        TableColumn("Serie", value: \MacBookRow.seriesKey) { (row: MacBookRow) in MacCell(text: row.seriesLabel, role: .secondary) }
+            .width(min: Theme.Mac.nameColumn, ideal: Theme.Mac.column)
+            .customizationID("serie")
+    }
+
+    @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
+    private var lowColumns: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
+        TableColumn("Etiquetas", value: \MacBookRow.tagsKey) { (row: MacBookRow) in MacCell(text: row.tagsLabel, role: .secondary) }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .customizationID("etiquetas")
+        TableColumn("Avance", value: \MacBookRow.progress) { (row: MacBookRow) in MacCell(text: row.progressLabel, role: .secondary) }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
+            .customizationID("avance")
+    }
+
+    @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
+    private var stateColumns: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
+        TableColumn("Estado", value: \MacBookRow.stateLabel) { (row: MacBookRow) in MacCell(text: row.stateLabel, role: .secondary) }
+            .width(Theme.Mac.shortColumn)
+            .customizationID("estado")
+        TableColumn("Formato", value: \MacBookRow.format) { (row: MacBookRow) in MacCell(text: row.format, role: .secondary) }
+            .width(Theme.Mac.shortColumn)
+            .customizationID("formato")
+    }
+
+    @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
+    private var addedColumn: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
+        TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in MacCell(text: row.addedLabel, role: .secondary) }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .customizationID("agregado")
+    }
+
+    @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
+    private var extraColumns: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
+        TableColumn("Idioma", value: \MacBookRow.language) { (row: MacBookRow) in MacCell(text: row.language, role: .secondary) }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
+            .customizationID("idioma")
+            .defaultVisibility(.hidden)
+        TableColumn("Valoración", value: \MacBookRow.rating) { (row: MacBookRow) in
+            MacCell(text: row.stars, role: .secondary).accessibilityLabel(row.starCount.counted("estrella", "estrellas"))
+        }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .customizationID("valoracion")
+            .defaultVisibility(.hidden)
+        TableColumn("Editorial", value: \MacBookRow.publisherKey) { (row: MacBookRow) in MacCell(text: row.publisher, role: .secondary) }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .customizationID("editorial")
+            .defaultVisibility(.hidden)
+        TableColumn("Publicado", value: \MacBookRow.published) { (row: MacBookRow) in MacCell(text: row.published, role: .secondary) }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .customizationID("publicado")
+            .defaultVisibility(.hidden)
+        TableColumn("ISBN", value: \MacBookRow.isbn) { (row: MacBookRow) in MacCell(text: row.isbn, role: .secondary) }
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .customizationID("isbn")
+            .defaultVisibility(.hidden)
     }
 
     /// Todos los libros como renglones, con su avance y si les falta portada o esperan revisión

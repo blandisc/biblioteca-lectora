@@ -94,16 +94,9 @@ struct WelcomeScreen: View {
             #endif
             .pushedScreen()
             #if os(iOS)
-            .toolbar {
-                if step != .hello {
-                    ToolbarItem(placement: .cancellationAction) {
-                        BarButton(Self.backTitle, action: goBack)
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    BarButton(Self.skipTitle) { seen = true }.foregroundStyle(Theme.secondaryInk)
-                }
-            }
+            // Con la letra más grande, «Ir a la biblioteca» baja al pie en vez de esconderse en «•••».
+            .sheetActions(leave: step == .hello ? nil : SheetAction(title: Self.backTitle, action: goBack),
+                          confirm: SheetAction(title: Self.skipTitle) { seen = true }, quiet: true)
             #endif
             .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
                 if case .success(let folder) = result { useFolder(folder) }
@@ -148,7 +141,7 @@ private struct HelloStep: View {
                 .padding(.vertical, Theme.Space.xxl)
             Text("Para leer y pensar")
                 .screenTitleFont()
-            Text("Tus libros, tus subrayados y tus notas, juntos en una carpeta tuya. Sin servidor: lo que guardas se queda en tus dispositivos y se abre también con Calibre y Obsidian.")
+            Text("Tus libros, tus subrayados y tus notas, juntos en una carpeta tuya. Sin servidor: lo que guardas se queda en tus dispositivos y lo abres también con Calibre y Obsidian.")
                 .font(.body)
                 .foregroundStyle(Theme.secondaryInk)
             PrimaryButton(title: "Preparar mi Gabinete", fillsWidth: true, action: next)
@@ -170,7 +163,7 @@ private struct PlaceStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             Text("¿Dónde vive tu Gabinete?").screenTitleFont()
-            Text("Una carpeta con dos partes: Biblioteca (con la forma de Calibre) y Notas (Markdown).")
+            Text("Una carpeta con dos partes: Biblioteca, con la forma de Calibre, y Notas, que abre también Obsidian.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             Button { place = .device } label: {
@@ -181,7 +174,7 @@ private struct PlaceStep: View {
             .buttonStyle(.plain)
             Button(action: chooseFolder) {
                 OptionRow(systemImage: "icloud", title: chosen ?? "En iCloud Drive",
-                          detail: "Elige o crea una carpeta «Gabinete». Si tu \(device.partner.name) ya tiene uno ahí, se usa ese: así tu \(device.name) y tu \(device.partner.name) comparten todo.",
+                          detail: "Elige o crea una carpeta «Gabinete». Si tu \(device.partner.name) ya tiene uno ahí, uso ese: así tu \(device.name) y tu \(device.partner.name) comparten todo.",
                           selected: chosen != nil)
             }
             .buttonStyle(.plain)
@@ -223,7 +216,7 @@ private struct BooksStep: View {
             }
             Button(action: calibre) {
                 OptionRow(systemImage: "books.vertical", title: "Traer mi biblioteca de Calibre",
-                          detail: "Libros, datos, portadas, series y subrayados. Calibre no se toca.")
+                          detail: "Libros, datos, portadas, series y subrayados. No toco Calibre.")
             }
             .buttonStyle(.plain)
             Button(action: add) {
@@ -277,7 +270,7 @@ private struct WelcomeExits: View {
     var body: some View {
         VStack(spacing: Theme.Space.s) {
             Hairline()
-            AdaptiveStack(spacing: Theme.Space.s) {
+            ButtonPair {
                 if let back { QuietButton(title: WelcomeScreen.backTitle, action: back) }
                 QuietButton(title: WelcomeScreen.skipTitle, action: skip)
             }

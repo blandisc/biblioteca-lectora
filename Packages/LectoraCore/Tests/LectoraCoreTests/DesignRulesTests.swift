@@ -693,6 +693,10 @@ final class DesignRulesTests: XCTestCase {
         if !index.contains("dynamicTypeSize(...") { overlay.append("LetterIndex: su letra crece sin tope") }
         if !index.contains("ViewThatFits(in: .vertical)") { overlay.append("LetterIndex: si no caben las 27 letras se sale de su alto") }
         if !index.contains("isAccessibilitySize") { overlay.append("LetterIndex: no dice que con la letra más grande no se enseña") }
+        // Auditoría 3: VoiceOver leía la instrucción como si fuera la letra elegida. El cómo va en la pista.
+        if !index.contains(".accessibilityHint(") || index.contains(#"accessibilityValue(spoken ?? "Desliza"#) {
+            overlay.append("LetterIndex: la instrucción va en accessibilityValue, no en accessibilityHint")
+        }
         for file in Self.screens where file.text.contains("LetterIndex {") {
             if !file.text.contains("LetterIndex.shows(at:") { overlay.append("\(file.path): enseña el índice A–Z con la letra más grande") }
             if !file.text.contains("Theme.Space.letterIndex") { overlay.append("\(file.path): la lista no le deja libre su columna al índice A–Z") }
@@ -719,6 +723,21 @@ final class DesignRulesTests: XCTestCase {
             }
         }
         check(fields, "Campo de la Mac que no corta con «…»: agrégale .oneLine()")
+        // Auditoría 3: en la ficha de la Mac las pistas («2016 o 2016-05-01») salían del mismo gris que
+        // los datos. Lo escrito va en tinta (`oneLine`) y la pista, más callada (`.fieldPrompt`).
+        var prompts = hits(#"TextField\([^\n]*prompt: Text\("#, in: Self.ui.filter { $0.path.hasPrefix("App/Shared/Mac/") })
+        if !Self.sources("App/Shared/Design").contains(where: { $0.text.contains("lineLimit(1).truncationMode(.tail).foregroundStyle(Theme.ink)") }) {
+            prompts.append("oneLine: lo escrito no va en tinta")
+        }
+        check(prompts, "Pista de un campo de la Mac del mismo color que un dato: usa .fieldPrompt")
+        // Auditoría 3: con la ficha abierta, «Formato» quedaba cortada sin «…» y la tabla corría de lado.
+        // Con la ficha abierta la tabla lleva solo sus columnas de más peso, y el autor y la serie no
+        // bajan de `Mac.nameColumn` (el título cede antes).
+        let macTable = Self.screens.first { $0.path.hasSuffix("Mac/MacBookTable.swift") }?.text ?? ""
+        var columns: [String] = []
+        if !macTable.contains("if showsInspector {") { columns.append("MacBookTable: con la ficha abierta enseña todas las columnas") }
+        if macTable.components(separatedBy: "min: Theme.Mac.nameColumn").count - 1 < 2 { columns.append("MacBookTable: autor y serie se encogen más que el título") }
+        check(columns, "Tabla de la Mac que no cabe junto a la ficha")
 
         // 7. UX-2e: una portada cuadrada o apaisada se estiraba al llenar el marco 2∶3. Solo
         //    `FittedCover` y la portada que ya es 2∶3 (`CoverView`) llenan; lo demás cabe entero.
@@ -735,6 +754,16 @@ final class DesignRulesTests: XCTestCase {
         // ancho y parte su texto; con la medida ideal se cortaba aunque bajara de renglón.
         if !Self.piece("WrapRows").contains("sizeThatFits(ProposedViewSize(width: width") { wrap.append("WrapRows: una opción más ancha que el renglón se corta") }
         if Self.piece("FilterBar").contains(".lineLimit(") { wrap.append("FilterBar: una opción no puede usar dos renglones") }
+        // Auditoría 3: «1 SERIE · / 3 LIBROS» y «Ir a la / letra…» con un «Abc» enorme. Cada cifra va
+        // pegada a su palabra y cada par baja entero, sin el «·» colgando; el salto a una letra es corto.
+        if !Self.piece("CountLine").contains("u{00A0}") || !Self.piece("CountLine").contains("ViewThatFits") {
+            wrap.append("CountLine: una cifra se separa de su palabra o el «·» queda colgando")
+        }
+        let jump = Self.piece("LetterJumpMenu")
+        if jump.contains("textformat") || jump.contains("Ir a la letra…\"") { wrap.append("LetterJumpMenu: su rótulo no cabe en un renglón con la letra más grande") }
+        // El punto de «Por revisar» crece con la letra y va al centro de su primer renglón.
+        let link = Self.piece("LinkRow")
+        if !link.contains("@ScaledMetric") || link.contains(#"Text(verbatim: " ")"#) { wrap.append("LinkRow: su punto no crece con la letra o cae en la línea de base") }
         check(wrap, "Texto que se corta en vez de bajar de renglón")
 
         // 10. UX-3a: «Editar datos» no se veía: con dos botones de texto en la barra, iOS esconde el
@@ -748,6 +777,24 @@ final class DesignRulesTests: XCTestCase {
             }
         }
         check(hidden, "Hoja con dos botones de texto y el título en medio, donde iOS lo esconde: usa .sheetTitle")
+
+        // 10b. Auditoría 3 (27 nov 2026): con AX5, «Guardar cambios» y «Ir a la biblioteca» se iban al
+        //      «•••» de iOS y la hoja quedaba sin cómo guardar ni saltar. Las dos salidas de texto de una
+        //      hoja van con `.sheetActions`, que con la letra grande baja la segunda, entera, al pie.
+        var folded: [String] = []
+        for file in Self.screens {
+            for (index, line) in file.lines.enumerated() where line.contains("ToolbarItem(placement: .cancellationAction)") {
+                let next = file.lines[index..<min(index + 8, file.lines.count)].joined()
+                if next.contains("BarButton(") && (next.contains(".confirmationAction") || next.contains(".primaryAction")) {
+                    folded.append("\(file.path):\(index + 1)")
+                }
+            }
+        }
+        let actions = Self.piece("SheetActions")
+        if !actions.contains("isAccessibilitySize") || !actions.contains("BottomBar") {
+            folded.append("SheetActions: con la letra más grande no baja la segunda salida al pie")
+        }
+        check(folded, "Hoja con dos botones de texto en la barra: usa .sheetActions, que con AX5 no los esconde en «•••»")
 
         // 11. Auditoría 2 (27 nov 2026): «Sesión terminada» era media hoja que no se desplazaba; con
         //     AX5 o en un iPhone SE sus dos botones quedaban fuera, sin cómo llegar. Toda hoja que
@@ -765,6 +812,19 @@ final class DesignRulesTests: XCTestCase {
             let body = summary[start.upperBound...].components(separatedBy: "\nstruct ").first ?? ""
             if body.contains("HStack") { sheets.append("SessionSummarySheet: lo que va lado a lado no usa AdaptiveStack") }
             if !body.contains("isAccessibilitySize ? [.large]") { sheets.append("SessionSummarySheet: con la letra más grande no abre a todo lo alto") }
+        }
+        // Auditoría 3: «Cerrar el resumen» se partía en dos renglones junto a «Escribir sobre ella» en
+        // uno. Botones de texto lado a lado van en `ButtonPair`: del mismo ancho en un renglón, o uno
+        // bajo otro.
+        for file in Self.screens {
+            for (index, line) in file.lines.enumerated() where line.contains("AdaptiveStack") || line.contains("HStack") {
+                let next = file.lines[(index + 1)..<min(index + 3, file.lines.count)].joined()
+                let buttons = ["PrimaryButton(", "SecondaryButton(", "QuietButton("].map { next.components(separatedBy: $0).count - 1 }.reduce(0, +)
+                if buttons > 1 { sheets.append("\(file.path):\(index + 1): botones de texto lado a lado sin ButtonPair") }
+            }
+        }
+        if !Self.piece("ButtonPair").contains("sizeThatFits(.unspecified).width <= part") {
+            sheets.append("ButtonPair: no comprueba que cada botón quepa entero en su parte")
         }
         check(sheets, "Hoja que deja fuera lo de abajo con la letra más grande o en un iPhone chico")
 
@@ -791,6 +851,10 @@ final class DesignRulesTests: XCTestCase {
         if !welcome.contains("WelcomeExits(") || !welcome.contains("min(contentHeight, Theme.Mac.sheetMax)") {
             mac12.append("WelcomeScreen: en la Mac no tiene sus salidas a la vista o pasa de Mac.sheetMax")
         }
+        // Auditoría 3: «Sesión terminada» medía siempre `Mac.sheetMax` y quedaba medio vacía. Una hoja
+        // de la Mac mide su contenido, con tope en `Mac.sheetMax`.
+        mac12 += hits(#"height: Theme\.Mac\.sheetMax\)"#, in: Self.screens)
+            .map { "\($0) — alto fijo: mide el contenido con min(contentHeight, Theme.Mac.sheetMax)" }
         check(mac12, "Hoja de la Mac más alta que la ventana: lo de abajo queda fuera")
 
         // 9. UX-1a: el primer renglón del libro quedaba bajo los botones de arriba. El aire de
@@ -1044,6 +1108,11 @@ final class DesignRulesTests: XCTestCase {
         // concuerda con la primera cifra: «1 día de 7».
         check(hits(interpolation + #" de \\\([^()]*\.counted\("#, in: Self.sources("App")),
               "«x de y» con el sustantivo en la segunda cifra: va en la primera («1 día de 7»)")
+        // Auditoría 3: con «Series» elegido la Biblioteca seguía enseñando «Por revisar 3», libros que no
+        // eran los del filtro. Lo que cuenta toda la biblioteca solo va en «Todos».
+        let library = Self.screens.first { $0.path.hasSuffix("Screens/LibraryScreen.swift") }?.text ?? ""
+        check(library.contains("if filter == .all, !model.library.reviews.isEmpty") ? [] : ["LibraryScreen: «Por revisar» con un filtro elegido"],
+              "Un número de toda la biblioteca bajo un filtro: va solo en «Todos»")
     }
 
     // MARK: Las mismas palabras y la misma voz (SD-2 y SD-3, 26 nov 2026)
@@ -1065,7 +1134,7 @@ final class DesignRulesTests: XCTestCase {
         check(titles, "Aviso cuyo título no dice qué pasó (tres palabras o más, nunca «Aviso» ni «Nota»)")
         // Auditoría de medios (27 nov 2026): «Se borra el archivo», «Se borra la llave», «Se copian
         // tus libros» seguían impersonales. Lo que hago lo digo yo: «Borro», «Copio», «La guardo».
-        check(hits(#""[^"]*(No se pud|No se pued|Se guardó|Se juntó|Se completaron|[Ss]e borra|[Ss]e copia|[Ss]e guarda en)"#, in: Self.ui) +
+        check(hits(#""[^"]*(No se pud|No se pued|Se guardó|Se juntó|Se completaron|[Ss]e borra|[Ss]e copia|[Ss]e guarda en|[Ss]e anota|[Ss]e aplica|[Ss]e busca|se trae|se modifica|se pintan|se pueden recuperar|se completan|se importa|se usa ese|no se toca)"#, in: Self.ui) +
               hits(#""[^"]*(No se pud|No se pued)"#, in: Self.sources("Packages/LectoraCore/Sources")),
               "Voz impersonal: di qué hice yo («No pude guardar», «Junté»)")
     }
@@ -1126,6 +1195,8 @@ final class DesignRulesTests: XCTestCase {
         problems += hits(#"Found\.excerpt\(note\.text"#, in: Self.ui)
         // El buscador de la Mac dice qué busca en palabras; los filtros están en su menú.
         problems += hits(#"prompt: "[^"]*\w+:[ "]"#, in: Self.ui)
+        // Auditoría 3: la bienvenida decía «Notas (Markdown)» y el dibujo de Ajustes «Markdown».
+        problems += hits(#""[^"]*\bMarkdown\b[^"]*""#, in: Self.ui)
         check(problems, "Sintaxis a la vista: dilo en palabras (SavedShelf.describe, la fecha, NoteMarkdown.plain)")
     }
 

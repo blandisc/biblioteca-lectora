@@ -34,20 +34,26 @@ struct MetadataEditorView: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack(alignment: .top, spacing: Theme.Space.l) {
+                    // Con la letra más grande, los botones bajan bajo la portada («Elegi|r» se cortaba) y
+                    // su nombre usa dos renglones, con el ícono dentro del texto (la fila de un formulario lo dejaba
+                    // en uno, con «…»).
+                    AdaptiveStack(rowAlignment: .top, spacing: Theme.Space.l) {
+                        // Del alto de una portada, no más: apilada, se quedaba el alto que les tocaba a los botones.
                         coverPreview
                             .frame(width: Theme.Size.coverEditor)
+                            .aspectRatio(Theme.Size.coverAspect, contentMode: .fit)
                         VStack(alignment: .leading, spacing: Theme.Space.l) {
                             PhotosPicker(selection: $photo, matching: .images) {
-                                Label("Elegir de Fotos", systemImage: "photo")
+                                Text("\(Image(systemName: "photo"))  Elegir de Fotos").multilineTextAlignment(.leading)
                             }
                             Button {
                                 choosingCoverFile = true
                             } label: {
-                                Label("Elegir archivo", systemImage: "folder")
+                                Text("\(Image(systemName: "folder"))  Elegir archivo").multilineTextAlignment(.leading)
                             }
                         }
                         .buttonStyle(.borderless)
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.vertical, Theme.Space.xs)
                 } header: {
@@ -111,16 +117,11 @@ struct MetadataEditorView: View {
             }
             .formScreen()
             .sheetTitle("Editar datos")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    BarButton("Dejar como está") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    BarButton("Guardar cambios", action: save)
-                        .disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty
-                                  || (draft.series != nil && seriesInput.isInvalid))
-                }
-            }
+            .sheetActions(leave: SheetAction(title: "Dejar como está") { dismiss() },
+                          confirm: SheetAction(title: "Guardar cambios",
+                                               disabled: draft.title.trimmingCharacters(in: .whitespaces).isEmpty
+                                                   || (draft.series != nil && seriesInput.isInvalid),
+                                               action: save))
             .onChange(of: photo) { _, item in
                 Task { newCover = try? await item?.loadTransferable(type: Data.self) }
             }

@@ -110,7 +110,7 @@ private struct ChooseStep: View {
             SectionHeader("Una sola vez")
             Text("Elige la carpeta de tu biblioteca de Calibre, la que tiene metadata.db (en Calibre: botón Biblioteca › Abrir la carpeta).")
                 .font(.body)
-            Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no se modifica. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
+            Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no la toco. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             PrimaryButton(title: "Elegir la carpeta de Calibre", systemImage: "folder", action: choose)
@@ -136,7 +136,7 @@ private struct ReviewStep: View {
                 FactRow(label: "Ya estaban en tu Gabinete", value: "\(plan.alreadyHere.count)")
                 FactRow(label: "Sin archivo en Calibre", value: "\(plan.withoutFiles.count)")
             }
-            Text("Los subrayados de Calibre llegan a tu Cuaderno con su libro, y se pintan en el texto la primera vez que abres cada libro.")
+            Text("Los subrayados de Calibre llegan a tu Cuaderno con su libro, y los pinto en el texto la primera vez que abres cada libro.")
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
             if plan.toImport.isEmpty {

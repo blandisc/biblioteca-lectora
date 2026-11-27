@@ -73,7 +73,7 @@ enum Connector: String, CaseIterable, Identifiable {
         case .readwise:
             "Tus subrayados de Gabinete van a Readwise con su libro, su nota y un enlace que vuelve al pasaje. De Readwise llegan los de Kindle, Apple Books y tus otras fuentes. Si borras o editas uno aquí, también allá. Nada se duplica."
         case .hardcover:
-            "Al leer, el libro queda como «Leyendo» en tu Hardcover con tu avance, y como «Leído» con su fecha al terminar. Gabinete manda; de Hardcover no se trae nada."
+            "Al leer, el libro queda como «Leyendo» en tu Hardcover con tu avance, y como «Leído» con su fecha al terminar. Gabinete manda; de Hardcover no traigo nada."
         }
     }
 }

@@ -173,6 +173,46 @@ struct AdaptiveStack<Content: View>: View {
     }
 }
 
+/// Dos o más botones de texto lado a lado, todos del mismo ancho y en un renglón; si alguno no
+/// cabe entero en su parte, van uno bajo otro, a lo ancho. Con `AdaptiveStack` el más largo se
+/// partía en dos renglones junto a uno de un renglón («Cerrar el / resumen», auditoría 3).
+struct ButtonPair: Layout {
+    var spacing: CGFloat = Theme.Space.s
+
+    private func side(_ width: CGFloat, _ subviews: Subviews) -> CGFloat? {
+        guard !subviews.isEmpty else { return nil }
+        let part = (width - spacing * CGFloat(subviews.count - 1)) / CGFloat(subviews.count)
+        return subviews.allSatisfy { $0.sizeThatFits(.unspecified).width <= part } ? part : nil
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.reduce(0, +)
+        if let part = side(width, subviews) {
+            let height = subviews.map { $0.sizeThatFits(ProposedViewSize(width: part, height: nil)).height }.max() ?? 0
+            return CGSize(width: width, height: height)
+        }
+        let heights = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
+        return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(subviews.count - 1, 0)))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        if let part = side(bounds.width, subviews) {
+            var x = bounds.minX
+            for view in subviews {
+                view.place(at: CGPoint(x: x, y: bounds.minY), proposal: ProposedViewSize(width: part, height: bounds.height))
+                x += part + spacing
+            }
+            return
+        }
+        var y = bounds.minY
+        for view in subviews {
+            let size = ProposedViewSize(width: bounds.width, height: nil)
+            view.place(at: CGPoint(x: bounds.minX, y: y), proposal: size)
+            y += view.sizeThatFits(size).height + spacing
+        }
+    }
+}
+
 /// Ícono de acción en tinta que se toca en 44 aunque se dibuje chico (SB-4): las acciones de
 /// `ScreenHeading` (el engrane del Cuaderno, lista o portadas en la Biblioteca). Antes solo
 /// respondía el dibujo, de unos 20 pt, junto a un «+» que sí medía 44.
@@ -717,14 +757,38 @@ struct CountLine<Trailing: View>: View {
     var body: some View {
         // Con la letra más grande, el orden baja bajo el conteo («TÍT…» ya no se corta).
         AdaptiveStack(spacing: Theme.Space.l) {
-            CapsText(text: text, lines: Theme.Size.countLines)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            count.frame(maxWidth: .infinity, alignment: .leading)
             trailing
         }
         .frame(minHeight: Theme.Size.tapTarget)
         // Con la letra más grande el conteo es más alto que su renglón de 44 y quedaba pegado a
         // los filtros de arriba: lleva su propio aire.
         .padding(.top, typeSize.isAccessibilitySize ? Theme.Space.s : 0)
+    }
+}
+
+extension CountLine {
+    /// Cada cifra va pegada a su palabra («3 libros» nunca se parte) y, con la letra más grande, si
+    /// el conteo no cabe en un renglón cada par baja al suyo, sin el «·» colgando al final
+    /// («1 SERIE · / 3 LIBROS», auditoría 3).
+    static func pairs(_ text: String) -> [String] {
+        text.components(separatedBy: " · ").map {
+            $0.replacingOccurrences(of: #"(\d) "#, with: "$1\u{00A0}", options: .regularExpression)
+        }
+    }
+
+    @ViewBuilder fileprivate var count: some View {
+        let pairs = Self.pairs(text)
+        if typeSize.isAccessibilitySize, pairs.count > 1 {
+            ViewThatFits(in: .horizontal) {
+                CapsText(text: pairs.joined(separator: " · "))
+                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                    ForEach(pairs, id: \.self) { CapsText(text: $0) }
+                }
+            }
+        } else {
+            CapsText(text: pairs.joined(separator: " · "), lines: Theme.Size.countLines)
+        }
     }
 }
 
@@ -1170,7 +1234,8 @@ struct LetterIndex: View {
         // vea una de cada dos o tres: antes solo se alcanzaban las que se dibujaban.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Índice alfabético")
-        .accessibilityValue(spoken ?? "Desliza hacia arriba o abajo para elegir una letra")
+        .accessibilityValue(spoken ?? "")
+        .accessibilityHint("Desliza hacia arriba o abajo para elegir una letra")
         .accessibilityAdjustableAction { direction in
             let at = spoken.flatMap(letters.firstIndex) ?? -1
             let next = direction == .increment ? at + 1 : at - 1
@@ -1195,8 +1260,10 @@ struct LetterJumpMenu: View {
             }
         } label: {
             HStack(spacing: Theme.Space.xs) {
-                CapsText(text: "Ir a la letra…", tone: Theme.ink)
-                Image(systemName: "textformat.abc")
+                // Corto y con la flecha del orden: «Ir a la letra…» se partía en dos renglones con la
+                // letra más grande y su ícono de letras se dibujaba como un «Abc» enorme (auditoría 3).
+                CapsText(text: "A–Z", tone: Theme.ink)
+                Image(systemName: "chevron.down")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Theme.ink)
             }
@@ -1289,15 +1356,18 @@ struct LinkRow: View {
     var status: Bool? = nil
     var chevron = true
     @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .body) private var markSize = Theme.Size.statusDot
 
     var body: some View {
         // El punto va a la altura del primer renglón del nombre: con la letra más grande, centrado
         // en la fila, caía abajo a la izquierda, entre el nombre y su valor.
         HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
             if marked {
-                Text(verbatim: " ")
-                    .frame(width: Theme.Size.statusDot)
-                    .overlay { StatusDot(on: true) }
+                // Una «X» escondida da el alto del primer renglón: el punto va en su centro, no en
+                // la línea de base, donde se leía como un punto final; y crece con la letra (auditoría 3).
+                Text(verbatim: "X").hidden()
+                    .frame(width: markSize)
+                    .overlay { StatusDot(on: true, size: markSize) }
                     .accessibilityHidden(true)
             }
             // Con la letra más grande, el valor baja bajo el nombre (antes «Fuent / e  Open…»).
@@ -1328,12 +1398,13 @@ struct LinkRow: View {
 /// Punto de estado: lleno en verde (conectado, pendiente) o hueco en gris.
 struct StatusDot: View {
     let on: Bool
+    var size = Theme.Size.statusDot
 
     var body: some View {
         Circle()
             .strokeBorder(on ? Theme.accent : Theme.secondaryInk, lineWidth: Theme.Size.statusDotLine)
             .background(Circle().fill(on ? Theme.accent : .clear))
-            .frame(width: Theme.Size.statusDot, height: Theme.Size.statusDot)
+            .frame(width: size, height: size)
             .accessibilityHidden(true)
     }
 }
@@ -1391,8 +1462,17 @@ struct LabeledField: View {
 extension View {
     /// Un renglón que, si no cabe, termina en «…» en vez de cortarse en seco: los campos y
     /// valores de la ficha de la Mac (regla 9, UX-3b).
+    /// Lo escrito va en tinta: en la ficha de la Mac los datos y sus pistas («2016 o 2016-05-01»)
+    /// salían del mismo gris y una pista se leía como un dato (auditoría 3); la pista es `.fieldPrompt`.
     func oneLine() -> some View {
-        lineLimit(1).truncationMode(.tail)
+        lineLimit(1).truncationMode(.tail).foregroundStyle(Theme.ink)
+    }
+}
+
+extension Text {
+    /// La pista de un campo, más callada que lo escrito (ver `oneLine`).
+    static func fieldPrompt(_ text: String) -> Text {
+        Text(text).foregroundStyle(Theme.tertiaryInk)
     }
 }
 
@@ -1409,6 +1489,75 @@ struct BarButton: View {
 
     var body: some View {
         Button(title, action: action).tint(Theme.ink)
+    }
+}
+
+/// Una salida de texto de una hoja: lo que dice, si se puede tocar y qué hace.
+struct SheetAction {
+    let title: String
+    var disabled = false
+    let action: () -> Void
+}
+
+/// Las dos salidas de texto de una hoja («Dejar como está» y «Guardar cambios», «Volver al paso
+/// anterior» e «Ir a la biblioteca»). Con la letra de siempre van en la barra; con la de
+/// accesibilidad (AX1–AX5) iOS guardaba la segunda en su «•••» y la hoja quedaba sin cómo
+/// guardar (auditoría 3): la de salir se queda arriba y la otra baja, entera, a `BottomBar`.
+/// `quiet`: la segunda es saltar, no la acción principal (bienvenida): en tinta secundaria.
+struct SheetActions: ViewModifier {
+    let leave: SheetAction?
+    let confirm: SheetAction?
+    var quiet = false
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        let below = typeSize.isAccessibilitySize
+        content
+            .toolbar {
+                if let leave {
+                    ToolbarItem(placement: .cancellationAction) { BarButton(leave.title, action: leave.action) }
+                }
+                if let confirm, !below {
+                    ToolbarItem(placement: quiet ? .primaryAction : .confirmationAction) {
+                        BarButton(confirm.title, action: confirm.action)
+                            .foregroundStyle(quiet ? Theme.secondaryInk : Theme.ink)
+                            .disabled(confirm.disabled)
+                    }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if let confirm, below {
+                    BottomBar {
+                        if quiet {
+                            QuietButton(title: confirm.title, action: confirm.action)
+                        } else {
+                            PrimaryButton(title: confirm.title, fillsWidth: true, action: confirm.action)
+                        }
+                    }
+                    .disabled(confirm.disabled)
+                }
+            }
+        #else
+        content
+            .toolbar {
+                if let leave {
+                    ToolbarItem(placement: .cancellationAction) { BarButton(leave.title, action: leave.action) }
+                }
+                if let confirm {
+                    ToolbarItem(placement: .confirmationAction) {
+                        BarButton(confirm.title, action: confirm.action).disabled(confirm.disabled)
+                    }
+                }
+            }
+        #endif
+    }
+}
+
+extension View {
+    /// Las dos salidas de una hoja, a la vista con cualquier letra (ver `SheetActions`).
+    func sheetActions(leave: SheetAction?, confirm: SheetAction?, quiet: Bool = false) -> some View {
+        modifier(SheetActions(leave: leave, confirm: confirm, quiet: quiet))
     }
 }
 
@@ -1854,7 +2003,7 @@ struct CabinetArt: View {
                     node(symbol: "folder.fill", title: folder, tint: Theme.accent)
                     VStack(alignment: .leading, spacing: Theme.Space.s) {
                         node(symbol: "folder", title: "Biblioteca", note: "forma de Calibre", figure: books.counted("libro", "libros"))
-                        node(symbol: "folder", title: "Notas", note: "Markdown", figure: notes.counted("nota", "notas"))
+                        node(symbol: "folder", title: "Notas", note: "también para Obsidian", figure: notes.counted("nota", "notas"))
                     }
                     .branch()
                 }
@@ -2467,7 +2616,7 @@ enum EmptyCopy {
     static let noDuplicates = (title: "Sin libros repetidos",
                                message: "No encontré dos libros con el mismo título y un autor parecido, ni con el mismo ISBN.")
     static let chooseBook = (title: "Elige un libro",
-                             message: "Con varios elegidos, lo que cambies aquí se aplica a todos.")
+                             message: "Con varios elegidos, lo que cambies aquí lo aplico a todos.")
 }
 
 #if os(macOS)

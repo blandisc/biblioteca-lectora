@@ -101,7 +101,7 @@ struct ConnectorScreen: View {
                     ShareLink(item: exported) { Label("Compartir el archivo", systemImage: "square.and.arrow.up") }
                 }
             } footer: {
-                Text("Salida libre: el CSV se importa en Readwise o en cualquier hoja de cálculo.")
+                Text("Salida libre: puedes importar el CSV en Readwise o en cualquier hoja de cálculo.")
             }
         case .hardcover:
             Section {
@@ -109,7 +109,7 @@ struct ConnectorScreen: View {
             } header: {
                 CapsText(text: "Qué viaja")
             } footer: {
-                Text("Tu calificación (las estrellas de la ficha) también viaja. Cada libro se busca en Hardcover una vez (por ISBN o título y autor) y su número queda en el catálogo como hardcover:…, también en el OPF.")
+                Text("Tu calificación (las estrellas de la ficha) también viaja. Busco cada libro en Hardcover una vez (por ISBN o título y autor) y su número queda en el catálogo como hardcover:…, también en el OPF.")
             }
         }
         Section {
