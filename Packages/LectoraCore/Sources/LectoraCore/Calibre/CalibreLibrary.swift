@@ -143,14 +143,14 @@ public enum CalibreLibrary {
                 title: title,
                 authors: authors[id] ?? [],
                 series: series[id]?.first,
-                seriesIndex: series[id] == nil ? nil : row[4].flatMap(Double.init),
+                seriesIndex: series[id] == nil ? nil : Book.sanitizedSeriesIndex(row[4].flatMap(Double.init)),
                 tags: tags[id] ?? [],
                 language: languages[id]?.first.map(CalibreOPF.iso639_1),
                 identifiers: ids,
                 publisher: publishers[id]?.first,
                 published: published,
                 summary: comments[id]?.first,
-                rating: ratings[id]?.first.flatMap(Double.init).map { $0 / 2 },
+                rating: ratings[id]?.first.flatMap(Double.init).flatMap { $0.isFinite && $0 >= 0 ? min($0, 10) / 2 : nil },
                 calibreID: id,
                 addedAt: row[2].flatMap { CalibreOPF.parseTimestamp($0.replacingOccurrences(of: " ", with: "T")) }
             )

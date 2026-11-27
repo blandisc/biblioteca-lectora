@@ -144,7 +144,7 @@ extension Book {
             title: title,
             authors: fields[Field.authors]?.stringArrayValue ?? [],
             series: fields[Field.series]?.stringValue,
-            seriesIndex: fields[Field.seriesIndex]?.doubleValue,
+            seriesIndex: Book.sanitizedSeriesIndex(fields[Field.seriesIndex]?.doubleValue),
             tags: fields[Field.tags]?.stringArrayValue ?? [],
             language: fields[Field.language]?.stringValue,
             identifiers: identifiers,
@@ -154,15 +154,42 @@ extension Book {
             published: fields[Field.published]?.stringValue,
             summary: fields[Field.summary]?.stringValue,
             rating: fields[Field.rating]?.doubleValue,
-            calibreID: fields[Field.calibreID]?.doubleValue.map { Int($0) },
+            calibreID: Book.sanitizedCalibreID(fields[Field.calibreID]?.doubleValue),
             fileHash: fields[Field.fileHash]?.stringValue,
             addedAt: fields[Field.addedAt]?.doubleValue.map(Date.init(timeIntervalSince1970:))
         )
         extraFiles = fields[Field.extraFiles]?.stringArrayValue ?? []
     }
 
+    /// Número de tomo usable: finito y entre 0 y 9999; si no, `nil`.
+    /// «inf», «1e20» o un número negativo llegan de fichas y EPUB raros, y cierran la app al mostrarse.
+    public static func sanitizedSeriesIndex(_ value: Double?) -> Double? {
+        guard let value, value.isFinite, (0...9999).contains(value) else { return nil }
+        return value
+    }
+
+    /// Número de Calibre usable: entero, positivo y de tamaño razonable; nunca se cierra.
+    static func sanitizedCalibreID(_ value: Double?) -> Int? {
+        guard let value, value.isFinite, value >= 0, value <= Double(Int32.max) else { return nil }
+        return Int(exactly: value)
+    }
+
     /// Cambios que describen el libro completo (para altas e importaciones).
     public func changes(clock: HybridLogicalClock) -> [Change] {
+        changes(from: nil, clock: clock)
+    }
+
+    /// Solo los campos que cambiaron frente a `previous` (todos si es `nil`): así una
+    /// copia vieja de otro dispositivo no pisa lo que no tocaste («gana el último por campo»).
+    public func changes(from previous: Book?, clock: HybridLogicalClock) -> [Change] {
+        let before = previous.map { Dictionary(uniqueKeysWithValues: $0.encodedFields) }
+        return encodedFields
+            .filter { field, value in before?[field] != value }
+            .map { field, value in Change(hlc: clock.tick(), entity: .book, entityID: id, field: field, value: value) }
+    }
+
+    /// Cada campo como viaja en el registro.
+    var encodedFields: [(String, JSONValue)] {
         var fields: [(String, JSONValue)] = [
             (Field.title, .string(title)),
             (Field.authors, .array(authors.map(JSONValue.string))),
@@ -171,20 +198,19 @@ extension Book {
             (Field.readingStatus, .string(readingStatus.rawValue)),
         ]
         fields.append((Field.series, series.map(JSONValue.string) ?? .null))
-        fields.append((Field.seriesIndex, seriesIndex.map(JSONValue.number) ?? .null))
+        // Un número no finito ni siquiera se puede escribir en JSON.
+        fields.append((Field.seriesIndex, Book.sanitizedSeriesIndex(seriesIndex).map(JSONValue.number) ?? .null))
         fields.append((Field.language, language.map(JSONValue.string) ?? .null))
         fields.append((Field.filePath, filePath.map(JSONValue.string) ?? .null))
         fields.append((Field.publisher, publisher.map(JSONValue.string) ?? .null))
         fields.append((Field.published, published.map(JSONValue.string) ?? .null))
         fields.append((Field.summary, summary.map(JSONValue.string) ?? .null))
-        fields.append((Field.rating, rating.map(JSONValue.number) ?? .null))
+        fields.append((Field.rating, rating.flatMap { $0.isFinite ? JSONValue.number($0) : nil } ?? .null))
         fields.append((Field.calibreID, calibreID.map { JSONValue.number(Double($0)) } ?? .null))
         fields.append((Field.fileHash, fileHash.map(JSONValue.string) ?? .null))
         fields.append((Field.addedAt, addedAt.map { JSONValue.number($0.timeIntervalSince1970) } ?? .null))
         fields.append((Field.extraFiles, .array(extraFiles.map(JSONValue.string))))
-        return fields.map { field, value in
-            Change(hlc: clock.tick(), entity: .book, entityID: id, field: field, value: value)
-        }
+        return fields
     }
 }
 
