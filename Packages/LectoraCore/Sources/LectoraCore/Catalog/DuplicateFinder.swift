@@ -46,7 +46,7 @@ public enum DuplicateFinder {
         let byTitle = Dictionary(grouping: books.filter { !titleKey($0.title).isEmpty }) { titleKey($0.title) }
         for bucket in byTitle.values where bucket.count > 1 {
             for (i, a) in bucket.enumerated() {
-                for b in bucket[(i + 1)...] where sameAuthors(a, b) { join(a, b) }
+                for b in bucket[(i + 1)...] where sameAuthors(a, b) && sameVolume(a, b) { join(a, b) }
             }
         }
         let byISBN = Dictionary(grouping: books.filter { $0.identifiers["isbn"] != nil }) { ISBN.normalized($0.identifiers["isbn"] ?? "") ?? "" }
@@ -59,6 +59,13 @@ public enum DuplicateFinder {
             .filter { $0.count > 1 }
             .map { $0.sorted { ($0.addedAt ?? .distantPast) < ($1.addedAt ?? .distantPast) } }
             .sorted { $0[0].title.localizedStandardCompare($1[0].title) == .orderedAscending }
+    }
+
+    /// Otro tomo de la misma serie no es un duplicado: «Dune» y «Dune: tomo diez», o dos libros
+    /// con distinto número en la serie.
+    static func sameVolume(_ a: Book, _ b: Book) -> Bool {
+        if let x = a.seriesIndex, let y = b.seriesIndex, x != y { return false }
+        return TextMatch.titleFit(a.title, b.title) != .otherVolume
     }
 
     /// Algún autor en común (o parecido), o uno de los dos sin autor.

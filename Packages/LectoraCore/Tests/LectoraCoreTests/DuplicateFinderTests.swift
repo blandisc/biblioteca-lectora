@@ -57,4 +57,15 @@ final class DuplicateFinderTests: XCTestCase {
         state.apply([Book.deletion(id: book.id, clock: HybridLogicalClock(node: "prueba"))])
         XCTAssertTrue(state.books().isEmpty, "Juntar borra el otro del registro")
     }
+
+    func testOtherVolumesAreNotDuplicates() {
+        let dune = Book(title: "Dune", authors: ["Frank Herbert"])
+        let tenth = Book(title: "Dune: tomo diez", authors: ["Frank Herbert"])
+        var first = Book(title: "Fundación", authors: ["Isaac Asimov"])
+        first.seriesIndex = 1
+        var second = Book(title: "Fundación", authors: ["Isaac Asimov"])
+        second.seriesIndex = 2
+        XCTAssertTrue(DuplicateFinder.groups([dune, tenth, first, second]).isEmpty)
+        XCTAssertEqual(DuplicateFinder.groups([dune, Book(title: "Dune", authors: ["F. Herbert"])]).count, 1)
+    }
 }

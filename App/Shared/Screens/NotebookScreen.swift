@@ -92,7 +92,7 @@ struct NotebookScreen: View {
         } else {
             LazyVStack(spacing: 0) {
                 ForEach(notes) { note in
-                    NavigationLink(value: NoteRef(fileName: note.fileName)) { NoteRow(note: note) }
+                    NavigationLink(value: NoteRef(fileName: note.fileName)) { NoteRow(note: note, isInLibrary: { model.shelfBook(titled: $0) != nil }) }
                         .buttonStyle(.plain)
                 }
             }

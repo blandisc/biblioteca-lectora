@@ -1725,12 +1725,13 @@ struct CoverChoiceCell: View {
 /// Fila de nota en el Cuaderno y en la ficha: título en serif, las primeras
 /// líneas y, abajo, la fecha y los libros que enlaza (en verde).
 struct NoteRow: View {
-    @EnvironmentObject private var model: AppModel
     let note: Note
     /// Detalle en lugar de los libros enlazados («1 cita»).
     var detail: String? = nil
     /// Al buscar: el pasaje de la nota donde aparece, con lo buscado en verde.
     var match: String? = nil
+    /// ¿Está ese libro en tu biblioteca? Los que no, se ven en gris (no son enlace).
+    var isInLibrary: (String) -> Bool = { _ in true }
 
     private var preview: String {
         guard let match, !Found.terms(match).contains(where: { note.title.localizedStandardContains($0) }) else { return note.preview }
@@ -1770,7 +1771,7 @@ struct NoteRow: View {
         guard !links.isEmpty else { return date }
         // En verde solo los libros que están en tu biblioteca: uno que no está no es enlace (RB-7b).
         return links.enumerated().reduce(date) { text, link in
-            let found = model.shelfBook(titled: link.element) != nil
+            let found = isInLibrary(link.element)
             return text + Text(" · ").foregroundStyle(Theme.secondaryInk)
                 + Text(link.element.uppercased()).foregroundStyle(found ? Theme.highlight : Theme.secondaryInk)
         }

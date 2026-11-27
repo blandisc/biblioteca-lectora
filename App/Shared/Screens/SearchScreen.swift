@@ -179,7 +179,7 @@ struct SearchScreen: View {
             if !found.notes.isEmpty {
                 section("Tus notas") {
                     ForEach(found.notes) { note in
-                        NavigationLink(value: NoteRef(fileName: note.fileName)) { NoteRow(note: note, match: term) }
+                        NavigationLink(value: NoteRef(fileName: note.fileName)) { NoteRow(note: note, match: term, isInLibrary: { model.shelfBook(titled: $0) != nil }) }
                             .buttonStyle(.plain)
                     }
                 }
