@@ -29,6 +29,14 @@ public struct Book: Identifiable, Hashable, Sendable {
     /// Otros formatos del mismo libro (CB-3), en su misma carpeta: nombres de archivo como
     /// «Rayuela - Julio Cortázar.pdf». El que se lee es `filePath`.
     public var extraFiles: [String] = []
+    /// Huellas de los archivos que se juntaron en este libro (sus otros formatos y los repetidos
+    /// que se fueron a la Papelera): volver a importar uno se reconoce como este libro (M4).
+    public var extraHashes: [String] = []
+
+    /// ¿Este archivo (por su huella) ya es de este libro?
+    public func hasFile(hash: String) -> Bool {
+        fileHash == hash || extraHashes.contains(hash)
+    }
 
     public init(
         id: UUID = UUID(),
@@ -128,6 +136,7 @@ extension Book {
         static let fileHash = "file_hash"
         static let addedAt = "added_at"
         static let extraFiles = "extra_files"
+        static let extraHashes = "extra_hashes"
     }
 
     /// Construye el libro a partir de sus campos; `nil` si no tiene título.
@@ -159,6 +168,7 @@ extension Book {
             addedAt: fields[Field.addedAt]?.doubleValue.map(Date.init(timeIntervalSince1970:))
         )
         extraFiles = fields[Field.extraFiles]?.stringArrayValue ?? []
+        extraHashes = fields[Field.extraHashes]?.stringArrayValue ?? []
     }
 
     /// Número de tomo usable: finito y entre 0 y 9999; si no, `nil`.
@@ -210,6 +220,8 @@ extension Book {
         fields.append((Field.fileHash, fileHash.map(JSONValue.string) ?? .null))
         fields.append((Field.addedAt, addedAt.map { JSONValue.number($0.timeIntervalSince1970) } ?? .null))
         fields.append((Field.extraFiles, .array(extraFiles.map(JSONValue.string))))
+        // Solo si hay: los libros de antes no escriben un cambio vacío al editarse.
+        if !extraHashes.isEmpty { fields.append((Field.extraHashes, .array(extraHashes.map(JSONValue.string)))) }
         return fields
     }
 }

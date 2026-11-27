@@ -72,12 +72,22 @@ public struct LibraryQuery: Equatable, Sendable {
     public func matchesFilters(_ book: Book) -> Bool {
         filters.allSatisfy { filter in
             let values = Self.values(of: filter.field, in: book).map(Self.fold)
-            guard values.contains(where: { $0.contains(filter.value) }) else { return false }
+            guard values.contains(where: { Self.contains($0, filter.value, as: filter.field) }) else { return false }
             guard !filter.more.isEmpty else { return true }
             // Las palabras de más, en el mismo dato («Julio Cortázar» o «Cortázar, Julio») o en el libro.
             let field = values.joined(separator: " "), book = Self.haystack(book)
             return filter.more.allSatisfy { field.contains($0) || book.contains($0) }
         }
+    }
+
+    /// `isbn:978-84-376-0494-7` encuentra el guardado sin guiones (y al revés), y uno de 10
+    /// cifras al de 13 (auditoría de medios): se comparan solo las cifras.
+    static func contains(_ value: String, _ wanted: String, as field: Field) -> Bool {
+        guard field == .isbn else { return value.contains(wanted) }
+        let digits = { (text: String) in text.uppercased().filter { $0.isNumber || $0 == "X" } }
+        let (stored, query) = (digits(value), digits(wanted))
+        if let left = ISBN.normalized(stored), let right = ISBN.normalized(query) { return left == right }
+        return !query.isEmpty && stored.contains(query)
     }
 
     /// Buscar en todo (SG-3): cada palabra aparece en alguno de los textos, en cualquier orden.

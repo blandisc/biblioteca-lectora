@@ -108,6 +108,19 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// Nueva posición, ya asentada (un instante después de pasar página).
     var onPositionSettled: ((Location) -> Void)?
     private var settleTask: Task<Void, Never>?
+    /// La posición que espera a asentarse: si cierras el libro o sales de la app antes, se
+    /// guarda igual (`flushPosition`).
+    private var unsavedLocation: Location?
+
+    /// Guarda ya la posición que esperaba a asentarse (al cerrar el libro o salir de la app):
+    /// antes se perdía si te ibas en menos de `positionSettle`.
+    func flushPosition() {
+        settleTask?.cancel()
+        settleTask = nil
+        guard let location = unsavedLocation else { return }
+        unsavedLocation = nil
+        onPositionSettled?(location)
+    }
 
     let schemeHandler = ReaderSchemeHandler()
     private(set) weak var webView: WKWebView?
@@ -143,14 +156,17 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     }
 
     /// Abre un libro (copia local) y, si existe, vuelve a la última posición.
-    func open(bookFile: URL, bookID: UUID? = nil, lastCFI: String? = nil) {
+    func open(bookFile: URL, bookID: UUID? = nil, lastCFI: String? = nil, fraction: Double? = nil) {
+        unsavedLocation = nil
         schemeHandler.bookFile = bookFile
         isSettled = false
         self.bookID = bookID ?? AnnotationStore.bookID(for: bookFile)
         // Solo los libros del catálogo tienen sesiones (para el diario y la ficha).
         session = bookID.map { SessionTracker(bookID: $0) }
         let cfiArgument = lastCFI.map(Self.js) ?? "null"
-        let script = "window.lectora.open('\(ReaderSchemeHandler.bookURL(for: bookFile).absoluteString)', \(cfiArgument))"
+        // Sin CFI pero con avance (un libro juntado con otro, auditoría de medios): abre ahí.
+        let fractionArgument = fraction?.readingFraction.map { "\($0)" } ?? "null"
+        let script = "window.lectora.open('\(ReaderSchemeHandler.bookURL(for: bookFile).absoluteString)', \(cfiArgument), \(fractionArgument))"
         if isReady { evaluate(script) } else { pendingOpen = script }
     }
 
@@ -241,7 +257,11 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// Al salir de la hendidura: el libro queda en el pedazo donde ibas.
     func slitGoTo(offset: Int) { evaluate("window.lectora.slitGoTo(\(offset))") }
     /// Ir a una entrada del índice, a un resultado o a un subrayado (href o CFI).
-    func goTo(target: String) { evaluate("window.lectora.goTo(\(Self.js(target)))") }
+    func goTo(target: String) {
+        // Un marcador que venía de otro archivo (al juntar duplicados) solo sabe su avance.
+        if let fraction = Bookmark.approximateFraction(target) { return goTo(fraction: fraction) }
+        evaluate("window.lectora.goTo(\(Self.js(target)))")
+    }
 
     func search(_ query: String) {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -564,10 +584,11 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             // Abrir el libro no es leerlo (UX-1e): la posición se guarda hasta que tú lo
             // mueves; antes, solo abrirlo ya decía «5 % leído».
             if let location, body["moved"] as? Bool == true {
+                unsavedLocation = location
                 settleTask = Task { [weak self] in
                     try? await Task.sleep(for: Theme.Reader.positionSettle)
                     guard !Task.isCancelled else { return }
-                    self?.onPositionSettled?(location)
+                    self?.flushPosition()
                 }
             }
         case "searchProgress":

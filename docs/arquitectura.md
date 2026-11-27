@@ -33,9 +33,15 @@ nuestro queda fuera.
 ### D2. El centro es la carpeta `Gabinete/` en iCloud Drive
 - `Biblioteca/` con la forma de Calibre (`Autor/Título (id)/archivo + cover.jpg + metadata.opf`).
 - `Biblioteca/.lectora/`: registros por dispositivo (JSONL, solo se agregan líneas),
-  reglas, lo completado, por revisar y las sesiones de lectura.
+  reglas, lo completado, por revisar y las sesiones de lectura. Nada de lo que guardas se
+  pierde por cómo se escribe: una línea cortada no se pega a la siguiente (`LineFile`), lo que
+  guardas mientras el registro se lee se aplica encima de la lectura (`WritesDuringRead`), la
+  posición se guarda también al cerrar el libro o salir de la app, y cada aparato tiene su
+  propio id aunque venga de un respaldo (`DeviceIdentity`, M7). Un archivo de `.lectora/` que
+  no se puede leer no se toca y te lo digo una vez (auditoría de medios; `AuditoriaMediosTests`).
 - Lo que iCloud todavía no baja nunca se pisa ni se borra: la app pide bajarlo, espera y te
-  dice que vuelvas a intentar (auditoría 1; `AuditoriaUnoTests`, y solo `ChangeLog`,
+  dice que vuelvas a intentar; mover el Gabinete primero baja lo que falta y, si no baja, no
+  mueve nada (auditoría 1; `AuditoriaUnoTests`, y solo `ChangeLog`,
   `SessionLog`, `NoteFolder` y `SideFile` escriben en la carpeta). Lo que guardo mientras
   iCloud baja no se pierde aunque cierres la app: espera en el dispositivo, con su Gabinete
   (`PendingWrites`, nunca dentro de la carpeta), y se escribe solo en cuanto baja, al volver
@@ -44,7 +50,15 @@ nuestro queda fuera.
 - Una carpeta nunca tiene una gemela que solo cambia en mayúsculas: iCloud y la Mac no las
   distinguen y el iPhone sí. Si ya existe con otras mayúsculas, el libro entra a ella y el
   catálogo guarda el nombre que tiene en el disco (`FolderMove.createFolder`,
-  `moveBookFolder`; auditoría 2, `AuditoriaDosTests`, también en un disco sensible).
+  `moveBookFolder`; auditoría 2, `AuditoriaDosTests`, también en un disco sensible). Tampoco
+  al deshacer un cambio de carpeta; una ruta guardada antes con otras mayúsculas se corrige al
+  abrir y «Ordenar» junta las gemelas que quedaron de antes (auditoría de medios).
+- Pendiente (A7, diseño): el registro crece con cada página asentada (4 cambios cada vez). La
+  compactación sería que cada dispositivo reescriba solo su `<id>.jsonl` con el último cambio
+  de cada campo y todas las lápidas (gana el último por campo, así que el estado no cambia),
+  de forma atómica, coordinada con iCloud y solo con su registro bajado; y que la posición se
+  guarde menos seguido. No se hizo aún: reescribir un archivo que iCloud sincroniza necesita
+  probarse con dos aparatos de verdad, no solo en `swift test`.
 - `Notas/`: Markdown normal, legible por Obsidian o cualquier editor.
 - Si borras Gabinete, todo sigue ahí y se abre con Calibre y Obsidian.
 

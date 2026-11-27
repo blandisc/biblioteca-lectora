@@ -51,6 +51,25 @@ public struct Bookmark: Identifiable, Hashable, Sendable {
         Change(hlc: clock.tick(), entity: .bookmark, entityID: id, field: Change.deletedField, value: .bool(true))
     }
 
+    /// Un marcador que llega de otro archivo al juntar duplicados: su CFI apunta a otro libro,
+    /// así que solo conserva su avance («avance:0.42») y el lector abre a esa altura.
+    static let approximatePrefix = "avance:"
+
+    public static func approximateCFI(_ fraction: Double) -> String {
+        approximatePrefix + String(fraction.readingFraction ?? 0)
+    }
+
+    /// El avance de un marcador aproximado, o nil si es un CFI de verdad.
+    public static func approximateFraction(_ cfi: String) -> Double? {
+        guard cfi.hasPrefix(approximatePrefix) else { return nil }
+        return Double(cfi.dropFirst(approximatePrefix.count))?.readingFraction
+    }
+
+    /// El mismo marcador, pasado a otro libro cuyo archivo es otro: sin su CFI.
+    public func moved(to bookID: UUID) -> Bookmark {
+        Bookmark(bookID: bookID, cfi: Self.approximateCFI(fraction), fraction: fraction, excerpt: excerpt, createdAt: createdAt)
+    }
+
     // Si un marcador cae en la página visible lo decide reader.js (`setBookmarks`):
     // compara su punto con el principio y el final de la página. Comparar el
     // principio exacto o el avance falla en cuanto la página se vuelve a paginar.

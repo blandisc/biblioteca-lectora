@@ -124,8 +124,47 @@ public enum DuplicateFinder {
             book.identifiers.merge(other.identifiers) { mine, _ in mine }
             if progress(other.readingStatus) > progress(book.readingStatus) { book.readingStatus = other.readingStatus }
             if let added = other.addedAt, added < (book.addedAt ?? .distantFuture) { book.addedAt = added }
+            // Sus archivos ya son de este libro: importarlos otra vez no lo duplica (M4).
+            for hash in [other.fileHash].compactMap({ $0 }) + other.extraHashes
+            where hash != book.fileHash && !book.extraHashes.contains(hash) {
+                book.extraHashes.append(hash)
+            }
         }
         return book
+    }
+
+    /// Los libros que terminaron en `id`, también por cadenas (X se juntó en Y y luego Y en Z:
+    /// los subrayados de X son de Z). `table`: libro que se quedó → los que se juntaron en él.
+    /// Un ciclo (dos dispositivos juntando al revés) no se repite sin fin y nunca incluye a `id`.
+    public static func absorbed(into id: UUID, table: [UUID: [UUID]]) -> [UUID] {
+        var seen: Set<UUID> = [id], result: [UUID] = [], queue = table[id] ?? []
+        while let next = queue.first {
+            queue.removeFirst()
+            guard seen.insert(next).inserted else { continue }
+            result.append(next)
+            queue.append(contentsOf: table[next] ?? [])
+        }
+        return result
+    }
+
+    /// Dónde vas en un libro, para juntar duplicados: el avance y cuándo lo guardaste.
+    public struct Spot: Equatable, Sendable {
+        public var fraction: Double
+        public var updatedAt: Date?
+        public init(fraction: Double, updatedAt: Date?) {
+            self.fraction = fraction
+            self.updatedAt = updatedAt
+        }
+    }
+
+    /// Al juntar, la posición que se queda: la más avanzada (si empataste, la más reciente).
+    /// Devuelve su lugar en `spots` (el primero es el libro que se queda), o nil si no hay.
+    public static func furthest(_ spots: [Spot?]) -> Int? {
+        let known = spots.enumerated().compactMap { index, spot in spot.map { (index, $0) } }
+        return known.max { a, b in
+            if a.1.fraction != b.1.fraction { return a.1.fraction < b.1.fraction }
+            return (a.1.updatedAt ?? .distantPast) < (b.1.updatedAt ?? .distantPast)
+        }?.0
     }
 
     static func progress(_ status: ReadingStatus) -> Int {

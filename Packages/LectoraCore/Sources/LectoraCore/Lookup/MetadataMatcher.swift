@@ -23,6 +23,9 @@ public enum MetadataMatcher {
         "resumen", "summary", "analisis", "analysis", "study", "sparknotes", "cliffsnotes", "guia", "guide",
         "estuche", "trilogia", "boxed", "box", "coleccion", "collection", "obras", "completas", "workbook",
         "selections", "adaptation", "adaptacion", "comentario", "critica", "criticism", "readers",
+        // Otra forma del libro (auditoría de medios): «Sapiens: A Graphic History», la novela
+        // gráfica, la edición ilustrada, la trilogía en un tomo.
+        "graphic", "grafica", "grafico", "illustrated", "ilustrada", "ilustrado", "trilogy", "comic", "comics",
     ]
 
     public static func match(_ candidate: MetadataCandidate, for book: Book) -> Match {
@@ -42,6 +45,11 @@ public enum MetadataMatcher {
         case .otherSubtitle: title = min(title, 0.7)
         case .same: break
         }
+        // Tu archivo no trae subtítulo y el candidato sí lo tiene en su propio título
+        // («Los juegos del hambre» / «Los juegos del hambre: En llamas»): puede ser otro libro
+        // y va a «Por revisar». El subtítulo aparte de una edición («Sapiens» + «De animales a
+        // dioses») sí es el mismo libro.
+        if addsSubtitle(to: bookTitle, candidate) { title = min(title, 0.7) }
         // Archivo sin autor: «cervantes don-quijote» trae el autor en el título.
         if book.authors.isEmpty, let author = candidate.authors.first {
             let words = Set(TextMatch.tokens(bookTitle)), withAuthor = Set(TextMatch.tokens(candidate.title + " " + author))
@@ -66,7 +74,8 @@ public enum MetadataMatcher {
                 notes.append(.conflictingISBN)
             }
         }
-        let candidateWords = Set(TextMatch.words(candidate.title + " " + (candidate.workTitle ?? "")))
+        let candidateWords = Set(TextMatch.words([candidate.title, candidate.subtitle, candidate.workTitle]
+            .compactMap { $0 }.joined(separator: " ")))
         let bookWords = Set(TextMatch.words(bookTitle))
         if !candidateWords.intersection(derivative).subtracting(bookWords).isEmpty {
             score -= 0.3
@@ -83,6 +92,17 @@ public enum MetadataMatcher {
         notes.append(title >= 0.95 ? .sameTitle : (title >= 0.6 ? .similarTitle : .otherTitle))
         notes.append(author >= 0.8 ? .sameAuthor : (author == 0.5 ? .unknownAuthor : .otherAuthor))
         return Match(confidence: max(0, min(score, 0.99)), title: title, author: author, sameISBN: sameISBN, notes: notes)
+    }
+
+    /// ¿El título del candidato es el tuyo más un subtítulo que tu archivo no tiene? Si su obra
+    /// se llama como tu libro, es el mismo y no cuenta.
+    static func addsSubtitle(to bookTitle: String, _ candidate: MetadataCandidate) -> Bool {
+        let title = TextMatch.withoutBrackets(candidate.title)
+        let mine = Set(TextMatch.tokens(TextMatch.withoutBrackets(bookTitle)))
+        let main = Set(TextMatch.tokens(TextMatch.mainTitle(title)))
+        guard !mine.isEmpty, main == mine, Set(TextMatch.tokens(title)) != mine else { return false }
+        if let work = candidate.workTitle, Set(TextMatch.tokens(TextMatch.withoutBrackets(work))) == mine { return false }
+        return true
     }
 
     public static func score(_ candidate: MetadataCandidate, for book: Book) -> Double {

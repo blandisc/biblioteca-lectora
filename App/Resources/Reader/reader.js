@@ -520,7 +520,8 @@ const placeOnPage = index => {
 // La hendidura: el texto desde donde vas hasta el fin del capítulo.
 // Entre un bloque y otro (el título del capítulo y su primera frase, dos párrafos) va un
 // salto de renglón: el texto de un rango los pegaba, «Capítulo IEn un lugar…» (UX-8b). Los
-// saltos de renglón del código del libro, dentro de un párrafo, cuentan como espacio.
+// saltos de renglón del código del libro, dentro de un párrafo, cuentan como espacio; un
+// <br> sí es salto (hay libros con todo el capítulo en un solo bloque partido con <br>).
 // Cada pedazo recuerda dónde empieza, para volver al mismo lugar al cerrar.
 const slitBlocks = /^(P|DIV|H[1-6]|LI|BLOCKQUOTE|SECTION|ARTICLE|HEADER|FOOTER|ASIDE|NAV|TR|TD|TH|DT|DD|FIGCAPTION|PRE|TABLE|UL|OL|DL|FIGURE|HR)$/
 const blockOf = node => {
@@ -531,11 +532,15 @@ const blockOf = node => {
 }
 const slitTextOf = rest => {
     const doc = rest.startContainer.ownerDocument
-    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT)
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT)
     let text = '', block, started = false
     const pieces = []
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
         if (!rest.intersectsNode(node)) continue
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            if (started && node.tagName.toUpperCase() === 'BR' && !text.endsWith('\n')) text += '\n'
+            continue
+        }
         const from = node === rest.startContainer ? rest.startOffset : 0
         const to = node === rest.endContainer ? rest.endOffset : node.data.length
         if (to <= from) continue
@@ -878,7 +883,8 @@ window.lectora = {
         return null
     },
 
-    async open(url, lastLocation) {
+    // `fraction`: sin CFI, a qué altura del libro abrir (0 a 1).
+    async open(url, lastLocation, fraction) {
         moved = false
         screens = new Map()
         view?.close?.()
@@ -903,7 +909,9 @@ window.lectora = {
                 language: [].concat(book.metadata?.language ?? [])[0] ?? null,
             })
             applyStyle()
-            await view.init({ lastLocation: lastLocation || null, showTextStart: !lastLocation })
+            const atFraction = !lastLocation && fraction > 0 && fraction < 1
+            await view.init({ lastLocation: lastLocation || null, showTextStart: !lastLocation && !atFraction })
+            if (atFraction) await view.goToFraction(fraction)
         } catch (error) {
             post('error', { message: String(error?.message ?? error) })
         }

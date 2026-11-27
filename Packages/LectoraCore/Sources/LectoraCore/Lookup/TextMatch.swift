@@ -88,11 +88,13 @@ enum TextMatch {
 
     /// Compara los títulos completos (sin series entre paréntesis): solo `same` permite
     /// decir «Mismo título» y aplicar los datos sin preguntar.
+    /// El título sin lo que va entre paréntesis o corchetes (la serie, «edición conmemorativa»).
+    static func withoutBrackets(_ text: String) -> String {
+        text.replacingOccurrences(of: #"\s*[\(\[][^\)\]]*[\)\]]"#, with: "", options: .regularExpression)
+    }
+
     static func titleFit(_ a: String, _ b: String) -> TitleFit {
-        let strip = { (text: String) in
-            text.replacingOccurrences(of: #"\s*[\(\[][^\)\]]*[\)\]]"#, with: "", options: .regularExpression)
-        }
-        let (left, right) = (strip(a), strip(b))
+        let (left, right) = (withoutBrackets(a), withoutBrackets(b))
         let x = Set(tokens(left)), y = Set(tokens(right))
         let extraX = x.filter { word in !y.contains { close(word, $0) } }
         let extraY = y.filter { word in !x.contains { close(word, $0) } }

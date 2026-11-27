@@ -63,9 +63,18 @@ struct ReaderView: View {
     var body: some View {
         lifecycle(alerts(tail(withOverlays
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active { controller.session?.resume() } else { controller.session?.pause() }
+                if phase == .active {
+                    controller.session?.resume()
+                } else {
+                    // Sales de la app justo después de pasar de página: la posición no se pierde.
+                    controller.flushPosition()
+                    controller.session?.pause()
+                }
             }
-            .onDisappear { controller.session?.finish() })))
+            .onDisappear {
+                controller.flushPosition()
+                controller.session?.finish()
+            })))
     }
 
     /// La página y lo que se le pone encima mientras lees.
@@ -324,7 +333,10 @@ extension ReaderView {
                         for: bookID)
                 }
             }
-            let resume = startCFI ?? bookID.flatMap { LibraryStore.shared.position(for: $0)?.cfi }
+            let saved = bookID.flatMap { LibraryStore.shared.position(for: $0) }
+            let resume = startCFI ?? saved?.cfi
+            // Solo el avance (de un libro que se juntó con este): se abre a esa altura.
+            let resumeFraction = resume == nil ? saved?.fraction : nil
             // En iCloud Drive el libro puede no estar en el dispositivo: primero se baja.
             let file = bookFile
             Task { @MainActor in
@@ -332,7 +344,7 @@ extension ReaderView {
                     controller.errorMessage = "No pude bajar el libro de iCloud. Revisa tu conexión e inténtalo de nuevo."
                     return
                 }
-                controller.open(bookFile: file, bookID: bookID, lastCFI: resume)
+                controller.open(bookFile: file, bookID: bookID, lastCFI: resume, fraction: resumeFraction)
             }
         }
         // Capturas automáticas: el índice o una búsqueda, ya con el libro abierto.
@@ -479,7 +491,7 @@ extension ReaderView {
 
     /// Los CFI de los marcadores del libro, para mandarlos a reader.js.
     private var bookmarkCFIs: [String] {
-        bookID.map { library.bookmarks(for: $0).map(\.cfi) } ?? []
+        bookID.map { library.bookmarks(for: $0).map(\.cfi).filter { Bookmark.approximateFraction($0) == nil } } ?? []
     }
 
     private func toggleBookmark() {

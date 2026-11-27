@@ -43,14 +43,7 @@ public struct SessionLog: Sendable {
             data.append(try Self.encoder.encode(session))
             data.append(0x0A)
         }
-        if FileManager.default.fileExists(atPath: ownFile.path) {
-            let handle = try FileHandle(forWritingTo: ownFile)
-            defer { try? handle.close() }
-            _ = try handle.seekToEnd()
-            try handle.write(contentsOf: data)
-        } else {
-            try data.write(to: ownFile, options: .atomic)
-        }
+        try LineFile.append(data, to: ownFile)
     }
 
     /// Todas las sesiones de todos los dispositivos, de la más antigua a la más reciente.

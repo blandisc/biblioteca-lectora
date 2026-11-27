@@ -50,14 +50,7 @@ public struct ChangeLog: Sendable {
             data.append(try encoder.encode(change))
             data.append(0x0A)
         }
-        if FileManager.default.fileExists(atPath: ownFile.path) {
-            let handle = try FileHandle(forWritingTo: ownFile)
-            defer { try? handle.close() }
-            _ = try handle.seekToEnd()
-            try handle.write(contentsOf: data)
-        } else {
-            try data.write(to: ownFile, options: .atomic)
-        }
+        try LineFile.append(data, to: ownFile)
     }
 
     /// Resultado de leer todos los registros.
@@ -105,4 +98,54 @@ public struct ChangeLog: Sendable {
 public enum ChangeLogError: Error, Equatable {
     /// El registro propio está en iCloud pero no en este dispositivo; ya se pidió bajarlo.
     case ownLogNotDownloaded
+}
+
+/// Archivos de una línea por registro (`.jsonl`): el registro de cambios y el de sesiones.
+public enum LineFile {
+    /// Agrega líneas al final. Si la última quedó cortada (la app se cerró a media escritura),
+    /// primero termina esa línea: así la rota se pierde sola y la nueva no se pega a ella.
+    public static func append(_ data: Data, to file: URL) throws {
+        guard FileManager.default.fileExists(atPath: file.path) else {
+            try data.write(to: file, options: .atomic)
+            return
+        }
+        let handle = try FileHandle(forUpdating: file)
+        defer { try? handle.close() }
+        let end = try handle.seekToEnd()
+        var payload = data
+        if end > 0 {
+            try handle.seek(toOffset: end - 1)
+            if try handle.read(upToCount: 1) != Data([0x0A]) { payload.insert(0x0A, at: 0) }
+            _ = try handle.seekToEnd()
+        }
+        try handle.write(contentsOf: payload)
+    }
+}
+
+/// Lo que escribiste mientras el registro se leía en segundo plano (auditoría de medios): la
+/// lectura no lo vio, así que se vuelve a aplicar encima de ella. Sin esto, «traer de iCloud»
+/// reemplazaba el catálogo con una lectura vieja y lo recién guardado desaparecía hasta la
+/// siguiente lectura (una edición, una posición, un marcador).
+public struct WritesDuringRead: Sendable {
+    private var open: [UUID: [Change]] = [:]
+
+    public init() {}
+
+    /// Empieza una lectura; devuelve con qué pedir luego lo escrito mientras tanto.
+    public mutating func begin() -> UUID {
+        let token = UUID()
+        open[token] = []
+        return token
+    }
+
+    /// Anota lo que se acaba de escribir en el registro (para cada lectura en curso).
+    public mutating func note(_ changes: [Change]) {
+        guard !changes.isEmpty else { return }
+        for token in open.keys { open[token, default: []].append(contentsOf: changes) }
+    }
+
+    /// Termina la lectura: lo escrito desde que empezó, para aplicarlo encima.
+    public mutating func end(_ token: UUID) -> [Change] {
+        open.removeValue(forKey: token) ?? []
+    }
 }

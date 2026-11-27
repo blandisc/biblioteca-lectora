@@ -50,8 +50,14 @@ public struct NoteFolder: Sendable {
             }
             name = fileName
             if wanted != fileName, !CloudFile.isTaken(file(for: wanted)) {
-                try FileManager.default.moveItem(at: file(for: fileName), to: file(for: wanted))
-                name = wanted
+                do {
+                    try FileManager.default.moveItem(at: file(for: fileName), to: file(for: wanted))
+                    name = wanted
+                } catch {
+                    // Si no se pudo renombrar, lo que escribiste no se pierde (auditoría de medios):
+                    // se queda con su nombre; si su archivo ya no está, va con el nombre nuevo.
+                    if !FileManager.default.fileExists(atPath: file(for: fileName).path) { name = freeName(wanted) }
+                }
             }
         } else {
             name = freeName(wanted)

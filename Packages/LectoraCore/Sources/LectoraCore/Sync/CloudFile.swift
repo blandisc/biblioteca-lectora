@@ -27,6 +27,30 @@ public enum CloudFile {
         return String(name.dropFirst().dropLast(".icloud".count))
     }
 
+    /// Los archivos de la carpeta (y sus subcarpetas) que siguen en iCloud sin bajar, con su
+    /// nombre real. Copiar la carpeta así copiaría marcadores vacíos, no los libros.
+    public static func waiting(in folder: URL) -> [URL] {
+        let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil)
+        var result: [URL] = []
+        while let url = walker?.nextObject() as? URL {
+            if let name = realName(ofPlaceholder: url.lastPathComponent) {
+                result.append(url.deletingLastPathComponent().appendingPathComponent(name))
+            }
+        }
+        return result
+    }
+
+    /// Cuántos archivos y carpetas hay de verdad (sin contar los marcadores de iCloud): para
+    /// comprobar que una copia quedó completa.
+    public static func countItems(in folder: URL) -> Int {
+        let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil)
+        var count = 0
+        while let url = walker?.nextObject() as? URL {
+            if realName(ofPlaceholder: url.lastPathComponent) == nil { count += 1 }
+        }
+        return count
+    }
+
     /// Pide a iCloud que lo baje (sin esperar). Fuera de iCloud no hace nada.
     public static func requestDownload(_ file: URL) {
         try? FileManager.default.startDownloadingUbiquitousItem(at: file)
@@ -43,6 +67,29 @@ public enum SideFile {
         /// No se escribió: el archivo está en iCloud sin bajar (ya se pidió) o no se pudo leer.
         /// El cambio queda pendiente en la app y se reintenta en el siguiente guardado.
         case postponed
+    }
+
+    /// El archivo está en el dispositivo y se lee, pero no se entiende (dañado o escrito por
+    /// otra versión): no es esperar a iCloud, así que no se arregla solo.
+    public static func isDamaged<K, V>(_ url: URL, decode: (Data) -> [K: V]?) -> Bool {
+        guard let data = try? Data(contentsOf: url) else { return false }
+        return decode(data) == nil
+    }
+
+    /// Lo que te digo, una vez, si un archivo de `.lectora/` no se puede leer: tus cambios
+    /// esperan en el dispositivo y el archivo no se toca.
+    public static func damagedNotice(_ fileName: String) -> String {
+        let what = [
+            "estantes.json": "tus estantes",
+            "reglas.json": "tus reglas de autores y etiquetas",
+            "por-revisar.json": "lo que tienes en «Por revisar»",
+            "completados.json": "lo que completé solo",
+            "no-duplicados.json": "los libros que marcaste como distintos",
+            "por-buscar.json": "los libros que me faltan por buscar",
+            "rechazados.json": "los datos de internet que deshiciste",
+        ][fileName] ?? "un archivo de tu Gabinete"
+        return "No puedo leer \(what) en la carpeta de tu Gabinete (.lectora/\(fileName)) y no lo toqué. "
+            + "Lo que cambies lo guardo en este dispositivo; si lo abres en otro aparato, revisa que el archivo esté completo."
     }
 
     /// Junta lo del disco con `mine` en las claves `keys` y lo escribe.

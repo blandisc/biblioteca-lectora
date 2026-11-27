@@ -182,7 +182,7 @@ final class AuditoriaDosTests: XCTestCase {
     /// usan el nombre que ya está en el disco: nunca una gemela que solo cambia en mayúsculas.
     func testBookFoldersAreCreatedWithoutTwins() {
         let allowed = ["CabinetLocation.notes", "root.deletingLastPathComponent()", "at: destination",
-                       "oldFolder.deletingLastPathComponent()", "at: local"]
+                       "at: local"]
         var problems: [String] = []
         for file in DesignRulesTests.sources("App/Shared") {
             for (index, line) in file.lines.enumerated() where line.contains("createDirectory(") {

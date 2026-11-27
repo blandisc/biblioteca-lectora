@@ -18,6 +18,9 @@ struct FilledRecord: Codable, Hashable {
     /// El registro de internet de donde salió («openlibrary:OL46125W»): al deshacer se recuerda
     /// como rechazado y ya no se aplica solo.
     var record: Set<String>? = nil
+    /// La huella de la portada que puse: al deshacer, solo se quita si sigue siendo esa (si la
+    /// cambiaste después, la tuya se queda). Opcional: los archivos de antes no la tienen.
+    var coverHash: String? = nil
 }
 
 /// Los campos que se completan solos (nunca el título: ese no se toca).

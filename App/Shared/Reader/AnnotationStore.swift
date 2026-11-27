@@ -76,14 +76,20 @@ final class AnnotationStore: ObservableObject {
             .appendingPathComponent("Registro", isDirectory: true)
     }
 
-    /// Identificador estable de este dispositivo para su archivo de registro.
-    nonisolated static var deviceID: String {
-        let key = "registro.deviceID"
-        if let id = UserDefaults.standard.string(forKey: key) { return id }
-        let id = UUID().uuidString
-        UserDefaults.standard.set(id, forKey: key)
-        return id
-    }
+    /// Identificador estable de este dispositivo para su archivo de registro. Va con la huella
+    /// del aparato (`DeviceFingerprint`): un respaldo restaurado en otro iPhone, o la Mac nueva
+    /// del Asistente de Migración, toman uno nuevo en vez de escribir en el registro del otro (M7).
+    nonisolated static let deviceID: String = {
+        let defaults = UserDefaults.standard
+        let (idKey, fingerprintKey) = ("registro.deviceID", "registro.deviceFingerprint")
+        let stored = DeviceIdentity.Stored(id: defaults.string(forKey: idKey), fingerprint: defaults.string(forKey: fingerprintKey))
+        let resolved = DeviceIdentity.resolve(stored, fingerprint: DeviceFingerprint.current())
+        if resolved != stored {
+            defaults.set(resolved.id, forKey: idKey)
+            defaults.set(resolved.fingerprint, forKey: fingerprintKey)
+        }
+        return resolved.id ?? UUID().uuidString
+    }()
 
     /// ID de libro provisional, derivado del nombre del archivo. Con el catálogo
     /// (S3/S4) cada libro tendrá su propio ID en LectoraCore.

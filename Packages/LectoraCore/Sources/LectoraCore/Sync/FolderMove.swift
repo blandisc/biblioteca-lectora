@@ -140,6 +140,47 @@ public enum FolderMove {
         return parts.joined(separator: "/")
     }
 
+    /// Una ruta del catálogo guardada con otras mayúsculas que las del disco (en un disco que las
+    /// distingue, como el del iPhone, el libro «no está»): la ruta real, o nil si la guardada
+    /// sirve o no hay nada parecido. Solo mira el disco si la guardada no está: es barato al abrir.
+    public static func repairedSpelling(of relative: String, in root: URL) -> String? {
+        guard !CloudFile.isTaken(root.appendingPathComponent(relative)) else { return nil }
+        let real = diskSpelling(of: relative, in: root)
+        return real != relative && CloudFile.isTaken(root.appendingPathComponent(real)) ? real : nil
+    }
+
+    /// Junta las carpetas de autor gemelas que dejó una versión anterior en un disco que distingue
+    /// mayúsculas («julio cortázar/» y «Julio Cortázar/»; en iCloud chocan). Los libros pasan a la
+    /// que tiene más; uno que ya exista allá con el mismo nombre se queda donde está (nunca se
+    /// pisa). Devuelve lo que se movió: `Autor/Título (id)` de antes → el de ahora.
+    @discardableResult
+    public static func mergeTwinFolders(in root: URL) -> [String: String] {
+        let manager = FileManager.default
+        let entries = ((try? manager.contentsOfDirectory(atPath: root.path)) ?? []).filter { name in
+            var isFolder: ObjCBool = false
+            return !name.hasPrefix(".") && manager.fileExists(atPath: root.appendingPathComponent(name).path, isDirectory: &isFolder)
+                && isFolder.boolValue
+        }
+        var moved: [String: String] = [:]
+        for twins in Dictionary(grouping: entries, by: { $0.lowercased() }).values where twins.count > 1 {
+            let children = { (name: String) in
+                ((try? manager.contentsOfDirectory(atPath: root.appendingPathComponent(name).path)) ?? []).filter { $0 != ".DS_Store" }
+            }
+            // La que tiene más libros se queda; si empatan, la primera en orden.
+            guard let keep = twins.sorted().max(by: { children($0).count < children($1).count }) else { continue }
+            for twin in twins where twin != keep {
+                for child in children(twin) {
+                    let from = root.appendingPathComponent(twin).appendingPathComponent(child)
+                    let to = root.appendingPathComponent(keep).appendingPathComponent(child)
+                    guard !CloudFile.isTaken(to), (try? manager.moveItem(at: from, to: to)) != nil else { continue }
+                    moved["\(twin)/\(child)"] = "\(keep)/\(child)"
+                }
+                removeIfEmpty(root.appendingPathComponent(twin))
+            }
+        }
+        return moved
+    }
+
     /// Crea `relative` dentro de `root` sin hacer una gemela que solo cambie en mayúsculas.
     /// Devuelve la ruta que quedó en el disco: esa es la que se guarda en el catálogo.
     @discardableResult
