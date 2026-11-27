@@ -5,6 +5,8 @@ import Foundation
 public enum BatchLookup {
     /// Entre un libro y el siguiente: Open Library pide no pasar de unas cuantas por segundo.
     public static let pause: Duration = .seconds(1)
+    /// Tantos libros seguidos sin respuesta y se da por hecho que no hay internet.
+    public static let unreachableLimit = 3
 
     /// Le falta algo que internet suele tener: portada, sinopsis, ISBN, editorial o año.
     public static func needsData(_ book: Book, hasCover: Bool) -> Bool {

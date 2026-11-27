@@ -54,6 +54,11 @@ public struct LibraryState: Sendable {
         entities[EntityKey(kind: kind, id: id)]?[Change.deletedField]?.value.boolValue == true
     }
 
+    /// Todos los IDs de un tipo, también los borrados (p. ej. libros que se juntaron en otro).
+    public func allIDs(of kind: EntityKind) -> [UUID] {
+        entities.keys.filter { $0.kind == kind }.map(\.id)
+    }
+
     /// IDs vivos (no borrados) de un tipo de entidad.
     public func ids(of kind: EntityKind) -> [UUID] {
         entities.keys

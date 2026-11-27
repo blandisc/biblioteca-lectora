@@ -119,6 +119,12 @@ enum CabinetLocation {
 
 /// Archivos de iCloud Drive que aún no están en el dispositivo.
 enum CloudFiles {
+    /// El archivo no está bajado: en su lugar hay un «.nombre.icloud».
+    static func isPlaceholder(_ file: URL) -> Bool {
+        !FileManager.default.fileExists(atPath: file.path) && FileManager.default.fileExists(atPath:
+            file.deletingLastPathComponent().appendingPathComponent(".\(file.lastPathComponent).icloud").path)
+    }
+
     /// ¿Está el archivo en el dispositivo? (Fuera de iCloud, siempre.)
     static func isDownloaded(_ url: URL) -> Bool {
         guard let values = try? url.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]),

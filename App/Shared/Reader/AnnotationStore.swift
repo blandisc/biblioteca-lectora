@@ -26,8 +26,12 @@ final class AnnotationStore: ObservableObject {
         }
     }
 
+    /// Libros que se juntaron en este, también en otro dispositivo (RB-3): sus subrayados
+    /// son de este. Lo pone la biblioteca.
+    var mergedIDs: (UUID) -> [UUID] = { _ in [] }
+
     func annotations(forBook bookID: UUID) -> [Annotation] {
-        state.annotations(for: bookID)
+        ([bookID] + mergedIDs(bookID)).flatMap { state.annotations(for: $0) }
     }
 
     /// Todos los subrayados, del más reciente al más antiguo.

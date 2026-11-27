@@ -33,9 +33,7 @@ final class AppModel: ObservableObject {
         self.notes = notes ?? .shared
         observations = [
             // La estantería se recalcula una vez por cambio de la biblioteca, no en cada vista.
-            self.library.objectWillChange.sink { [weak self] _ in
-                DispatchQueue.main.async { self?.rebuildShelf() }
-            },
+            self.library.objectWillChange.sink { [weak self] _ in self?.scheduleShelfRebuild() },
             self.annotations.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() },
             self.notes.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() },
             // Otro Gabinete (Ajustes › Gabinete): sus notas van con él.
@@ -44,6 +42,8 @@ final class AppModel: ObservableObject {
                 SessionStore.shared.use(root: root)
             },
         ]
+        // Los subrayados de un libro que se juntó en otro (también en otro dispositivo) lo siguen.
+        self.annotations.mergedIDs = { [weak library = self.library] id in library?.booksMerged(into: id) ?? [] }
         rebuildShelf()
         if LaunchOptions.listening { listening = currentBook }
     }
@@ -53,6 +53,18 @@ final class AppModel: ObservableObject {
     private var shelfByID: [String: ShelfBook] = [:]
     /// Los más recientes primero (lo último que añadiste).
     private var recent: [ShelfBook] = []
+
+    private var shelfRebuildPending = false
+
+    /// Muchos cambios seguidos (un lote, una página que se asienta) rehacen la estantería una sola vez.
+    private func scheduleShelfRebuild() {
+        guard !shelfRebuildPending else { return }
+        shelfRebuildPending = true
+        DispatchQueue.main.async { [weak self] in
+            self?.shelfRebuildPending = false
+            self?.rebuildShelf()
+        }
+    }
 
     private func rebuildShelf() {
         shelf = library.books.map { ShelfBook(book: $0, library: library) }
@@ -116,11 +128,11 @@ final class AppModel: ObservableObject {
     func importBooks(_ urls: [URL]) async {
         let results = await library.importFiles(urls)
         var duplicates: [String] = []
-        var failures = 0
+        var failures: [Error] = []
         for result in results {
             switch result {
             case .success(.duplicate(let book)): duplicates.append(book.title)
-            case .failure: failures += 1
+            case .failure(let error): failures.append(error)
             default: break
             }
         }
@@ -130,8 +142,17 @@ final class AppModel: ObservableObject {
                 ? "«\(duplicates[0])» ya estaba en tu biblioteca."
                 : "\(duplicates.count.counted("libro", "libros")) ya estaban en tu biblioteca.")
         }
-        if failures > 0 {
-            lines.append(failures == 1 ? "Un archivo no se pudo leer." : "\(failures) archivos no se pudieron leer.")
+        // Qué archivo no entró y por qué (RB-4), no solo cuántos.
+        if failures.count == 1, let failure = failures.first {
+            lines.append(failure.localizedDescription)
+        } else if !failures.isEmpty {
+            let names = failures.compactMap { error -> String? in
+                if case LibraryStore.LibraryError.unreadable(let name, _) = error { return "«\(name)»" }
+                return nil
+            }
+            lines.append("\(failures.count.counted("archivo no entró", "archivos no entraron")) a tu biblioteca"
+                + (names.isEmpty ? "." : ": \(names.prefix(5).joined(separator: ", "))\(names.count > 5 ? "…" : "").")
+                + " No se pueden abrir como libros.")
         }
         if !lines.isEmpty { importReport = lines.joined(separator: " ") }
     }
