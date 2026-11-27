@@ -14,7 +14,9 @@ enum LaunchOptions {
     /// Mostrar el mini reproductor como si sonara el libro actual (solo con `Features.audiobook`).
     static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
     /// Pantalla empujada: en la Biblioteca, `review` («Por revisar»), `detail` (ficha
-    /// del primer libro, o del de `-screenshot.book`), `edit` (la ficha con «Escribir a mano» abierto) o `shelf` (el primer estante); en el Cuaderno, `note` (la primera nota), `highlights` o
+    /// del primer libro, o del de `-screenshot.book`), `edit` (la ficha con «Escribir a mano» abierto), `candidates`
+    /// («Buscar con otros datos»), `cover` («Elegir portada de internet»), `series` (la primera serie) o `shelf`
+    /// (el primer estante); en el Cuaderno, `note` (la primera nota), `noteEdit` (la misma, escribiendo), `highlights` o
     /// `settings` (Ajustes); en la Mesa, `diary` (el Diario, también en la Mac) o `summary` (el resumen
     /// «Sesión terminada», como al cerrar un libro); en el lector, `contents`, `booksearch`, `marks` o `appearance` («Aa»).
     static var screen: String? { UserDefaults.standard.string(forKey: "screenshot.screen") }

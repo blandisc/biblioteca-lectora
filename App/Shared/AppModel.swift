@@ -203,6 +203,8 @@ final class AppModel: ObservableObject {
         seedSampleHighlights()
         seedSampleNotes()
         seedSampleSessions()
+        // Un estante guardado de muestra, para la pantalla del estante (`-screenshot.screen shelf`).
+        if library.shelves.isEmpty { library.saveShelf(SavedShelf(name: "Cortázar", query: "Cortázar")) }
         rebuildShelf()
         if Features.audiobook, LaunchOptions.listening { listening = currentBook }
     }

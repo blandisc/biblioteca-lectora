@@ -79,8 +79,16 @@ struct BookDetailScreen: View {
         .navigationDestination(isPresented: $searching) {
             if let id = live.bookID { CandidatesScreen(bookID: id, searchesFirst: true) }
         }
-        // Capturas: `-screenshot.screen edit` abre «Escribir a mano» sobre la ficha.
-        .onAppear { if LaunchOptions.screen == "edit" { editing = true } }
+        // Capturas: `-screenshot.screen edit` abre «Escribir a mano» sobre la ficha; `candidates`,
+        // «Buscar con otros datos», y `cover`, «Elegir portada de internet».
+        .onAppear {
+            switch LaunchOptions.screen {
+            case "edit": editing = true
+            case "candidates": searching = true
+            case "cover": choosingCover = true
+            default: break
+            }
+        }
         .sheet(isPresented: $editing) {
             if let record { MetadataEditorView(book: record).duoBars() }
         }

@@ -453,9 +453,12 @@ el ancho que tiene.
   con su argumento: DUO-1B `-duo.bars below` (pestañas abajo y hora arriba, `duoBars()`), DUO-2B
   `-duo.book column` (el libro en una columna, como en la Mac) y DUO-3B `-duo.desk two` (la Mesa en dos
   columnas con la pantalla abierta).
-- **Simulador:** «Gabinete Duo» (iPhone Duo, iOS 27.2). `xcrun simctl` no dobla ni desdobla el aparato (la
-  pantalla de adentro es `--display=primary-1`, pero apagar la de afuera con `screenConfig` tumba el
-  simulador): se cambia con los botones de pose de Device Hub, a mano.
+- **Simulador:** «Gabinete Duo» (iPhone Duo, iOS 27.2). `xcrun simctl` no dobla el aparato, pero
+  `scripts/duo/duopose.m` sí: llama al servicio de pruebas de SpringBoard que mueve la bisagra
+  (`xcrun simctl spawn <udid> duopose -position=open|closed -deviceOrientation=… -duration=0 -wait`) y fija
+  también la orientación de verdad. La pantalla de afuera es `--display=primary` y la de adentro,
+  `--display=primary-1`. `scripts/duo-estudio.sh todos comparar` toma cada pantalla en los cuatro modos y en
+  un iPhone normal, con la hoja de contactos en `/tmp/gabinete-duo-estudio/ronda-N/index.html`.
 
 ## Simetría
 

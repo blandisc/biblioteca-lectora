@@ -174,10 +174,11 @@ struct LibraryScreen: View {
         guard path.isEmpty else { return }
         switch LaunchOptions.screen {
         case "review": path.append(ReviewInboxRef())
-        case "detail", "edit":
+        case "detail", "edit", "candidates", "cover":
             let wanted = LaunchOptions.book.flatMap { title in model.shelf.first { $0.title.contains(title) } }
             if let first = wanted ?? model.shelf.first { path.append(first) }
         case "shelf": if let first = model.library.shelves.first { path.append(ShelfRef(id: first.id)) }
+        case "series": if let ref = model.shelf.lazy.compactMap(SeriesRef.init).first { path.append(ref) }
         default: break
         }
     }

@@ -67,6 +67,11 @@ struct SettingsScreen: View {
     /// Reglas o una conexión, en una hoja sobre Ajustes: empujadas dentro de una pestaña, la
     /// flecha de regreso se metía entre las pestañas y marcaba otra (27 nov 2026).
     @State private var macPage: MacSettingsPage?
+    #elseif DEBUG
+    /// Capturas en el iPhone: `-screenshot.demo settingsRules` entra a Reglas y `settingsConnection`,
+    /// a la primera conexión (`settingsCalibre` abre «Traer mi biblioteca de Calibre»).
+    @State private var opensRules = false
+    @State private var opensConnector = false
     #endif
 
     var body: some View {
@@ -179,11 +184,20 @@ extension SettingsScreen {
                 if demo == "settingsCabinet" || demo == "settingsTidy" { scroller.scrollTo(Self.cabinet, anchor: .center) }
                 // `settingsTidy` pide confirmar «Ordenar la biblioteca».
                 if demo == "settingsTidy" { confirmingTidy = true }
+                if demo == "settingsRules" { opensRules = true }
+                if demo == "settingsConnection" { opensConnector = true }
+                if demo == "settingsCalibre" { migratingCalibre = true }
             }
             #endif
             }
             // Las tarjetas sobre un papel un poco más hondo que el de la app (AJ-8).
             .background(Theme.sunken.ignoresSafeArea())
+            #if DEBUG
+            .navigationDestination(isPresented: $opensRules) { RulesScreen() }
+            .navigationDestination(isPresented: $opensConnector) {
+                if let first = Connector.allCases.first { ConnectorScreen(connector: first) }
+            }
+            #endif
             .pushedScreen(bar: false)
         }
         #endif

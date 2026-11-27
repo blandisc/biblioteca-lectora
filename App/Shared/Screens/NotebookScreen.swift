@@ -105,10 +105,10 @@ struct NotebookScreen: View {
         }
     }
 
-    /// Capturas automáticas: `-screenshot.screen note` abre la primera nota.
+    /// Capturas automáticas: `-screenshot.screen note` abre la primera nota (`noteEdit`, ya escribiendo).
     private func openForScreenshots() {
-        if LaunchOptions.screen == "note", path.isEmpty, let first = notes.first {
-            path.append(NoteRef(fileName: first.fileName))
+        if LaunchOptions.screen == "note" || LaunchOptions.screen == "noteEdit", path.isEmpty, let first = notes.first {
+            path.append(NoteRef(fileName: first.fileName, writes: LaunchOptions.screen == "noteEdit"))
         }
     }
 
