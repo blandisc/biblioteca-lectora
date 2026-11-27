@@ -13,7 +13,11 @@ struct MacBookInspector: View {
     @State private var loaded = Draft()
     @State private var errorMessage: String?
 
-    private var books: [Book] { ids.compactMap { library.book(id: $0) }.sorted { $0.title < $1.title } }
+    private var books: [Book] { books(ids) }
+
+    private func books(_ ids: Set<UUID>) -> [Book] {
+        ids.compactMap { library.book(id: $0) }.sorted { $0.title < $1.title }
+    }
 
     var body: some View {
         Group {
@@ -27,7 +31,13 @@ struct MacBookInspector: View {
             }
         }
         .onAppear(perform: load)
-        .onChange(of: ids) { _, _ in load() }
+        // M12: al cambiar de libro se guarda lo que dejaste escrito, como en Finder o Fotos;
+        // antes se perdía sin aviso.
+        .onChange(of: ids) { old, _ in
+            if draft != loaded { save(old) }
+            load()
+        }
+        .onDisappear { if draft != loaded { save(ids) } }
         .alert("No se pudo guardar", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("Volver a la ficha", role: .cancel) {}
         } message: {
@@ -59,6 +69,9 @@ struct MacBookInspector: View {
                 TextField("Autores", text: $draft.authors, prompt: Text("Separados por comas"))
                 TextField("Serie", text: $draft.series)
                 TextField("Número en la serie", text: $draft.seriesIndex)
+                if SeriesIndexInput(draft.seriesIndex).isInvalid {
+                    Text(SeriesIndexInput.hint).font(.footnote).foregroundStyle(.secondary)
+                }
                 TextField("Etiquetas", text: $draft.tags, prompt: Text("Separadas por comas"))
             }
             Section("Edición") {
@@ -133,10 +146,10 @@ struct MacBookInspector: View {
                     Button("Deshacer cambios") { draft = loaded }
                         .disabled(draft == loaded)
                     Spacer()
-                    Button(count == 1 ? "Guardar" : "Aplicar a los \(count)") { save() }
+                    Button(count == 1 ? "Guardar" : "Aplicar a los \(count)") { save(ids) }
                         .keyboardShortcut("s")
                         .buttonStyle(.borderedProminent)
-                        .disabled(draft == loaded)
+                        .disabled(draft == loaded || (count == 1 && SeriesIndexInput(draft.seriesIndex).isInvalid))
                 }
             }
         }
@@ -159,8 +172,11 @@ struct MacBookInspector: View {
         loaded = draft
     }
 
-    private func save() {
+    /// Guarda en los libros de `targets`: los elegidos ahora, o los de antes si cambiaste de libro.
+    /// Un número de tomo que no sirve no se guarda (se queda el que había).
+    private func save(_ targets: Set<UUID>) {
         var failed: [String] = []
+        let books = books(targets)
         if books.count == 1, let book = books.first {
             do { _ = try library.update(draft.applied(to: book)) } catch { failed.append(error.localizedDescription) }
         } else {
@@ -205,14 +221,14 @@ private struct Draft: Equatable {
         title = book.title
         authors = book.authors.joined(separator: ", ")
         series = book.series ?? ""
-        seriesIndex = book.seriesIndex.map(ShelfBook.number) ?? ""
+        seriesIndex = book.seriesIndex.flatMap(ShelfBook.number) ?? ""
         tags = book.tags.joined(separator: ", ")
         language = book.language ?? ""
         publisher = book.publisher ?? ""
         published = book.published ?? ""
         isbn = book.identifiers["isbn"] ?? ""
         status = book.readingStatus
-        rating = Int((book.rating ?? 0).rounded())
+        rating = min(5, max(0, (book.rating ?? 0).safeInt ?? 0))
         summary = book.summary ?? ""
     }
 
@@ -221,7 +237,7 @@ private struct Draft: Equatable {
         book.title = title.trimmingCharacters(in: .whitespaces).nonEmpty ?? book.title
         book.authors = BulkEdit.list(authors)
         book.series = series.trimmingCharacters(in: .whitespaces).nonEmpty
-        book.seriesIndex = book.series == nil ? nil : Double(seriesIndex.replacingOccurrences(of: ",", with: "."))
+        book.seriesIndex = book.series == nil ? nil : SeriesIndexInput(seriesIndex).value(keeping: book.seriesIndex)
         book.tags = BulkEdit.list(tags)
         book.language = language.trimmingCharacters(in: .whitespaces).nonEmpty
         book.publisher = publisher.trimmingCharacters(in: .whitespaces).nonEmpty

@@ -32,7 +32,7 @@ struct BookDetailScreen: View {
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)
                     if let series = live.series {
-                        Text(live.seriesIndex.map { "\(series) · libro \(ShelfBook.number($0))" } ?? series)
+                        Text(live.seriesIndex.flatMap(ShelfBook.number).map { "\(series) · libro \($0)" } ?? series)
                             .font(.subheadline)
                             .foregroundStyle(Theme.secondaryInk)
                     }

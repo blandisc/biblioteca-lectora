@@ -650,6 +650,12 @@ const findISBN = values => {
     }
     return null
 }
+// El número del tomo, de 0 a 9999. «1e300» o un número negativo se ignoran: igual que en la
+// ficha (C5, 26 nov 2026: un tomo gigante cerraba la app en cada arranque).
+const seriesIndex = position => {
+    const value = parseFloat(position)
+    return Number.isFinite(value) && value >= 0 && value <= 9999 ? value : null
+}
 const extract = async url => {
     const book = await makeBook(url)
     const m = book.metadata ?? {}
@@ -673,7 +679,7 @@ const extract = async url => {
         description: m.description ?? null,
         subjects: [].concat(m.subject ?? []).map(text).filter(Boolean),
         series: text(series?.name) ?? null,
-        seriesIndex: Number.isFinite(parseFloat(series?.position)) ? parseFloat(series.position) : null,
+        seriesIndex: seriesIndex(series?.position),
         isbn: findISBN(identifiers),
         cover,
     }
