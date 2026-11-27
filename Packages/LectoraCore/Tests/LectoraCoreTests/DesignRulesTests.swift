@@ -170,6 +170,12 @@ final class DesignRulesTests: XCTestCase {
                 > file.lines.filter { $0.contains(".formScreen()") }.count
         }.map(\.path)
         check(problems, "Form sin .formScreen(): usa la receta de formulario")
+        // 27 nov 2026: en la Mac, Reglas y las conexiones salían en columnas, más anchas que Ajustes.
+        // La receta los agrupa a todos, como la ficha; ninguna pantalla elige su estilo.
+        let components = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }?.text ?? ""
+        let recipe = components.components(separatedBy: "func formScreen()").dropFirst().first?.components(separatedBy: "\n    }").first ?? ""
+        if !recipe.contains(".formStyle(.grouped)") { XCTFail("formScreen no agrupa el formulario") }
+        check(hits(#"\.formStyle\("#, in: Self.screens), "Estilo de formulario a mano: lo pone .formScreen()")
     }
 
     /// 19 nov 2026: el gris secundario (4,35 : 1) y el terciario (2,75 : 1) no se
@@ -792,6 +798,10 @@ final class DesignRulesTests: XCTestCase {
                 }
             }
         }
+        // 27 nov 2026: lo elegido en la tabla y la barra lateral de la Mac salía en el azul del
+        // sistema. El color del catálogo (`AccentColor`) lo vuelve verde, pero es otro lugar
+        // donde se escribe un verde: se permite solo si es exactamente `Theme.Green`, claro y oscuro.
+        problems += Self.catalogGreens(matching: Self.greenPair(theme))
         // El color del sistema (enlaces, «Listo», alertas) es el acento.
         let app = Self.sources("App/Shared").first { $0.path.hasSuffix("LectoraApp.swift") }?.text ?? ""
         if !app.contains(".tint(Theme.accent)") { problems.append("LectoraApp: el color del sistema no es Theme.accent") }
@@ -801,6 +811,42 @@ final class DesignRulesTests: XCTestCase {
             problems.append("reader.js escribe un color: el verde llega de la app (Theme.Green.css)")
         }
         check(problems, "Un verde escrito fuera de Theme.Green: apunta a Theme.accent, Theme.highlight o Theme.Green.css")
+    }
+
+    /// Los colores del catálogo de la app (`*.colorset`) que se ven verdes: solo vale
+    /// `AccentColor`, y con los valores de `Theme.Green` (claro sin apariencia, oscuro con «dark»).
+    static func catalogGreens(matching green: (light: UInt32, dark: UInt32)?) -> [String] {
+        let base = root.appendingPathComponent("App/Resources")
+        let sets = (FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? [])
+            .filter { $0.pathExtension == "colorset" }
+        var problems: [String] = []
+        for set in sets {
+            let name = set.deletingPathExtension().lastPathComponent
+            guard let data = try? Data(contentsOf: set.appendingPathComponent("Contents.json")),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let colors = json["colors"] as? [[String: Any]] else { problems.append("\(name): no pude leer sus colores"); continue }
+            var values: [String: UInt32] = [:]
+            for entry in colors {
+                guard let components = (entry["color"] as? [String: Any])?["components"] as? [String: String] else { continue }
+                func channel(_ key: String) -> UInt32 {
+                    let text = components[key] ?? "0"
+                    if text.hasPrefix("0x") { return UInt32(text.dropFirst(2), radix: 16) ?? 0 }
+                    let number = Double(text) ?? 0
+                    return UInt32((number <= 1 && text.contains(".") ? number * 255 : number).rounded())
+                }
+                let hex = channel("red") << 16 | channel("green") << 8 | channel("blue")
+                let dark = (entry["appearances"] as? [[String: String]])?.contains { $0["value"] == "dark" } ?? false
+                values[dark ? "dark" : "light"] = hex
+            }
+            let greens = values.filter { looksGreen($0.value) }
+            guard !greens.isEmpty else { continue }
+            if name != "AccentColor" {
+                problems.append("App/Resources/…/\(name).colorset: otro verde en el catálogo")
+            } else if let green, values["light"] != green.light || values["dark"] != green.dark {
+                problems.append("AccentColor.colorset no es Theme.Green: " + values.map { "\($0.key) #\(String(format: "%06X", $0.value))" }.sorted().joined(separator: ", "))
+            }
+        }
+        return problems
     }
 
     /// 26 nov 2026: la Mac decía «Renombrar en 1 libros». Una cifra y lo que cuenta salen de
@@ -882,6 +928,10 @@ final class DesignRulesTests: XCTestCase {
                 if phoneOnly == 0, line.contains("\"gearshape\"") { problems.append("\(file.path):\(index + 1): engrane también en la Mac") }
             }
         }
+        // 27 nov 2026: con el Diario abierto desde la Mesa, la barra seguía diciendo «Mesa»: la ventana
+        // le ponía el nombre por fuera a su navegación. Cada pantalla lo pone por dentro.
+        problems += hits(#"(MesaScreen|NotebookScreen|SearchScreen)\(\)\s*\.navigationTitle"#, in: Self.screens)
+            .map { "\($0) — el nombre por fuera tapa el de lo que se abre dentro" }
         let settings = Self.screens.first { $0.path.hasSuffix("SettingsScreen.swift") }?.text ?? ""
         if !settings.contains("TabView(") { problems.append("SettingsScreen: en la Mac, Ajustes va en pestañas") }
         check(problems, "En la Mac el nombre va una vez, en la barra de la ventana (regla 8)")

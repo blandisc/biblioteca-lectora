@@ -138,8 +138,17 @@ enum Theme {
         /// Margen lateral de toda pantalla. Igual a la izquierda y a la derecha, y el mismo
         /// del texto del libro (`Reader.textMargin`).
         static let gutter: CGFloat = 24
-        /// Del área segura superior al título de la pantalla.
+        /// Del área segura superior al título de la pantalla. En la Mac no hay título en el
+        /// contenido (va en la barra de la ventana, regla 8) y la barra ya deja su aire (16): el
+        /// contenido empieza ahí. Con 24 la Mesa, el Cuaderno y el Diario quedaban con un hueco de
+        /// 40 a 50 pt bajo la barra (27 nov 2026).
+        #if os(macOS)
+        static let screenTop: CGFloat = 0
+        #else
         static let screenTop: CGFloat = 24
+        #endif
+        /// En la Mac, lo que deja la barra de la ventana y no deja una hoja (la nota abierta desde la ficha).
+        static let screenTopInSheet: CGFloat = 16
         /// Aire al final del contenido, antes del dock.
         static let screenBottom: CGFloat = 32
         /// Sangría de una entrada del índice del libro: un paso por nivel, hasta `Size.indentLevels`.

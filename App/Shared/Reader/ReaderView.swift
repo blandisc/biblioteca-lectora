@@ -535,6 +535,10 @@ extension ReaderView {
                     forward ? controller.next() : controller.previous()
                     try? await Task.sleep(for: .seconds(1.5))
                 }
+            case "screens":
+                // Baja dos pantallas sin guardar la posición: en continuo, el pie y la marca
+                // «—— N ——» deben decir el mismo número.
+                controller.demoScreenDown(Double(UserDefaults.standard.string(forKey: "screenshot.query") ?? "") ?? 0.6)
             case "aa":
                 showsAppearance = true
             case "guide":

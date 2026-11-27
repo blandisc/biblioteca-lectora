@@ -15,8 +15,14 @@ enum LaunchOptions {
     static var listening: Bool { UserDefaults.standard.bool(forKey: "screenshot.listening") }
     /// Pantalla empujada: en la Biblioteca, `review` («Por revisar»), `detail` (ficha
     /// del primer libro, o del de `-screenshot.book`), `edit` (la ficha con «Escribir a mano» abierto) o `shelf` (el primer estante); en el Cuaderno, `note` (la primera nota), `highlights` o
-    /// `settings` (Ajustes); en el lector, `contents`, `booksearch`, `marks` o `appearance` («Aa»).
+    /// `settings` (Ajustes); en la Mesa, `diary` (el Diario, también en la Mac); en el lector, `contents`, `booksearch`, `marks` o `appearance` («Aa»).
     static var screen: String? { UserDefaults.standard.string(forKey: "screenshot.screen") }
+    /// En la Biblioteca, el filtro ya elegido: el título de uno («Leyendo», «Por leer», «Series»…),
+    /// para revisar que el conteo cuente lo que ves (`-screenshot.filter Leyendo`).
+    static var filter: String? { UserDefaults.standard.string(forKey: "screenshot.filter") }
+    /// Importar al arrancar los libros de `Documents/<nombre>` aunque la biblioteca ya tenga
+    /// (`-screenshot.import Largos`): un libro de título larguísimo para revisar los «…».
+    static var importFolder: String? { UserDefaults.standard.string(forKey: "screenshot.import") }
     /// En el diario, la parte abierta: `Mes` o `Año` (`-screenshot.part Mes`).
     static var part: String? { UserDefaults.standard.string(forKey: "screenshot.part") }
     /// Revisar animaciones en video: en el lector, `turns` pasa páginas solo

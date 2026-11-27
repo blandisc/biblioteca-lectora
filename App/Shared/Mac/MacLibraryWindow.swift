@@ -84,10 +84,12 @@ struct MacLibraryWindow: View {
                 .navigationSplitViewColumnWidth(min: Theme.Mac.sidebarMin, ideal: Theme.Mac.sidebar)
         } detail: {
             switch section ?? .all {
-            case .desk: MesaScreen().navigationTitle("Mesa")
-            case .notebook: NotebookScreen().navigationTitle("Cuaderno")
+            // Su nombre lo ponen ellas, dentro de su navegación: así lo que abren (el Diario, una
+            // nota) pone el suyo en la barra. Puesto aquí afuera, la barra decía «Mesa» con el Diario abierto.
+            case .desk: MesaScreen()
+            case .notebook: NotebookScreen()
             // Buscar en todo (SG-3): libros, subrayados y notas. La búsqueda de la tabla es solo de libros.
-            case .search: SearchScreen().navigationTitle(SearchWording.title)
+            case .search: SearchScreen()
             case .duplicates: MacDuplicatesView(library: model.library)
             default: MacBookTable(library: model.library, section: section ?? .all)
             }

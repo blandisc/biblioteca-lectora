@@ -175,4 +175,28 @@ final class ReadingFractionTests: XCTestCase {
         XCTAssertEqual(1.4.readingFraction, 1)
         XCTAssertEqual(0.37.readingFraction, 0.37)
     }
+
+    /// 26 nov 2026: con el renglón L M M J V S D, el día 1 desaparecía del Diario cuando el mes
+    /// empezaba en domingo (el domingo del renglón y el día 1 tenían la misma identidad).
+    func testMonthGridKeepsDayOneWhenTheMonthStartsOnSunday() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/Mexico_City")!
+        calendar.firstWeekday = 1 // aunque el dispositivo empiece en domingo
+        // Marzo de 2026 empieza en domingo.
+        let first = calendar.date(from: DateComponents(year: 2026, month: 3, day: 1))!
+        let days = (0..<31).map { calendar.date(byAdding: .day, value: $0, to: first)! }
+        let grid = MonthGrid(days: days, calendar: calendar)
+
+        XCTAssertEqual(grid.cells.filter { if case .blank = $0 { true } else { false } }.count, 6, "seis huecos, de lunes a sábado")
+        XCTAssertEqual(grid.cells[6], .day(0), "el día 1 cae en domingo, la última columna")
+        XCTAssertEqual(grid.cells.count, 37)
+        XCTAssertEqual(Set(grid.cells.map(\.id)).count, grid.cells.count, "cada celda con su identidad")
+        XCTAssertEqual(grid.weekdays.map { calendar.component(.weekday, from: $0) }, [2, 3, 4, 5, 6, 7, 1], "de lunes a domingo")
+        XCTAssertTrue(calendar.isDate(grid.weekdays[6], inSameDayAs: first))
+
+        // Un mes que empieza en lunes no lleva huecos.
+        let june = calendar.date(from: DateComponents(year: 2026, month: 6, day: 1))!
+        XCTAssertEqual(MonthGrid(days: [june], calendar: calendar).cells, [.day(0)])
+        XCTAssertTrue(MonthGrid(days: [], calendar: calendar).cells.isEmpty)
+    }
 }

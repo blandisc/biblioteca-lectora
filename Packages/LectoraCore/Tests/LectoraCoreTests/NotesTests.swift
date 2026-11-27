@@ -85,4 +85,22 @@ final class NotesTests: XCTestCase {
         try folder.delete(fileName: renamed.fileName)
         XCTAssertEqual(folder.all().map(\.fileName), ["Ideas sueltas varias 2"])
     }
+
+    /// 27 nov 2026: el Cuaderno de la Mac enseñaba «El silencio en Rulfo» dos veces. No era la
+    /// carpeta leyendo doble: la semilla de las capturas corrió dos veces y escribió «… 2.md».
+    /// Sembrar otra vez deja las notas que ya están.
+    func testSeedingTwiceKeepsOneOfEach() throws {
+        let folder = NoteFolder(url: FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true))
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let samples = ["# El silencio en Rulfo\n\nComala se oye.", "# Ideas sueltas\n\nUna."]
+
+        XCTAssertEqual(try folder.seed(samples).count, 2)
+        XCTAssertEqual(try folder.seed(samples).count, 0)
+        // Aunque cambie una mayúscula o un acento, es la misma nota.
+        XCTAssertEqual(try folder.seed(["# el silencio en rulfo\n\nOtra."]).count, 0)
+        XCTAssertEqual(folder.all().map(\.fileName).sorted(), ["El silencio en Rulfo", "Ideas sueltas"])
+        // Una nota que escribes tú con el mismo título sí se guarda aparte.
+        XCTAssertEqual(try folder.save(text: "# Ideas sueltas\n\nOtra.").fileName, "Ideas sueltas 2")
+    }
 }

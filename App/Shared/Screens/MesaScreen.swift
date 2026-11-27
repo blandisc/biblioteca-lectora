@@ -6,8 +6,9 @@ struct MesaScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.bookOpeningNamespace) private var opening
     @ObservedObject private var sessions = SessionStore.shared
-    /// Capturas automáticas: `-screenshot.screen diary` abre el diario.
-    @State private var showsDiary = LaunchOptions.screen == "diary"
+    /// Capturas automáticas: `-screenshot.screen diary` abre el diario (en la Mac, con
+    /// `-screenshot.tab desk`). Se abre ya puesta la Mesa: empezar en `true` no empujaba nada en la Mac.
+    @State private var showsDiary = false
 
     var body: some View {
         NavigationStack {
@@ -28,8 +29,20 @@ struct MesaScreen: View {
             }
             // Portadas nítidas: filo fino y sombra larga y tenue (ME-1).
             .environment(\.crispCovers, true)
+            #if os(macOS)
+            // En la Mac el nombre va en la barra (regla 8); la Mesa no tiene `ScreenHeading`.
+            .navigationTitle("Mesa")
+            #endif
             .screen()
             .navigationDestination(isPresented: $showsDiary) { DiaryScreen() }
+            #if DEBUG
+            .task {
+                guard LaunchOptions.screen == "diary" else { return }
+                // En la Mac la Mesa se arma dos veces al abrir: se espera a que se quede quieta.
+                try? await Task.sleep(for: .seconds(1))
+                showsDiary = true
+            }
+            #endif
         }
     }
 

@@ -70,7 +70,6 @@ struct MacCatalogSheet: View {
                 }
             }
         }
-        .formStyle(.grouped)
         .formScreen()
         .frame(width: Theme.Mac.catalogSheet.width)
         .frame(minHeight: Theme.Mac.catalogSheet.height)

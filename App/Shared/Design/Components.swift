@@ -37,6 +37,9 @@ extension View {
     /// en verde hoja: con la marca (casi negra en claro) parecían texto fijo.
     func formScreen() -> some View {
         self
+            // En la Mac, agrupado como la ficha: con el estilo de columnas, Reglas y las conexiones
+            // se salían de la ventana de Ajustes y cortaban sus nombres (27 nov 2026).
+            .formStyle(.grouped)
             .scrollContentBackground(.hidden)
             .background(Theme.paper.ignoresSafeArea())
             .tint(Theme.accent)
@@ -3036,26 +3039,17 @@ struct MonthCalendar: View {
     let days: [ReadingDay]
     var today = Date()
 
-    private var leadingBlanks: Int {
-        guard let first = days.first else { return 0 }
-        let weekday = Calendar.current.component(.weekday, from: first.date)
-        return (weekday + 5) % 7 // lunes primero
-    }
-
-    /// Lunes a domingo de la primera semana del mes, para el renglón de los días (UX-4b).
-    private var weekdays: [Date] {
-        guard let first = days.first?.date,
-              let monday = Calendar.current.date(byAdding: .day, value: -leadingBlanks, to: first) else { return [] }
-        return (0..<7).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: monday) }
-    }
+    /// Los huecos, los días y el renglón de arriba, cada uno con su identidad (`MonthGrid`).
+    private var grid: MonthGrid { MonthGrid(days: days.map(\.date)) }
 
     var body: some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
+        let grid = self.grid
         VStack(spacing: Theme.Space.s) {
             // L M M J V S D, del lunes al domingo, como el renglón de la semana. En su propia
             // rejilla: en la de los días, el domingo 1 tenía la misma identidad que el día 1 y lo borraba.
             LazyVGrid(columns: columns, spacing: Theme.Space.s) {
-                ForEach(weekdays, id: \.self) { day in
+                ForEach(grid.weekdays, id: \.self) { day in
                     Text(day.es(.dateTime.weekday(.narrow)).uppercased())
                         .font(.caption)
                         .foregroundStyle(Theme.tertiaryInk)
@@ -3063,18 +3057,11 @@ struct MonthCalendar: View {
                 }
             }
             LazyVGrid(columns: columns, spacing: Theme.Space.s) {
-                ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.frame(height: Theme.Size.dayCell) }
-                ForEach(days) { day in
-                    let future = day.date > today
-                    let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
-                    Text(day.date.es(.dateTime.day()))
-                        .font(.footnote)
-                        .monospacedDigit()
-                        .foregroundStyle(future ? Theme.track : (day.level.map { $0 == .active || $0 == .immersed } == true ? Theme.paper : Theme.ink))
-                        .frame(width: Theme.Size.dayCell, height: Theme.Size.dayCell)
-                        .background(day.level.map(Theme.stage) ?? Color.clear, in: Circle())
-                        .overlay { if isToday { Circle().stroke(Theme.ink, lineWidth: Theme.Size.selection) } }
-                        .accessibilityLabel("\(day.date.es(.dateTime.day().month(.wide))): \(ReadingFormat.duration(day.seconds))")
+                ForEach(grid.cells) { cell in
+                    switch cell {
+                    case .blank: Color.clear.frame(height: Theme.Size.dayCell)
+                    case .day(let index): dayCell(days[index])
+                    }
                 }
             }
             HStack(spacing: Theme.Space.s) {
@@ -3088,6 +3075,19 @@ struct MonthCalendar: View {
             .foregroundStyle(Theme.secondaryInk)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func dayCell(_ day: ReadingDay) -> some View {
+        let future = day.date > today
+        let isToday = Calendar.current.isDate(day.date, inSameDayAs: today)
+        return Text(day.date.es(.dateTime.day()))
+            .font(.footnote)
+            .monospacedDigit()
+            .foregroundStyle(future ? Theme.track : (day.level.map { $0 == .active || $0 == .immersed } == true ? Theme.paper : Theme.ink))
+            .frame(width: Theme.Size.dayCell, height: Theme.Size.dayCell)
+            .background(day.level.map(Theme.stage) ?? Color.clear, in: Circle())
+            .overlay { if isToday { Circle().stroke(Theme.ink, lineWidth: Theme.Size.selection) } }
+            .accessibilityLabel("\(day.date.es(.dateTime.day().month(.wide))): \(ReadingFormat.duration(day.seconds))")
     }
 }
 

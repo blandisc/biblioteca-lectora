@@ -488,6 +488,13 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         return String(array.dropFirst().dropLast())
     }
 
+    #if DEBUG
+    /// Capturas: en continuo baja `screens` pantallas sin contarlo como avance (no se guarda la posición).
+    func demoScreenDown(_ screens: Double) {
+        evaluate("(r => r?.scrollBy(r.size * \(screens), 0))(document.querySelector('foliate-view')?.renderer)")
+    }
+    #endif
+
     private func evaluate(_ script: String) {
         webView?.evaluateJavaScript(script, completionHandler: nil)
     }

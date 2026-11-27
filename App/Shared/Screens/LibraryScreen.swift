@@ -9,6 +9,7 @@ struct LibraryScreen: View {
     @EnvironmentObject private var model: AppModel
     @AppStorage(LibraryKeys.sort) private var sort: LibrarySort = .recent
     @AppStorage(LibraryKeys.layout) private var layout: LibraryLayout = .covers
+    /// Capturas: `-screenshot.filter Leyendo` abre con ese filtro elegido (UX-2a).
     @State private var filter: LibraryFilter = .all
     @State private var path = NavigationPath()
 
@@ -108,6 +109,10 @@ struct LibraryScreen: View {
 
     /// Capturas automáticas: abre la pantalla pedida al arrancar.
     private func openScreenForScreenshots() {
+        if let wanted = LaunchOptions.filter,
+           let chosen = LibraryFilter.options(for: model.shelf).first(where: { $0.title == wanted }) {
+            filter = chosen
+        }
         guard path.isEmpty else { return }
         switch LaunchOptions.screen {
         case "review": path.append(ReviewInboxRef())

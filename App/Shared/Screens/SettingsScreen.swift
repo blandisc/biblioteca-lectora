@@ -58,9 +58,14 @@ struct SettingsScreen: View {
     @State private var errorMessage: String?
     #if os(macOS)
     /// La pestaña de Ajustes en la Mac. Capturas: `-screenshot.demo settingsReading`, `settingsCabinet`,
-    /// `settingsMiddle` (Datos) o `settingsEnd` (Conexiones) abren en esa pestaña.
+    /// `settingsMiddle` (Datos) o `settingsEnd` (Conexiones) abren en esa pestaña; `settingsRules`
+    /// abre Datos › Reglas y `settingsConnection`, Conexiones › la primera conexión.
     @State private var macTab = ["settingsReading", "settingsCabinet", "settingsMiddle", "settingsEnd"]
-        .firstIndex(of: LaunchOptions.demo ?? "").map { $0 + 1 } ?? 0
+        .firstIndex(of: ["settingsRules": "settingsMiddle", "settingsConnection": "settingsEnd"][LaunchOptions.demo ?? ""] ?? LaunchOptions.demo ?? "")
+        .map { $0 + 1 } ?? 0
+    /// Reglas o una conexión, en una hoja sobre Ajustes: empujadas dentro de una pestaña, la
+    /// flecha de regreso se metía entre las pestañas y marcaba otra (27 nov 2026).
+    @State private var macPage: MacSettingsPage?
     #endif
 
     var body: some View {
@@ -113,6 +118,32 @@ extension SettingsScreen {
             }
             .tag(4)
         }
+        .sheet(item: $macPage) { page in
+            NavigationStack {
+                Group {
+                    switch page {
+                    case .rules: RulesScreen()
+                    case .connector(let connector): ConnectorScreen(connector: connector)
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Volver a Ajustes") { macPage = nil } }
+                }
+            }
+            .environmentObject(model)
+            .frame(width: Theme.Mac.settings, height: Theme.Mac.settingsPage)
+        }
+        #if DEBUG
+        // Capturas: `-screenshot.demo settingsRules` abre Reglas y `settingsConnection`, la primera conexión.
+        .task {
+            try? await Task.sleep(for: .seconds(1))
+            switch LaunchOptions.demo {
+            case "settingsRules": macPage = .rules
+            case "settingsConnection": macPage = Connector.allCases.first.map(MacSettingsPage.connector)
+            default: break
+            }
+        }
+        #endif
         #else
         NavigationStack {
             ScrollViewReader { scroller in
@@ -197,13 +228,15 @@ extension SettingsScreen {
         } content: {
             LinkRow(title: "Fuente", value: googleKey.isEmpty ? "Open Library" : "Open Library y Google Books", chevron: false)
             FieldRow(title: "Clave de Google Books", prompt: "Agregar", text: $googleKey)
-            NavigationLink {
-                RulesScreen().settingsPage()
-            } label: {
-                LinkRow(title: "Reglas de autores y etiquetas",
-                        value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
-            }
-            .buttonStyle(.plain)
+            let rules = LinkRow(title: "Reglas de autores y etiquetas",
+                                value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
+            #if os(macOS)
+            Button { macPage = .rules } label: { rules }
+                .buttonStyle(.plain)
+            #else
+            NavigationLink { RulesScreen() } label: { rules }
+                .buttonStyle(.plain)
+            #endif
         }
     }
 
@@ -216,12 +249,14 @@ extension SettingsScreen {
         } content: {
             ForEach(Connector.allCases) { connector in
                 let connected = connectors.isConnected(connector)
-                NavigationLink {
-                    ConnectorScreen(connector: connector).settingsPage()
-                } label: {
-                    LinkRow(title: connector.title, value: connected ? "Conectado" : "Sin conectar", status: connected)
-                }
-                .buttonStyle(.plain)
+                let row = LinkRow(title: connector.title, value: connected ? "Conectado" : "Sin conectar", status: connected)
+                #if os(macOS)
+                Button { macPage = .connector(connector) } label: { row }
+                    .buttonStyle(.plain)
+                #else
+                NavigationLink { ConnectorScreen(connector: connector) } label: { row }
+                    .buttonStyle(.plain)
+                #endif
             }
         }
     }
@@ -324,15 +359,17 @@ extension SettingsScreen {
     }
 }
 
-private extension View {
-    /// En la Mac la ventana de Ajustes toma el alto de lo que muestra: Reglas o una conexión
-    /// (formularios que se desplazan) piden el suyo para no quedar en una tira.
-    @ViewBuilder
-    func settingsPage() -> some View {
-        #if os(macOS)
-        frame(minHeight: Theme.Mac.settingsPage)
-        #else
-        self
-        #endif
+#if os(macOS)
+/// Lo que se abre en una hoja sobre los Ajustes de la Mac.
+enum MacSettingsPage: Identifiable {
+    case rules
+    case connector(Connector)
+
+    var id: String {
+        switch self {
+        case .rules: "reglas"
+        case .connector(let connector): connector.rawValue
+        }
     }
 }
+#endif

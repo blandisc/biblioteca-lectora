@@ -51,29 +51,59 @@ const pageMarkCSS = ({ flow, textColor }) => {
     }`
 }
 
-// Página del libro en que empieza cada párrafo (la misma cuenta que foliate en
-// view.js: 2,400 bytes del archivo por página, unas 1,800 letras, como una página
-// de un libro de bolsillo; con 1,500 salía más corta que una pantalla) y la marca
-// en el primero de cada una.
+// En continuo, la marca «—— 24 ——» va donde empieza cada pantalla, con el mismo número
+// que el pie (27 nov 2026): antes contaba páginas de foliate (2,400 bytes del archivo),
+// y el pie decía «Pág. 3» mientras la marca de al lado decía «—— 24 ——». La marca va antes
+// de un párrafo y es un atributo, no un nodo: los CFI siguen apuntando al mismo lugar.
+// `sizePerPage` queda solo para estimar un libro del que aún no se mide ningún capítulo.
 const sizePerPage = 2400
-const markPages = (doc, index) => {
-    const sections = view?.book?.sections ?? []
-    const sizes = sections.map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
-    const size = sizes[index] ?? 0
-    if (!size) return
-    const before = sizes.slice(0, index).reduce((a, b) => a + b, 0)
-    const blocks = [...doc.body.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, figure, dt, dd')]
-        .filter(el => !el.parentElement?.closest('p, li, blockquote, pre, figure, dt, dd'))
-    const total = blocks.reduce((sum, el) => sum + (el.textContent?.length ?? 0), 0)
-    if (!total) return
-    let seen = 0
-    let page = Math.floor(before / sizePerPage)
-    blocks.forEach((el, i) => {
-        const here = Math.floor((before + (seen / total) * size) / sizePerPage)
-        if (i > 0 && here > page) el.setAttribute('data-gabinete-page', String(here + 1))
-        page = Math.max(page, here)
-        seen += el.textContent?.length ?? 0
-    })
+const pageBlocks = doc => [...doc.body.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, figure, dt, dd')]
+    .filter(el => !el.parentElement?.closest('p, li, blockquote, pre, figure, dt, dd'))
+// Dónde cae cada pantalla del capítulo: se mide con el capítulo ya acomodado y se rehace si
+// cambia la letra, el margen o el tamaño. Devuelve si movió el texto (para volver a donde ibas).
+const markScreens = (doc, index) => {
+    const renderer = view?.renderer
+    if (!doc?.body || !renderer) return false
+    const layout = renderer.scrolled ? layoutKey() : ''
+    let shifted = false
+    if (doc.body.dataset.gabineteScreens !== layout) {
+        doc.body.dataset.gabineteScreens = layout
+        for (const el of doc.querySelectorAll('[data-gabinete-screen]')) {
+            el.removeAttribute('data-gabinete-screen')
+            el.removeAttribute('data-gabinete-page')
+            shifted = true
+        }
+        const screen = renderer.size
+        if (renderer.scrolled && screen > 0) {
+            const origin = doc.documentElement.getBoundingClientRect().top
+            const blocks = pageBlocks(doc)
+            const tops = blocks.map(el => el.getBoundingClientRect().top - origin)
+            // Cada marca empuja lo que sigue: se mide la primera y se suma a las demás.
+            let shift = 0, mark = null, page = 0
+            blocks.forEach((el, i) => {
+                const here = Math.floor((tops[i] + shift) / screen)
+                if (i > 0 && here > page) {
+                    const before = mark === null ? el.getBoundingClientRect().height : 0
+                    el.setAttribute('data-gabinete-screen', String(here))
+                    el.setAttribute('data-gabinete-page', '')
+                    if (mark === null) mark = Math.max(0, el.getBoundingClientRect().height - before)
+                    shift += mark
+                    shifted = true
+                }
+                page = Math.max(page, here)
+            })
+        }
+    }
+    // El número: las pantallas de los capítulos de antes más la de aquí (cambia sin mover nada).
+    if (renderer.scrolled) {
+        const sizes = sectionSizes()
+        let before = 0
+        for (let i = 0; i < index; i++) before += screensOf(sizes, i)
+        for (const el of doc.querySelectorAll('[data-gabinete-screen]')) {
+            el.setAttribute('data-gabinete-page', String(before + Number(el.dataset.gabineteScreen) + 1))
+        }
+    }
+    return shifted
 }
 
 const getCSS = ({ lineHeight, justify, hyphenate, fontFamily, fontScale, flow, scrollTop, ...colors }) => `
@@ -349,11 +379,13 @@ let moved = false
 let touchedAt = 0
 const touched = () => { touchedAt = Date.now() }
 
-// Páginas de pantalla (UX-1d): «Pág. N de M» cambia con cada hoja. Cada capítulo ya
+// Páginas de pantalla (UX-1d): «Pág. N de M» cambia con cada hoja y, en continuo, con cada
+// pantalla que subes (27 nov 2026: antes contaba páginas de foliate). Cada capítulo ya
 // acomodado sabe cuántas pantallas mide; los demás se estiman con las letras por
-// pantalla de los que sí. Se vuelve a medir si cambia la letra, el margen o el tamaño.
+// pantalla de los que sí. Se vuelve a medir si cambia el modo, la letra, el margen o el tamaño.
 let screens = new Map()
 let screensLayout = ''
+const layoutKey = () => `${style.flow}|${window.innerWidth}x${window.innerHeight}|${style.fontFamily}|${style.fontScale}|${style.margin}|${style.marginBottom}`
 const sectionSizes = () => (view?.book?.sections ?? []).map(s => s.linear != 'no' && s.size > 0 ? s.size : 0)
 const screensOf = (sizes, index) => {
     if (screens.has(index)) return screens.get(index)
@@ -362,16 +394,10 @@ const screensOf = (sizes, index) => {
     const perScreen = pages && size ? size / pages : sizePerPage
     return sizes[index] ? Math.max(1, Math.round(sizes[index] / perScreen)) : 0
 }
-// La página de pantalla (desde 1) de un lugar del libro y cuántas tiene en total. En
-// continuo no hay pantallas: cuentan las páginas del libro, las de las marcas «—— 24 ——».
-const pageAt = (index, fractionInSection) => {
+// La página de pantalla (desde 1) de un lugar del libro y cuántas tiene en total: la misma
+// cuenta en páginas y en continuo. `local` es la pantalla dentro del capítulo, desde 0.
+const pageAt = (index, local) => {
     const sizes = sectionSizes()
-    if (style.flow === 'scrolled') {
-        const before = sizes.slice(0, index).reduce((a, b) => a + b, 0)
-        const total = sizes.reduce((a, b) => a + b, 0)
-        return { page: Math.floor((before + fractionInSection * (sizes[index] ?? 0)) / sizePerPage) + 1,
-                 total: Math.max(1, Math.ceil(total / sizePerPage)) }
-    }
     let before = 0, total = 0
     sizes.forEach((_, i) => {
         const n = screensOf(sizes, i)
@@ -379,17 +405,31 @@ const pageAt = (index, fractionInSection) => {
         total += n
     })
     const here = screensOf(sizes, index)
-    const page = before + Math.min(here, Math.floor(fractionInSection * here) + 1)
+    const page = before + Math.min(Math.max(here, 1), local + 1)
     return { page, total: Math.max(total, page) }
 }
+// Lo mismo para un punto del capítulo dado como fracción (0 a 1): los resultados de buscar.
+const pageAtFraction = (index, fraction) =>
+    pageAt(index, Math.floor(Math.min(Math.max(fraction, 0), 1) * screensOf(sectionSizes(), index)))
+// Cuántas pantallas mide el capítulo que se ve: en páginas, sus hojas; en continuo, su alto
+// entre el alto de la pantalla.
 const measureScreens = () => {
     const renderer = view?.renderer
-    if (!renderer || renderer.scrolled) return
-    const layout = `${window.innerWidth}x${window.innerHeight}|${style.fontFamily}|${style.fontScale}|${style.margin}|${style.marginBottom}`
+    if (!renderer) return
+    const layout = layoutKey()
     if (layout !== screensLayout) { screens = new Map(); screensLayout = layout }
     const contents = renderer.getContents?.()?.[0]
-    const pages = renderer.pages - 2
-    if (contents && pages > 0) screens.set(contents.index, pages)
+    if (!contents) return
+    const pages = renderer.scrolled
+        ? (renderer.size > 0 ? Math.ceil(renderer.viewSize / renderer.size) : 0)
+        : renderer.pages - 2
+    if (pages > 0) screens.set(contents.index, pages)
+}
+// La pantalla de ahora dentro del capítulo (desde 0).
+const localScreen = renderer => {
+    if (!renderer) return 0
+    if (renderer.scrolled) return renderer.size > 0 ? Math.floor(renderer.start / renderer.size) : 0
+    return renderer.pages > 2 ? Math.max(0, renderer.page - 1) : 0
 }
 
 // Marcadores: la app manda sus CFI y aquí se ve cuáles caen en la página visible.
@@ -499,12 +539,18 @@ const onRelocate = ({ detail }) => {
         requestAnimationFrame(() => placeOnPage(from))
     }
     const chapter = chapterLeftOf(range)
-    measureScreens()
     const renderer = view.renderer
-    const index = renderer?.getContents?.()?.[0]?.index ?? 0
-    const inSection = renderer && !renderer.scrolled && renderer.pages > 2
-        ? (renderer.page - 1) / (renderer.pages - 2) : (renderer?.scrolled ? renderer.start / Math.max(renderer.viewSize, 1) : 0)
-    const screen = pageAt(index, inSection)
+    const contents = renderer?.getContents?.()?.[0]
+    const index = contents?.index ?? 0
+    // En continuo, si cambió la letra o el tamaño, las marcas de pantalla se rehacen y el texto
+    // vuelve a donde ibas; el pie se manda con la vuelta.
+    if (renderer?.scrolled && contents?.doc && markScreens(contents.doc, index) && range) {
+        renderer.scrollToAnchor?.(range)
+        return
+    }
+    measureScreens()
+    if (contents?.doc) markScreens(contents.doc, index)
+    const screen = pageAt(index, localScreen(renderer))
     post('relocate', {
         // foliate da NaN en secciones de dos páginas (0 ÷ 0): no se manda.
         fraction: Number.isFinite(fraction) ? fraction : null,
@@ -555,7 +601,9 @@ const onLoad = ({ detail: { doc, index } }) => {
     }
     watchPull(doc)
     evenLines(doc)
-    markPages(doc, index)
+    // Ya acomodado el capítulo (foliate lo pinta justo después de avisar) y antes de ir a
+    // donde ibas: las marcas no mueven el texto que estás leyendo.
+    queueMicrotask(() => markScreens(doc, index))
     markChapter(doc)
     doc.addEventListener('selectionchange', () => {
         const selection = doc.getSelection()
@@ -979,7 +1027,7 @@ window.lectora = {
                     if (results.length >= 300) break
                     const before = sizes.slice(0, result.index ?? 0).reduce((a, b) => a + b, 0)
                     const at = before + (item.at ?? 0) * (sizes[result.index ?? 0] ?? 0)
-                    const { page } = pageAt(result.index ?? 0, item.at ?? 0)
+                    const { page } = pageAtFraction(result.index ?? 0, item.at ?? 0)
                     const entry = {
                         cfi: item.cfi, chapter: result.label ?? '',
                         pre: item.excerpt?.pre ?? '', match: item.excerpt?.match ?? text, post: item.excerpt?.post ?? '',

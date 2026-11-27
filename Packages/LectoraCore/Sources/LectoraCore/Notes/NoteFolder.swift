@@ -54,6 +54,17 @@ public struct NoteFolder: Sendable {
         return Note(fileName: name, text: text, modifiedAt: Date())
     }
 
+    /// Notas de muestra que se escriben una sola vez: la que ya existe con ese título se
+    /// queda como está. Sembrar dos veces no duplica nada (antes «El silencio en Rulfo 2»).
+    /// Devuelve las que escribió.
+    @discardableResult
+    public func seed(_ texts: [String]) throws -> [Note] {
+        let titles = Set(all().map { NoteMarkdown.key($0.title) })
+        return try texts
+            .filter { !titles.contains(NoteMarkdown.key(Note.title(of: $0) ?? "")) }
+            .map { try save(text: $0) }
+    }
+
     public func delete(fileName: String) throws {
         try FileManager.default.removeItem(at: file(for: fileName))
     }

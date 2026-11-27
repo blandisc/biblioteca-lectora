@@ -24,7 +24,23 @@ struct MacBookInspector: View {
     private var books: [Book] { books(ids) }
 
     private func books(_ ids: Set<UUID>) -> [Book] {
-        ids.compactMap { library.book(id: $0) }.sorted { $0.title < $1.title }
+        let found = ids.compactMap { library.book(id: $0) }.sorted { $0.title < $1.title }
+        #if DEBUG
+        // Capturas: `-screenshot.long` enseña el libro elegido con datos larguísimos, solo en
+        // pantalla (no se guarda), para revisar que la ficha corte con «…» (UX-3b).
+        if UserDefaults.standard.bool(forKey: "screenshot.long") {
+            return found.map { book in
+                var long = book
+                long.title = "Historia verdadera de la conquista de la Nueva España escrita por uno de sus conquistadores"
+                long.authors = ["Bernal Díaz del Castillo Fernández de Córdoba y Grijalva", "Juan Ginés de Sepúlveda y Montenegro"]
+                long.series = "Crónicas de Indias y relaciones del siglo dieciséis"
+                long.publisher = "Imprenta del Reino, por Francisco Martínez Abad y herederos"
+                long.tags = ["Crónicas", "Historia de México", "Siglo XVI", "Conquista"]
+                return long
+            }
+        }
+        #endif
+        return found
     }
 
     var body: some View {
@@ -115,8 +131,18 @@ struct MacBookInspector: View {
             }
             buttons(count: 1)
         }
-        .formStyle(.grouped)
         .formScreen()
+        #if DEBUG
+        // Capturas: con un libro elegido (`-screenshot.pick Rayuela`), `-screenshot.inspector note`
+        // abre su primera nota y `cover`, «Buscar portada en internet…», como el clic.
+        .task(id: book.id) {
+            switch UserDefaults.standard.string(forKey: "screenshot.inspector") {
+            case "note": openNote = model.notes.notes(linking: book.title).first.map { NoteRef(fileName: $0.fileName) }
+            case "cover": choosingInternetCover = true
+            default: break
+            }
+        }
+        #endif
         .fileImporter(isPresented: $choosingCoverFile, allowedContentTypes: [.image]) { result in
             setCover(result, for: book)
         }
@@ -128,6 +154,8 @@ struct MacBookInspector: View {
         .sheet(item: $openNote) { ref in
             NavigationStack {
                 NoteScreen(ref: ref)
+                    // En una hoja no hay barra arriba que deje su aire (en la ventana sí): el que le toca.
+                    .contentMargins(.top, Theme.Space.screenTopInSheet, for: .scrollContent)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Volver a la ficha") { openNote = nil }
@@ -229,7 +257,6 @@ struct MacBookInspector: View {
             }
             buttons(count: books.count)
         }
-        .formStyle(.grouped)
         .formScreen()
     }
 
