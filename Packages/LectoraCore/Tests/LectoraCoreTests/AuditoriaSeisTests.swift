@@ -146,11 +146,12 @@ final class AuditoriaSeisTests: XCTestCase {
         XCTAssertTrue(move.contains("to = staged.staging(folder)") && move.contains("LibraryStore.coordinatedCopy(from: from, to: to)"),
                       "Se copia a la carpeta de trabajo")
         XCTAssertTrue(move.contains("to = staged.staged(folder)"), "Los repasos también van a la de trabajo")
-        XCTAssertTrue(move.contains("placed = try staged.place()") && move.contains("staged.takeBack(placed)") && move.contains("staged.discard()"))
+        XCTAssertTrue(move.contains("{ try staged.place() }") && move.contains("staged.takeBack(placed)") && move.contains("staged.discard()"))
         XCTAssertFalse(move.contains("let created"), "Ya no se borra lo que no estaba al empezar")
-        guard let place = move.range(of: "placed = try staged.place()"), let remember = move.range(of: "CabinetLocation.remember(destination)"),
-              let last = move.range(of: "let written = journal.drain()") else { return XCTFail("Al final se pone en su lugar") }
-        XCTAssertTrue(last.upperBound <= place.lowerBound && place.upperBound <= remember.lowerBound)
+        guard let place = move.range(of: "{ try staged.place() }"), let remember = move.range(of: "CabinetLocation.remember(destination)"),
+              let written = move.range(of: "let written = journal.drain()"), let last = move.range(of: "let late = journal.drain()")
+        else { return XCTFail("Al final se pone en su lugar") }
+        XCTAssertTrue(written.upperBound <= place.lowerBound && place.upperBound <= last.lowerBound && last.upperBound <= remember.lowerBound)
         XCTAssertFalse(move[last.upperBound..<remember.lowerBound].contains("await"))
     }
 

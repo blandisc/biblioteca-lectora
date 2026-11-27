@@ -57,11 +57,19 @@ public struct Note: Identifiable, Hashable, Sendable {
     static func title(of text: String) -> String? {
         for line in text.components(separatedBy: .newlines) {
             var trimmed = line.trimmingCharacters(in: .whitespaces)
+            // Una cerca de código («```swift») no es el título (auditoría 8, B1): se lee el renglón
+            // de texto que sigue. Los números de una lista sí se quedan (auditoría 7).
+            if isFence(trimmed) { continue }
             while trimmed.hasPrefix("#") { trimmed.removeFirst() }
             trimmed = NoteMarkdown.plain(trimmed)
             if !trimmed.isEmpty { return trimmed }
         }
         return nil
+    }
+
+    /// El renglón que abre o cierra un bloque de código: tres «`» o tres «~».
+    static func isFence(_ line: String) -> Bool {
+        line.hasPrefix("```") || line.hasPrefix("~~~")
     }
 }
 

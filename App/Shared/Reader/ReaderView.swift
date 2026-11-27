@@ -306,6 +306,11 @@ extension ReaderView {
         .noticeAlert("Llevé el pasaje a tu nota", message: $controller.notice, back: "Seguir leyendo")
     }
 
+    /// Dónde está ahora el archivo de este libro en la biblioteca (nil si no es de la biblioteca).
+    private var currentFile: URL? {
+        bookID.flatMap { library.book(id: $0) }.flatMap { library.fileURL(for: $0) }
+    }
+
     /// Al abrir y cuando cambia la letra, el tema o el modo: se lo dice al libro.
     fileprivate func lifecycle(_ content: some View) -> some View {
         content
@@ -352,6 +357,12 @@ extension ReaderView {
                 }
                 controller.open(bookFile: file, bookID: bookID, lastCFI: resume, fraction: resumeFraction)
             }
+        }
+        // El libro que lees sigue abierto aunque cambie de carpeta (auditoría 8, A1): lo identificas,
+        // cambias su autor, ordenas o mueves el Gabinete. Su contenido ya está cargado y la página se
+        // guarda por su ID; si el lector vuelve a pedir el archivo, se lo doy de su carpeta nueva.
+        .onChange(of: currentFile) { _, file in
+            if let file { controller.follow(bookFile: file) }
         }
         // Capturas automáticas: el índice o una búsqueda, ya con el libro abierto.
         .onChange(of: controller.contents) { _, contents in

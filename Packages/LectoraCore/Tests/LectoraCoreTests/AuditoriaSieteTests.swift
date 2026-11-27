@@ -159,7 +159,7 @@ final class AuditoriaSieteTests: XCTestCase {
         let work = source("LibraryWork.swift", in: "Packages/LectoraCore/Sources")
         let place = body(of: "public func place() throws -> [String] {", in: work)
         XCTAssertTrue(place.contains("try Self.coordinatedMove(from: staging(folder), to: target)") && !place.contains("manager.moveItem"))
-        XCTAssertTrue(body(of: "public func takeBack(_ placed: [String]) {", in: work).contains("Self.coordinatedMove(from: target, to: staging(folder))"))
+        XCTAssertTrue(body(of: "public func takeBack(_ placed: [String]) {", in: work).contains("Self.coordinatedMove(from: mine, to: staging(folder))"))
         let move = body(of: "static func coordinatedMove(from source: URL, to target: URL) throws {", in: work)
         XCTAssertTrue(move.contains("options: .forMoving") && move.contains("coordinator.item(at: from, didMoveTo: to)"))
     }
@@ -240,16 +240,16 @@ final class AuditoriaSieteTests: XCTestCase {
 
     /// M1 · Una ventana de libro de un libro que ya no está no vuelve a abrirse en cada arranque.
     func testRestoredReaderOfAMissingBookCloses() {
-        XCTAssertFalse(ReaderOpening.keepsRestoredWindow(fileExists: false, inLibrary: true, waitingForCloud: false))
-        XCTAssertFalse(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: false, waitingForCloud: false),
+        XCTAssertEqual(ReaderOpening.restoredWindow(waitingForCloud: false, inLibrary: true, fileExists: false, inCloud: false), .close)
+        XCTAssertEqual(ReaderOpening.restoredWindow(waitingForCloud: false, inLibrary: false, fileExists: true, inCloud: false), .close,
                        "Ya no está en la biblioteca (otro Gabinete, lo borraste)")
-        XCTAssertTrue(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: false, waitingForCloud: true),
-                      "Mientras bajo tu biblioteca de iCloud, puede llegar")
-        XCTAssertTrue(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: true, waitingForCloud: false))
-        XCTAssertTrue(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: nil, waitingForCloud: false), "Un archivo suelto")
+        XCTAssertEqual(ReaderOpening.restoredWindow(waitingForCloud: true, inLibrary: false, fileExists: true, inCloud: false), .wait,
+                       "Mientras bajo tu biblioteca de iCloud, puede llegar")
+        XCTAssertEqual(ReaderOpening.restoredWindow(waitingForCloud: false, inLibrary: true, fileExists: true, inCloud: false), .keep)
+        XCTAssertEqual(ReaderOpening.restoredWindow(waitingForCloud: false, inLibrary: nil, fileExists: true, inCloud: false), .keep, "Un archivo suelto")
 
         let window = source("MacReaderWindow.swift", in: "App/Shared/Mac")
-        XCTAssertTrue(window.contains("ReaderOpening.keepsRestoredWindow(") && window.contains("openWindow(id: Self.libraryWindow)")
+        XCTAssertTrue(window.contains("ReaderOpening.restoredWindow(") && window.contains("openWindow(id: Self.libraryWindow)")
                       && window.contains("dismiss()"), "La cierro y abro la biblioteca")
         XCTAssertTrue(source("LectoraApp.swift").contains("id: \"biblioteca\""), "El id de la biblioteca es el que abro")
     }
@@ -290,7 +290,7 @@ final class AuditoriaSieteTests: XCTestCase {
         guard let lookup = search.range(of: "await service.search("), let guardLock = search.range(of: "if lock.current != nil { return .busy }", options: .backwards),
               let review = search.range(of: "setReview(") else { return XCTFail("search respeta el candado") }
         XCTAssertTrue(guardLock.lowerBound > lookup.lowerBound && guardLock.lowerBound < review.lowerBound, "Tampoco si empezó mientras buscaba")
-        XCTAssertTrue(body(of: "func waitUntilIdle() async {", in: store).contains("lockWaiters.append($0)"))
+        XCTAssertTrue(body(of: "func waitUntilIdle() async {", in: store).contains("idleWaiters[id] = continuation"))
         let screen = source("ReviewScreen.swift")
         XCTAssertTrue(screen.contains(".task(id: waits) {") && screen.contains("await model.library.waitUntilIdle()")
                       && screen.contains("show(await run(ask), asked: ask)"), "Al terminar, lo vuelvo a buscar solo")

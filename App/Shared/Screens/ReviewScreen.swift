@@ -314,6 +314,8 @@ struct CandidatesScreen: View {
     @State private var pendingAsk: Ask?
     /// Cada vez que me encuentro ocupado, una espera nueva (aunque sea lo mismo).
     @State private var waits = 0
+    /// Ya lo estaba buscando (la vuelta de lo pendiente o el lote): espero ese resultado (auditoría 8, B2).
+    @State private var alreadySearching = false
 
     private var book: ShelfBook? { model.shelfBook(id: bookID.uuidString) }
     private var candidates: [MetadataCandidate] { model.library.reviews[bookID] ?? [] }
@@ -333,7 +335,7 @@ struct CandidatesScreen: View {
 
                 Group {
                     if searching {
-                        LoadingLine(text: "Buscando en internet…")
+                        LoadingLine(text: alreadySearching ? Self.alreadySearchingLine : "Buscando en internet…")
                             .padding(.vertical, Theme.Space.xl)
                     } else if let busyReason {
                         EmptyState(title: "Espera un momento",
@@ -414,10 +416,23 @@ struct CandidatesScreen: View {
         case other(title: String, author: String?, isbn: String?)
     }
 
+    /// Lo que digo mientras espero la búsqueda que ya corría de este libro.
+    static let alreadySearchingLine = "Ya lo estoy buscando; en cuanto termine te enseño lo que encontré…"
+
     private func run(_ ask: Ask) async -> MetadataService.Decision? {
+        // Ya lo estaba buscando (auditoría 8, B2): antes `identify` devolvía nil, el «Buscando» se
+        // quitaba y no salía nada. Espero esa búsqueda; si dejó candidatos, te los enseño, y si no
+        // (completó lo seguro o no lo encontró), busco lo que pediste.
+        if model.library.identifying.contains(bookID) {
+            alreadySearching = true
+            await model.library.waitUntilSearched(bookID)
+            alreadySearching = false
+            if Task.isCancelled { return nil }
+            if ask == .again, !candidates.isEmpty { return .review }
+        }
         switch ask {
-        case .again: await model.library.identify(bookID, askAlways: true)
-        case .other(let title, let author, let isbn): await model.library.search(title: title, author: author, isbn: isbn, for: bookID)
+        case .again: return await model.library.identify(bookID, askAlways: true)
+        case .other(let title, let author, let isbn): return await model.library.search(title: title, author: author, isbn: isbn, for: bookID)
         }
     }
 

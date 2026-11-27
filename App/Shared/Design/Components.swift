@@ -2664,6 +2664,9 @@ enum EmptyCopy {
     /// Por qué no añado ni traigo libros mientras bajo la tuya (auditorías 5 y 6), por ningún lado:
     /// el «+», la bienvenida, Ajustes, Traer de Calibre, arrastrar y la biblioteca misma.
     static let addWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para añadir libros o traer los de Calibre."
+    /// Por qué no muevo tu Gabinete ni cambio de carpeta mientras bajo tu biblioteca (auditoría 8):
+    /// la copia saldría a medias. Lo dicen Ajustes y el aviso si algo lo pide.
+    static let cabinetWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para mover tu Gabinete, cambiar de carpeta o traer los libros de Calibre."
     /// El título del aviso cuando tocaste algo que añade libros mientras bajo la tuya.
     static let addWhileDownloadingTitle = "Todavía no puedo añadir libros"
     /// Volver a la bienvenida desde una biblioteca que no bajó.

@@ -222,12 +222,17 @@ final class AuditoriaCincoTests: XCTestCase {
 
         let move = body(of: "func move(toCabinet destination: URL) async throws {", in: store)
         guard let walk = move.range(of: "for folder in catchUp {"), let detached = move.range(of: "Task.detached", options: .backwards, range: move.startIndex..<walk.lowerBound),
-              let last = move.range(of: "let written = journal.drain()"), let remember = move.range(of: "CabinetLocation.remember(destination)") else {
+              let written = move.range(of: "let written = journal.drain()"), let last = move.range(of: "let late = journal.drain()"),
+              let remember = move.range(of: "CabinetLocation.remember(destination)") else {
             return XCTFail("El recorrido va en segundo plano y lo último copia lo anotado")
         }
-        XCTAssertTrue(detached.upperBound <= walk.lowerBound && walk.upperBound <= last.lowerBound && last.upperBound <= remember.lowerBound)
+        XCTAssertTrue(detached.upperBound <= walk.lowerBound && walk.upperBound <= written.lowerBound
+                      && written.upperBound <= last.lowerBound && last.upperBound <= remember.lowerBound)
+        XCTAssertTrue(move[written.upperBound..<last.lowerBound].contains("FolderCatchUp.copy(written"))
+        // Poner las carpetas en su lugar suelta el hilo (auditoría 8, M2): lo escrito mientras tanto
+        // es lo último que copio, y de ahí al cambio nada se cuela.
         XCTAssertFalse(move[last.upperBound..<remember.lowerBound].contains("await"), "Nada se cuela entre lo último y el cambio")
-        XCTAssertTrue(move[last.upperBound..<remember.lowerBound].contains("FolderCatchUp.copy(written"))
+        XCTAssertTrue(move[last.upperBound..<remember.lowerBound].contains("FolderCatchUp.copy(late"))
     }
 
     // MARK: B1 · La tabla de la Mac no salta arriba mientras cambias el ancho

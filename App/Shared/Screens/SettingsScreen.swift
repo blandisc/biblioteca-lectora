@@ -282,16 +282,17 @@ extension SettingsScreen {
                     .frame(minHeight: Theme.Size.row)
             } else {
                 Button { choosingFolder = true } label: { LinkRow(title: "Mover a iCloud Drive u otra carpeta") }
-                    .disabled(busy)
+                    .disabled(busy || model.cabinetChangeBlocked != nil)
                 if !model.library.isLocal {
                     Button { run { try model.library.useLocalCabinet() } } label: { LinkRow(title: "Volver a la carpeta de este dispositivo") }
-                        .disabled(busy)
+                        .disabled(busy || model.cabinetChangeBlocked != nil)
                 }
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
                 .disabled(busy || model.addBooksBlocked != nil)
-            // Mientras bajo tu biblioteca de iCloud no traigo nada de Calibre (auditoría 6).
-            if let blocked = model.addBooksBlocked, !busy {
+            // Mientras bajo tu biblioteca de iCloud no muevo el Gabinete, no cambio de carpeta ni
+            // traigo nada de Calibre (auditorías 6 y 8): una sola razón para las tres.
+            if let blocked = model.cabinetChangeBlocked ?? model.addBooksBlocked, !busy {
                 ReasonLine(blocked)
                     .padding(.vertical, Theme.Space.s)
             }

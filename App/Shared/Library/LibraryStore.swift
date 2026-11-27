@@ -140,12 +140,23 @@ final class LibraryStore: ObservableObject {
         }
     }
 
-    /// Espera a que ningún trabajo de toda la biblioteca tenga el candado (sin tomarlo).
+    /// Espera a que ningún trabajo de toda la biblioteca tenga el candado (sin tomarlo). Si quien
+    /// espera se va (cerraste la pantalla), deja de esperar ya (auditoría 8, B3): antes se quedaba
+    /// colgado hasta que el trabajo terminara.
     func waitUntilIdle() async {
-        while lock.current != nil {
-            await withCheckedContinuation { lockWaiters.append($0) }
+        while lock.current != nil, !Task.isCancelled {
+            let id = UUID()
+            await withTaskCancellationHandler {
+                await withCheckedContinuation { continuation in
+                    if Task.isCancelled { continuation.resume() } else { idleWaiters[id] = continuation }
+                }
+            } onCancel: {
+                Task { @MainActor [weak self] in self?.idleWaiters.removeValue(forKey: id)?.resume() }
+            }
         }
     }
+    /// Lo que espera a que la biblioteca esté libre, cada uno con su ficha para soltarlo si se va.
+    private var idleWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
     /// Toma el candado ya, o falla con el porqué.
     private func takeLock(_ work: LibraryWork) throws {
@@ -158,6 +169,9 @@ final class LibraryStore: ObservableObject {
         let waiting = lockWaiters
         lockWaiters = []
         waiting.forEach { $0.resume() }
+        let idle = idleWaiters
+        idleWaiters = [:]
+        idle.values.forEach { $0.resume() }
         // Lo que se quedó sin guardar mientras corría (auditoría 6, M2) se busca de nuevo ya, no
         // hasta volver a abrir la app.
         // Una sola vuelta a la vez y con pausa entre libros (auditoría 7, M4): antes cada candado
@@ -246,6 +260,9 @@ final class LibraryStore: ObservableObject {
         /// Hay cambios guardados en el dispositivo que todavía no llegan a la carpeta: en la
         /// carpeta nueva se quedarían fuera (auditoría 3).
         case pendingChanges
+        /// Tu biblioteca sigue bajando de iCloud (auditoría 8, A2): moverla copiaría una lista a
+        /// medias, y cambiar de carpeta dejaría a medias lo que baja.
+        case downloadingLibrary
         var errorDescription: String? {
             switch self {
             case .occupied(let folder):
@@ -256,6 +273,8 @@ final class LibraryStore: ObservableObject {
                 "Esa carpeta ya tiene una biblioteca de Gabinete. Ábrela en vez de mover la tuya encima."
             case .incomplete(let copied, let expected):
                 "Solo copié \(copied) de \(expected) elementos. Tu biblioteca sigue donde estaba."
+            case .downloadingLibrary:
+                EmptyCopy.cabinetWhileDownloading
             case .pendingChanges:
                 "Todavía estoy guardando en tu Gabinete cambios que esperan a iCloud. No moví nada: "
                     + "vuelve a intentarlo en un momento, con conexión y la app abierta."
@@ -269,6 +288,8 @@ final class LibraryStore: ObservableObject {
     /// Lleva la biblioteca (y las notas) a otra carpeta y la usa desde ahí. Se
     /// copia todo, se comprueba y solo entonces se borra la copia local.
     func move(toCabinet destination: URL) async throws {
+        // Mientras bajo tu biblioteca de iCloud no muevo ni cambio de Gabinete (auditoría 8, A2).
+        guard !waitingForCloud else { throw LocationError.downloadingLibrary }
         CabinetLocation.startAccessing(destination)
         guard !CabinetLocation.hasLibrary(in: destination) else { throw LocationError.alreadyHasLibrary }
         try Self.checkMove(from: cabinet, to: destination)
@@ -345,18 +366,19 @@ final class LibraryStore: ObservableObject {
                 }
                 return mine
             }.value
-            // Lo último, ya sin soltar el hilo: solo lo que escribiste durante el recorrido (pocos
-            // archivos). Nada de lo que guardas puede colarse entre esto y el cambio.
+            // Lo que escribiste durante el recorrido (pocos archivos), antes de ponerlas en su lugar;
+            // lo que escribas mientras las pongo lo copio después, ya sin soltar el hilo.
             let written = journal.drain()
             for folder in catchUp {
                 let from = source.appendingPathComponent(folder), to = staged.staged(folder)
                 guard FileManager.default.fileExists(atPath: from.path) else { continue }
                 try FolderCatchUp.copy(written, from: from, to: to, copied: &mine[folder, default: []])
             }
-            // A su lugar, sin pisar lo que haya llegado mientras tanto.
+            // A su lugar, sin pisar lo que haya llegado mientras tanto. Fuera del hilo de la interfaz
+            // (auditoría 8, M2): con iCloud, avisarle a cada proveedor puede tardar y la app se trababa.
             let placed: [String]
             do {
-                placed = try staged.place()
+                placed = try await Task.detached(priority: .userInitiated) { try staged.place() }.value
             } catch StagedMove.Failure.occupied(let folder) {
                 throw LocationError.occupied(folder)
             }
@@ -366,20 +388,29 @@ final class LibraryStore: ObservableObject {
                 FileManager.default.fileExists(atPath: source.appendingPathComponent($0).path) && !placed.contains($0)
             }
             guard missing.isEmpty else {
-                staged.takeBack(placed)
+                await Task.detached(priority: .userInitiated) { staged.takeBack(placed) }.value
                 throw LocationError.incomplete(copied: placed.count, expected: placed.count + missing.count)
             }
+            // Lo que guardaste mientras las ponía en su lugar (el hilo quedó libre) va ya a su lugar
+            // nuevo, sin soltar el hilo hasta el cambio: nada se queda en la copia vieja.
+            let late = journal.drain()
             do {
+                for folder in catchUp where placed.contains(String(folder.split(separator: "/")[0])) {
+                    let from = source.appendingPathComponent(folder), to = destination.appendingPathComponent(folder)
+                    guard FileManager.default.fileExists(atPath: from.path) else { continue }
+                    try FolderCatchUp.copy(late, from: from, to: to, copied: &mine[folder, default: []])
+                }
                 try CabinetLocation.remember(destination)
             } catch {
                 // Lo que puse en su lugar es de esta corrida: regresa a la de trabajo y se quita.
-                staged.takeBack(placed)
+                await Task.detached(priority: .userInitiated) { staged.takeBack(placed) }.value
                 throw error
             }
         } catch {
-            staged.discard()
+            await Task.detached(priority: .utility) { staged.discard() }.value
             throw error
         }
+        staged.finish()
         open(cabinet: destination)
         if wasLocal {
             for folder in topFolders {
@@ -397,6 +428,7 @@ final class LibraryStore: ObservableObject {
     /// Usa la biblioteca que ya está en esa carpeta (p. ej. la que creó tu Mac).
     func use(cabinet destination: URL) throws {
         try ensureIdle()
+        guard !waitingForCloud else { throw LocationError.downloadingLibrary }
         CabinetLocation.startAccessing(destination)
         try CabinetLocation.remember(destination)
         open(cabinet: destination)
@@ -405,6 +437,7 @@ final class LibraryStore: ObservableObject {
     /// Vuelve a la carpeta del dispositivo (no copia nada).
     func useLocalCabinet() throws {
         try ensureIdle()
+        guard !waitingForCloud else { throw LocationError.downloadingLibrary }
         CabinetLocation.forget()
         open(cabinet: CabinetLocation.local)
     }
@@ -1059,6 +1092,12 @@ final class LibraryStore: ObservableObject {
             setReview(bookID, candidates: result.candidates)
         }
         return result.decision
+    }
+
+    /// Espera a que termine la búsqueda que ya corre de ese libro (la vuelta de lo pendiente o el
+    /// lote), sin empezar otra (auditoría 8, B2). Si quien espera se va, deja de esperar.
+    func waitUntilSearched(_ bookID: UUID) async {
+        for await searching in $identifying.values where !searching.contains(bookID) { return }
     }
 
     /// «Buscar con otros datos»: otro título, autor o ISBN. Los candidatos
@@ -1732,6 +1771,9 @@ final class LibraryStore: ObservableObject {
         guard batchTask == nil else { return }
         let ids = ids.filter { book(id: $0) != nil }
         guard !ids.isEmpty else { return }
+        // Una sola fila de consultas (auditoría 8, M5): la vuelta de lo pendiente se detiene y
+        // sigue al terminar el lote. Antes las dos preguntaban a la vez, a veces por el mismo libro.
+        stopPendingLookups()
         batch = BatchLookup.Progress(total: ids.count)
         // Cada lote con su ficha: uno detenido que termina tarde no toca al siguiente (RB-5).
         let token = UUID()
@@ -1753,9 +1795,12 @@ final class LibraryStore: ObservableObject {
                 }
                 try? await Task.sleep(for: BatchLookup.pause)
             }
-            if self?.batchToken == token {
-                self?.batchTask = nil
-                self?.batchToken = nil
+            guard let self, self.batchToken == token else { return }
+            self.batchTask = nil
+            self.batchToken = nil
+            // Lo pendiente que esperaba al lote, ahora (si hay internet: si no, el lote ya lo dejó pendiente).
+            if self.batch?.stopped != true, unreachableInARow < BatchLookup.unreachableLimit, self.lock.current == nil {
+                await self.retryPendingLookups()
             }
         }
     }

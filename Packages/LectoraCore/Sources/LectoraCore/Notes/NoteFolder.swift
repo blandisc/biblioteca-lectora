@@ -49,11 +49,12 @@ public struct NoteFolder: Sendable {
                 throw NoteFolderError.notDownloaded
             }
             name = fileName
-            if wanted != fileName, titleChanged(in: fileName, to: wanted), !CloudFile.isTaken(file(for: wanted)) {
+            if wanted != fileName, titleChanged(in: fileName, to: wanted),
+               let target = renameTarget(from: fileName, to: wanted) {
                 do {
-                    try FileManager.default.moveItem(at: file(for: fileName), to: file(for: wanted))
+                    try FileManager.default.moveItem(at: file(for: fileName), to: file(for: target))
                     WriteJournal.shared.note(file(for: fileName))
-                    name = wanted
+                    name = target
                 } catch {
                     // Si no se pudo renombrar, lo que escribiste no se pierde (auditoría de medios):
                     // se queda con su nombre; si su archivo ya no está, va con el nombre nuevo.
@@ -76,6 +77,15 @@ public struct NoteFolder: Sendable {
     private func titleChanged(in fileName: String, to wanted: String) -> Bool {
         guard let data = try? Data(contentsOf: file(for: fileName)) else { return true }
         return Self.fileName(forTitle: Note.title(of: String(decoding: data, as: UTF8.self)) ?? "") != wanted
+    }
+
+    /// El nombre nuevo cuando tú cambias el título: el del título o, si ya hay otra nota con ese
+    /// nombre, el siguiente libre («Ideas 2», auditoría 8, M4). Antes se quedaba con el nombre viejo
+    /// y ya nunca se renombraba. Si solo cambian mayúsculas, nil: en el disco es el mismo archivo.
+    private func renameTarget(from fileName: String, to wanted: String) -> String? {
+        if wanted.lowercased() == fileName.lowercased() { return nil }
+        guard CloudFile.isTaken(file(for: wanted)) else { return wanted }
+        return freeName(wanted)
     }
 
     /// Notas de muestra que se escriben una sola vez: la que ya existe con ese título se

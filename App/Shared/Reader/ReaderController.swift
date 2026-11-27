@@ -176,6 +176,13 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         if isReady { evaluate(script) } else { pendingOpen = script }
     }
 
+    /// El archivo del libro abierto cambió de carpeta (auditoría 8, A1): no lo vuelvo a abrir (ya
+    /// está cargado); solo, si el lector lo vuelve a pedir, lo sirvo desde su carpeta nueva.
+    func follow(bookFile: URL) {
+        guard schemeHandler.bookFile != nil, schemeHandler.bookFile != bookFile else { return }
+        schemeHandler.bookFile = bookFile
+    }
+
     func next() { turn(forward: true) }
     func previous() { turn(forward: false) }
 

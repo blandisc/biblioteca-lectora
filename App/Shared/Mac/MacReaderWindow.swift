@@ -12,26 +12,23 @@ struct MacReaderWindow: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openWindow) private var openWindow
 
+    /// El archivo que abre el lector, decidido una vez al abrirse la ventana (auditoría 8, A1).
+    @State private var file: URL?
+
     var body: some View {
         Group {
-            if available {
-                ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
+            if let file {
+                ReaderView(bookFile: file, bookID: book.bookID, startCFI: book.startCFI)
             } else {
                 Color.clear
             }
         }
             .frame(minWidth: Theme.Mac.readerMin.width, minHeight: Theme.Mac.readerMin.height)
             .navigationTitle(title)
-            // Una ventana que la Mac vuelve a abrir al arrancar, de un libro que ya no está (lo
-            // borraste o cambiaste de Gabinete): la cierro y abro la biblioteca (auditoría 7). Antes
-            // se abría en cada arranque con «Load failed», sin la biblioteca, y no dejaba salir.
-            .task(id: available) {
-                guard !available else { return }
-                if !NSApp.windows.contains(where: { $0.isVisible && $0.identifier?.rawValue.hasPrefix(Self.libraryWindow) == true }) {
-                    openWindow(id: Self.libraryWindow)
-                }
-                dismiss()
-            }
+            // Se decide una vez, al abrirse (auditoría 8, A1): antes se miraba en cada vuelta si el
+            // archivo seguía en la ruta de cuando lo abriste, y la ventana se cerraba mientras leías
+            // al identificar el libro, cambiar su autor, ordenar o mover el Gabinete.
+            .task { await openOnce() }
             #if DEBUG
             // Capturas: `-screenshot.readerSize 1400x900` abre el libro en una ventana ancha
             // (para ver que el renglón no se estira, MX-B).
@@ -47,11 +44,43 @@ struct MacReaderWindow: View {
     /// El `id` de la ventana de la biblioteca (`LectoraApp`).
     static let libraryWindow = "biblioteca"
 
-    /// El libro sigue ahí: su archivo existe y la biblioteca lo tiene.
-    private var available: Bool {
-        ReaderOpening.keepsRestoredWindow(fileExists: FileManager.default.fileExists(atPath: book.url.path),
-                                          inLibrary: book.bookID.map { model.library.book(id: $0) != nil },
-                                          waitingForCloud: model.library.waitingForCloud)
+    /// La ventana que abriste tú se queda siempre. Una que la Mac vuelve a abrir al arrancar, de un
+    /// libro que ya no está (lo borraste o cambiaste de Gabinete), se cierra y abre la biblioteca
+    /// (auditoría 7); mientras bajo tu biblioteca de iCloud, espero a saberlo.
+    private func openOnce() async {
+        guard file == nil else { return }
+        guard !model.openedWindows.contains(book) else {
+            file = currentFile
+            return
+        }
+        while true {
+            let url = currentFile
+            let decision = ReaderOpening.restoredWindow(waitingForCloud: model.library.waitingForCloud,
+                                                        inLibrary: book.bookID.map { model.library.book(id: $0) != nil },
+                                                        fileExists: FileManager.default.fileExists(atPath: url.path),
+                                                        inCloud: CloudFile.isPlaceholder(url))
+            switch decision {
+            case .keep:
+                // Si sigue en iCloud, el lector lo baja antes de abrirlo (`CloudFiles.ensureDownloaded`).
+                file = url
+                return
+            case .close:
+                if !NSApp.windows.contains(where: { $0.isVisible && $0.identifier?.rawValue.hasPrefix(Self.libraryWindow) == true }) {
+                    openWindow(id: Self.libraryWindow)
+                }
+                dismiss()
+                return
+            case .wait:
+                try? await Task.sleep(for: CloudFiles.poll)
+                if Task.isCancelled { return }
+            }
+        }
+    }
+
+    /// El archivo del libro ahora: el de la biblioteca (pudo cambiar de carpeta desde que lo
+    /// abriste) o, si es un archivo suelto, el de siempre.
+    private var currentFile: URL {
+        book.bookID.flatMap { model.library.book(id: $0) }.flatMap { model.library.fileURL(for: $0) } ?? book.url
     }
 
     private var title: String {

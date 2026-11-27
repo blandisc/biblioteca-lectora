@@ -18,7 +18,7 @@
   `Lectora.xcodeproj`, `.lectora/`) hasta un renombre aparte; en textos de la app, Gabinete.
 - Interoperabilidad con Calibre: la carpeta de la biblioteca mantiene la forma de Calibre
   (`Gabinete/Biblioteca/Autor/Título (id)/archivo + cover.jpg + metadata.opf`). No romper ese formato.
-- Notas: Markdown normal en `Gabinete/Notas/`, legible fuera de la app. Gabinete nunca cambia el nombre de tus notas por su cuenta: el archivo se renombra solo cuando tú cambias el título, y el título se lee siempre igual (lo que quita la vista previa no toca el título); si no, se rompen sus enlaces en Obsidian (auditoría 7, `testNotesNeverRenameThemselves`).
+- Notas: Markdown normal en `Gabinete/Notas/`, legible fuera de la app. Gabinete nunca cambia el nombre de tus notas por su cuenta: el archivo se renombra solo cuando tú cambias el título (si ya hay otra nota con ese nombre, va como «Ideas 2»), y el título se lee siempre igual (lo que quita la vista previa no toca el título; una cerca de código no es título); si no, se rompen sus enlaces en Obsidian (auditorías 7 y 8, `testNotesNeverRenameThemselves`, `testRenamingToATakenTitleUsesTheNextName`).
 - Sin servidor: el catálogo y los subrayados viven en los registros de LectoraCore.
 - Pruebas con fechas: no supongas UTC. Arma las fechas en el calendario local (`Calendar.current`);
   CI corre `swift test` también con `TZ=America/Mexico_City` para atraparlo.
