@@ -287,15 +287,20 @@ extension SettingsScreen {
                 }
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
-            Button { confirmingTidy = true } label: { LinkRow(title: "Ordenar la biblioteca") }
-                // La pregunta sale de la fila que tocaste: puesta en la tarjeta, su flecha
-                // apuntaba al rótulo «Tu Gabinete».
-                .confirmationDialog("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy, titleVisibility: .visible) {
-                    Button("Ordenar la biblioteca") { tidyReport = model.library.tidy() }
-                    Button("Dejarla como está", role: .cancel) {}
-                } message: {
-                    Text("Reviso cada libro y muevo a su carpeta de Calibre (autor y título) los que no están donde deben. Solo muevo: no borro nada, y lo que no esté en el catálogo se queda donde está.")
-                }
+            if model.library.tidying {
+                LoadingLine(text: "Ordenando tu biblioteca…")
+                    .frame(minHeight: Theme.Size.row)
+            } else {
+                Button { confirmingTidy = true } label: { LinkRow(title: "Ordenar la biblioteca") }
+                    // La pregunta sale de la fila que tocaste: puesta en la tarjeta, su flecha
+                    // apuntaba al rótulo «Tu Gabinete».
+                    .confirmationDialog("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy, titleVisibility: .visible) {
+                        Button("Ordenar la biblioteca") { Task { tidyReport = await model.library.tidy() } }
+                        Button("Dejarla como está", role: .cancel) {}
+                    } message: {
+                        Text("Reviso cada libro y muevo a su carpeta de Calibre (autor y título) los que no están donde deben. Solo muevo: no borro nada, y lo que no esté en el catálogo se queda donde está.")
+                    }
+            }
         }
         .buttonStyle(.plain)
     }

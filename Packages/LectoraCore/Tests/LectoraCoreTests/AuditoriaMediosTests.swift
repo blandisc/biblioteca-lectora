@@ -268,7 +268,7 @@ final class AuditoriaMediosTests: XCTestCase {
         XCTAssertNil(FolderMove.repairedSpelling(of: "Borges/Ficciones (2)/Ficciones.epub", in: root), "Lo que no hay, tampoco")
         let store = source("App/Shared/Library", "LibraryStore.swift")
         XCTAssertTrue(store.contains("repairPathCase()"), "Se corrige al abrir la biblioteca")
-        XCTAssertTrue(body(of: "func tidy() -> TidyReport {", in: store).contains("FolderMove.mergeTwinFolders(in: root)"),
+        XCTAssertTrue(body(of: "func tidy() async -> TidyReport {", in: store).contains("FolderMove.mergeTwinFolders(in: root)"),
                       "«Ordenar» junta las gemelas que quedaron de antes")
     }
 

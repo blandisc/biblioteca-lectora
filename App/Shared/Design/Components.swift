@@ -2455,6 +2455,10 @@ struct ChoiceMark: View {
 enum EmptyCopy {
     static let noBooks = (title: "Todavía no hay libros",
                           message: "Añade EPUB, PDF, MOBI o cómics. Leo sus datos, les busco portada y los guardo ordenados en una carpeta que Calibre también puede abrir.")
+    /// El registro de tu biblioteca sigue en iCloud (p. ej. el primer arranque en un aparato nuevo):
+    /// no es una biblioteca vacía (auditoría 3).
+    static let stillDownloading = (title: "Bajando tu biblioteca",
+                                   message: "Ya le pedí a iCloud tu biblioteca. Tus libros aparecen aquí en cuanto baje; deja la app abierta y con conexión.")
     static func noMatch(_ what: String) -> (title: String, message: String) {
         ("Ningún libro aquí", "Ningún libro coincide con «\(what)».")
     }

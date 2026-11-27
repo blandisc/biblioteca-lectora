@@ -192,12 +192,49 @@ public enum NoteMarkdown {
         "<!-- gabinete:sesion \(id.uuidString) -->"
     }
 
-    /// La nota de esa sesión, si ya existe en la carpeta.
+    /// La nota de esa sesión, si ya existe en la carpeta. Aguanta espacios y mayúsculas de más
+    /// en la marca (un editor de afuera pudo tocarla).
     public static func note(forSession id: UUID, in notes: [Note]) -> Note? {
-        let marker = sessionMarker(id)
+        let wanted = id.uuidString.lowercased()
         return notes.first { note in
-            note.text.components(separatedBy: .newlines).contains { $0.trimmingCharacters(in: .whitespaces) == marker }
+            note.text.components(separatedBy: .newlines).contains { line in
+                guard isComment(line) else { return false }
+                let words = line.lowercased().replacingOccurrences(of: "<!--", with: " ").replacingOccurrences(of: "-->", with: " ")
+                    .split(whereSeparator: \.isWhitespace)
+                return words.count == 2 && words[0] == "gabinete:sesion" && words[1] == wanted
+            }
         }
+    }
+
+    /// Lo que se escribe en el editor: la nota sin sus comentarios (`<!-- … -->`, como la marca
+    /// de la sesión), que no se ven y no se deben poder borrar sin querer (auditoría 3: borrar la
+    /// marca hacía una segunda nota para la misma sesión). Devuelve también los comentarios, para
+    /// volver a ponerlos al guardar (`restoringComments`).
+    public static func editable(_ text: String) -> (text: String, comments: [String]) {
+        var kept: [String] = []
+        var comments: [String] = []
+        for line in text.components(separatedBy: "\n") {
+            if isComment(line) { comments.append(line.trimmingCharacters(in: .whitespaces)) } else { kept.append(line) }
+        }
+        return (kept.joined(separator: "\n"), comments)
+    }
+
+    /// Vuelve a poner los comentarios que se quitaron para editar: debajo del título (donde los
+    /// deja la nota de la sesión) o, sin título, al principio. Los que ya estén no se repiten.
+    public static func restoringComments(_ comments: [String], in text: String) -> String {
+        let present = Set(text.components(separatedBy: "\n").filter(isComment).map { $0.trimmingCharacters(in: .whitespaces) })
+        let missing = comments.filter { !present.contains($0) }
+        guard !missing.isEmpty else { return text }
+        var lines = text.components(separatedBy: "\n")
+        let at = lines.first?.trimmingCharacters(in: .whitespaces).hasPrefix("#") == true ? 1 : 0
+        lines.insert(contentsOf: missing, at: at)
+        return lines.joined(separator: "\n")
+    }
+
+    /// El texto en que se busca: sin comentarios, así «sesion» o «gabinete» no encuentran las
+    /// notas de sesión por su marca escondida (auditoría 3).
+    public static func searchText(_ text: String) -> String {
+        editable(text).text
     }
 
     /// Un comentario de Markdown en un renglón (`<!-- … -->`): no se enseña.

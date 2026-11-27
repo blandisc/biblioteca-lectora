@@ -41,7 +41,8 @@ struct RootView: View {
                     model.open(first)
                 }
                 // Primer arranque, con el Gabinete vacío (no en las capturas automáticas).
-                showsWelcome = (!welcomeSeen && !LaunchOptions.seed && model.library.books.isEmpty)
+                // Con tu biblioteca todavía en iCloud no es un Gabinete vacío: no sale la bienvenida.
+                showsWelcome = (!welcomeSeen && !LaunchOptions.seed && model.library.books.isEmpty && !model.library.waitingForCloud)
                     || LaunchOptions.screen == "welcome"
                 #if DEBUG
                 // Capturas: `-screenshot.screen summary` enseña «Sesión terminada» con una sesión de muestra.

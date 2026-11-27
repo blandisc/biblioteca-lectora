@@ -88,8 +88,22 @@ final class AnnotationStore: ObservableObject {
             defaults.set(resolved.id, forKey: idKey)
             defaults.set(resolved.fingerprint, forKey: fingerprintKey)
         }
+        if let old = DeviceIdentity.replaced(stored, by: resolved) { defaults.set(old, forKey: previousIDKey) }
         return resolved.id ?? UUID().uuidString
     }()
+
+    private nonisolated static let previousIDKey = "registro.previousDeviceID"
+
+    /// El id que este aparato usaba antes de tomar uno nuevo, hasta que suelte lo que tenía
+    /// tomado con él (auditoría 3). nil si no cambió.
+    nonisolated static var previousDeviceID: String? {
+        _ = deviceID
+        return UserDefaults.standard.string(forKey: previousIDKey)
+    }
+
+    nonisolated static func forgetPreviousDeviceID() {
+        UserDefaults.standard.removeObject(forKey: previousIDKey)
+    }
 
     /// ID de libro provisional, derivado del nombre del archivo. Con el catálogo
     /// (S3/S4) cada libro tendrá su propio ID en LectoraCore.

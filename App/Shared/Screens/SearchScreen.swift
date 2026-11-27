@@ -40,7 +40,7 @@ struct SearchScreen: View {
     private var notes: [Note] {
         let parsed = parsed
         guard term.count >= 2, parsed.filters.isEmpty else { return [] }
-        return model.notes.notes.filter { parsed.matches(text: [$0.text, $0.fileName]) }
+        return model.notes.notes.filter { parsed.matches(text: [NoteMarkdown.searchText($0.text), $0.fileName]) }
     }
 
     /// Los últimos libros que abriste, con su avance.

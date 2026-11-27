@@ -37,14 +37,62 @@ public struct PendingWrites: Sendable {
     }
 
     /// Los archivos que tienen algo pendiente (con su nombre en la carpeta, p. ej. «reglas.json»).
+    /// Una lista que crece renglón por renglón (`registro.jsonl`) cuenta con su nombre `.json`.
     public var names: [String] {
-        ((try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []).filter { $0.hasSuffix(".json") }.sorted()
+        let all = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        return Set(all.compactMap { name in
+            name.hasSuffix(".json") ? name : name.hasSuffix(".jsonl") ? String(name.dropLast()) : nil
+        }).sorted()
     }
 
     public var isEmpty: Bool { names.isEmpty }
 
     public func has(_ name: String) -> Bool {
-        FileManager.default.fileExists(atPath: url(name).path)
+        FileManager.default.fileExists(atPath: url(name).path) || FileManager.default.fileExists(atPath: linesURL(name).path)
+    }
+
+    private func linesURL(_ name: String) -> URL {
+        url(name).deletingPathExtension().appendingPathExtension("jsonl")
+    }
+
+    /// Una lista pendiente que crece (los cambios del registro mientras iCloud lo baja): cada
+    /// guardado agrega solo sus renglones (auditoría 3). Antes se leía, decodificaba y reescribía
+    /// la lista entera en cada página. Lee también la lista de antes (`<nombre>.json`).
+    public func lines<T: Decodable>(_ name: String, as type: T.Type = T.self) -> [T] {
+        var result = value(name, as: [T].self) ?? []
+        let decoder = JSONDecoder()
+        if let data = try? Data(contentsOf: linesURL(name)) {
+            for line in data.split(separator: 0x0A, omittingEmptySubsequences: true) {
+                // Un renglón cortado (la app se cerró a media escritura) se salta.
+                if let item = try? decoder.decode(T.self, from: Data(line)) { result.append(item) }
+            }
+        }
+        return result
+    }
+
+    /// Agrega renglones a la lista pendiente. Devuelve si quedaron guardados.
+    @discardableResult
+    public func appendLines<T: Encodable>(_ items: [T], _ name: String) -> Bool {
+        guard !items.isEmpty else { return true }
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let encoder = JSONEncoder()
+            var data = Data()
+            for item in items {
+                data.append(try encoder.encode(item))
+                data.append(0x0A)
+            }
+            try LineFile.append(data, to: linesURL(name))
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// Quita la lista pendiente (la de renglones y la de antes): ya se escribió.
+    public func removeLines(_ name: String) {
+        try? FileManager.default.removeItem(at: linesURL(name))
+        try? FileManager.default.removeItem(at: url(name))
     }
 
     public func value<T: Decodable>(_ name: String, as type: T.Type = T.self) -> T? {

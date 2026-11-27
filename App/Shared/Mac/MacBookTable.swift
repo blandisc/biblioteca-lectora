@@ -31,7 +31,10 @@ struct MacBookTable: View {
             .overlay {
                 if rows.isEmpty {
                     if query.isEmpty {
-                        if library.books.isEmpty {
+                        if library.books.isEmpty, library.waitingForCloud {
+                            MacEmptyState(title: EmptyCopy.stillDownloading.title, message: EmptyCopy.stillDownloading.message,
+                                          systemImage: "icloud.and.arrow.down")
+                        } else if library.books.isEmpty {
                             MacEmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message)
                         } else {
                             MacEmptyState(title: EmptyCopy.noMatch(section.title).title, message: EmptyCopy.noMatch(section.title).message,

@@ -111,15 +111,20 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// La posición que espera a asentarse: si cierras el libro o sales de la app antes, se
     /// guarda igual (`flushPosition`).
     private var unsavedLocation: Location?
+    /// Cómo guardar `unsavedLocation`: el de su libro, tomado cuando se movió (auditoría 3). Al
+    /// saltar a otro libro, `onPositionSettled` ya es el del nuevo.
+    private var saveUnsaved: ((Location) -> Void)?
 
     /// Guarda ya la posición que esperaba a asentarse (al cerrar el libro o salir de la app):
     /// antes se perdía si te ibas en menos de `positionSettle`.
     func flushPosition() {
         settleTask?.cancel()
         settleTask = nil
+        let save = saveUnsaved ?? onPositionSettled
+        saveUnsaved = nil
         guard let location = unsavedLocation else { return }
         unsavedLocation = nil
-        onPositionSettled?(location)
+        save?(location)
     }
 
     let schemeHandler = ReaderSchemeHandler()
@@ -157,7 +162,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
 
     /// Abre un libro (copia local) y, si existe, vuelve a la última posición.
     func open(bookFile: URL, bookID: UUID? = nil, lastCFI: String? = nil, fraction: Double? = nil) {
-        unsavedLocation = nil
+        // Saltar de A a B en menos de `positionSettle`: la última página de A se guarda en A.
+        flushPosition()
         schemeHandler.bookFile = bookFile
         isSettled = false
         self.bookID = bookID ?? AnnotationStore.bookID(for: bookFile)
@@ -585,6 +591,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             // mueves; antes, solo abrirlo ya decía «5 % leído».
             if let location, body["moved"] as? Bool == true {
                 unsavedLocation = location
+                saveUnsaved = onPositionSettled
                 settleTask = Task { [weak self] in
                     try? await Task.sleep(for: Theme.Reader.positionSettle)
                     guard !Task.isCancelled else { return }

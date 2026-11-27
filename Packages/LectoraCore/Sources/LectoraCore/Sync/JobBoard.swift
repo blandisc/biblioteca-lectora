@@ -109,6 +109,14 @@ public struct JobBoard: Sendable {
         ].map { Change(hlc: clock.tick(), entity: .job, entityID: job.id, field: $0.0, value: $0.1) }
     }
 
+    /// Este aparato tomó un id nuevo (`DeviceIdentity`): sus tomas con el id de antes las tendría
+    /// un fantasma hasta que vencieran (`lease`). Se sueltan para que se retomen ya (auditoría 3).
+    public func release(claimsOf device: String, in state: LibraryState, clock: HybridLogicalClock) -> [Change] {
+        Self.jobs(in: state).filter { !$0.done && $0.claims[device] != nil }.map { job in
+            Change(hlc: clock.tick(), entity: .job, entityID: job.id, field: Field.claimPrefix + device, value: .null)
+        }
+    }
+
     /// El dispositivo que tiene el trabajo ahora, si alguno.
     public func owner(of job: Job, now: Date = Date()) -> String? {
         job.claims

@@ -46,13 +46,19 @@ nuestro queda fuera.
   iCloud baja no se pierde aunque cierres la app: espera en el dispositivo, con su Gabinete
   (`PendingWrites`, nunca dentro de la carpeta), y se escribe solo en cuanto baja, al volver
   a la app o al abrirla; si algo se iba a tirar después (juntar duplicados), no se tira
-  (auditoría 2; `AuditoriaDosTests`).
+  (auditoría 2; `AuditoriaDosTests`). Un registro que iCloud no ha bajado no es uno vacío (la
+  biblioteca dice «Bajando tu biblioteca» y vuelve a leer), mover el Gabinete primero escribe lo
+  que esperaba y lo que espera solo crece renglón por renglón (auditoría 3).
 - Una carpeta nunca tiene una gemela que solo cambia en mayúsculas: iCloud y la Mac no las
   distinguen y el iPhone sí. Si ya existe con otras mayúsculas, el libro entra a ella y el
   catálogo guarda el nombre que tiene en el disco (`FolderMove.createFolder`,
   `moveBookFolder`; auditoría 2, `AuditoriaDosTests`, también en un disco sensible). Tampoco
   al deshacer un cambio de carpeta; una ruta guardada antes con otras mayúsculas se corrige al
-  abrir y «Ordenar» junta las gemelas que quedaron de antes (auditoría de medios).
+  abrir y «Ordenar» junta las gemelas que quedaron de antes (auditoría de medios). «Ordenar»,
+  abrir la app y traer de Calibre no se congelan aunque tengas miles de libros: el disco se lee
+  una vez por carpeta (`SpellingIndex`), los libros se arman una vez al final y la corrección al
+  abrir corre fuera del hilo de la interfaz (auditoría 3; `AuditoriaTresTests`, 5,000 libros y
+  1,500 autores en menos de 2 s).
 - Pendiente (A7, diseño): el registro crece con cada página asentada (4 cambios cada vez). La
   compactación sería que cada dispositivo reescriba solo su `<id>.jsonl` con el último cambio
   de cada campo y todas las lápidas (gana el último por campo, así que el estado no cambia),

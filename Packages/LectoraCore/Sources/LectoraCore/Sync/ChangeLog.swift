@@ -62,6 +62,12 @@ public struct ChangeLog: Sendable {
         /// Archivos que no se pudieron abrir (p. ej. uno de iCloud sin bajar estando
         /// sin conexión). Los demás sí se leen.
         public var skipped: [URL] = []
+        /// Registros que iCloud todavía no baja (solo está su marcador `.<id>.jsonl.icloud`),
+        /// también el propio (auditoría 3). También van en `skipped`: no se leyeron, no están
+        /// vacíos. Quien lee pide bajarlos y vuelve a leer; mientras, no vacía lo que tenía.
+        public var notDownloaded: [URL] = []
+        /// Se leyó todo lo que hay en la carpeta.
+        public var isComplete: Bool { skipped.isEmpty }
     }
 
     /// Lee los cambios de todos los dispositivos. Solo lanza si no se puede listar la carpeta:
@@ -70,14 +76,22 @@ public struct ChangeLog: Sendable {
         guard FileManager.default.fileExists(atPath: directory.path) else {
             return ReadResult(changes: [], skippedLines: 0)
         }
-        let files = try FileManager.default
-            .contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        let entries = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        let files = entries
             .filter { $0.pathExtension == "jsonl" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        // Un registro desalojado por iCloud no se salta en silencio: en el primer arranque, con el
+        // propio sin bajar, la biblioteca salía vacía (auditoría 3).
+        let present = Set(files.map(\.lastPathComponent))
+        let notDownloaded = entries.compactMap { entry -> URL? in
+            guard let name = CloudFile.realName(ofPlaceholder: entry.lastPathComponent), name.hasSuffix(".jsonl"),
+                  !present.contains(name) else { return nil }
+            return directory.appendingPathComponent(name)
+        }.sorted { $0.lastPathComponent < $1.lastPathComponent }
         let decoder = JSONDecoder()
         var changes: [Change] = []
         var skipped = 0
-        var skippedFiles: [URL] = []
+        var skippedFiles: [URL] = notDownloaded
         for file in files {
             guard let data = try? Data(contentsOf: file) else {
                 skippedFiles.append(file)
@@ -91,7 +105,7 @@ public struct ChangeLog: Sendable {
                 }
             }
         }
-        return ReadResult(changes: changes, skippedLines: skipped, skipped: skippedFiles)
+        return ReadResult(changes: changes, skippedLines: skipped, skipped: skippedFiles, notDownloaded: notDownloaded)
     }
 }
 

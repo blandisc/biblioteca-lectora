@@ -91,6 +91,11 @@ final class SessionStore: ObservableObject {
         }
     }
 
+    /// Escribe ya lo que esperaba a iCloud (antes de mover el Gabinete, auditoría 3).
+    func writePending() {
+        writeUnsaved()
+    }
+
     /// Escribe lo pendiente. Devuelve si quedó todo escrito; si no, reintenta cada poco.
     @discardableResult
     private func writeUnsaved() -> Bool {

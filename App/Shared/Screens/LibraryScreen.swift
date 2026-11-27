@@ -103,7 +103,9 @@ struct LibraryScreen: View {
                                 .buttonStyle(.plain)
                             }
 
-                            if model.shelf.isEmpty {
+                            if model.shelf.isEmpty, model.library.waitingForCloud {
+                                EmptyState(title: EmptyCopy.stillDownloading.title, message: EmptyCopy.stillDownloading.message)
+                            } else if model.shelf.isEmpty {
                                 EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
                                            actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
                             } else if books.isEmpty {

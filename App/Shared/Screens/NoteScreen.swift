@@ -25,7 +25,11 @@ struct NoteScreen: View {
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var notes = NotesStore.shared
     @Environment(\.dismiss) private var dismiss
+    /// Lo que se ve y se escribe: sin los comentarios de la nota (`hidden`).
     @State private var text = ""
+    /// Los comentarios (`<!-- … -->`, como la marca de su sesión): no se ven ni se pueden borrar
+    /// sin querer; se vuelven a poner al guardar (auditoría 3).
+    @State private var hidden: [String] = []
     @State private var fileName: String?
     @State private var editing = false
     @State private var loaded = false
@@ -144,10 +148,10 @@ struct NoteScreen: View {
         loaded = true
         if let name = ref.fileName, let existing = notes.note(fileName: name) {
             fileName = name
-            text = existing.text
+            (text, hidden) = NoteMarkdown.editable(existing.text)
             if ref.writes { startEditing() }
         } else {
-            text = ref.draft.isEmpty ? "# " : ref.draft
+            (text, hidden) = NoteMarkdown.editable(ref.draft.isEmpty ? "# " : ref.draft)
             startEditing()
         }
     }
@@ -169,7 +173,7 @@ struct NoteScreen: View {
 
     private func save() {
         do {
-            let saved = try notes.save(text: text, fileName: fileName)
+            let saved = try notes.save(text: NoteMarkdown.restoringComments(hidden, in: text), fileName: fileName)
             fileName = saved?.fileName
         } catch {
             errorMessage = error.localizedDescription

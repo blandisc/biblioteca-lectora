@@ -24,4 +24,11 @@ public enum DeviceIdentity {
         guard let saved = stored.fingerprint else { return Stored(id: id, fingerprint: fingerprint) }
         return saved == fingerprint ? stored : Stored(id: makeID(), fingerprint: fingerprint)
     }
+
+    /// El id que este aparato dejó de usar al resolver (para soltar lo que tenía tomado con él),
+    /// o nil si sigue siendo el mismo o no tenía.
+    public static func replaced(_ stored: Stored, by resolved: Stored) -> String? {
+        guard let old = stored.id, old != resolved.id else { return nil }
+        return old
+    }
 }
