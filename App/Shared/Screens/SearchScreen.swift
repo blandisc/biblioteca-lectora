@@ -110,7 +110,7 @@ struct SearchScreen: View {
         }
         if !recents.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Búsquedas recientes")
+                SectionHeader("Búsquedas recientes")
                     .padding(.bottom, Theme.Space.xs)
                 ForEach(recents) { item in
                     RecentSearchRow(text: item.text, count: item.count) { query = item.text }
@@ -124,7 +124,7 @@ struct SearchScreen: View {
         }
         if !recentlyOpened.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Abiertos hace poco")
+                SectionHeader("Abiertos hace poco")
                     .padding(.bottom, Theme.Space.xs)
                 ForEach(recentlyOpened) { book in
                     NavigationLink(value: book) {
@@ -190,7 +190,7 @@ struct SearchScreen: View {
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionLabel(text: title)
+            SectionHeader(title)
                 .padding(.bottom, Theme.Space.xs)
             content()
         }
@@ -199,15 +199,14 @@ struct SearchScreen: View {
 
     /// «1 libro · 4 subrayados · 1 nota».
     private func summary(_ found: (books: [ShelfBook], highlights: [Annotation], notes: [Note])) -> String {
-        func count(_ n: Int, _ one: String, _ many: String) -> String? { n == 0 ? nil : n.counted(one, many) }
-        return [count(found.books.count, "libro", "libros"),
-                count(found.highlights.count, "subrayado", "subrayados"),
-                count(found.notes.count, "nota", "notas")].compactMap { $0 }.joined(separator: " · ")
+        return [found.books.count.countedIfAny("libro", "libros"),
+                found.highlights.count.countedIfAny("subrayado", "subrayados"),
+                found.notes.count.countedIfAny("nota", "notas")].compactMap { $0 }.joined(separator: " · ")
     }
 
     /// «Agentes del imperio · 12 nov».
     private func label(for highlight: Annotation) -> String {
-        let title = model.shelfBook(id: highlight.bookID.uuidString)?.title ?? highlight.bookTitle ?? "Sin título"
-        return "\(title) · \(highlight.createdAt.es(.dateTime.day().month(.abbreviated)))"
+        let title = model.shelfBook(id: highlight.bookID.uuidString)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled
+        return "\(title) · \(highlight.createdAt.esDayMonth)"
     }
 }

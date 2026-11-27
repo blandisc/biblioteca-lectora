@@ -68,14 +68,7 @@ struct RootView: View {
             .sheet(item: $sessions.justFinished) { session in
                 SessionSummarySheet(session: session).environmentObject(model)
             }
-            .alert("Importación", isPresented: Binding(
-                get: { model.importReport != nil },
-                set: { if !$0 { model.importReport = nil } }
-            )) {
-                Button("Ver mis libros", role: .cancel) {}
-            } message: {
-                Text(model.importReport ?? "")
-            }
+            .noticeAlert("No añadí todos tus libros", message: $model.importReport, back: "Ver mis libros")
             #if os(iOS)
             .fullScreenCover(item: $model.openBook) { book in
                 ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)

@@ -45,12 +45,12 @@ struct MacBookTable: View {
             }
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
-                    Button { model.importing = true } label: { Label("Importar libros", systemImage: "plus") }
-                        .help("Importar libros (⌘O)")
+                    Button { model.importing = true } label: { Label(LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) }
+                        .help("\(LibraryAction.addBooks.title) (⌘O)")
                     Button { savingShelf = query } label: { Label("Guardar como estante", systemImage: "rectangle.stack.badge.plus") }
                         .disabled(LibraryQuery(query).isEmpty)
                         .help("Guardar esta búsqueda como un estante que se llena solo")
-                    Button { lookUp(selection) } label: { Label("Buscar datos", systemImage: "wand.and.stars") }
+                    Button { lookUp(selection) } label: { Label(LibraryAction.findData(count: selection.count), systemImage: LibraryAction.findData.symbol) }
                         .disabled(selection.isEmpty)
                         .help("Buscar portada y datos en internet para lo elegido")
                     Button { showsInspector.toggle() } label: { Label("Ficha", systemImage: "sidebar.right") }
@@ -127,7 +127,9 @@ struct MacBookTable: View {
                     .width(min: Theme.Mac.shortColumn)
                     .customizationID("idioma")
                     .defaultVisibility(.hidden)
-                TableColumn("Valoración", value: \MacBookRow.rating) { (row: MacBookRow) in Text(row.stars) }
+                TableColumn("Valoración", value: \MacBookRow.rating) { (row: MacBookRow) in
+                    Text(row.stars).accessibilityLabel(row.starCount.counted("estrella", "estrellas"))
+                }
                     .width(min: Theme.Mac.column)
                     .customizationID("valoracion")
                     .defaultVisibility(.hidden)
@@ -146,9 +148,9 @@ struct MacBookTable: View {
             }
         }
         .contextMenu(forSelectionType: UUID.self) { ids in
-            Button("Abrir") { open(ids) }
+            Button("Abrir el libro") { open(ids) }
                 .disabled(ids.count != 1)
-            Button(ids.count > 1 ? "Buscar datos para los \(ids.count)" : "Buscar datos") { lookUp(ids) }
+            Button(LibraryAction.findData(count: ids.count)) { lookUp(ids) }
             Divider()
             Button("Mostrar en el Finder") { reveal(ids) }
         } primaryAction: { ids in

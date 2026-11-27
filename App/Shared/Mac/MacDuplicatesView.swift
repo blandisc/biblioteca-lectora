@@ -58,14 +58,9 @@ struct MacDuplicatesView: View {
         return Button { keep[group[0].id] = book.id } label: {
             HStack(spacing: Theme.Space.l) {
                 ChoiceMark(selected: chosen)
-                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                    Text(book.title).font(.rowTitle)
-                    Text(details(book, highlights: highlights))
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.secondaryInk)
+                TitleDetailRow(title: book.title, detail: details(book, highlights: highlights)) {
+                    if chosen { Text("Se queda").foregroundStyle(Theme.ink) }
                 }
-                Spacer()
-                if chosen { Text("Se queda").font(.subheadline).foregroundStyle(Theme.ink) }
             }
             .contentShape(Rectangle())
         }
@@ -79,7 +74,7 @@ struct MacDuplicatesView: View {
          book.formats.joined(separator: " · ").nonEmpty,
          highlights > 0 ? highlights.counted("subrayado", "subrayados") : nil,
          book.readingStatus == .toRead ? nil : (book.readingStatus == .finished ? "leído" : "empezado"),
-         book.addedAt.map { "agregado \($0.es(.dateTime.day().month(.abbreviated).year()))" }]
+         book.addedAt.map { "agregado \($0.esShort)" }]
             .compactMap { $0 }.joined(separator: " · ")
     }
 
@@ -109,13 +104,13 @@ struct MacDuplicatesView: View {
         guard let keeper = keeper(of: group) else { return }
         do {
             let report = try library.merge(keep: keeper.id, others: group.map(\.id).filter { $0 != keeper.id })
-            var parts = ["Se juntó «\(keeper.title)»"]
+            var parts = ["Junté «\(keeper.title)»"]
             if !report.addedFormats.isEmpty { parts.append("ahora con \(report.addedFormats.joined(separator: " y "))") }
             if report.movedHighlights > 0 { parts.append(report.movedHighlights.counted("subrayado pasó", "subrayados pasaron")) }
             if report.trashed > 0 { parts.append(report.trashed.counted("archivo a la Papelera", "archivos a la Papelera")) }
             notice = parts.joined(separator: " · ") + "."
         } catch {
-            notice = "No se pudo juntar «\(keeper.title)»: \(error.localizedDescription)"
+            notice = "No pude juntar «\(keeper.title)»: \(error.localizedDescription)"
         }
         keep[group[0].id] = nil
     }

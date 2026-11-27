@@ -23,7 +23,7 @@ struct NoteLinkSheet: View {
                         .lineLimit(3)
 
                     VStack(alignment: .leading, spacing: Theme.Space.s) {
-                        SectionLabel(text: "Nota nueva")
+                        SectionHeader("Nota nueva")
                         HStack(spacing: Theme.Space.l) {
                             TextField("Notas sobre \(bookTitle)", text: $newTitle)
                                 .font(.rowTitle)
@@ -40,22 +40,16 @@ struct NoteLinkSheet: View {
             }
             .pushedScreen("Llevar a una nota")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cerrar") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Dejar el pasaje") { dismiss() } }
             }
-            .alert("No se pudo guardar", isPresented: Binding(
-                get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button("Elegir otra nota", role: .cancel) {}
-            } message: {
-                Text(errorMessage ?? "")
-            }
+            .errorAlert("No pude guardar el pasaje", message: $errorMessage, back: "Elegir otra nota")
         }
         .presentationDetents([.medium, .large])
     }
 
     private func section(_ title: String, _ items: [Note]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionLabel(text: title)
+            SectionHeader(title)
             ForEach(items) { note in
                 Button { save(to: note.fileName) } label: { NoteRow(note: note) }
                     .buttonStyle(.plain)

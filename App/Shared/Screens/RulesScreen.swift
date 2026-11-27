@@ -61,14 +61,7 @@ struct RulesScreen: View {
         }
         .formScreen()
         .navigationTitle("Reglas")
-        .alert("Reglas aplicadas", isPresented: Binding(
-            get: { appliedMessage != nil },
-            set: { if !$0 { appliedMessage = nil } }
-        )) {
-            Button("Volver a Reglas", role: .cancel) {}
-        } message: {
-            Text(appliedMessage ?? "")
-        }
+        .noticeAlert("Apliqué tus reglas", message: $appliedMessage, back: "Volver a Reglas")
     }
 
     private func row(_ rule: MetadataRules.Rule) -> some View {

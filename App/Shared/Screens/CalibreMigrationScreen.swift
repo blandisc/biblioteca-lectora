@@ -39,17 +39,13 @@ struct CalibreMigrationScreen: View {
             .pushedScreen("Traer de Calibre")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    if !isMigrating { Button("Cerrar") { dismiss() } }
+                    if !isMigrating { Button("Cerrar la importación") { dismiss() } }
                 }
             }
             .fileImporter(isPresented: $choosing, allowedContentTypes: [.folder]) { result in
                 if case .success(let url) = result { read(url) }
             }
-            .alert("No se pudo leer", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-                Button("Volver a la importación", role: .cancel) {}
-            } message: {
-                Text(errorMessage ?? "")
-            }
+            .errorAlert("No pude leer tu biblioteca de Calibre", message: $errorMessage, back: "Volver a la importación")
             .interactiveDismissDisabled(isMigrating)
         }
     }
@@ -63,8 +59,12 @@ struct CalibreMigrationScreen: View {
 
     private func progress(title: String, value: Double?) -> some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            Text(title).font(.body)
-            if let value { ThinProgress(value: value) } else { ProgressView() }
+            if let value {
+                Text(title).font(.body)
+                ThinProgress(value: value)
+            } else {
+                LoadingLine(text: title)
+            }
             Text("Puedes dejar la app abierta; no cierres esta hoja.")
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
@@ -103,7 +103,7 @@ private struct ChooseStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            SectionLabel(text: "Una sola vez")
+            SectionHeader("Una sola vez")
             Text("Elige la carpeta de tu biblioteca de Calibre, la que tiene metadata.db (en Calibre: botón Biblioteca › Abrir la carpeta).")
                 .font(.body)
             Text("Se copian tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no se modifica. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
@@ -121,7 +121,7 @@ private struct ReviewStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            SectionLabel(text: "Lo que llega")
+            SectionHeader("Lo que llega")
             StatTrio(items: [
                 .init(value: plan.toImport.count.formatted(.number.locale(.gabinete)), label: "libros"),
                 .init(value: plan.covers.formatted(.number.locale(.gabinete)), label: "portadas"),
@@ -151,23 +151,20 @@ private struct SummaryStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            SectionLabel(text: "Listo")
+            SectionHeader("Terminé")
             Text("\(report.imported == 1 ? "Llegó" : "Llegaron") \(report.imported.counted("libro", "libros")) a tu Gabinete.")
                 .font(.bookTitle)
             VStack(spacing: 0) {
                 FactRow(label: "Subrayados", value: "\(report.annotations)")
                 FactRow(label: "Ya estaban", value: "\(report.alreadyHere)")
                 FactRow(label: "Sin archivo en Calibre", value: "\(report.withoutFiles.count)")
-                FactRow(label: "No se pudieron copiar", value: "\(report.failed.count)")
+                FactRow(label: "No pude copiar", value: "\(report.failed.count)")
             }
             if !report.failed.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
-                    SectionLabel(text: "Revisa estos")
+                    SectionHeader("Revisa estos")
                     ForEach(Array(report.failed.enumerated()), id: \.offset) { _, item in
-                        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                            Text(item.title).font(.rowTitle)
-                            Text(item.reason).font(.footnote).foregroundStyle(Theme.secondaryInk)
-                        }
+                        TitleDetailRow(title: item.title, detail: item.reason)
                     }
                 }
             }

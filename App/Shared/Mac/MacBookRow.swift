@@ -19,7 +19,7 @@ struct MacBookRow: Identifiable {
         return book.seriesIndex.flatMap(ShelfBook.number).map { "\(series) · \($0)" } ?? series
     }
     var tagsLabel: String { book.tags.joined(separator: ", ") }
-    var language: String { book.language ?? "" }
+    var language: String { book.language.map(BookFields.languageName) ?? "" }
     /// «EPUB · PDF» si tiene varios formatos (CB-3).
     var format: String { book.formats.joined(separator: " · ") }
     var progress: Double { shelf.progress }

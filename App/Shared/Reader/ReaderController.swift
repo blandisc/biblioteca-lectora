@@ -84,7 +84,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// la cinta sigue ahí aunque la página se vuelva a paginar (letra, controles).
     @Published private(set) var bookmarksOnPage: Set<String> = []
     @Published var errorMessage: String?
-    /// Avisos que no impiden seguir leyendo (p. ej. un subrayado que no se guardó).
+    /// Un subrayado que no se guardó: no impide seguir leyendo.
+    @Published var saveError: String?
+    /// Algo que salió bien y conviene saber (el pasaje quedó en una nota).
     @Published var notice: String?
     /// Subrayado que se tocó (CFI), para ofrecer borrarlo.
     @Published var tappedHighlight: String?
@@ -376,7 +378,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                     if withNote { self.noteTarget = annotation }
                     if toNote { self.noteLinkTarget = annotation }
                 } catch {
-                    self.notice = "No se pudo guardar el subrayado: \(error.localizedDescription)"
+                    self.saveError = error.localizedDescription
                 }
             }
         }
@@ -620,13 +622,13 @@ final class LectoraWebView: WKWebView {
     #else
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
         super.willOpenMenu(menu, with: event)
-        let underline = NSMenuItem(title: "Subrayar", action: #selector(underlineSelection), keyEquivalent: "")
+        let underline = NSMenuItem(title: SelectionAction.highlight.title, action: #selector(underlineSelection), keyEquivalent: "")
         underline.target = self
-        let note = NSMenuItem(title: "Subrayar con nota", action: #selector(underlineWithNote), keyEquivalent: "")
+        let note = NSMenuItem(title: SelectionAction.note.title, action: #selector(underlineWithNote), keyEquivalent: "")
         note.target = self
-        let toNote = NSMenuItem(title: "Llevar a una nota", action: #selector(underlineToNote), keyEquivalent: "")
+        let toNote = NSMenuItem(title: SelectionAction.toNote.title, action: #selector(underlineToNote), keyEquivalent: "")
         toNote.target = self
-        let lookUp = NSMenuItem(title: "Consultar en Gabinete", action: #selector(lookUpSelection), keyEquivalent: "")
+        let lookUp = NSMenuItem(title: SelectionAction.lookup.title, action: #selector(lookUpSelection), keyEquivalent: "")
         lookUp.target = self
         menu.insertItem(.separator(), at: 0)
         menu.insertItem(lookUp, at: 0)

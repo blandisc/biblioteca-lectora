@@ -70,9 +70,7 @@ struct ReviewScreen: View {
     /// Lo que se completó solo: para revisarlo de un vistazo y deshacer lo que no quieras.
     private var filledSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                SectionLabel(text: "Se completaron solos")
-                Spacer()
+            SectionHeader(title: "Lo que completé solo") {
                 TextAction(title: "Todo bien") { model.library.forgetAllFilled() }
             }
             Text("Datos que tomé de internet porque estaba seguro. Revísalos y deshaz lo que no quieras.")
@@ -148,13 +146,8 @@ struct CandidatesScreen: View {
 
                 Group {
                     if searching {
-                        HStack(spacing: Theme.Space.l) {
-                            ProgressView()
-                            Text("Buscando en internet…")
-                                .font(.subheadline)
-                                .foregroundStyle(Theme.secondaryInk)
-                        }
-                        .padding(.vertical, Theme.Space.xl)
+                        LoadingLine(text: "Buscando en internet…")
+                            .padding(.vertical, Theme.Space.xl)
                     } else if unreachable {
                         EmptyState(title: "Sin conexión",
                                    message: "No pude preguntar en internet. Lo intento de nuevo cuando vuelvas a abrir la app, o ahora:")
@@ -261,7 +254,7 @@ struct CandidatePreview: View {
                         .foregroundStyle(Theme.secondaryInk)
                         .padding(.top, Theme.Space.xl)
                     if loadingCovers {
-                        ProgressView().padding(.vertical, Theme.Space.l)
+                        LoadingLine(text: "Buscando portadas…").padding(.vertical, Theme.Space.l)
                     } else if coverOptions.isEmpty {
                         Text("No encontré portadas en internet.")
                             .font(.subheadline)
@@ -293,7 +286,7 @@ struct CandidatePreview: View {
                         QuoteBlock(label: "Sinopsis", text: summary)
                             .padding(.top, Theme.Space.xl)
                     } else if candidate.workKey != nil {
-                        ProgressView().padding(.top, Theme.Space.xl)
+                        LoadingLine(text: "Buscando la sinopsis…").padding(.top, Theme.Space.xl)
                     }
 
                     PrimaryButton(title: applying ? "Guardando…" : "Usar estos datos", fillsWidth: true) { apply() }
@@ -321,14 +314,7 @@ struct CandidatePreview: View {
             coverChoice = keepsMine ? coverOptions.first : (urls.first.map { .remote($0) } ?? coverOptions.first)
             loadingCovers = false
         }
-        .alert("No se pudo aplicar", isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
-            Button("Volver a la vista previa", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .errorAlert("No pude aplicar los datos", message: $errorMessage, back: "Volver a la vista previa")
     }
 
     /// El libro como quedaría (mismas reglas que al aplicar).
@@ -394,7 +380,7 @@ struct OtherSearchSheet: View {
                     Button("Cerrar la búsqueda") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Buscar") {
+                    Button("Buscar con estos datos") {
                         let trimmed = { (text: String) in text.trimmingCharacters(in: .whitespaces) }
                         onSearch(trimmed(title), trimmed(author).isEmpty ? nil : trimmed(author),
                                  trimmed(isbn).isEmpty ? nil : trimmed(isbn))
@@ -435,7 +421,7 @@ struct FilledScreen: View {
                     }
                     .padding(.top, Theme.Space.l)
                     VStack(spacing: Theme.Space.l) {
-                        PrimaryButton(title: "Está bien", fillsWidth: true) {
+                        PrimaryButton(title: "Dejar estos datos", fillsWidth: true) {
                             model.library.forgetFilled(bookID)
                             dismiss()
                         }
@@ -454,14 +440,7 @@ struct FilledScreen: View {
             .screenContent()
         }
         .pushedScreen()
-        .alert("No se pudo deshacer", isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
-            Button("Volver a la revisión", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .errorAlert("No pude deshacer el cambio", message: $errorMessage, back: "Volver a la revisión")
     }
 
     private func undo(_ field: FilledField) {

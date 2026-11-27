@@ -123,7 +123,8 @@ public enum BookFields {
 }
 
 /// Lo que se hace con el texto elegido en el libro: el mismo nombre y el mismo símbolo en
-/// la barra del iPhone, el menú de la Mac y la tarjeta de un subrayado (C10).
+/// la barra del iPhone, el menú de la Mac y la tarjeta de un subrayado (C10). Cortos, porque
+/// en el iPhone caben cinco en un renglón.
 public enum SelectionAction: CaseIterable, Sendable {
     case highlight, note, toNote, lookup, copy
 
@@ -131,7 +132,7 @@ public enum SelectionAction: CaseIterable, Sendable {
         switch self {
         case .highlight: "Subrayar"
         case .note: "Nota"
-        case .toNote: "Llevar a una nota"
+        case .toNote: "A una nota"
         case .lookup: "Consultar"
         case .copy: "Copiar"
         }
@@ -139,8 +140,8 @@ public enum SelectionAction: CaseIterable, Sendable {
 
     public var symbol: String {
         switch self {
-        case .highlight: "pencil.tip"
-        case .note: "text.bubble"
+        case .highlight: "pencil.line"
+        case .note: "square.and.pencil"
         case .toNote: "note.text.badge.plus"
         case .lookup: "character.book.closed"
         case .copy: "doc.on.doc"

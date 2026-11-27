@@ -29,18 +29,8 @@ struct SessionCard: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let session = tracker.snapshot(at: context.date)
             VStack(alignment: .leading, spacing: Theme.Space.l) {
-                HStack {
-                    SectionLabel(text: "Esta sesión")
-                    Spacer()
-                    Button(action: close) {
-                        Image(systemName: "xmark")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Theme.secondaryInk)
-                            .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Cerrar")
+                SectionHeader(title: "Esta sesión") {
+                    CloseButton(label: "Cerrar la sesión", action: close)
                 }
                 // El botón conserva su área de toque, pero no empuja lo de abajo.
                 .padding(.vertical, -Theme.Size.tapBleed)
@@ -125,9 +115,7 @@ struct SessionSummarySheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                HStack {
-                    SectionLabel(text: "Sesión terminada")
-                    Spacer()
+                SectionHeader(title: "Sesión terminada") {
                     ShareSessionButton(card: ShareCard(session: session, title: book?.title ?? "", author: book?.author ?? ""))
                         .foregroundStyle(Theme.ink)
                 }
@@ -154,11 +142,11 @@ struct SessionSummarySheet: View {
             ])
             HStack(spacing: Theme.Space.s) {
                 SecondaryButton(title: "Escribir sobre ella") {
-                    do { writing = try SessionNote.open(session, bookTitle: book?.title ?? "Sin título") } catch {
+                    do { writing = try SessionNote.open(session, bookTitle: book?.title ?? MetadataCleaner.untitled) } catch {
                         notice = error.localizedDescription
                     }
                 }
-                PrimaryButton(title: "Listo", fillsWidth: true) { dismiss() }
+                PrimaryButton(title: "Cerrar el resumen", fillsWidth: true) { dismiss() }
             }
         }
         .foregroundStyle(Theme.ink)
@@ -208,9 +196,7 @@ struct SessionDetail: View {
                 .init(value: session.wordsPerMinute.map(String.init) ?? "—", label: "palabras/min"),
             ])
             VStack(alignment: .leading, spacing: Theme.Space.l) {
-                HStack(alignment: .firstTextBaseline) {
-                    SectionLabel(text: "Etapas")
-                    Spacer()
+                SectionHeader(title: "Etapas") {
                     let immersed = session.seconds(in: .immersed)
                     if immersed >= 60 {
                         Text("\(ReadingFormat.duration(immersed)) inmersa")
@@ -279,13 +265,8 @@ extension View {
         }
     }
 
-    /// Si la nota no se pudo crear, por qué.
+    /// Si no pude crear la nota, por qué.
     func sessionNoteError(_ message: Binding<String?>) -> some View {
-        alert("No se pudo crear la nota", isPresented: Binding(get: { message.wrappedValue != nil },
-                                                             set: { if !$0 { message.wrappedValue = nil } })) {
-            Button("Volver a la sesión", role: .cancel) {}
-        } message: {
-            Text(message.wrappedValue ?? "")
-        }
+        errorAlert("No pude crear la nota", message: message, back: "Volver a la sesión")
     }
 }

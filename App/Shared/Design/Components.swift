@@ -1833,7 +1833,7 @@ struct NoteRow: View {
         let calendar = Calendar.current
         if calendar.isDateInToday(date) { return "Hoy" }
         if calendar.isDateInYesterday(date) { return "Ayer" }
-        return date.es(.dateTime.day().month(.abbreviated))
+        return date.esDayMonth
     }
 }
 
@@ -1910,6 +1910,8 @@ struct NoteBody: View {
 /// dice qué carga (SB-1). Antes cada pantalla armaba su `ProgressView` con o sin texto.
 struct LoadingLine: View {
     let text: String
+    /// Sobre la página del libro, el color de su texto.
+    var tone: Color = Theme.secondaryInk
 
     var body: some View {
         HStack(spacing: Theme.Space.s) {
@@ -1917,7 +1919,8 @@ struct LoadingLine: View {
             Text(text)
         }
         .font(.subheadline)
-        .foregroundStyle(Theme.secondaryInk)
+        .foregroundStyle(tone)
+        .tint(tone)
         .accessibilityElement(children: .combine)
     }
 }
@@ -2094,7 +2097,7 @@ struct RenameShelfAlert: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .alert("Renombrar estante", isPresented: Binding(
+            .alert("Renombrar el estante", isPresented: Binding(
                 get: { shelf != nil }, set: { if !$0 { shelf = nil } }
             )) {
                 TextField("Nombre", text: $name)

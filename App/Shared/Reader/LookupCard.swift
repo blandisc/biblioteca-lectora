@@ -33,16 +33,8 @@ struct LookupCard: View {
                     .lineLimit(Theme.Reader.highlightLines)
                     .textSelection(.enabled)
                 Spacer(minLength: 0)
-                Button(action: close) {
-                    Image(systemName: "xmark")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Theme.secondaryInk)
-                        .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Cerrar")
-                .padding(.vertical, -Theme.Space.s)
+                CloseButton(label: "Cerrar la consulta", action: close)
+                    .padding(.vertical, -Theme.Space.s)
             }
             if let translation {
                 entry("Traducción", translation)
@@ -50,14 +42,13 @@ struct LookupCard: View {
             if let summary {
                 entry("Wikipedia", summary.extract)
             } else if isEntry && searching {
-                ProgressView()
+                LoadingLine(text: "Buscando en Wikipedia…")
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel("Buscando en Wikipedia")
             }
             HStack(spacing: Theme.Space.s) {
                 #if os(iOS)
                 if isEntry {
-                    tile("Diccionario", "character.book.closed") { showsDictionary = true }
+                    tile("Diccionario", "text.magnifyingglass") { showsDictionary = true }
                 }
                 #endif
                 if offersTranslation && translation == nil {
@@ -69,7 +60,7 @@ struct LookupCard: View {
                 if let summary {
                     tile("Wikipedia", "globe") { openURL(summary.url) }
                 }
-                tile("Copiar", "doc.on.doc") { copy() }
+                tile(SelectionAction.copy.title, SelectionAction.copy.symbol) { copy() }
             }
         }
         .padding(Theme.Space.l)
@@ -93,7 +84,7 @@ struct LookupCard: View {
 
     private func entry(_ label: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionLabel(text: label)
+            SectionHeader(label)
             Text(text)
                 .font(.prose)
                 .foregroundStyle(Theme.ink)

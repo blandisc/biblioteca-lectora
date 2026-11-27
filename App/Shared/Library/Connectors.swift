@@ -240,7 +240,7 @@ final class ConnectorsStore: ObservableObject {
             else { library.completeJob(job); continue }
             let book = library.book(id: annotation.bookID)
             outgoing.append((job, .init(annotationID: id, text: annotation.quote,
-                                        title: book?.title ?? annotation.bookTitle ?? "Sin título",
+                                        title: book?.title ?? annotation.bookTitle ?? MetadataCleaner.untitled,
                                         author: book?.authors.joined(separator: ", ") ?? annotation.bookAuthor,
                                         note: annotation.note, location: nil, highlightedAt: annotation.createdAt)))
         }
@@ -407,7 +407,7 @@ final class ConnectorsStore: ObservableObject {
     func exportCSV() throws -> URL {
         let rows = annotations.allAnnotations().map { annotation in
             let book = library.book(id: annotation.bookID)
-            return (annotation, book?.title ?? annotation.bookTitle ?? "Sin título",
+            return (annotation, book?.title ?? annotation.bookTitle ?? MetadataCleaner.untitled,
                     book?.authors.joined(separator: ", ") ?? annotation.bookAuthor)
         }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Gabinete-subrayados.csv")

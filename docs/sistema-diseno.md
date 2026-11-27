@@ -241,7 +241,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
 | `BrandMark` | «GABINETE» en Cinzel, centrado (o a la izquierda) | Bienvenida, dentro de `DeskHeader` |
 | `DeskHeader` | Encabezado de la Mesa: «GABINETE» a la izquierda, la fecha de hoy en versalitas a la derecha y una línea finísima que acaba en un trazo verde (`Size.deskMark`); MT-F, 25 nov 2026 | Arriba de la Mesa |
-| `SectionLabel` | Rótulo en mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`) | «EN LA MESA», «SE COMPLETARON SOLOS», «Nº 7» en la ficha |
+| `SectionLabel` | Mayúsculas romanas pequeñas (Cinzel, `Font.sectionLabel`), solo para el número y el capítulo; las secciones van con `SectionHeader` | «Nº 7» en la ficha, el capítulo sobre la tarjeta del lector |
 | `AccentIconButton` | Ícono de acción en `accent` (verde botella, se distingue de la tinta), sin fondo: el único acento verde de una pantalla | «+» de la Biblioteca y del Cuaderno |
 | `SecondaryButton`, `LinkRow` | Acción secundaria a lo ancho; fila que lleva a otra pantalla | «Por revisar» |
 | `QuietButton` | Salida discreta, solo texto, bajo opciones que importan más | «Empezar sin libros» en la bienvenida |
@@ -353,10 +353,10 @@ En la Mac, Gabinete es una app de Mac: la mesa de trabajo de tu biblioteca. Vive
 | Búsqueda | En la barra de la ventana, con filtros como Calibre: `autor:` `serie:` `etiqueta:` `idioma:` `editorial:` `estado:` `isbn:` `título:` (`LibraryQuery`, con sus pruebas) | `MacBookTable` |
 | Ficha | `inspector` a la derecha: con un libro, todos sus datos; con varios, lo que escribas se aplica a todos y lo que dejes en blanco no cambia (`BulkEdit`, con sus pruebas) | `MacBookInspector` |
 | Libro abierto | Cada libro en su propia ventana, con su nombre en la barra: lees con la biblioteca al lado y puedes tener varios abiertos. ⌘W lo cierra | `MacReaderWindow` |
-| Menús | Archivo › Importar libros… (⌘O) y Gabinete › Ajustes… (⌘,), como en toda app de Mac | `LectoraApp` |
+| Menús | Archivo › Añadir libros… (⌘O) y Gabinete › Ajustes… (⌘,), como en toda app de Mac | `LectoraApp` |
 | Ordenar autores, series y etiquetas | Clic derecho en la barra lateral › «Renombrar o juntar…»: escribir un nombre que ya existe es juntar, y los parecidos («Cortázar, Julio», «J. Cortázar») vienen marcados. En series, «Renumerar tomos 1, 2, 3…». ⌘Z deshace. Con autores y etiquetas queda la regla para lo que importes después (CB-2) | `MacCatalogSheet`, `CatalogRename` |
 | Estantes | Búsquedas guardadas que se llenan solas (CB-1). En la Mac, «Guardar como estante» en la barra de la tabla y la sección Estantes en la barra lateral (clic derecho: renombrar o borrar). En el iPhone, «Guardar estos libros como estante» en Buscar, y cada estante como renglón en la Biblioteca. Viven en la carpeta (`.lectora/estantes.json`) | `SavedShelf`, `SavedShelfScreen` |
-| Buscar datos en lote | Clic derecho en «Todos los libros» › «Buscar datos de N libros incompletos…» (los que no tienen portada, sinopsis, ISBN, editorial o año), o en cualquier vista para todos sus libros; también el botón de la barra con varios elegidos. Uno tras otro con pausa (`BatchLookup.pause`); lo seguro se completa, lo dudoso va a Por revisar. Abajo, «Buscando datos · 7 de 14» con «Detener búsqueda» y al final el resumen (CB-4) | `MacBatchBar`, `BatchLookup` |
+| Buscar datos en lote | Clic derecho en «Todos los libros» › «Buscar datos de N libros incompletos» (los que no tienen portada, sinopsis, ISBN, editorial o año), o en cualquier vista para todos sus libros; también el botón de la barra con varios elegidos. Uno tras otro con pausa (`BatchLookup.pause`); lo seguro se completa, lo dudoso va a Por revisar. Abajo, «Buscando datos · 7 de 14» con «Detener búsqueda» y al final el resumen (CB-4) | `MacBatchBar`, `BatchLookup` |
 | Posibles duplicados | En la Mac, «Posibles duplicados» en la barra lateral (solo si hay): mismo título con autor parecido, o el mismo ISBN. Cada grupo con sus libros (autor, formatos, subrayados, avance, fecha); se queda por omisión el que tiene subrayados o avance, luego el EPUB. «Juntar en uno…» pide confirmación y dice qué pasa: el que se queda gana los formatos que no tenía en su misma carpeta, sus datos se completan, subrayados y marcadores pasan a él, y lo repetido va a la Papelera. «No son el mismo» no lo vuelve a proponer (`.lectora/no-duplicados.json`). La tabla muestra todos los formatos («EPUB · PDF») (CB-3) | `MacDuplicatesView`, `DuplicateFinder` |
 | Buscar en todo | En la barra lateral (Leer): la misma pantalla Buscar del iPhone, con libros, subrayados y notas (SG-3). La búsqueda de la barra de la tabla sigue siendo solo de libros | `MacLibraryWindow`, `SearchScreen` |
 
@@ -418,7 +418,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 
 | Prueba | Qué exige |
 |---|---|
-| `testScreensUseOnlyTokens` | Sin números (también decimales, sombras, escalas y proporciones), colores, fuentes, animaciones ni curvas a mano en las pantallas **ni dentro de las piezas** (`Design/`, «Aa» del lector); desde el 22 nov 2026 |
+| `testScreensUseOnlyTokens` | Sin números (también decimales, sombras, escalas y proporciones), colores, fuentes, esperas, animaciones ni curvas a mano en ningún archivo de `App/Shared` (pantallas, piezas, lector y Mac); los patrones viven en `scripts/design-patterns.txt` y las exclusiones en `scripts/design-sources.txt`, que lee también el lint (SD-1, 26 nov 2026) |
 | `testScreensUseCatalogPieces` | Sin segmentados, `.searchable`, vacíos del sistema, botones `bordered`, `DateFormatter`, formas ni estilos nuevos en las pantallas: son piezas de `Components.swift` |
 | `testDesignPiecesDontKnowTheApp` | Las piezas de `Design/` no conocen `AppModel` ni los almacenes: reciben datos y avisan con acciones |
 | `testOneMainActionPerScreen` | Una `PrimaryButton` y un `AccentIconButton` por pantalla, como mucho |
@@ -443,12 +443,18 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |
 | `testOnlyPiecesPaintTheAccent` | Regla 1 (26 nov 2026): ninguna pantalla usa el verde directo; las acciones van en tinta (`TextAction`) |
 | `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `SectionHeader` o `CountLine`, nunca a mano |
+| `testSectionsUseTheirHeader` | Regla 3 (SD-2, 26 nov 2026): toda sección se anuncia con `SectionHeader` y su acción va dentro, no en un `HStack` a mano; `SectionLabel` solo para el «Nº» y el capítulo |
 | `testFiguresAreExact` | Regla 4: toda pieza que enseña cifras las pone del mismo ancho |
 | `testOneGreenForEverything` | Un solo verde: ningún color con tono verde se escribe fuera de `Theme.Green` (ni en `Theme.swift`, ni en pantallas, piezas o el libro), `action` y el color del sistema salen de él, y `reader.js` no escribe ningún color |
 | `testSpacingKeepsTheHouseScale` | Regla 5 y SB-2 de la casa: sin 12 ni 6, y nada heredado en `sistema-base.json` |
 | `testMainActionIsDarkInBothModes` | Regla 6: `Theme.action` igual y oscuro en los dos modos, y `PrimaryButton` lo usa |
 | `testBoldOnlyForTitlesAndFigures` | D2-B de la casa: negrita solo en el título más grande y en cifras |
 | `testEveryScreenFollowsARecipe` | Toda pantalla usa `.screen()`, `.pushedScreen()` o `.formScreen()`, así lo nuevo nace con la forma de la app |
+| `testNoticesSayWhatHappened` | Regla 7 (SD-2, 26 nov 2026): todo aviso sale de `.errorAlert` o `.noticeAlert` (a mano solo si pide escribir), su título tiene tres palabras o más y dice qué pasó, y nada dice «No se pudo» |
+| `testButtonsSayWhatTheyDo` | Regla 7 y SB-1: ningún botón dice solo «Cancelar», «OK», «Listo», «Cerrar», «Seguir»…; toda ✕ es `CloseButton` con su nombre |
+| `testWaitingSaysWhat` | Regla 7: ninguna pantalla enseña una ruedita sola; `LoadingLine` dice qué estoy haciendo |
+| `testSameWordsOnBothPlatforms` | Regla 8 (SD-3, 26 nov 2026): estados, acciones de la biblioteca, lo que haces con el texto, «Sin título» y la fecha corta salen de un solo lugar, y el iPhone y la Mac los usan |
+| `ReadingStateTests` | Regla 8: lo que marcas manda y luego el avance; un nombre y un símbolo por estado; autores con « & » |
 
 Cuando se decide algo de diseño que no debe volver a romperse, se vuelve una prueba con
 su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).

@@ -52,7 +52,7 @@ struct NoteScreen: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if editing {
-                        Button("Listo") { finishEditing() }
+                        Button("Terminar la nota") { finishEditing() }
                             .fontWeight(.semibold)
                     } else {
                         Menu("Editar") {
@@ -77,13 +77,7 @@ struct NoteScreen: View {
             } message: {
                 Text("Se borra el archivo de Gabinete/Notas.")
             }
-            .alert("No se pudo guardar la nota", isPresented: Binding(
-                get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button("Seguir editando", role: .cancel) {}
-            } message: {
-                Text(errorMessage ?? "")
-            }
+            .errorAlert("No pude guardar la nota", message: $errorMessage, back: "Seguir editando")
             .onAppear(perform: load)
             .onDisappear { if editing { save() } }
     }

@@ -45,7 +45,7 @@ struct MacCatalogSheet: View {
                 TextField(fieldName, text: $name)
                     .onSubmit(apply)
                 if let existing {
-                    Text("Ya existe «\(existing)»: se juntan en un solo \(fieldNoun).")
+                    Text("Ya existe «\(existing)»: los junto en \(oneField).")
                         .foregroundStyle(Theme.secondaryInk)
                 }
             } header: {
@@ -65,7 +65,7 @@ struct MacCatalogSheet: View {
                 }
             }
             if !failed.isEmpty {
-                Section("No se pudieron cambiar") {
+                Section("No pude cambiar estos") {
                     Text(failed.joined(separator: ", ")).foregroundStyle(Theme.secondaryInk)
                 }
             }
@@ -103,6 +103,11 @@ struct MacCatalogSheet: View {
         case .series: "serie"
         case .tag: "etiqueta"
         }
+    }
+
+    /// «un solo autor», «una sola serie»: concuerda con lo que se junta.
+    private var oneField: String {
+        target.field == .author ? "un solo autor" : "una sola \(fieldNoun)"
     }
 
     private func count(of value: String) -> String {

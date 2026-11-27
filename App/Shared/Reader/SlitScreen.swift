@@ -40,13 +40,7 @@ struct SlitScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button { leave() } label: {
-                    Image(systemName: "xmark")
-                        .font(.body.weight(.semibold))
-                        .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
-                        .glassCircle()
-                }
-                .accessibilityLabel("Terminar la hendidura")
+                CloseButton(label: "Terminar la hendidura", style: .glass) { leave() }
                 Spacer()
             }
             .padding(.horizontal, Theme.Reader.chromeInset)

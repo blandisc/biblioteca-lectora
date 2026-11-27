@@ -1,3 +1,4 @@
+import LectoraCore
 import SwiftUI
 
 /// Biblioteca: título con dos acciones, filtros en texto, conteo con el orden,
@@ -43,7 +44,7 @@ struct LibraryScreen: View {
                             }
                             .accessibilityLabel(layout == .covers ? "Ver como lista" : "Ver portadas")
                             // El único acento verde de la pantalla.
-                            AccentIconButton(systemImage: "plus", label: "Añadir libro") { model.importing = true }
+                            AccentIconButton(systemImage: LibraryAction.addBooks.symbol, label: LibraryAction.addBooks.title) { model.importing = true }
                         }
 
                         FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
@@ -74,7 +75,7 @@ struct LibraryScreen: View {
 
                         if model.shelf.isEmpty {
                             EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
-                                       actionTitle: "Añadir libros", systemImage: "plus") { model.importing = true }
+                                       actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
                         } else if books.isEmpty {
                             EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message)
                         } else {

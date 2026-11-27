@@ -51,7 +51,7 @@ struct ReaderToolsSheet: View {
             .pushedScreen(controller.title ?? "Libro")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") { dismiss() }
+                    Button("Volver al libro") { dismiss() }
                 }
             }
             .onAppear {
@@ -189,7 +189,7 @@ struct ReaderToolsSheet: View {
         let shown = recents.filter { $0.text != controller.searchedQuery }
         if !shown.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Búsquedas recientes")
+                SectionHeader("Búsquedas recientes")
                     .padding(.top, Theme.Space.l)
                     .padding(.bottom, Theme.Space.xs)
                 ForEach(shown) { item in
@@ -244,7 +244,7 @@ struct ReaderToolsSheet: View {
             VStack(alignment: .leading, spacing: Theme.Space.xl) {
                 if !bookmarks.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
-                        SectionLabel(text: "Marcadores")
+                        SectionHeader("Marcadores")
                         ForEach(bookmarks) { mark in
                             Button {
                                 controller.goTo(target: mark.cfi)
@@ -263,7 +263,7 @@ struct ReaderToolsSheet: View {
                 }
                 if !highlights.isEmpty {
                     VStack(alignment: .leading, spacing: Theme.Space.l) {
-                        SectionLabel(text: "Subrayados")
+                        SectionHeader("Subrayados")
                         ForEach(highlights) { highlight in
                             Button {
                                 if let cfi = highlight.cfi {
@@ -294,7 +294,7 @@ struct ReaderToolsSheet: View {
 
     /// «12 nov», y de dónde vino si no se encontró su lugar en este libro.
     private func label(for highlight: Annotation) -> String {
-        let day = highlight.createdAt.es(.dateTime.day().month(.abbreviated))
+        let day = highlight.createdAt.esDayMonth
         guard highlight.cfi == nil else { return day }
         let origin = highlight.source == "calibre" ? "de Calibre" : "de Readwise"
         return "\(day) · \(origin), sin lugar en este libro"

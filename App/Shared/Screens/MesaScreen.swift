@@ -20,7 +20,7 @@ struct MesaScreen: View {
                             current(book)
                         } else {
                             EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
-                                       actionTitle: "Añadir libros", systemImage: "plus") { model.importing = true }
+                                       actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
                         }
                     }
                 }
@@ -66,7 +66,7 @@ struct MesaScreen: View {
             .padding(.top, Theme.Space.s)
 
             HStack(spacing: Theme.Space.l) {
-                PrimaryButton(title: book.progress > 0 ? "Seguir leyendo" : "Empezar a leer", action: model.continueReading)
+                PrimaryButton(title: book.state.openAction, action: model.continueReading)
                 if Features.audiobook {
                     RoundIconButton(systemImage: "headphones", label: "Escuchar como audiolibro") {
                         withAnimation(Theme.Motion.standard) { model.listening = model.listening == nil ? book : nil }
@@ -79,7 +79,7 @@ struct MesaScreen: View {
                 .padding(.top, Theme.Space.xxl)
 
             if !model.desk.isEmpty {
-                SectionLabel(text: "En la mesa")
+                SectionHeader("En la mesa")
                     .padding(.top, Theme.Space.xxl)
                     .padding(.bottom, Theme.Space.l)
                 CoverGrid {
@@ -108,9 +108,7 @@ struct MesaScreen: View {
         if !sessions.sessions.isEmpty {
             let week = sessions.week()
             VStack(alignment: .leading, spacing: Theme.Space.l) {
-                HStack(alignment: .firstTextBaseline) {
-                    SectionLabel(text: "Esta semana")
-                    Spacer()
+                SectionHeader(title: "Esta semana") {
                     NavigationLink(value: DiaryRef()) {
                         Label("Diario", systemImage: "chevron.right")
                             .labelStyle(TrailingIconLabelStyle())

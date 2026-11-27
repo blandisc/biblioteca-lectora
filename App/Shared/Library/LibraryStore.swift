@@ -129,7 +129,7 @@ final class LibraryStore: ObservableObject {
             case .occupied(let folder):
                 "Esa carpeta ya tiene una carpeta «\(folder)». Para no tocarla, elige otra carpeta o crea una nueva para tu Gabinete."
             case .insideItself:
-                "No se puede mover el Gabinete dentro de sí mismo. Elige una carpeta que esté fuera de él."
+                "No puedo mover el Gabinete dentro de sí mismo. Elige una carpeta que esté fuera de él."
             case .alreadyHasLibrary:
                 "Esa carpeta ya tiene una biblioteca de Gabinete. Ábrela en vez de mover la tuya encima."
             case .incomplete(let copied, let expected):

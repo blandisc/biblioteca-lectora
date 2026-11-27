@@ -136,7 +136,7 @@ struct SettingsScreen: View {
             // «Listo» no hacía nada.
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") { dismiss() }
+                    Button("Cerrar Ajustes") { dismiss() }
                 }
             }
             #endif
@@ -162,22 +162,10 @@ struct SettingsScreen: View {
         } message: {
             Text(dialogMessage)
         }
-        .alert("Biblioteca ordenada", isPresented: Binding(
-            get: { tidyReport != nil },
-            set: { if !$0 { tidyReport = nil } }
-        )) {
-            Button("Volver a Ajustes", role: .cancel) {}
-        } message: {
-            Text(tidyReport.map(describe) ?? "")
-        }
-        .alert("No se pudo", isPresented: Binding(
-            get: { errorMessage != nil },
-            set: { if !$0 { errorMessage = nil } }
-        )) {
-            Button("Volver a Ajustes", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .noticeAlert("Ordené tu biblioteca", message: Binding(
+            get: { tidyReport.map(describe) }, set: { if $0 == nil { tidyReport = nil } }
+        ), back: "Volver a Ajustes")
+        .errorAlert("No pude mover tu Gabinete", message: $errorMessage, back: "Volver a Ajustes")
         .preferredColorScheme(mode.colorScheme)
     }
 }
@@ -197,11 +185,8 @@ extension SettingsScreen {
                 .id(Self.cabinet)
         } content: {
             if model.library.moving {
-                HStack(spacing: Theme.Space.l) {
-                    ProgressView()
-                    Text("Moviendo tu Gabinete…")
-                }
-                .frame(minHeight: Theme.Size.row)
+                LoadingLine(text: "Moviendo tu Gabinete…")
+                    .frame(minHeight: Theme.Size.row)
             } else {
                 Button { choosingFolder = true } label: { LinkRow(title: "Mover a iCloud Drive u otra carpeta") }
                 if !model.library.isLocal {

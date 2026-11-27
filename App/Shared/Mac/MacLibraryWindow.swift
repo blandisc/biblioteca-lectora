@@ -25,7 +25,8 @@ enum MacSection: Hashable {
         case .state(let state): state.group
         case .review: "Por revisar"
         case .noCover: "Sin portada"
-        case .author(let name), .series(let name), .tag(let name), .language(let name): name
+        case .author(let name), .series(let name), .tag(let name): name
+        case .language(let code): BookFields.languageName(code)
         case .shelf(let shelf): shelf.name
         }
     }
@@ -190,7 +191,8 @@ private struct MacSidebar: View {
                 group("Autores", "person.2", values(rows.flatMap(\.book.authors)), MacSection.author, icon: "person", field: .author)
                 group("Series", "square.stack", values(rows.compactMap(\.book.series)), MacSection.series, icon: "square.stack", field: .series)
                 group("Etiquetas", "tag", values(rows.flatMap(\.book.tags)), MacSection.tag, icon: "tag", field: .tag)
-                group("Idiomas", "globe", values(rows.compactMap(\.book.language)), MacSection.language, icon: "globe", field: nil)
+                group("Idiomas", "globe", values(rows.compactMap(\.book.language)), MacSection.language, icon: "globe", field: nil,
+                      display: BookFields.languageName)
             }
         }
         .listStyle(.sidebar)
@@ -274,7 +276,7 @@ private struct MacSidebar: View {
             .contextMenu {
                 // CB-4: datos para muchos libros a la vez.
                 let ids = lookupTargets(for: section)
-                Button("Buscar datos de \(ids.count.counted("libro", "libros"))\(section == .all ? " incompletos" : "")…") {
+                Button(section == .all ? "Buscar datos de \(ids.count.counted("libro incompleto", "libros incompletos"))" : LibraryAction.findData(count: ids.count)) {
                     library.lookUpMany(ids)
                 }
                 .disabled(ids.isEmpty || library.batch.map { !$0.finished } == true)
@@ -289,10 +291,10 @@ private struct MacSidebar: View {
 
     private func group(_ title: String, _ symbol: String, _ values: [(String, Int)],
                        _ make: @escaping (String) -> MacSection, icon: String,
-                       field: CatalogRename.Field?) -> some View {
+                       field: CatalogRename.Field?, display: @escaping (String) -> String = { $0 }) -> some View {
         DisclosureGroup {
             ForEach(values, id: \.0) { value, count in
-                Label(value, systemImage: icon).badge(count).tag(make(value))
+                Label(display(value), systemImage: icon).badge(count).tag(make(value))
                     .contextMenu {
                         if let field {
                             Button("Renombrar o juntar…") { renaming = .init(field: field, value: value) }

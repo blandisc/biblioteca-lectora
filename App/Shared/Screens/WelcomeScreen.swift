@@ -70,7 +70,7 @@ struct WelcomeScreen: View {
             .toolbar {
                 if step != .hello {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Atrás") { step = Step(rawValue: step.rawValue - 1) ?? .hello }
+                        Button("Volver al paso anterior") { step = Step(rawValue: step.rawValue - 1) ?? .hello }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
@@ -84,11 +84,7 @@ struct WelcomeScreen: View {
             .sheet(isPresented: $connectingReadwise) {
                 NavigationStack { ConnectorScreen(connector: .readwise) }
             }
-            .alert("No se pudo usar esa carpeta", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-                Button("Elegir otra carpeta", role: .cancel) {}
-            } message: {
-                Text(errorMessage ?? "")
-            }
+            .errorAlert("No pude usar esa carpeta", message: $errorMessage, back: "Elegir otra carpeta")
         }
     }
 
@@ -125,7 +121,7 @@ private struct HelloStep: View {
             Text("Tus libros, tus subrayados y tus notas, juntos en una carpeta tuya. Sin servidor: lo que guardas se queda en tus dispositivos y se abre también con Calibre y Obsidian.")
                 .font(.body)
                 .foregroundStyle(Theme.secondaryInk)
-            PrimaryButton(title: "Empezar", fillsWidth: true, action: next)
+            PrimaryButton(title: "Preparar mi Gabinete", fillsWidth: true, action: next)
                 .padding(.top, Theme.Space.l)
         }
     }
@@ -160,10 +156,9 @@ private struct PlaceStep: View {
             .buttonStyle(.plain)
             .disabled(working)
             if working {
-                HStack(spacing: Theme.Space.s) { ProgressView(); Text("Preparando la carpeta…").font(.footnote) }
-                    .foregroundStyle(Theme.secondaryInk)
+                LoadingLine(text: "Preparando la carpeta…")
             }
-            PrimaryButton(title: "Seguir", fillsWidth: true, action: next)
+            PrimaryButton(title: "Usar esta carpeta", fillsWidth: true, action: next)
                 .disabled(working)
         }
     }
@@ -209,7 +204,7 @@ private struct BooksStep: View {
             if count == 0 {
                 QuietButton(title: "Empezar sin libros", action: next)
             } else {
-                PrimaryButton(title: "Seguir", fillsWidth: true, action: next)
+                PrimaryButton(title: "Seguir con mis libros", fillsWidth: true, action: next)
             }
         }
     }
@@ -233,7 +228,7 @@ private struct ReadwiseStep: View {
             }
             .buttonStyle(.plain)
             if connected {
-                PrimaryButton(title: "Listo", fillsWidth: true, action: finish)
+                PrimaryButton(title: "Ir a mi Gabinete", fillsWidth: true, action: finish)
             } else {
                 QuietButton(title: "Ahora no", action: finish)
             }

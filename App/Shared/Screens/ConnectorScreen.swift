@@ -29,12 +29,8 @@ struct ConnectorScreen: View {
         }
         .formScreen()
         .inlineTitle(connector.title)
-        .alert("No se pudo conectar", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("Volver a la conexión", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
-        }
-        .confirmationDialog("¿Desconectar \(connector.title)?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
+        .errorAlert("No pude conectarme", message: $errorMessage, back: "Volver a la conexión")
+        .confirmationDialog("¿Desconectar \(connector.title) de tu Gabinete?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
             Button("Desconectar", role: .destructive) { store.disconnect(connector) }
         } message: {
             Text("Se borra la llave de tu Llavero. Lo que ya se mandó se queda allá y lo de Gabinete se queda aquí.")
@@ -57,10 +53,7 @@ struct ConnectorScreen: View {
                     connecting = false
                 }
             } label: {
-                HStack {
-                    Text(connecting ? "Conectando…" : "Conectar")
-                    if connecting { Spacer(); ProgressView() }
-                }
+                if connecting { LoadingLine(text: "Conectando con \(connector.title)…") } else { Text("Conectar \(connector.title)") }
             }
             .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty || connecting)
         } header: {

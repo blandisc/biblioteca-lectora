@@ -1,3 +1,4 @@
+import LectoraCore
 import SwiftUI
 
 @main
@@ -22,9 +23,9 @@ struct LectoraApp: App {
         .defaultSize(width: Theme.Mac.defaultWindow.width, height: Theme.Mac.defaultWindow.height)
         .windowResizability(.contentMinSize)
         .commands {
-            // Archivo › Importar libros… en lugar de «Nueva ventana».
+            // Archivo › Añadir libros… en lugar de «Nueva ventana».
             CommandGroup(replacing: .newItem) {
-                Button("Importar libros…") { model.importing = true }
+                Button("\(LibraryAction.addBooks.title)…") { model.importing = true }
                     .keyboardShortcut("o")
             }
         }

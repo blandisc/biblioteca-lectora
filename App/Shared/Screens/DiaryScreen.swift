@@ -121,7 +121,7 @@ struct DiaryScreen: View {
             let longest = period.sessions.sorted { $0.readingSeconds > $1.readingSeconds }.prefix(Theme.Lists.longestSessions)
             if !longest.isEmpty {
                 VStack(alignment: .leading, spacing: 0) {
-                    SectionLabel(text: "Lo más largo")
+                    SectionHeader("Lo más largo")
                     ForEach(Array(longest)) { session in
                         NavigationLink(value: SessionRef(id: session.id)) {
                             SessionRow(session: session, bookTitle: title(of: session.bookID))
@@ -163,7 +163,7 @@ struct DiaryScreen: View {
         let firstShare = first.map { all.between($0.start, $0.end).immersedShare }
         let typical = period.sessions.map(\.readingSeconds).sorted()
         return VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionLabel(text: "Tu atención")
+            SectionHeader("Tu atención")
             FactRow(label: "Tiempo inmersa", value: shareLine(period.immersedShare, since: firstShare, month: first?.start))
             if !typical.isEmpty {
                 FactRow(label: "Sesión típica", value: ReadingFormat.duration(typical[typical.count / 2]))
@@ -187,7 +187,7 @@ struct DiaryScreen: View {
         let books = period.books()
         if !books.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Libros")
+                SectionHeader("Libros")
                 ForEach(books, id: \.bookID) { entry in
                     if let book = model.shelfBook(id: entry.bookID.uuidString) {
                         NavigationLink(value: book) {
@@ -206,7 +206,7 @@ struct DiaryScreen: View {
     private func sessionsSection(_ period: ReadingPeriod) -> some View {
         if !period.sessions.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                SectionLabel(text: "Sesiones")
+                SectionHeader("Sesiones")
                 ForEach(period.sessions.reversed()) { session in
                     NavigationLink(value: SessionRef(id: session.id)) {
                         SessionRow(session: session, bookTitle: title(of: session.bookID))
@@ -228,7 +228,7 @@ struct DiaryScreen: View {
         let books = finished(period)
         if !books.isEmpty {
             VStack(alignment: .leading, spacing: Theme.Space.l) {
-                SectionLabel(text: "Terminados")
+                SectionHeader("Terminados")
                 CoverGrid {
                     ForEach(books) { book in
                         NavigationLink(value: book) { CoverCell(book: book) }.buttonStyle(PressableStyle())
@@ -256,7 +256,7 @@ private struct PeriodStepper: View {
             Button(action: back) { Image(systemName: "chevron.left").frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget) }
                 .accessibilityLabel("Periodo anterior")
             Spacer()
-            if roman { SectionLabel(text: title) } else { Text(title).font(.subheadline).foregroundStyle(Theme.secondaryInk) }
+            if roman { CapsText(text: title) } else { Text(title).font(.subheadline).foregroundStyle(Theme.secondaryInk) }
             Spacer()
             Button(action: forward) { Image(systemName: "chevron.right").frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget) }
                 .disabled(!canGoForward)
@@ -308,13 +308,13 @@ struct SessionScreen: View {
                         .buttonStyle(.plain)
                     }
                     SessionDetail(session: session, bookTitle: book?.title ?? "", fraction: session.toFraction) {
-                        do { writing = try SessionNote.open(session, bookTitle: book?.title ?? "Sin título") } catch {
+                        do { writing = try SessionNote.open(session, bookTitle: book?.title ?? MetadataCleaner.untitled) } catch {
                             notice = error.localizedDescription
                         }
                     }
                     if !highlights.isEmpty {
                         VStack(alignment: .leading, spacing: Theme.Space.l) {
-                            SectionLabel(text: "Subrayaste")
+                            SectionHeader("Subrayaste")
                             ForEach(highlights) { QuoteBlock(text: $0.quote, note: $0.note) }
                         }
                     }

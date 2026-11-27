@@ -88,14 +88,8 @@ struct ReaderView: View {
                 .opacity(controller.isSettled ? Theme.Emphasis.rest : 0)
             // Hasta que aparece la primera página: que se note que está trabajando.
             if !controller.isSettled && controller.errorMessage == nil {
-                VStack(spacing: Theme.Space.s) {
-                    ProgressView()
-                    Text("Abriendo el libro…").font(.footnote)
-                }
-                .foregroundStyle(palette.textColor)
-                .tint(palette.textColor)
-                .transition(.opacity)
-                .accessibilityElement(children: .combine)
+                LoadingLine(text: "Abriendo el libro…", tone: palette.textColor)
+                    .transition(.opacity)
             }
         }
         .animation(Theme.Motion.standard, value: controller.isSettled)
@@ -170,16 +164,10 @@ struct ReaderView: View {
         // folio: arriba tapaba el primer renglón.
         .overlay(alignment: .bottomTrailing) {
             if controller.guiding && !showsChrome {
-                Button { withAnimation(Theme.Motion.standard) { controller.stopGuide() } } label: {
-                    Image(systemName: "xmark")
-                        .font(.body.weight(.semibold))
-                        .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
-                        .glassCircle()
+                CloseButton(label: "Terminar el renglón", style: .glass) {
+                    withAnimation(Theme.Motion.standard) { controller.stopGuide() }
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(Theme.ink)
                 .padding(.horizontal, Theme.Reader.chromeInset)
-                .accessibilityLabel("Terminar el renglón")
                 .transition(.opacity)
             }
         }
@@ -283,32 +271,22 @@ extension ReaderView {
         content
         .sheet(item: $controller.noteLinkTarget) { annotation in
             NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
-                controller.notice = "Se guardó en «\(saved.title)»."
+                controller.notice = "Quedó en «\(saved.title)»."
             }
         }
-        .alert("Nota", isPresented: Binding(
+        .alert("Tu nota sobre el pasaje", isPresented: Binding(
             get: { controller.noteTarget != nil },
             set: { if !$0 { controller.noteTarget = nil } }
         )) {
             TextField("Escribe tu nota", text: $noteText)
-            Button("Guardar") { controller.saveNote(noteText); noteText = "" }
+            Button("Guardar la nota") { controller.saveNote(noteText); noteText = "" }
             Button("Descartar la nota", role: .cancel) { noteText = "" }
         } message: {
             Text(controller.noteTarget.map { "«\($0.quote)»" } ?? "")
         }
-        .alert("No se pudo abrir el libro", isPresented: .constant(controller.errorMessage != nil)) {
-            Button("Volver a la biblioteca", role: .cancel) { dismiss() }
-        } message: {
-            Text(controller.errorMessage ?? "")
-        }
-        .alert("Aviso", isPresented: Binding(
-            get: { controller.notice != nil },
-            set: { if !$0 { controller.notice = nil } }
-        )) {
-            Button("Seguir leyendo", role: .cancel) {}
-        } message: {
-            Text(controller.notice ?? "")
-        }
+        .errorAlert("No pude abrir el libro", message: $controller.errorMessage, back: "Volver a la biblioteca") { dismiss() }
+        .errorAlert("No pude guardar el subrayado", message: $controller.saveError, back: "Seguir leyendo")
+        .noticeAlert("Llevé el pasaje a tu nota", message: $controller.notice, back: "Seguir leyendo")
     }
 
     /// Al abrir y cuando cambia la letra, el tema o el modo: se lo dice al libro.
@@ -853,21 +831,13 @@ private struct HighlightCard: View {
                 QuoteBlock(text: annotation.quote, note: annotation.note, italic: true)
                     .lineLimit(Theme.Reader.highlightLines)
                 Spacer(minLength: 0)
-                Button { perform(.close) } label: {
-                    Image(systemName: "xmark")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Theme.secondaryInk)
-                        .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Cerrar")
-                .padding(.vertical, -Theme.Space.s)
+                CloseButton(label: "Cerrar el subrayado") { perform(.close) }
+                    .padding(.vertical, -Theme.Space.s)
             }
             HStack(spacing: Theme.Space.s) {
-                action(.note, annotation.note == nil ? "Nota" : "Editar nota", "square.and.pencil")
-                action(.toNote, "A una nota", "note.text.badge.plus")
-                action(.copy, "Copiar", "doc.on.doc")
+                action(.note, annotation.note == nil ? SelectionAction.note.title : "Editar nota", SelectionAction.note.symbol)
+                action(.toNote, SelectionAction.toNote.title, SelectionAction.toNote.symbol)
+                action(.copy, SelectionAction.copy.title, SelectionAction.copy.symbol)
                 action(.delete, "Borrar", "trash")
             }
         }
@@ -894,13 +864,13 @@ private struct SelectionBar: View {
     var body: some View {
         HStack(spacing: Theme.Space.s) {
             Button { perform(.underline) } label: {
-                IconTile(symbol: "pencil.line", title: "Subrayar", prominent: true)
+                IconTile(symbol: SelectionAction.highlight.symbol, title: SelectionAction.highlight.title, prominent: true)
             }
             .buttonStyle(PressableStyle())
-            item(.lookUp, "Consultar", "character.book.closed")
-            item(.note, "Nota", "square.and.pencil")
-            item(.toNote, "A una nota", "note.text.badge.plus")
-            item(.copy, "Copiar", "doc.on.doc")
+            item(.lookUp, .lookup)
+            item(.note, .note)
+            item(.toNote, .toNote)
+            item(.copy, .copy)
         }
         .padding(Theme.Space.s)
         .glassPanel(cornerRadius: Theme.Radius.panel)
@@ -908,8 +878,8 @@ private struct SelectionBar: View {
         .padding(.bottom, Theme.Reader.chromeInset)
     }
 
-    private func item(_ kind: Action, _ title: String, _ symbol: String) -> some View {
-        Button { perform(kind) } label: { IconTile(symbol: symbol, title: title) }
+    private func item(_ kind: Action, _ shared: SelectionAction) -> some View {
+        Button { perform(kind) } label: { IconTile(symbol: shared.symbol, title: shared.title) }
             .buttonStyle(PressableStyle())
     }
 }
@@ -1044,7 +1014,7 @@ private struct FooterPicker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionLabel(text: "Abajo de la página", tone: Theme.secondaryInk)
+            SectionHeader("Abajo de la página")
             LazyVGrid(columns: columns, spacing: Theme.Space.s) {
                 ForEach(options) { option in
                     Button {

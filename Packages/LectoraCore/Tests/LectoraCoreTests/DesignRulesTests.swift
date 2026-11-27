@@ -498,7 +498,21 @@ final class DesignRulesTests: XCTestCase {
     /// del catálogo), con su tamaño, su espaciado y cifras exactas. Nada de armarlas a mano.
     func testCapsComeFromThePieces() {
         check(hits(#"Tracking\.caps|textCase\(\.uppercase\)"#, in: Self.screens),
-              "Versalitas armadas a mano: usa CapsText, RuledLabel o CountLine")
+              "Versalitas armadas a mano: usa CapsText, SectionHeader o CountLine")
+    }
+
+    /// Regla 3 (SD-2, 26 nov 2026): toda sección se anuncia con `SectionHeader`, con su línea
+    /// y su acción al final. Las romanas de `SectionLabel` quedan para el «Nº» de la ficha y
+    /// el capítulo del lector; antes 35 secciones las usaban sin línea, distintas a las demás.
+    func testSectionsUseTheirHeader() {
+        let roman = hits(#"SectionLabel\("#, in: Self.ui).filter { !$0.contains("Nº") && !$0.contains("eyebrow") }
+        check(roman, "Rótulo de sección con SectionLabel: usa SectionHeader (las romanas, solo «Nº» y capítulo)")
+        let handMade = Self.screens.flatMap { file in
+            zip(file.lines, file.lines.dropFirst()).compactMap { line, next in
+                line.contains("HStack") && (next.contains("CapsText(") || next.contains("SectionHeader(")) ? "\(file.path): \(next)" : nil
+            }
+        }
+        check(handMade, "Rótulo con su acción armado en un HStack: usa SectionHeader(title:) { acción }")
     }
 
     /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
@@ -665,5 +679,65 @@ final class DesignRulesTests: XCTestCase {
         let interpolation = #"\\\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)"#
         check(hits(interpolation + #" (\#(nouns))\b(?![/a-z])"#, in: Self.sources("App")),
               "Cifra con su sustantivo armada a mano: usa n.counted(\"libro\", \"libros\")")
+    }
+
+    // MARK: Las mismas palabras y la misma voz (SD-2 y SD-3, 26 nov 2026)
+
+    /// Regla 7: un aviso dice qué pasó en primera persona («No pude abrir el libro») y su botón
+    /// a dónde vuelves. Antes había «Aviso», «Nota», «Importación» y once «No se pudo».
+    func testNoticesSayWhatHappened() {
+        let app = Self.ui.filter { !$0.path.hasSuffix("Design/Components.swift") }
+        // Un aviso de un botón sale de .errorAlert o .noticeAlert; .alert a mano solo si pide escribir.
+        var handMade: [String] = []
+        for file in app {
+            for (index, line) in file.lines.enumerated() where line.contains(".alert(") {
+                let next = file.lines[index..<min(index + 6, file.lines.count)].joined()
+                if !next.contains("TextField") { handMade.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces))") }
+            }
+        }
+        check(handMade, "Aviso armado a mano: usa .errorAlert o .noticeAlert")
+        let titles = hits(#"(errorAlert|noticeAlert|\.alert|confirmationDialog)\("(Aviso|Nota|Error|Atención|Importación|[^" ]+|[^" ]+ [^" ]+)""#, in: Self.ui)
+        check(titles, "Aviso cuyo título no dice qué pasó (tres palabras o más, nunca «Aviso» ni «Nota»)")
+        check(hits(#""[^"]*(No se pud|No se pued|Se guardó|Se juntó|Se completaron)"#, in: Self.ui) +
+              hits(#""[^"]*(No se pud|No se pued)"#, in: Self.sources("Packages/LectoraCore/Sources")),
+              "Voz impersonal: di qué hice yo («No pude guardar», «Junté»)")
+    }
+
+    /// Regla 7 y SB-1 de la casa: un botón dice qué hace. «Cancelar», «OK», «Listo», «Cerrar»
+    /// o «Seguir» a secas no dicen qué pasa al tocarlos; tampoco una ✕ sin nombre.
+    func testButtonsSayWhatTheyDo() {
+        let vague = "Cancelar|OK|Aceptar|Listo|Hecho|Cerrar|Seguir|Continuar|Atrás|Abrir|Usar|Guardar|Buscar|Empezar|Está bien|Sí|No"
+        check(hits(#"(Button|PrimaryButton\(title:|SecondaryButton\(title:|QuietButton\(title:|TextAction\(title:)\(?\s*"(\#(vague))""#, in: Self.ui)
+              + hits(#"accessibilityLabel\("Cerrar"\)"#, in: Self.ui),
+              "Botón que no dice qué hace: verbo y objeto («Guardar cambios», «Cerrar la consulta»)")
+        check(hits(#"Image\(systemName: "xmark"\)"#, in: Self.screens),
+              "✕ armada a mano: usa CloseButton, que se toca en 44 y dice qué cierra")
+    }
+
+    /// Regla 7: mientras algo tarda, digo qué estoy haciendo («Buscando portadas…»), no una
+    /// ruedita sola. Las pantallas usan LoadingLine.
+    func testWaitingSaysWhat() {
+        check(hits(#"ProgressView\(\)"#, in: Self.screens), "Ruedita sola: usa LoadingLine(text: \"Buscando…\")")
+    }
+
+    /// Regla 8: lo mismo se llama igual en el iPhone y la Mac. Los nombres viven en
+    /// LectoraCore (ReadingState, LibraryAction, SelectionAction, BookFields), no en cada pantalla.
+    func testSameWordsOnBothPlatforms() {
+        check(hits(#"(?<!back: )"(Seguir leyendo|Empezar a leer|Leer otra vez|Importar libros|Añadir libros?|Buscar datos|En curso|Sin empezar|Leídos|Por leer|Valores distintos|Varios|Sin título|Subrayar|Consultar|A una nota)…?""#, in: Self.ui),
+              "Nombre escrito a mano: sale de ReadingState, LibraryAction, SelectionAction, BookFields o MetadataCleaner")
+        let mac = Self.ui.filter { $0.path.hasPrefix("App/Shared/Mac/") }.map(\.text).joined()
+        let phone = Self.ui.filter { $0.path.hasPrefix("App/Shared/Screens/") || $0.path.hasPrefix("App/Shared/Model/") }.map(\.text).joined()
+        let reader = Self.ui.filter { $0.path.hasPrefix("App/Shared/Reader/") }
+        var missing: [String] = []
+        for name in ["ReadingState", "LibraryAction.addBooks", "LibraryAction.findData", "BookFields", "BookSection", "StatusPicker", "LanguagePicker"] {
+            if !mac.contains(name) { missing.append("La Mac no usa \(name)") }
+            if !phone.contains(name) { missing.append("El iPhone no usa \(name)") }
+        }
+        for file in ["ReaderView.swift", "ReaderController.swift"] where !(reader.first { $0.path.hasSuffix(file) }?.text.contains("SelectionAction") ?? false) {
+            missing.append("\(file) no usa SelectionAction")
+        }
+        check(missing, "Una plataforma nombra a su manera")
+        check(hits(#"\.day\(\)\.month\(\.abbreviated\)"#, in: Self.ui.filter { !$0.path.hasSuffix("Design/Components.swift") }),
+              "Fecha corta armada a mano: usa fecha.esShort («3 oct 2024») o fecha.esDayMonth")
     }
 }

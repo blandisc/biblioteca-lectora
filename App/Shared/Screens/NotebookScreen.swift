@@ -64,7 +64,7 @@ struct NotebookScreen: View {
             .screen()
             .sheet(isPresented: $showsAccount) { SettingsScreen() }
             .sheet(item: $toNote) { highlight in
-                NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? "Sin título")
+                NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled)
             }
             .onAppear(perform: openForScreenshots)
         }
@@ -116,7 +116,7 @@ struct NotebookScreen: View {
                 ForEach(highlights) { highlight in
                     QuoteBlock(label: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle, text: highlight.quote, note: highlight.note)
                         .contextMenu {
-                            Button { toNote = highlight } label: { Label("Llevar a una nota", systemImage: "note.text.badge.plus") }
+                            Button { toNote = highlight } label: { Label(SelectionAction.toNote.title, systemImage: SelectionAction.toNote.symbol) }
                         }
                 }
             }
@@ -131,7 +131,7 @@ struct NotebookScreen: View {
             .sorted { $0.book.title.localizedStandardCompare($1.book.title) == .orderedAscending }
         // Lo que llegó de Readwise de libros que no están en tu biblioteca.
         let outside = grouped.filter { shelfBook($0.key) == nil }
-            .map { OutsideBook(id: $0.key, title: $0.value.first?.bookTitle ?? "Sin título",
+            .map { OutsideBook(id: $0.key, title: $0.value.first?.bookTitle ?? MetadataCleaner.untitled,
                                author: $0.value.first?.bookAuthor, highlights: $0.value) }
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
         if groups.isEmpty && outside.isEmpty {
@@ -149,14 +149,13 @@ struct NotebookScreen: View {
             }
             if !outside.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.Space.l) {
-                    SectionLabel(text: "Fuera de tu biblioteca")
+                    SectionHeader("Fuera de tu biblioteca")
                     Text("Subrayados que llegaron de Readwise (Kindle, Apple Books…) de libros que no tienes en Gabinete.")
                         .font(.footnote)
                         .foregroundStyle(Theme.secondaryInk)
                     ForEach(outside) { book in
                         VStack(alignment: .leading, spacing: Theme.Space.l) {
-                            Text(book.author.map { "\(book.title) · \($0)" } ?? book.title)
-                                .font(.rowTitle)
+                            TitleDetailRow(title: book.title, detail: book.author)
                             ForEach(book.highlights) { QuoteBlock(text: $0.quote, note: $0.note) }
                         }
                     }

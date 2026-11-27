@@ -303,7 +303,7 @@ struct ReaderAppearanceSheet: View {
         VStack(alignment: .leading, spacing: Theme.Space.xl) {
             // Letra: cuatro mosaicos 2×2 con su «Aa», su nombre y qué la hace distinta.
             VStack(alignment: .leading, spacing: Theme.Space.s) {
-                SectionLabel(text: "Letra")
+                SectionHeader("Letra")
                 LazyVGrid(columns: fontColumns, spacing: Theme.Space.s) {
                     ForEach(ReaderFont.allCases) { item in
                         Button { font = item } label: {
@@ -339,7 +339,7 @@ struct ReaderAppearanceSheet: View {
             // desvanece rápido, antes de que el carril le pase encima; al volver,
             // primero se abre su lugar y luego entran los mosaicos en cascada.
             VStack(alignment: .leading, spacing: Theme.Space.s) {
-                SectionLabel(text: "Página")
+                SectionHeader("Página")
                 SegmentedChoice(options: ReaderFlow.allCases, selection: $flow) { item in
                     Label(item.name, systemImage: item.symbol)
                 }
@@ -354,7 +354,7 @@ struct ReaderAppearanceSheet: View {
             .onChange(of: showsTurns) { _, shows in moveTurns(shows) }
 
             VStack(alignment: .leading, spacing: Theme.Space.s) {
-            SectionLabel(text: "Fondo")
+            SectionHeader("Fondo")
             HStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {

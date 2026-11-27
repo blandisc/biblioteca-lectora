@@ -152,7 +152,7 @@ final class AppModel: ObservableObject {
             }
             lines.append("\(failures.count.counted("archivo no entró", "archivos no entraron")) a tu biblioteca"
                 + (names.isEmpty ? "." : ": \(names.prefix(Theme.Lists.preview).joined(separator: ", "))\(names.count > Theme.Lists.preview ? "…" : "").")
-                + " No se pueden abrir como libros.")
+                + " No los pude abrir como libros.")
         }
         if !lines.isEmpty { importReport = lines.joined(separator: " ") }
     }
