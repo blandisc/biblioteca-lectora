@@ -191,7 +191,8 @@ final class AuditoriaSieteTests: XCTestCase {
         XCTAssertTrue(retry.contains("if let lookupRetry { return await lookupRetry.value }"), "Una vuelta a la vez")
         XCTAssertTrue(retry.contains("try? await Task.sleep(for: BatchLookup.pause)"), "Con pausa entre libros")
         XCTAssertTrue(retry.contains("!Task.isCancelled"), "Se puede detener")
-        XCTAssertTrue(body(of: "func stopBatch() {", in: store).contains("stopPendingLookups()"))
+        XCTAssertTrue(body(of: "private func haltBatch() {", in: store).contains("stopPendingLookups()"))
+        XCTAssertTrue(body(of: "func stopBatch() {", in: store).contains("haltBatch()"))
         XCTAssertTrue(body(of: "private func releaseLock(_ work: LibraryWork) {", in: store).contains("lookupRetry == nil"))
     }
 

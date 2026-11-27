@@ -32,7 +32,8 @@ struct CalibreMigrationScreen: View {
                     case .reading: progress(title: "Leyendo tu biblioteca de Calibre…", value: nil)
                     // Mientras bajo tu biblioteca de iCloud, el plan saldría de una lista a medias (auditoría 6).
                     case .review(let source, let plan):
-                        ReviewStep(plan: plan, busyReason: model.library.busyReason ?? model.addBooksBlocked) { migrate(source: source, plan: plan) }
+                        ReviewStep(plan: plan, busyReason: model.library.busyReason ?? model.addBooksBlocked,
+                                   cloudIncomplete: model.library.cloudGaveUp) { migrate(source: source, plan: plan) }
                     case .migrating:
                         let done = model.library.progress
                         progress(title: done.map { "Trayendo \($0.done.counted("libro", "libros")) de \($0.total)…" } ?? "Trayendo…",
@@ -131,6 +132,8 @@ private struct ReviewStep: View {
     let plan: CalibreMigrationPlan
     /// Otro trabajo de toda la biblioteca está corriendo (auditoría 4): traer espera.
     var busyReason: String?
+    /// iCloud no bajó toda tu biblioteca (auditoría 9, B10): se puede traer, pero lo digo antes.
+    var cloudIncomplete = false
     let migrate: () -> Void
 
     var body: some View {
@@ -154,6 +157,8 @@ private struct ReviewStep: View {
             } else {
                 if let busyReason {
                     ReasonLine(busyReason)
+                } else if cloudIncomplete {
+                    ReasonLine(EmptyCopy.calibreWhileCloudIncomplete)
                 }
                 PrimaryButton(title: "Traer \(plan.toImport.count.counted("libro", "libros"))", fillsWidth: true, action: migrate)
                     .disabled(busyReason != nil)

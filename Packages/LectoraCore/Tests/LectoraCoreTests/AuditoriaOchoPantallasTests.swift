@@ -40,7 +40,8 @@ final class AuditoriaOchoPantallasTests: XCTestCase {
         let store = source("LibraryStore.swift", in: "App/Shared/Library")
         guard let start = store.range(of: "func tidy() async -> TidyReport {") else { return XCTFail("Falta tidy()") }
         let body = store[start.upperBound...].prefix(600)
-        XCTAssertTrue(body.contains("guard !waitingForCloud else { return report }"))
+        // Y dice por qué no ordenó (auditoría 9, B5), no un informe vacío.
+        XCTAssertTrue(body.contains("guard !waitingForCloud else {\n            report.notDone = EmptyCopy.tidyWhileDownloading"))
         let settings = source("SettingsScreen.swift", in: "App/Shared/Screens")
         XCTAssertTrue(settings.contains("LinkRow(title: \"Ordenar la biblioteca\") }\n                    // Mientras bajo tu biblioteca de iCloud, apagado; su razón va arriba, con las demás.\n                    .disabled(busy || model.cabinetChangeBlocked != nil)"))
         XCTAssertTrue(source("Components.swift", in: "App/Shared/Design").contains("ordenar la biblioteca o traer los libros de Calibre"),
@@ -74,7 +75,8 @@ final class AuditoriaOchoPantallasTests: XCTestCase {
         let d = URL(string: "https://example.com/d.jpg")!, e = URL(string: "https://example.com/e.jpg")!
         XCTAssertEqual(CoverDedupe.distinct([(url: a, data: same), (url: c, data: same), (url: d, data: current),
                                              (url: e, data: other), (url: g1, data: nil)], current: current), [a, e])
-        XCTAssertTrue(source("LibraryStore.swift", in: "App/Shared/Library").contains("return CoverDedupe.distinct(zip(wanted, downloaded)"))
+        // Mientras bajan, sin repetir por sus bytes (auditoría 9, B2: el tope va después).
+        XCTAssertTrue(source("LibraryStore.swift", in: "App/Shared/Library").contains("collector.accept(url, data, rank: rank)"))
     }
 
     // MARK: B · El autor se compara aunque traiga acentos escritos aparte

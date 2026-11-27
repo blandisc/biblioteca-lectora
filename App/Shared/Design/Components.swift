@@ -1109,14 +1109,21 @@ struct ThinProgress: View {
 /// detec-/tives», «conquista-/dores» con la letra más grande). SwiftUI parte la palabra que no
 /// cabe en el renglón y no deja apagarlo; aquí, si la palabra más ancha no cabe a lo ancho, la
 /// letra baja un paso a la vez (el tamaño de texto de iOS, o la escala de una letra de medida
-/// fija) hasta que cabe entera. Lo demás lo pone quien lo usa: `.font`, `.lineLimit`, la alineación.
-/// Lo usan todos los títulos de libro y de nota, bajo una portada y en la portada dibujada.
+/// fija), como mucho `maxSteps` pasos y, si tu letra es de las grandes de accesibilidad, nunca por
+/// debajo de `.large` (auditoría 9, M2: con AX5 el título quedaba diminuto). En el piso, si aún no
+/// cabe, el título va en un renglón y termina en «…», sin guion. Lo demás lo pone quien lo usa:
+/// `.font`, `.lineLimit`, la alineación. Lo usan todos los títulos de libro y de nota, bajo una
+/// portada y en la portada dibujada.
 struct WholeWordsText: View {
     /// El texto, con lo que lo marca (lo buscado en verde, en `NoteRow`).
     let text: AttributedString
     /// Para la letra de medida fija (la portada dibujada): la letra a cada escala.
     var fixedFont: ((CGFloat) -> Font)? = nil
     @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// Cuántos pasos baja la letra como mucho: así `ViewThatFits` mide pocos candidatos, también en
+    /// una lista larga (auditoría 9, B4).
+    static let maxSteps = 3
 
     init(_ text: String, fixedFont: ((CGFloat) -> Font)? = nil) {
         self.init(AttributedString(text), fixedFont: fixedFont)
@@ -1128,21 +1135,27 @@ struct WholeWordsText: View {
     }
 
     var body: some View {
-        // La primera que cabe: la letra de ahora y, si su palabra más ancha no cabe, la siguiente.
+        // La primera que cabe: la letra de ahora y, si su palabra más ancha no cabe, la siguiente; al
+        // final, en el piso, el título en un renglón que termina en «…».
         ViewThatFits(in: .horizontal) {
             if let fixedFont {
-                ForEach(Theme.CoverArt.titleScales, id: \.self) { scale in candidate.font(fixedFont(scale)) }
+                ForEach(Theme.CoverArt.titleScales.prefix(Self.maxSteps + 1), id: \.self) { scale in candidate.font(fixedFont(scale)) }
+                floor.font(fixedFont(Theme.CoverArt.titleScales.prefix(Self.maxSteps + 1).last ?? 1))
             } else {
-                ForEach(Self.steps(from: typeSize), id: \.self) { size in candidate.dynamicTypeSize(size) }
+                let steps = Self.steps(from: typeSize)
+                ForEach(steps, id: \.self) { size in candidate.dynamicTypeSize(size) }
+                floor.dynamicTypeSize(steps.last ?? typeSize)
             }
         }
     }
 
-    /// El título, que a lo ancho dice medir lo que su palabra más ancha (`WordWidthLayout`).
+    /// El título, que a lo ancho dice medir lo que su palabra más ancha (`WordWidthLayout`). Las
+    /// palabras se miden con sus marcas (la negrita de lo buscado en `NoteRow`, auditoría 9, B3):
+    /// medidas sin ellas, una palabra en negritas parecía caber y se partía.
     private var candidate: some View {
         WordWidthLayout {
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(Self.words(String(text.characters)), id: \.self) { Text(verbatim: $0) }
+                ForEach(Self.words(text), id: \.self) { Text($0) }
             }
             .fixedSize(horizontal: true, vertical: true)
             .hidden()
@@ -1150,15 +1163,37 @@ struct WholeWordsText: View {
         }
     }
 
-    /// Las palabras del texto, sin repetir.
-    static func words(_ text: String) -> [String] {
-        var seen = Set<String>()
-        return text.split(whereSeparator: \.isWhitespace).map(String.init).filter { seen.insert($0).inserted }
+    /// En el piso: un renglón que termina en «…» antes que partir una palabra con guion.
+    private var floor: some View {
+        Text(text).lineLimit(1).truncationMode(.tail)
     }
 
-    /// Del tamaño de texto de ahora hacia abajo.
+    /// Las palabras del texto, sin repetir, cada una con sus marcas.
+    static func words(_ text: AttributedString) -> [AttributedString] {
+        var seen = Set<AttributedString>()
+        var result: [AttributedString] = []
+        let characters = text.characters
+        var start: AttributedString.Index?
+        var index = characters.startIndex
+        func close(at end: AttributedString.Index) {
+            guard let from = start else { return }
+            let word = AttributedString(text[from..<end])
+            if seen.insert(word).inserted { result.append(word) }
+            start = nil
+        }
+        while index < characters.endIndex {
+            if characters[index].isWhitespace { close(at: index) } else if start == nil { start = index }
+            index = characters.index(after: index)
+        }
+        close(at: characters.endIndex)
+        return result
+    }
+
+    /// Del tamaño de texto de ahora hacia abajo: como mucho `maxSteps` pasos y, desde uno de
+    /// accesibilidad, nunca por debajo de `.large` (la letra normal de iOS).
     static func steps(from size: DynamicTypeSize) -> [DynamicTypeSize] {
-        DynamicTypeSize.allCases.filter { $0 <= size }.reversed()
+        let lower = DynamicTypeSize.allCases.filter { $0 <= size && (!size.isAccessibilitySize || $0 >= .large) }
+        return Array(lower.reversed().prefix(maxSteps + 1))
     }
 }
 
@@ -2495,10 +2530,15 @@ struct CoverChoiceCell: View {
                 Theme.field
             }
         case .remote(let url):
-            AsyncImage(url: url) { image in
-                FittedCover(image: image)
-            } placeholder: {
-                Theme.field.overlay { ProgressView() }
+            // La que ya bajó la cuadrícula se dibuja con sus bytes, sin bajarla otra vez (auditoría 9, B2).
+            if let picture = CoverImaging.rememberedImage(url) {
+                FittedCover(image: Image(decorative: picture, scale: 1))
+            } else {
+                AsyncImage(url: url) { image in
+                    FittedCover(image: image)
+                } placeholder: {
+                    Theme.field.overlay { ProgressView() }
+                }
             }
         }
     }
@@ -2773,6 +2813,10 @@ enum EmptyCopy {
                               message: "Le pedí a iCloud tu biblioteca y todavía no llega. Si ya tenías libros en otro aparato, aparecen aquí en cuanto baje; si es tu primer Gabinete, añade libros o vuelve a la bienvenida.")
     /// Por qué no añado ni traigo libros mientras bajo la tuya (auditorías 5 y 6), por ningún lado:
     /// el «+», la bienvenida, Ajustes, Traer de Calibre, arrastrar y la biblioteca misma.
+    /// «Ordenar» mientras bajo tu biblioteca de iCloud (auditoría 9, B5): lo digo, no un informe vacío.
+    static let tidyWhileDownloading = "Estoy bajando tu biblioteca de iCloud. No ordené nada: vuelve a intentarlo cuando termine."
+    /// Traer de Calibre cuando iCloud no bajó todo (auditoría 9, B10): se puede, pero aviso antes.
+    static let calibreWhileCloudIncomplete = "Parte de tu biblioteca no ha bajado de iCloud; podría traer libros que ya tienes. Luego los juntas en Duplicados."
     static let addWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para añadir libros o traer los de Calibre."
     /// Por qué no muevo tu Gabinete ni cambio de carpeta mientras bajo tu biblioteca (auditoría 8):
     /// la copia saldría a medias. Lo dicen Ajustes y el aviso si algo lo pide.

@@ -398,6 +398,8 @@ enum Theme {
         /// Toques en la página: izquierda (atrás) y derecha (adelante) son
         /// franjas iguales; el centro muestra los controles.
         static let edgeZone = 0.28
+        /// Cuántas veces sigo al libro que cambió de carpeta mientras bajaba de iCloud, antes de abrirlo.
+        static let followAttempts = 3
         /// Margen de los controles de vidrio, igual arriba y abajo, izquierda y derecha.
         static let chromeInset: CGFloat = 16
         /// Los botones de arriba suben esto hacia la isla, sin tocarla.
@@ -565,6 +567,8 @@ enum Theme {
         /// Libros encontrados de los que se piden portadas, y portadas para elegir.
         static let coverSources = 3
         static let coverOptions = 12
+        /// Cuántas se bajan como mucho para llegar a `coverOptions` distintas (auditoría 9, B2).
+        static let coverDownloads = 24
         /// La sinopsis recortada en lo que se completó solo.
         static let summaryLetters = 140
         /// Subrayados y notas de un libro en la ficha de la Mac, antes de «Leer» para ver el resto.

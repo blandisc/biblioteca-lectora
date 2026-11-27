@@ -34,7 +34,9 @@ public struct Note: Identifiable, Hashable, Sendable {
     /// cambiaban el nombre del archivo).
     public var preview: String {
         let lines = text.components(separatedBy: .newlines)
-        let firstText = lines.firstIndex { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        // Después del renglón del título (el que sigue a un bloque de código, si la nota empieza así).
+        let firstText = Self.titleLine(of: lines)?.index
+            ?? lines.firstIndex { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         let body = Array(lines.dropFirst((firstText ?? 0) + 1))
         return NoteMarkdown.previewLines(body).filter { !$0.isEmpty }.joined(separator: " ").clipped(to: Self.previewLetters)
     }
@@ -55,14 +57,33 @@ public struct Note: Identifiable, Hashable, Sendable {
     /// conserva sus comillas. Si cambiara la forma de leerlo, tus notas cambiarían de nombre solas
     /// y se romperían sus enlaces en Obsidian.
     static func title(of text: String) -> String? {
-        for line in text.components(separatedBy: .newlines) {
+        titleLine(of: text.components(separatedBy: .newlines))?.title
+    }
+
+    /// El renglón del título y cómo se lee. Ni una cerca de código («```swift», auditoría 8) ni lo
+    /// que va dentro del bloque (auditoría 9, B8: «let a = 1» salía de título) lo son: se lee el
+    /// primer renglón de texto fuera del bloque; si no hay, no hay título (va el de siempre). El
+    /// bloque lo cierra una cerca del mismo signo, igual de larga o más, como en CommonMark. Los
+    /// números de una lista sí se quedan (auditoría 7).
+    static func titleLine(of lines: [String]) -> (index: Int, title: String)? {
+        var open: (mark: Character, length: Int)?
+        for (index, line) in lines.enumerated() {
+            if let current = open {
+                if let close = NoteMarkdown.fence(line), close.mark == current.mark, close.length >= current.length,
+                   close.info.allSatisfy({ $0 == " " || $0 == "\t" }) {
+                    open = nil
+                }
+                continue
+            }
             var trimmed = line.trimmingCharacters(in: .whitespaces)
-            // Una cerca de código («```swift») no es el título (auditoría 8, B1): se lee el renglón
-            // de texto que sigue. Los números de una lista sí se quedan (auditoría 7).
+            if let start = NoteMarkdown.fence(line) {
+                open = (start.mark, start.length)
+                continue
+            }
             if isFence(trimmed) { continue }
             while trimmed.hasPrefix("#") { trimmed.removeFirst() }
             trimmed = NoteMarkdown.plain(trimmed)
-            if !trimmed.isEmpty { return trimmed }
+            if !trimmed.isEmpty { return (index, trimmed) }
         }
         return nil
     }

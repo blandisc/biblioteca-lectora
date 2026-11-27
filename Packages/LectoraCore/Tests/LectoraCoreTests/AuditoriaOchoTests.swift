@@ -200,14 +200,18 @@ final class AuditoriaOchoTests: XCTestCase {
     // MARK: B1 · Una cerca de código no es el título
 
     func testFenceIsNotTheTitle() throws {
-        XCTAssertEqual(Note.title(of: "```swift\nlet a = 1\n```\n"), "let a = 1")
-        XCTAssertEqual(Note.title(of: "~~~\n# Ideas\n~~~"), "Ideas")
-        XCTAssertEqual(Note.title(of: "\n```\n1. Introducción"), "1. Introducción", "Los números de la lista se quedan")
+        // Lo de dentro del bloque tampoco (auditoría 9, B8): sin texto fuera, va el título de siempre.
+        XCTAssertNil(Note.title(of: "```swift\nlet a = 1\n```\n"))
+        XCTAssertEqual(Note.title(of: "~~~\n# Código\n~~~\n# Ideas"), "Ideas")
+        XCTAssertEqual(Note.title(of: "\n```\n```\n1. Introducción"), "1. Introducción", "Los números de la lista se quedan")
         XCTAssertNil(Note.title(of: "```\n```"))
-        // Una nota que ya tenías así no cambia de nombre sola.
+        // Una nota que ya tenías así no cambia de nombre sola, tampoco con la lectura nueva del título.
         let folder = NoteFolder(url: try tempDir())
         try Data("```swift\nlet a = 1\n```".utf8).write(to: folder.file(for: "codigo"))
-        XCTAssertEqual(try folder.save(text: "```swift\nlet a = 1\n```\nmás", fileName: "codigo").fileName, "codigo")
+        XCTAssertEqual(try folder.save(text: "```swift\nlet a = 1\n```", fileName: "codigo").fileName, "codigo")
+        let old = "```\nlet a = 1\n```\nmás"
+        try Data(old.utf8).write(to: folder.file(for: "let a = 1"))
+        XCTAssertEqual(try folder.save(text: old, fileName: "let a = 1").fileName, "let a = 1")
     }
 
     // MARK: B2 · «Ya lo estoy buscando»

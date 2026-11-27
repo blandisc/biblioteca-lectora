@@ -939,6 +939,17 @@ final class DesignRulesTests: XCTestCase {
         if !whole.contains("ViewThatFits(in: .horizontal)") || !whole.contains("WordWidthLayout") || !whole.contains("titleScales") {
             split.append("WholeWordsText: no baja la letra cuando su palabra más ancha no cabe")
         }
+        // Auditoría 9 (M2, B3): primero dos renglones, luego un poco más chico (como mucho tres pasos y,
+        // con la letra grande, nunca menos que la normal) y al final «…»; las palabras se miden con sus marcas.
+        if !whole.contains("static let maxSteps = 3") || !whole.contains("$0 >= .large") || !whole.contains("prefix(maxSteps + 1)") {
+            split.append("WholeWordsText: la letra baja sin piso (con AX5 el título quedaba diminuto)")
+        }
+        if !whole.contains(".lineLimit(1).truncationMode(.tail)") || !whole.contains("floor.") {
+            split.append("WholeWordsText: en el piso el título no termina en «…»")
+        }
+        if !whole.contains("Self.words(text)") || whole.contains("Text(verbatim: $0)") {
+            split.append("WholeWordsText: mide las palabras sin sus marcas (la negrita de lo buscado)")
+        }
         for name in ["CoverCell", "BookRow", "NoteRow", "TitleDetailRow", "NoteBody", "CandidateRow"] where !Self.piece(name).contains("WholeWordsText(") {
             split.append("\(name): su título puede partirse a media palabra")
         }

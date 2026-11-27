@@ -349,11 +349,18 @@ extension ReaderView {
             // Solo el avance (de un libro que se juntó con este): se abre a esa altura.
             let resumeFraction = resume == nil ? saved?.fraction : nil
             // En iCloud Drive el libro puede no estar en el dispositivo: primero se baja.
-            let file = bookFile
             Task { @MainActor in
-                guard await CloudFiles.ensureDownloaded(file) else {
-                    controller.errorMessage = "No pude bajar el libro de iCloud. Revisa tu conexión e inténtalo de nuevo."
-                    return
+                // Mientras bajaba, el libro pudo cambiar de carpeta (lo ordenaste o lo identificaste):
+                // se abre el de ahora, no la ruta de antes de esperar (auditoría 9, B1).
+                var file = currentFile ?? bookFile
+                for _ in 0..<Theme.Reader.followAttempts {
+                    guard await CloudFiles.ensureDownloaded(file) else {
+                        controller.errorMessage = "No pude bajar el libro de iCloud. Revisa tu conexión e inténtalo de nuevo."
+                        return
+                    }
+                    let now = currentFile ?? bookFile
+                    if now == file { break }
+                    file = now
                 }
                 controller.open(bookFile: file, bookID: bookID, lastCFI: resume, fraction: resumeFraction)
             }

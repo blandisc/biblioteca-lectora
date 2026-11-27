@@ -94,7 +94,7 @@ struct SettingsScreen: View {
         } message: {
             Text(dialogMessage)
         }
-        .noticeAlert("Ordené tu biblioteca", message: Binding(
+        .noticeAlert(model.library.tidyReport?.notDone == nil ? "Ordené tu biblioteca" : "No ordené tu biblioteca", message: Binding(
             // El informe vive en la biblioteca: si saliste de Ajustes mientras ordenaba, sale al volver.
             get: { model.library.tidyReport.map(describe) }, set: { if $0 == nil { model.library.tidyReport = nil } }
         ), back: "Volver a Ajustes")
@@ -378,6 +378,8 @@ extension SettingsScreen {
     }
 
     private func describe(_ report: LibraryStore.TidyReport) -> String {
+        // No ordené nada: digo por qué (auditoría 9, B5).
+        if let notDone = report.notDone { return notDone }
         var lines = ["Revisé \(report.checked.counted("libro", "libros")); \(report.relocated.counted("cambió", "cambiaron")) de carpeta para quedar como en Calibre."]
         if !report.missing.isEmpty {
             lines.append("Sin archivo: \(report.missing.prefix(Theme.Lists.preview).joined(separator: ", "))\(report.missing.count > Theme.Lists.preview ? "…" : "").")
