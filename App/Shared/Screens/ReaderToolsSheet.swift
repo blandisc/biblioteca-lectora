@@ -323,8 +323,16 @@ enum RecentSearches {
         var items = load(bookID).filter { $0.text.localizedCaseInsensitiveCompare(text) != .orderedSame }
         items.insert(Item(text: text, count: count), at: 0)
         items = Array(items.prefix(Theme.Reader.recentSearches))
+        // En el estudio del Duo las recientes no cambian de una captura a otra.
+        if LaunchOptions.frozen { return load(bookID) }
         UserDefaults.standard.set(try? JSONEncoder().encode(items), forKey: key)
         return items
+    }
+
+    /// El estudio del Duo: las recientes de la pestaña Buscar, siempre las mismas.
+    static func freeze(_ items: [(text: String, count: Int)]) {
+        guard let key = key(nil) else { return }
+        UserDefaults.standard.set(try? JSONEncoder().encode(items.map { Item(text: $0.text, count: $0.count) }), forKey: key)
     }
 
     static func clear(_ bookID: UUID?) {

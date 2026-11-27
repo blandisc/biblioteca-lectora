@@ -47,8 +47,12 @@ struct RootView: View {
                     || LaunchOptions.screen == "welcome"
                 #if DEBUG
                 // Capturas: `-screenshot.screen summary` enseña «Sesión terminada» con una sesión de muestra.
+                if LaunchOptions.frozen { RecentSearches.freeze(LaunchOptions.frozenSearches) }
                 if LaunchOptions.screen == "summary" {
-                    let start = Date().addingTimeInterval(-26 * 65)
+                    // En el estudio congelado, la sesión empieza siempre a las 8:15.
+                    let now = LaunchOptions.frozen
+                        ? Calendar.current.date(bySettingHour: 8, minute: 15 + 26 * 65 / 60, second: 0, of: Date()) ?? Date() : Date()
+                    let start = now.addingTimeInterval(-26 * 65)
                     let pages = (0..<26).map { index in
                         PageView(start: start.addingTimeInterval(Double(index) * 65), end: start.addingTimeInterval(Double(index + 1) * 65),
                                  words: 250, fraction: 0.31 + Double(index) * 0.002)
@@ -56,6 +60,8 @@ struct RootView: View {
                     sessions.justFinished = SessionClassifier().session(bookID: model.currentBook?.bookID ?? UUID(), device: AnnotationStore.deviceID, pages: pages)
                 }
                 #endif
+                // El estudio congelado no busca nada afuera: los datos son los de la semilla.
+                guard !LaunchOptions.frozen else { return }
                 // Readwise y Hardcover, si están conectados.
                 ConnectorsStore.shared.start()
                 // Los que se importaron sin internet se buscan ahora.
@@ -72,6 +78,7 @@ struct RootView: View {
             #endif
             // Al volver a la app: lo que cambió en tus otros dispositivos (iCloud).
             .onChange(of: scenePhase) { _, phase in
+                if LaunchOptions.frozen { return }
                 if phase == .active {
                     model.library.refreshFromCloud()
                     model.notes.refreshFromCloud()

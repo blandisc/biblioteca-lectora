@@ -584,6 +584,8 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                     try? await Task.sleep(for: .seconds(Theme.Reader.openSettle))
                     guard !Task.isCancelled else { return }
                     self?.isSettled = true
+                    // El estudio del Duo espera a que el libro esté en su página antes de retratarlo.
+                    if LaunchOptions.frozen { FileManager.default.createFile(atPath: LaunchOptions.readyMarker.path, contents: nil) }
                 }
             }
             session?.pageShown(words: body["words"] as? Int ?? 0,

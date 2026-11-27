@@ -48,6 +48,22 @@ enum LaunchOptions {
     /// pantallas sin dejar marcadores a mano (auditoría 5): `downloading` («Bajando tu biblioteca»)
     /// o `gaveUp` (ya no la espero). `-screenshot.cloud downloading`.
     static var cloud: String? { UserDefaults.standard.string(forKey: "screenshot.cloud") }
+    /// Solo en DEBUG: el estudio del iPhone Duo congela lo que cambia de una captura a otra, así
+    /// cada pantalla se compara igual en los seis modos y de una ronda a otra (`-screenshot.frozen YES`):
+    /// no busca datos en internet ni en las conexiones, no guarda búsquedas recientes (las de la
+    /// pestaña Buscar son siempre las mismas), la sesión de muestra tiene horas fijas, y avisa
+    /// (`readyMarker`) cuando el libro ya se acomodó, para no retratar «Abriendo el libro…».
+    static var frozen: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "screenshot.frozen")
+        #else
+        false
+        #endif
+    }
+    /// El archivo que deja el lector, en modo congelado, cuando el libro ya está en su página.
+    static var readyMarker: URL { URL.documentsDirectory.appendingPathComponent(".lector-listo") }
+    /// Las búsquedas recientes fijas del estudio.
+    static let frozenSearches: [(text: String, count: Int)] = [("Cortázar", 3), ("Fundación", 3)]
 }
 
 /// Lo que falta decidir para el iPhone Duo (propuesta del 27 nov 2026). Hasta que Fernando

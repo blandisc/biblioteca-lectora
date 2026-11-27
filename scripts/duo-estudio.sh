@@ -10,7 +10,15 @@
 # Salida: /tmp/gabinete-duo-estudio/ronda-N/<modo>/<pantalla>.png y ronda-N/index.html (las cuatro
 # columnas lado a lado, por pantalla). Variables: DEVICE (por omisión «Gabinete Duo»),
 # IPHONE (el simulador «Gabinete», iPhone 17 Pro), DERIVED (/tmp/dd-gabinete-duo), BUILD=1 recompila, RESEED=1 vuelve a instalar y sembrar la biblioteca,
-# ONLY="mesa ficha" toma solo esas pantallas, SHEET_ONLY=1.
+# ONLY="mesa ficha" toma solo esas pantallas, SHEET_ONLY=1, KEEP=1 deja el simulador prendido.
+# EXTRA="-duo.book column" agrega argumentos a cada captura y SUB=alternativas/D2-B las guarda aparte
+# (ronda-N/alternativas/D2-B/<modo>/…), para retratar la otra opción de una decisión.
+#   scripts/duo-estudio.sh pliegue [--ronda N]   revisa que nada se dibuje sobre el pliegue (abierto acostado)
+#
+# Todo es comparable de un modo a otro y de una ronda a otra: la biblioteca se siembra una vez y la misma
+# copia (ronda-N/../semilla.tgz) va a los dos simuladores; cada captura arranca congelada
+# (`-screenshot.frozen YES`: sin internet, recientes fijas, horas fijas) y el lector se retrata cuando ya
+# está en su página (deja `Documents/.lector-listo`), nunca en «Abriendo el libro…».
 #
 # Cada modo:
 #   cerrado-vertical    pantalla de afuera (466 × 678), de pie
@@ -38,10 +46,12 @@ while [ $# -gt 0 ]; do
     todos) MODES+=(cerrado-vertical cerrado-horizontal abierto-vertical abierto-horizontal); shift ;;
     comparar) MODES+=(iphone-vertical iphone-horizontal); shift ;;
     hoja) SHEET_ONLY=1; shift ;;
+    pliegue) FOLD_ONLY=1; shift ;;
     *) MODES+=("$1"); shift ;;
   esac
 done
-OUT="$ROOT/ronda-$ROUND"
+OUT="$ROOT/ronda-$ROUND${SUB:+/$SUB}"
+SNAPSHOT="$ROOT/semilla.tgz"
 mkdir -p "$OUT"
 
 # Las pantallas, en el orden de la hoja: nombre|título en español|espera|argumentos.
@@ -165,6 +175,33 @@ print(f"Hoja: {out}/index.html")
 PY
 }
 
+# Nada sobre el pliegue: con el Duo abierto y acostado, la franja de en medio (el lomo, `Space.fold`)
+# debe quedar en papel. Cuenta, por captura, las columnas de la franja con tinta (lo que se aparta
+# del papel); la del lector y las hojas son las que importan. Sale la lista de las que tienen.
+fold_check() {
+  python3 - "$OUT/abierto-horizontal" <<'PY'
+import glob, os, sys
+from PIL import Image
+folder = sys.argv[1]
+bad = []
+for path in sorted(glob.glob(f"{folder}/*.png")):
+    im = Image.open(path).convert("L")
+    w, h = im.size
+    mid, half = w // 2, int(w * 8 / 951)   # 8 pt a cada lado del pliegue (951 pt de ancho)
+    top, bottom = int(h * 0.08), int(h * 0.92)  # sin la barra de estado ni el dock
+    band = im.crop((mid - half, top, mid + half, bottom))
+    paper = band.getpixel((0, 0))
+    hist = band.histogram()
+    inked = sum(n for v, n in enumerate(hist) if abs(v - paper) > 60)
+    share = inked / (band.size[0] * band.size[1])
+    if share > 0.004: bad.append((share, os.path.basename(path)))
+for share, name in sorted(bad, reverse=True):
+    print(f"  tinta en el pliegue: {name} ({share:.1%})")
+print(f"Pliegue: {len(bad)} capturas con tinta en el lomo")
+PY
+}
+
+if [ -n "${FOLD_ONLY:-}" ]; then fold_check; exit 0; fi
 if [ -n "${SHEET_ONLY:-}" ]; then sheet; exit 0; fi
 [ ${#MODES[@]} -gt 0 ] || { sed -n 2,20p "$0"; exit 1; }
 
@@ -215,15 +252,23 @@ use_device() {
 # Biblioteca de muestra (una vez por simulador; RESEED=1 la rehace): más de 15 libros para el índice
 # A–Z, una serie, un título larguísimo, uno con emoji, uno en árabe, un duplicado y uno sin datos.
 seed() {
-  local DATA
+  local DATA stamp
   DATA=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data 2>/dev/null || true)
-  if [ -z "${RESEED:-}" ] && [ -n "$DATA" ] && [ -f "$DATA/Documents/.duo-estudio" ]; then
+  stamp=$( [ -f "$SNAPSHOT" ] && stat -f%m "$SNAPSHOT" || echo none)
+  if [ -z "${RESEED:-}" ] && [ -n "$DATA" ] && [ "$(cat "$DATA/Documents/.duo-estudio" 2>/dev/null)" = "$stamp" ]; then
     xcrun simctl install "$DEVICE" "$APP"; return
   fi
-  echo "Instalo y siembro la biblioteca de muestra…"
   xcrun simctl uninstall "$DEVICE" "$BUNDLE" 2>/dev/null || true
   xcrun simctl install "$DEVICE" "$APP"
   DATA=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data)
+  # La misma biblioteca en los dos simuladores: la copia sembrada se pone tal cual.
+  if [ -f "$SNAPSHOT" ] && { [ -z "${RESEED:-}" ] || [ -n "${SEEDED:-}" ]; }; then
+    echo "Pongo la biblioteca de muestra (la misma copia en todos los modos)…"
+    tar -xzf "$SNAPSHOT" -C "$DATA"
+    echo "$stamp" > "$DATA/Documents/.duo-estudio"
+    return
+  fi
+  echo "Siembro la biblioteca de muestra…"
   SEED="$DATA/Documents/Semilla"; mkdir -p "$SEED"
   mk() { python3 scripts/make-sample-epub.py "$SEED/$1" "${@:2}"; }
   mk 01-fundacion.epub --title "Fundación" --author "Isaac Asimov" --series "Fundación" --index 1 --isbn 9788497599245 --year 1951
@@ -248,14 +293,25 @@ seed() {
   # Importa y busca cada libro en Open Library y Google Books.
   sleep 100
   xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
-  touch "$DATA/Documents/.duo-estudio"
+  tar -czf "$SNAPSHOT" -C "$DATA" --exclude Library/Caches --exclude Library/SplashBoard \
+    --exclude 'Library/Saved Application State' Documents Library
+  SEEDED=1
+  stat -f%m "$SNAPSHOT" > "$DATA/Documents/.duo-estudio"
 }
 
 shoot() { # carpeta, nombre, pantalla (primary/primary-1), espera, argumentos…
   local dir=$1 name=$2 display=$3 wait=$4; shift 4
   if [ -n "${ONLY:-}" ] && ! [[ " $ONLY " == *" ${name%-oscuro} "* || " $ONLY " == *" ${name%-ax5} "* ]]; then return; fi
   xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
-  xcrun simctl launch "$DEVICE" "$BUNDLE" "$@" >/dev/null
+  local data; data=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data)
+  rm -f "$data/Documents/.lector-listo"
+  # shellcheck disable=SC2086
+  xcrun simctl launch "$DEVICE" "$BUNDLE" -screenshot.frozen YES "$@" ${EXTRA:-} >/dev/null
+  # El lector: primero que el libro esté en su página (a lo más 40 s), luego su demostración.
+  if [[ $name == lector-* ]]; then
+    local waited=0
+    while [ ! -f "$data/Documents/.lector-listo" ] && [ $waited -lt 40 ]; do sleep 1; waited=$((waited + 1)); done
+  fi
   sleep "$wait"
   # Con la Mac ocupada la app tarda en pintar: se repite mientras la captura salga casi vacía.
   local tries=0 file="$dir/$name.png"
