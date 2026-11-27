@@ -1419,6 +1419,24 @@ extension LinkRow {
     }
 }
 
+/// Por qué un botón está apagado, a la vista y entero (auditoría 7): en Ajustes de la Mac, dentro
+/// del formulario, el porqué de «Traer mi biblioteca de Calibre» se cortaba en un renglón. Baja a
+/// los renglones que haga falta, en el iPhone y en la Mac.
+struct ReasonLine: View {
+    let text: String
+
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        Text(text)
+            .font(.footnote)
+            .foregroundStyle(Theme.secondaryInk)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 /// Punto de estado: lleno en verde (conectado, pendiente) o hueco en gris.
 struct StatusDot: View {
     let on: Bool
@@ -2945,6 +2963,8 @@ extension Date {
     var esShort: String { es(.dateTime.day().month(.abbreviated).year()) }
     /// Día y mes: «12 nov».
     var esDayMonth: String { es(.dateTime.day().month(.abbreviated)) }
+    /// En cifras, para una columna angosta: «26/11/26».
+    var esNumeric: String { es(.dateTime.day(.twoDigits).month(.twoDigits).year(.twoDigits)) }
 }
 
 extension Double {

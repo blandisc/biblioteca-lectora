@@ -102,10 +102,11 @@ final class AuditoriaSeisTests: XCTestCase {
         // Volver a donde ibas nunca la corre de lado.
         XCTAssertFalse(table.contains("anchor: .top") || table.contains("anchor: .center") || table.contains(": .center : .top"))
         XCTAssertTrue(table.contains("static let middleLeading = UnitPoint(x: 0, y: 0.5)") && table.contains(".topLeading"))
-        // Más angosta que la última vez: los anchos guardados se vuelven a repartir.
-        XCTAssertTrue(table.contains("if next.widthStep < savedStep { columns = Self.withoutWidths(columns) }"))
-        // Angosta: el título se queda con el espacio.
-        XCTAssertEqual(table.components(separatedBy: "roomy ?").count - 1, 3, "Etiquetas, Avance y Agregado piden poco")
+        // Los anchos guardados que ya no caben se vuelven a repartir (auditoría 7: solo si no caben).
+        XCTAssertTrue(table.contains("if Self.overflows(columns, in: visible.width) { columns = Self.withoutWidths(columns) }"))
+        // Angosta: el título se queda con el espacio; Etiquetas, Avance y Agregado piden poco y no
+        // crecen de más (ideal y tope), y Agregado se dice en cifras (auditoría 7).
+        XCTAssertEqual(table.components(separatedBy: "roomy ?").count - 1, 4, "Etiquetas, Avance y Agregado piden poco")
     }
 
     // MARK: M1 · Mover el Gabinete nunca borra lo que llega de otro aparato

@@ -71,7 +71,7 @@ struct MacCatalogSheet: View {
             }
             // Mientras ordeno, muevo o traigo de Calibre no cambio muchos libros a la vez, y te digo por qué (auditoría 5).
             if let reason = library.busyReason {
-                Text(reason).font(.footnote).foregroundStyle(Theme.secondaryInk)
+                ReasonLine(reason)
             }
             if !failed.isEmpty {
                 Section("No pude cambiar estos") {

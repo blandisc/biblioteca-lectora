@@ -26,6 +26,9 @@ public struct Note: Identifiable, Hashable, Sendable {
         Self.title(of: text) ?? fileName
     }
 
+    /// Lo más largo de la vista previa; lo demás se corta entre palabras con «…».
+    public static let previewLetters = 240
+
     /// Las primeras líneas después del título, en texto plano (para la lista). Solo aquí se quitan
     /// las cercas, las comillas de código y las marcas de una lista (auditoría 7: en el título
     /// cambiaban el nombre del archivo).
@@ -33,7 +36,7 @@ public struct Note: Identifiable, Hashable, Sendable {
         let lines = text.components(separatedBy: .newlines)
         let firstText = lines.firstIndex { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         let body = Array(lines.dropFirst((firstText ?? 0) + 1))
-        return String(NoteMarkdown.previewLines(body).filter { !$0.isEmpty }.joined(separator: " ").prefix(240))
+        return NoteMarkdown.previewLines(body).filter { !$0.isEmpty }.joined(separator: " ").clipped(to: Self.previewLetters)
     }
 
     /// Títulos de los libros enlazados con `[[ ]]`, en orden y sin repetir.

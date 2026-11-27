@@ -28,11 +28,6 @@ struct MacBookTable: View {
     /// tabla se vuelve a armar y reparte de nuevo sus columnas. Antes se quedaban con los anchos de
     /// la primera vez y «Serie», «Estado» y «Formato» quedaban bajo la ficha (auditoría 4).
     @State private var widthStep = 0
-    /// El ancho (en pasos) con que se armó cada tabla la última vez, también en otra sesión: si ahora
-    /// es más angosta, sus anchos guardados no caben (auditoría 6, U1). Uno por tabla (auditoría 7,
-    /// M1): con uno solo, abrir la ficha (más angosta) borraba los anchos y el orden de las dos.
-    @SceneStorage("mac.columnas.paso") private var savedStep = 0
-    @SceneStorage("mac.columnas.ficha.paso") private var savedNarrowStep = 0
     /// Cómo está armada la tabla: con o sin ficha y con qué ancho ya quieto (auditorías 5 y 6). Se
     /// rearma una sola vez cuando el ancho se queda quieto, también al abrir la ficha (antes se
     /// rearmaba al abrirla y otra vez 350 ms después, al terminar de cambiar el ancho).
@@ -111,14 +106,15 @@ struct MacBookTable: View {
                 if LaunchOptions.screen == "settings" {
                     openSettings()
                 }
+                // Se elige cuando ya hay filas (auditoría 7): `rows` era la lista del primer momento,
+                // vacía si la biblioteca aún no llegaba, y no quedaba nada elegido.
                 if let pick = UserDefaults.standard.string(forKey: "screenshot.pick") {
-                    try? await Task.sleep(for: .seconds(1))
-                    selection = Set(rows.filter { $0.title.localizedCaseInsensitiveContains(pick) }.map(\.id))
+                    let found = await loadedRows().filter { $0.title.localizedCaseInsensitiveContains(pick) }
+                    selection = Set(found.map(\.id))
                     return
                 }
                 guard let demo = LaunchOptions.demo, demo.hasPrefix("mac") else { return }
-                try? await Task.sleep(for: .seconds(1))
-                selection = Set(rows.prefix(demo == "macMany" ? 3 : 1).map(\.id))
+                selection = Set(await loadedRows().prefix(demo == "macMany" ? 3 : 1).map(\.id))
             }
             #endif
             .saveShelfAlert(query: $savingShelf) { library.saveShelf($0) }
@@ -152,6 +148,20 @@ struct MacBookTable: View {
         }
     }
 
+    #if DEBUG
+    /// Las filas en cuanto hay (hasta 10 s): para elegir libros en las capturas.
+    private func loadedRows() async -> [MacBookRow] {
+        // Primero, que la ventana se acomode (una hoja abierta antes no salía).
+        try? await Task.sleep(for: .seconds(1))
+        for _ in 0..<20 {
+            let rows = currentRows()
+            if !rows.isEmpty { return rows }
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        return currentRows()
+    }
+    #endif
+
     /// Como está armada ahora; hasta que el ancho se quede quieto la primera vez, la de ahora.
     private var tableLayout: TableLayoutKey {
         layout ?? TableLayoutKey(inspector: showsInspector, widthStep: widthStep)
@@ -180,6 +190,8 @@ struct MacBookTable: View {
                 }
             }
             .id(tableLayout)
+            // Con qué ancho pidieron su ancho Etiquetas, Avance y Agregado la última vez que se armó.
+            .onAppear { if !tableLayout.inspector { visible.builtRoomy = roomy } }
             // Al volver a armarse (abrir o cerrar la ficha, cambiar el ancho), vuelve a donde ibas:
             // la primera fila que veías, o lo elegido (auditorías 4 y 5: antes regresaba arriba).
             // La primera visible se anota antes de rearmar: al rearmarse, las celdas se van y vacían
@@ -193,7 +205,10 @@ struct MacBookTable: View {
                 Task { @MainActor in scroller.scrollTo(id, anchor: firstVisible == nil ? Self.middleLeading : .topLeading) }
             }
         }
-        .onGeometryChange(for: Int.self) { Int($0.size.width / Theme.Mac.column) } action: { widthStep = $0 }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+            visible.width = width
+            widthStep = Int(width / Theme.Mac.column)
+        }
         // Se rearma cuando el ancho (y la ficha) se quedan quietos, una sola vez, no a cada paso.
         .task(id: TableLayoutKey(inspector: showsInspector, widthStep: widthStep)) {
             try? await Task.sleep(for: Theme.Mac.relayoutPause)
@@ -201,15 +216,21 @@ struct MacBookTable: View {
             let next = TableLayoutKey(inspector: showsInspector, widthStep: widthStep)
             guard next != layout else { return }
             visible.anchor = currentRows().first { visible.ids.contains($0.id) }?.id
-            // Más angosta que la última vez que se armó esa tabla: sus anchos guardados la dejaban más
-            // ancha que la vista, corrida de lado y sin título. Se vuelven a repartir; lo que
-            // escondiste y el orden en que pusiste las columnas se quedan. La otra tabla no se toca.
+            // Solo si los anchos que guardaste ya no caben (suman más que la tabla, auditoría 7): la
+            // dejaban más ancha que la vista, corrida de lado y sin título (auditoría 6, U1). Entonces
+            // se vuelven a repartir; lo que escondiste y el orden de las columnas se quedan. Solo la
+            // tabla que se arma: abrir la ficha no toca los anchos de la ancha.
             if next.inspector {
-                if next.widthStep < savedNarrowStep { narrowColumns = Self.withoutWidths(narrowColumns) }
-                savedNarrowStep = next.widthStep
+                if Self.overflows(narrowColumns, in: visible.width) { narrowColumns = Self.withoutWidths(narrowColumns) }
             } else {
-                if next.widthStep < savedStep { columns = Self.withoutWidths(columns) }
-                savedStep = next.widthStep
+                if Self.overflows(columns, in: visible.width) { columns = Self.withoutWidths(columns) }
+                // Pasó de angosta a ancha (o al revés): Etiquetas, Avance y Agregado cambian de ancho y
+                // el título, que toma lo que sobra, se queda con el que SwiftUI ya había guardado
+                // (guarda el de cada columna al armarla, no solo el que cambias tú). Se reparte de
+                // nuevo solo el del título (auditoría 7).
+                if let built = visible.builtRoomy, built != Self.isRoomy(next.widthStep) {
+                    columns = Self.withoutWidths(of: Self.roomyColumns, in: columns)
+                }
             }
             layout = next
         }
@@ -249,13 +270,16 @@ struct MacBookTable: View {
             .customizationID("serie")
     }
 
+    /// Las columnas de a lado tienen ancho fijo, más en una tabla ancha: lo que sobra va al título,
+    /// el único sin tope; autor y serie crecen hasta `nameColumnMax` (auditoría 7: a 1800, Avance
+    /// quedaba con 180 puntos vacíos y «Agregado» se cortaba).
     @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
     private var lowColumns: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
         TableColumn("Etiquetas", value: \MacBookRow.tagsKey) { (row: MacBookRow) in MacCell(text: row.tagsLabel, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: roomy ? Theme.Mac.column : Theme.Mac.shortColumn)
+            .width(roomy ? Theme.Mac.column : Theme.Mac.shortColumn)
             .customizationID("etiquetas")
         TableColumn("Avance", value: \MacBookRow.progress) { (row: MacBookRow) in MacCell(text: row.progressLabel, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: roomy ? Theme.Mac.shortColumn : Theme.Mac.narrowColumn)
+            .width(roomy ? Theme.Mac.shortColumn : Theme.Mac.narrowColumn)
             .customizationID("avance")
     }
 
@@ -271,33 +295,36 @@ struct MacBookTable: View {
 
     @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
     private var addedColumn: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
-        TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in MacCell(text: row.addedLabel, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: roomy ? Theme.Mac.column : Theme.Mac.shortColumn)
+        // Angosta, la fecha en cifras («26/11/26»): «26 nov 2026» se cortaba en «26 nov…» (auditoría 7).
+        TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in
+            MacCell(text: roomy ? row.addedLabel : row.addedShortLabel, role: .secondary)
+        }
+            .width(roomy ? Theme.Mac.column : Theme.Mac.shortColumn)
             .customizationID("agregado")
     }
 
     @TableColumnBuilder<MacBookRow, KeyPathComparator<MacBookRow>>
     private var extraColumns: some TableColumnContent<MacBookRow, KeyPathComparator<MacBookRow>> {
         TableColumn("Idioma", value: \MacBookRow.language) { (row: MacBookRow) in MacCell(text: row.language, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn)
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.shortColumn, max: Theme.Mac.shortColumn)
             .customizationID("idioma")
             .defaultVisibility(.hidden)
         TableColumn("Valoración", value: \MacBookRow.rating) { (row: MacBookRow) in
             MacCell(text: row.stars, role: .secondary).accessibilityLabel(row.starCount.counted("estrella", "estrellas"))
         }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column, max: Theme.Mac.column)
             .customizationID("valoracion")
             .defaultVisibility(.hidden)
         TableColumn("Editorial", value: \MacBookRow.publisherKey) { (row: MacBookRow) in MacCell(text: row.publisher, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column, max: Theme.Mac.column)
             .customizationID("editorial")
             .defaultVisibility(.hidden)
         TableColumn("Publicado", value: \MacBookRow.published) { (row: MacBookRow) in MacCell(text: row.published, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column, max: Theme.Mac.column)
             .customizationID("publicado")
             .defaultVisibility(.hidden)
         TableColumn("ISBN", value: \MacBookRow.isbn) { (row: MacBookRow) in MacCell(text: row.isbn, role: .secondary) }
-            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column)
+            .width(min: Theme.Mac.narrowColumn, ideal: Theme.Mac.column, max: Theme.Mac.column)
             .customizationID("isbn")
             .defaultVisibility(.hidden)
     }
@@ -311,8 +338,27 @@ struct MacBookTable: View {
         return (try? JSONDecoder().decode(TableColumnCustomization<MacBookRow>.self, from: ordered)) ?? fresh
     }
 
+    /// Los anchos guardados de una tabla suman más que `width`.
+    static func overflows(_ customization: TableColumnCustomization<MacBookRow>, in width: CGFloat) -> Bool {
+        guard width > 0, let saved = try? JSONEncoder().encode(customization) else { return false }
+        return ColumnLayout.overflows(saved, in: Double(width))
+    }
+
     /// Una tabla angosta: las columnas de a lado piden poco y el título se queda con el espacio.
-    private var roomy: Bool { CGFloat(tableLayout.widthStep) * Theme.Mac.column >= Theme.Mac.roomyTable }
+    private var roomy: Bool { Self.isRoomy(tableLayout.widthStep) }
+
+    static func isRoomy(_ widthStep: Int) -> Bool { CGFloat(widthStep) * Theme.Mac.column >= Theme.Mac.roomyTable }
+
+    /// El título, que se queda con lo que sobra: al pasar de angosta a ancha, su ancho guardado es
+    /// el de antes. Etiquetas, Avance y Agregado tienen ancho fijo (cambia con `roomy`): no se
+    /// encogen hasta cortarse ni crecen de más.
+    static let roomyColumns: Set<String> = ["titulo"]
+
+    /// Sin el ancho guardado de esas columnas.
+    static func withoutWidths(of ids: Set<String>, in old: TableColumnCustomization<MacBookRow>) -> TableColumnCustomization<MacBookRow> {
+        guard let saved = try? JSONEncoder().encode(old) else { return old }
+        return (try? JSONDecoder().decode(TableColumnCustomization<MacBookRow>.self, from: ColumnLayout.withoutWidths(of: ids, in: saved))) ?? old
+    }
 
     /// El renglón a media altura, pegado a la orilla de inicio (sin correr de lado).
     static let middleLeading = UnitPoint(x: 0, y: 0.5)
@@ -328,6 +374,10 @@ struct MacBookTable: View {
     final class VisibleRows {
         var ids = Set<UUID>()
         var anchor: UUID?
+        /// El ancho exacto de la tabla, para saber si caben los anchos guardados.
+        var width: CGFloat = 0
+        /// Si la tabla ancha se armó la última vez como ancha (`roomy`).
+        var builtRoomy: Bool?
     }
 
     /// Las filas ya filtradas y ordenadas, con lo que las armó. Comparar los arreglos de libros es

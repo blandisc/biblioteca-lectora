@@ -16,7 +16,7 @@ final class AuditoriaCuatroPantallasTests: XCTestCase {
         XCTAssertTrue(table.contains("@SceneStorage(\"mac.columnas.ficha\")") && table.contains("columnCustomization: $narrowColumns"),
                       "Cada tabla guarda sus columnas aparte: la de la ficha no toma los anchos de la ancha")
         XCTAssertTrue(table.contains(".id(tableLayout)")
-                      && table.contains(".onGeometryChange(for: Int.self) { Int($0.size.width / Theme.Mac.column) }"),
+                      && table.contains("widthStep = Int(width / Theme.Mac.column)"),
                       "Al cambiar el ancho (ventana o ficha) la tabla vuelve a repartir sus columnas")
         XCTAssertTrue(table.components(separatedBy: "max: Theme.Mac.nameColumnMax").count - 1 == 2,
                       "Autor y serie tienen tope: lo que sobra va al título (auditoría 5)")

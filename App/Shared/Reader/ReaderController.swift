@@ -633,7 +633,10 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         case "annotation":
             tappedHighlight = body["cfi"] as? String
         case "error":
-            errorMessage = body["message"] as? String
+            // En español y en primera persona (auditoría 7): el lector web decía «Load failed».
+            let file = schemeHandler.bookFile
+            errorMessage = ReaderOpening.message(for: body["message"] as? String,
+                                                 fileExists: file.map { FileManager.default.fileExists(atPath: $0.path) } ?? true)
         default:
             break
         }

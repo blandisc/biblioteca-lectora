@@ -310,6 +310,10 @@ struct CandidatesScreen: View {
     @State private var unreachable = false
     /// Lo encontré pero no lo pude guardar: otro trabajo corre (mover el Gabinete). No es «sin conexión».
     @State private var busyReason: String?
+    /// Lo que vuelvo a buscar en cuanto termine el trabajo que corre.
+    @State private var pendingAsk: Ask?
+    /// Cada vez que me encuentro ocupado, una espera nueva (aunque sea lo mismo).
+    @State private var waits = 0
 
     private var book: ShelfBook? { model.shelfBook(id: bookID.uuidString) }
     private var candidates: [MetadataCandidate] { model.library.reviews[bookID] ?? [] }
@@ -376,6 +380,12 @@ struct CandidatesScreen: View {
         .task {
             if searchesFirst { await research() }
         }
+        .task(id: waits) {
+            guard let ask = pendingAsk else { return }
+            await model.library.waitUntilIdle()
+            guard !Task.isCancelled else { return }
+            show(await run(ask), asked: ask)
+        }
         .sheet(item: $previewing) { candidate in
             CandidatePreview(bookID: bookID, candidate: candidate) { dismiss() }
         }
@@ -383,8 +393,8 @@ struct CandidatesScreen: View {
             if let record = model.library.book(id: bookID) {
                 OtherSearchSheet(book: record) { title, author, isbn in
                     Task {
-                        let decision = await model.library.search(title: title, author: author, isbn: isbn, for: bookID)
-                        show(decision)
+                        let ask = Ask.other(title: title, author: author, isbn: isbn)
+                        show(await run(ask), asked: ask)
                     }
                 }
             }
@@ -395,13 +405,29 @@ struct CandidatesScreen: View {
     }
 
     private func research() async {
-        show(await model.library.identify(bookID, askAlways: true))
+        show(await run(.again), asked: .again)
     }
 
-    /// Sin conexión y ocupado son dos cosas (auditoría 6): cada una con sus palabras.
-    private func show(_ decision: MetadataService.Decision?) {
+    /// Lo que pediste buscar: lo mismo otra vez o con otros datos.
+    enum Ask: Equatable {
+        case again
+        case other(title: String, author: String?, isbn: String?)
+    }
+
+    private func run(_ ask: Ask) async -> MetadataService.Decision? {
+        switch ask {
+        case .again: await model.library.identify(bookID, askAlways: true)
+        case .other(let title, let author, let isbn): await model.library.search(title: title, author: author, isbn: isbn, for: bookID)
+        }
+    }
+
+    /// Sin conexión y ocupado son dos cosas (auditoría 6): cada una con sus palabras. Ocupado (un
+    /// trabajo de toda la biblioteca), espero a que termine y lo vuelvo a buscar solo (auditoría 7).
+    private func show(_ decision: MetadataService.Decision?, asked: Ask) {
         unreachable = decision == .unreachable
         busyReason = decision == .busy ? (model.library.busyReason ?? LibraryWork.moving.reason) : nil
+        pendingAsk = decision == .busy ? asked : nil
+        if decision == .busy { waits += 1 }
     }
 }
 

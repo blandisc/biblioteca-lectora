@@ -72,17 +72,32 @@ final class AuditoriaSieteTests: XCTestCase {
     // MARK: M1 · Abrir la ficha no borra cómo acomodaste las columnas
 
     func testColumnsKeepTheirOrderAndEachTableItsStep() {
-        let old = Data(#"{"columnOrder":[{"base":{"explicit":{"_0":"autor"}}},{"base":{"explicit":{"_0":"titulo"}}}],"perColumnState":[{"base":{"explicit":{"_0":"autor"}}},{"visibility":{"visible":{}},"width":{"_0":300}}]}"#.utf8)
+        // Así guarda SwiftUI una columna a la que le cambiaste el ancho (`currentWidth`).
+        let old = Data(#"{"columnOrder":[{"base":{"explicit":{"_0":"autor"}}},{"base":{"explicit":{"_0":"titulo"}}}],"perColumnState":[{"base":{"explicit":{"_0":"autor"}}},{"visibility":{"visible":{}},"currentWidth":300},{"base":{"explicit":{"_0":"serie"}}},{"visibility":{"hidden":{}},"currentWidth":500},{"base":{"explicit":{"_0":"titulo"}}},{"currentWidth":250}]}"#.utf8)
         let fresh = Data(#"{"perColumnState":[{"base":{"explicit":{"_0":"autor"}}},{"visibility":{"visible":{}}}]}"#.utf8)
         let kept = try? JSONSerialization.jsonObject(with: ColumnLayout.keepingOrder(of: old, in: fresh)) as? [String: Any]
         XCTAssertNotNil(kept?["columnOrder"], "El orden en que pusiste las columnas se queda")
         XCTAssertFalse(String(decoding: ColumnLayout.keepingOrder(of: old, in: fresh), as: UTF8.self).contains("300"), "Los anchos se van")
         XCTAssertEqual(ColumnLayout.keepingOrder(of: Data("roto".utf8), in: fresh), fresh, "Si no lo puedo leer, la tabla limpia")
 
+        // Solo se quitan si ya no caben: lo escondido no cuenta (300 + 250 = 550).
+        XCTAssertEqual(ColumnLayout.storedWidth(of: old), 550)
+        XCTAssertFalse(ColumnLayout.overflows(old, in: 600), "Una tabla un poco más angosta en la que caben: se quedan")
+        XCTAssertTrue(ColumnLayout.overflows(old, in: 500), "Ya no caben: se vuelven a repartir")
+        XCTAssertFalse(ColumnLayout.overflows(fresh, in: 100), "Sin anchos guardados, nada que quitar")
+        XCTAssertFalse(ColumnLayout.overflows(Data("roto".utf8), in: 100))
+
+        // Cada tabla mira solo los suyos: abrir la ficha no toca los anchos de la ancha.
         let table = source("MacBookTable.swift")
-        XCTAssertTrue(table.contains("@SceneStorage(\"mac.columnas.ficha.paso\") private var savedNarrowStep"), "Un paso por tabla")
-        XCTAssertTrue(table.contains("if next.widthStep < savedNarrowStep { narrowColumns = Self.withoutWidths(narrowColumns) }"))
-        XCTAssertTrue(table.contains("if next.widthStep < savedStep { columns = Self.withoutWidths(columns) }"))
+        XCTAssertTrue(table.contains("if Self.overflows(narrowColumns, in: visible.width) { narrowColumns = Self.withoutWidths(narrowColumns) }"))
+        XCTAssertTrue(table.contains("if Self.overflows(columns, in: visible.width) { columns = Self.withoutWidths(columns) }"))
+        XCTAssertFalse(table.contains("widthStep < saved"), "Ya no se quitan solo porque la tabla se hizo más angosta")
+        // SwiftUI guarda el ancho de cada columna al armarla: al pasar de angosta a ancha, solo el
+        // del título (que toma lo que sobra) se vuelve a repartir; los demás se quedan.
+        let titleFree = ColumnLayout.withoutWidths(of: ["titulo"], in: old)
+        XCTAssertEqual(ColumnLayout.storedWidth(of: titleFree), 300)
+        XCTAssertNotNil((try? JSONSerialization.jsonObject(with: titleFree) as? [String: Any])?["columnOrder"])
+        XCTAssertTrue(table.contains("columns = Self.withoutWidths(of: Self.roomyColumns, in: columns)"))
         XCTAssertFalse(table.contains("keepingVisibility"), "Ya no se quita el orden con los anchos")
         XCTAssertTrue(body(of: "static func withoutWidths(", in: table).contains("ColumnLayout.keepingOrder(of: saved, in: clean)"))
     }
@@ -219,5 +234,87 @@ final class AuditoriaSieteTests: XCTestCase {
                       "Lo deshecho es otro cambio: deshacerlo es rehacer")
         XCTAssertTrue(body(of: "func restoreWhenFree(_ change: CatalogChange, named name: String) -> PendingRestore {", in: store)
             .contains("await withCheckedContinuation { self.lockWaiters.append($0) }"), "Ocupado, lo hago en cuanto termine")
+    }
+
+    // MARK: Pantallas de la Mac (segunda vuelta)
+
+    /// M1 · Una ventana de libro de un libro que ya no está no vuelve a abrirse en cada arranque.
+    func testRestoredReaderOfAMissingBookCloses() {
+        XCTAssertFalse(ReaderOpening.keepsRestoredWindow(fileExists: false, inLibrary: true, waitingForCloud: false))
+        XCTAssertFalse(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: false, waitingForCloud: false),
+                       "Ya no está en la biblioteca (otro Gabinete, lo borraste)")
+        XCTAssertTrue(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: false, waitingForCloud: true),
+                      "Mientras bajo tu biblioteca de iCloud, puede llegar")
+        XCTAssertTrue(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: true, waitingForCloud: false))
+        XCTAssertTrue(ReaderOpening.keepsRestoredWindow(fileExists: true, inLibrary: nil, waitingForCloud: false), "Un archivo suelto")
+
+        let window = source("MacReaderWindow.swift", in: "App/Shared/Mac")
+        XCTAssertTrue(window.contains("ReaderOpening.keepsRestoredWindow(") && window.contains("openWindow(id: Self.libraryWindow)")
+                      && window.contains("dismiss()"), "La cierro y abro la biblioteca")
+        XCTAssertTrue(source("LectoraApp.swift").contains("id: \"biblioteca\""), "El id de la biblioteca es el que abro")
+    }
+
+    /// M1 · Lo que no pudo abrir el lector se dice en español y en primera persona (regla 7).
+    func testReaderErrorsInSpanish() {
+        XCTAssertEqual(ReaderOpening.message(for: "Load failed", fileExists: false), ReaderOpening.missingFile)
+        for raw in ["Load failed", "File type not supported", "Unexpected end of archive", nil] {
+            let message = ReaderOpening.message(for: raw, fileExists: true)
+            XCTAssertFalse(message.isEmpty)
+            XCTAssertFalse(raw.map { message.contains($0) } ?? false, "Nunca el texto en inglés del lector web")
+            XCTAssertTrue(message.hasPrefix("No ") , "En primera persona: \(message)")
+        }
+        XCTAssertTrue(ReaderOpening.message(for: "File type not supported", fileExists: true).contains("EPUB"))
+        let controller = source("ReaderController.swift", in: "App/Shared/Reader")
+        XCTAssertTrue(controller.contains("errorMessage = ReaderOpening.message(for: body[\"message\"] as? String"))
+        XCTAssertFalse(controller.contains("errorMessage = body[\"message\"] as? String"))
+    }
+
+    /// M3 · Un texto cortado se corta entre palabras y termina en «…».
+    func testClippedTextEndsWithEllipsis() {
+        XCTAssertEqual("uno dos tres".clipped(to: 6), "uno…")
+        XCTAssertEqual("uno dos tres".clipped(to: 7), "uno dos…")
+        XCTAssertEqual("uno dos tres".clipped(to: 12), "uno dos tres", "Lo que cabe se queda igual")
+        XCTAssertEqual("uno, dos tres".clipped(to: 6), "uno…", "Sin la coma colgando")
+        XCTAssertEqual("larguísimapalabra".clipped(to: 5), "largu…", "Una sola palabra larga también lleva «…»")
+        let long = Note(fileName: "x", text: "# Ideas\n" + String(repeating: "palabra ", count: 60)).preview
+        XCTAssertTrue(long.hasSuffix("palabra…"), long)
+        XCTAssertLessThanOrEqual(long.count, Note.previewLetters + 1)
+        XCTAssertEqual(Note(fileName: "x", text: "# Ideas\nCorta").preview, "Corta")
+    }
+
+    /// B1 · «Elige los datos» respeta el candado: ocupado, no deja nada y lo vuelve a buscar solo.
+    func testReviewSearchWaitsForTheLock() {
+        let identify = body(of: "func identify(_ bookID: UUID, askAlways: Bool = false) async -> MetadataService.Decision? {", in: store)
+        XCTAssertTrue(identify.contains("if askAlways, lock.current != nil { return .busy }"))
+        let search = body(of: "func search(title: String, author: String?, isbn: String?, for bookID: UUID) async -> MetadataService.Decision? {", in: store)
+        guard let lookup = search.range(of: "await service.search("), let guardLock = search.range(of: "if lock.current != nil { return .busy }", options: .backwards),
+              let review = search.range(of: "setReview(") else { return XCTFail("search respeta el candado") }
+        XCTAssertTrue(guardLock.lowerBound > lookup.lowerBound && guardLock.lowerBound < review.lowerBound, "Tampoco si empezó mientras buscaba")
+        XCTAssertTrue(body(of: "func waitUntilIdle() async {", in: store).contains("lockWaiters.append($0)"))
+        let screen = source("ReviewScreen.swift")
+        XCTAssertTrue(screen.contains(".task(id: waits) {") && screen.contains("await model.library.waitUntilIdle()")
+                      && screen.contains("show(await run(ask), asked: ask)"), "Al terminar, lo vuelvo a buscar solo")
+    }
+
+    /// M4 y M5 · En la tabla ancha el título se queda con lo que sobra; angosta, la fecha en cifras.
+    func testMacTableGivesTheRoomToTheTitle() {
+        let table = source("MacBookTable.swift", in: "App/Shared/Mac")
+        let columns = table.components(separatedBy: "TableColumn(").dropFirst()
+        for column in columns {
+            let name = column.prefix(while: { $0 != "," })
+            guard let width = column.range(of: ".width(") else { continue }
+            let rule = column[width.lowerBound...].prefix(while: { $0 != "\n" })
+            if name.contains("\"Título\"") {
+                XCTAssertFalse(rule.contains("max:"), "El título no tiene tope")
+            } else {
+                // Las demás: ancho fijo o con tope (a 1800, Avance quedaba con 180 puntos vacíos).
+                let next = column[width.lowerBound...].prefix(200)
+                XCTAssertTrue(!rule.contains("min:") || next.contains("max:"), "\(name): sin tope, se lleva el espacio del título")
+            }
+        }
+        XCTAssertTrue(table.contains("MacCell(text: roomy ? row.addedLabel : row.addedShortLabel"))
+        let row = source("MacBookRow.swift", in: "App/Shared/Mac")
+        XCTAssertTrue(row.contains("progress > 0 ? progress.percentText : \"—\""), "Sin avance, «—»")
+        XCTAssertTrue(source("Components.swift", in: "App/Shared/Design").contains("var esNumeric: String"))
     }
 }

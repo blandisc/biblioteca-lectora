@@ -140,6 +140,13 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    /// Espera a que ningún trabajo de toda la biblioteca tenga el candado (sin tomarlo).
+    func waitUntilIdle() async {
+        while lock.current != nil {
+            await withCheckedContinuation { lockWaiters.append($0) }
+        }
+    }
+
     /// Toma el candado ya, o falla con el porqué.
     private func takeLock(_ work: LibraryWork) throws {
         if let current = lock.current { throw LibraryError.busy(current) }
@@ -1008,10 +1015,16 @@ final class LibraryStore: ObservableObject {
     @discardableResult
     func identify(_ bookID: UUID, askAlways: Bool = false) async -> MetadataService.Decision? {
         guard let book = book(id: bookID), !identifying.contains(bookID) else { return nil }
+        // Desde «Elige los datos», con un trabajo de toda la biblioteca corriendo, no busco ni dejo
+        // candidatos (se guardarían en la copia que se mueve): digo «ocupado» y la pantalla lo
+        // vuelve a buscar sola al terminar (auditoría 7: «Espera un momento» nunca salía).
+        if askAlways, lock.current != nil { return .busy }
         identifying.insert(bookID)
         defer { identifying.remove(bookID) }
 
         let result = await service.lookup(book)
+        // Empezó un trabajo mientras buscaba: tampoco dejo lo encontrado.
+        if askAlways, lock.current != nil { return .busy }
         if result.decision == .unreachable {
             setPending(bookID, true)
             return .unreachable
@@ -1053,9 +1066,11 @@ final class LibraryStore: ObservableObject {
     @discardableResult
     func search(title: String, author: String?, isbn: String?, for bookID: UUID) async -> MetadataService.Decision? {
         guard let book = book(id: bookID), !identifying.contains(bookID) else { return nil }
+        if lock.current != nil { return .busy }
         identifying.insert(bookID)
         defer { identifying.remove(bookID) }
         let result = await service.search(title: title, author: author, isbn: isbn, for: book)
+        if lock.current != nil { return .busy }
         if result.decision != .unreachable { setReview(bookID, candidates: result.candidates) }
         return result.decision
     }
