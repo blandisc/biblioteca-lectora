@@ -1,0 +1,145 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gabinete contra Calibre: qué traer</title>
+<style>
+:root{--sans:-apple-system,system-ui,sans-serif;--serif:"New York",Georgia,serif;--g:#0F4A35;--ink:#1C1B19;--sec:#6F6C65;--tr:#E6E3DC;--paper:#F8F7F4;--field:#EFEDE8;--ok:#E7EFEA;--half:#F6EBD9;--no:#F3E1DD}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--sans)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 24px 64px}
+h1{font:600 28px var(--serif);margin:0 0 6px}h2{font:600 21px var(--serif);margin:44px 0 8px}
+h3{margin:0;font:600 18px var(--sans);display:flex;gap:8px;align-items:center}h4{margin:2px 0 10px;font:500 15px var(--sans);color:var(--sec)}
+.muted{color:var(--sec)}
+.tag{font:600 11px var(--sans);letter-spacing:1px;background:var(--g);color:#fff;border-radius:6px;padding:2px 7px;text-transform:uppercase}
+.tag.two{background:#4E6B5E}
+table{border-collapse:collapse;width:100%;font-size:14px;background:#fff;border:1px solid var(--tr);border-radius:12px;overflow:hidden}
+th{text-align:left;color:var(--sec);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--tr);background:var(--field)}
+td{padding:7px 10px;border-bottom:1px solid #f1efea;vertical-align:top}
+td.area{font-weight:600;white-space:nowrap}
+.s{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;white-space:nowrap}
+.s.y{background:var(--ok);color:var(--g)}.s.p{background:var(--half);color:#8A5A12}.s.n{background:var(--no);color:#8E3324}.s.x{background:var(--field);color:var(--sec)}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+.sum div{background:#fff;border:1px solid var(--tr);border-radius:12px;padding:12px 14px}.sum b{font:600 26px var(--serif);display:block}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px}
+.opt{border:1px solid var(--tr);border-radius:14px;background:#fff;padding:16px 18px}.opt.rec{border:2px solid var(--g)}
+.mock{background:var(--paper);border:1px solid var(--tr);border-radius:12px;padding:12px;margin:10px 0;font-size:13px}
+.win{background:#fff;border:1px solid var(--tr);border-radius:10px;overflow:hidden}
+.bar{height:22px;background:var(--field);display:flex;align-items:center;gap:5px;padding:0 8px;border-bottom:1px solid var(--tr)}.bar i{width:8px;height:8px;border-radius:50%;background:#d8d4cc}
+.side{padding:8px}.side b{display:block;font:600 10px var(--sans);letter-spacing:1.2px;color:var(--sec);margin:8px 4px 3px}.side div{padding:3px 6px;border-radius:6px;display:flex;justify-content:space-between}.side .on{background:var(--field);font-weight:600}.side small{color:var(--sec)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid #f1efea}
+.btn{display:inline-block;background:var(--g);color:#fff;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600}
+.btn.q{background:var(--field);color:var(--ink)}
+.gp{font-size:14px;margin:6px 0 0}
+.rbox{background:var(--ok);border-radius:14px;padding:16px 18px;margin:32px 0 12px;max-width:980px}
+.codes{font:600 20px var(--sans);background:var(--field);border-radius:12px;padding:14px 16px;max-width:980px;user-select:all}
+ul.no li{margin:5px 0}
+@media(max-width:860px){.grid,.sum{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="doc">
+<h1>Gabinete contra Calibre: qué traer</h1>
+<p class="muted">26 nov 2026 · Repasé lo que hace Calibre (el programa y sus complementos más usados) contra lo que Gabinete ya tiene hoy en el código. La pregunta de producto: ¿qué le falta a Gabinete para que puedas cerrar Calibre para siempre, sin perder nada que de verdad uses?</p>
+
+<div class="sum">
+<div><b>13</b>Ya las tenemos</div>
+<div><b>7</b>Las tenemos a medias</div>
+<div><b>4</b>Faltan del todo</div>
+<div><b>6</b>Faltan y no las traería</div>
+</div>
+
+<h2>1. Calibre contra Gabinete, función por función</h2>
+<table>
+<tr><th>Área</th><th>Lo que hace Calibre</th><th>Gabinete hoy</th><th>Estado</th></tr>
+<tr><td class="area">Biblioteca</td><td>Importar libros sueltos o carpetas enteras</td><td>Importar archivos (⌘O, Archivos, Compartir) y arrastrarlos a la tabla de la Mac</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Formatos: EPUB, PDF, MOBI, AZW3, FB2, CBZ…</td><td>Los mismos seis se importan y se leen</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Carpeta Autor / Título con metadata.opf y portada</td><td>La misma forma, para que Calibre la pueda abrir</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Tabla con columnas, orden y selección múltiple</td><td>Tabla de la Mac (MG-1)</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Edición masiva de datos</td><td>Ficha de la Mac con varios libros elegidos</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Buscador con sintaxis (<code>author:</code>, <code>tags:</code>…)</td><td>«autor:», «serie:», «etiqueta:», «idioma:», «estado:», «isbn:», en la Mac y ahora en Buscar</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Navegador de etiquetas (autores, series, etiquetas, idiomas)</td><td>Explorar en la barra lateral de la Mac</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Bibliotecas virtuales y búsquedas guardadas</td><td>Solo vistas fijas (Leyendo, Por leer, Por revisar, Sin portada)</td><td><span class="s n">Falta</span></td></tr>
+<tr><td></td><td>Renombrar y fusionar autores, series y etiquetas en toda la biblioteca</td><td>Reglas de autores y etiquetas, pero solo para lo que entra nuevo</td><td><span class="s p">A medias</span></td></tr>
+<tr><td></td><td>Encontrar duplicados en toda la biblioteca (complemento Find Duplicates)</td><td>Detecta el mismo archivo o ISBN al importar; no revisa lo que ya está</td><td><span class="s p">A medias</span></td></tr>
+<tr><td></td><td>Varios formatos de un mismo libro (EPUB y PDF juntos)</td><td>Cada formato entra como un libro aparte</td><td><span class="s n">Falta</span></td></tr>
+<tr><td></td><td>Revisar la biblioteca (archivos que faltan o sobran)</td><td>«Ordenar la biblioteca» en Ajustes</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Columnas personalizadas</td><td>No</td><td><span class="s x">No traer</span></td></tr>
+<tr><td class="area">Datos</td><td>Bajar datos y portadas de internet, y elegir</td><td>Open Library y Google Books, con candidatos y elección de portada</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Bajar datos de cientos de libros a la vez</td><td>«Buscar datos» de la Mac, libro por libro dentro de la selección</td><td><span class="s p">A medias</span></td></tr>
+<tr><td></td><td>Escribir los datos corregidos dentro del archivo EPUB</td><td>Se guardan en metadata.opf al lado; el EPUB conserva sus datos viejos</td><td><span class="s p">A medias</span></td></tr>
+<tr><td></td><td>Sacar el ISBN del texto del libro</td><td>Lo lee de los datos del EPUB, no del texto</td><td><span class="s p">A medias</span></td></tr>
+<tr><td class="area">Lector</td><td>Lector con subrayados, marcadores, buscar, índice</td><td>Lector completo, con sesiones, diario y lectura guiada (Calibre no los tiene)</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Consultar palabras (diccionario, Google)</td><td>«Consultar»: traducción, Wikipedia y diccionario (SG-4)</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Explorar todos los subrayados de la biblioteca y exportarlos</td><td>Cuaderno y Buscar los muestran; se mandan a Readwise; no hay exportar a Markdown</td><td><span class="s p">A medias</span></td></tr>
+<tr><td></td><td>Buscar dentro del texto de todos los libros a la vez</td><td>Solo dentro del libro abierto</td><td><span class="s n">Falta</span></td></tr>
+<tr><td class="area">Aparatos</td><td>Mandar libros a un Kindle o Kobo (cable o correo)</td><td>No</td><td><span class="s n">Falta</span></td></tr>
+<tr><td class="area">Compartir</td><td>Servidor: tu biblioteca en el navegador y en otras apps (OPDS)</td><td>Planeado como «la web servida por tu Mac» (D8)</td><td><span class="s p">A medias</span></td></tr>
+<tr><td></td><td>Guardar copias en disco y respaldo</td><td>La carpeta ya vive en iCloud con la forma de Calibre</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td class="area">Archivos</td><td>Convertir entre formatos</td><td>No hace falta: el lector abre MOBI y AZW3 directo</td><td><span class="s x">No traer</span></td></tr>
+<tr><td></td><td>Pulir libros (fuentes, imágenes, puntuación)</td><td>No</td><td><span class="s x">No traer</span></td></tr>
+<tr><td></td><td>Editor de libros y editor de índice</td><td>No</td><td><span class="s x">No traer</span></td></tr>
+<tr><td class="area">Extras</td><td>Bajar noticias como libro</td><td>No</td><td><span class="s x">No traer</span></td></tr>
+<tr><td></td><td>Contar páginas y palabras (complemento Count Pages)</td><td>Ya estima palabras y «te faltan N min»</td><td><span class="s y">Tenemos</span></td></tr>
+<tr><td></td><td>Complementos de terceros</td><td>No</td><td><span class="s x">No traer</span></td></tr>
+</table>
+
+<h2>2. Las seis que recomiendo traer</h2>
+<div class="grid">
+
+<div class="opt rec"><h3>CB-1<span class="tag">Primero</span></h3><h4>Estantes: búsquedas guardadas en la barra lateral</h4>
+<div class="mock"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div class="side">
+<b>BIBLIOTECA</b><div>Todos los libros <small>1,248</small></div><div>Leyendo <small>3</small></div>
+<b>ESTANTES</b><div class="on">Historia del Mediterráneo <small>14</small></div><div>Por leer en inglés <small>37</small></div><div>Cortázar sin terminar <small>5</small></div><div style="color:var(--g)">+ Guardar esta búsqueda</div></div></div></div>
+<p class="gp"><b>Qué es:</b> escribes «etiqueta:historia idioma:en estado:por leer» y lo guardas como estante. Se llena solo con los libros que cumplen, en la Mac y en el iPhone. Es lo que en Calibre son las bibliotecas virtuales.</p>
+<p class="gp"><b>Ganas:</b> tus colecciones sin mover un solo archivo. Es rápido de hacer porque el buscador ya existe.<br><b>Pierdes:</b> casi nada; es una lista más en la barra lateral.</p></div>
+
+<div class="opt rec"><h3>CB-2<span class="tag">Primero</span></h3><h4>Ordenar autores, series y etiquetas</h4>
+<div class="mock"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div style="padding:8px">
+<div class="row"><span>Cortázar, Julio <small class="muted">· 3 libros</small></span><span class="btn q">Fusionar con…</span></div>
+<div class="row"><span>Julio Cortázar <small class="muted">· 9 libros</small></span><span class="muted">✓ se queda</span></div>
+<div class="row"><span>J. Cortazar <small class="muted">· 1 libro</small></span><span class="btn q">Fusionar con…</span></div>
+<div style="margin-top:8px"><span class="btn">Fusionar 3 en «Julio Cortázar» (13 libros)</span></div></div></div></div>
+<p class="gp"><b>Qué es:</b> clic derecho en un autor, serie o etiqueta de la barra lateral: renombrar, o fusionar con otro, en todos sus libros de una vez. También renumerar los tomos de una serie.</p>
+<p class="gp"><b>Ganas:</b> lo primero que vas a necesitar cuando traigas tu Calibre, porque ahí está el desorden de años.<br><b>Pierdes:</b> hay que cuidar que sea reversible (con «Deshacer»).</p></div>
+
+<div class="opt"><h3>CB-3<span class="tag two">Después</span></h3><h4>Duplicados y varios formatos de un libro</h4>
+<div class="mock"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div style="padding:8px">
+<div class="muted" style="font-size:12px;margin-bottom:4px">4 posibles duplicados</div>
+<div class="row"><span><b>Rayuela</b> · Cortázar · EPUB</span><span class="muted">2019</span></div>
+<div class="row"><span><b>Rayuela</b> · Julio Cortázar · PDF</span><span class="muted">2022</span></div>
+<div style="margin-top:8px"><span class="btn">Juntar en un libro (EPUB + PDF)</span> <span class="btn q">No son el mismo</span></div></div></div></div>
+<p class="gp"><b>Qué es:</b> revisa toda la biblioteca y te propone pares parecidos (mismo título y autor aunque estén escritos distinto). Los juntas en un libro con sus dos archivos, o dices «no son el mismo» y no vuelve a preguntar.</p>
+<p class="gp"><b>Ganas:</b> una biblioteca limpia después de años de Calibre.<br><b>Pierdes:</b> que un libro tenga varios archivos cambia por dentro cómo se guarda; es el más laborioso de los seis.</p></div>
+
+<div class="opt"><h3>CB-4<span class="tag two">Después</span></h3><h4>Datos para cientos de libros a la vez</h4>
+<div class="mock"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div style="padding:8px">
+<div class="row"><span>Buscando datos de 41 libros…</span><span class="muted">28 / 41</span></div>
+<div class="row"><span>✓ 22 con datos y portada nuevos</span></div>
+<div class="row"><span>◐ 6 con dudas · van a Por revisar</span></div>
+<div class="row" style="border:0"><span class="muted">Sigue aunque cierres la ventana</span></div></div></div></div>
+<p class="gp"><b>Qué es:</b> eliges «Por revisar» o «Sin portada» completo y Gabinete busca datos para todos, en segundo plano. Lo seguro se aplica solo; lo dudoso queda para que lo revises.</p>
+<p class="gp"><b>Ganas:</b> horas de clics ahorradas tras la mudanza.<br><b>Pierdes:</b> Open Library limita cuántas búsquedas por minuto acepta; con 1,000 libros tarda un rato.</p></div>
+
+<div class="opt"><h3>CB-5<span class="tag two">Después</span></h3><h4>Enviar a Kindle</h4>
+<div class="mock"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div style="padding:8px">
+<div class="row"><span><b>Agentes del imperio</b> · EPUB</span><span class="btn">Enviar a Kindle</span></div>
+<div class="row" style="border:0"><span class="muted">A fernando_xx@kindle.com · con título, autor y portada corregidos</span></div></div></div></div>
+<p class="gp"><b>Qué es:</b> un botón que manda el libro al correo de tu Kindle (Amazon ya acepta EPUB). Antes le escribe adentro los datos corregidos, para que en el Kindle salga bien el título y la portada.</p>
+<p class="gp"><b>Ganas:</b> leer en tinta electrónica sin abrir Calibre.<br><b>Pierdes:</b> solo sirve si sigues usando un Kindle físico; si no, sobra.</p></div>
+
+<div class="opt"><h3>CB-6<span class="tag two">Después</span></h3><h4>Buscar dentro de todos tus libros y exportar subrayados</h4>
+<div class="mock"><div class="win"><div class="bar"><i></i><i></i><i></i></div><div style="padding:8px">
+<div style="background:var(--field);border-radius:8px;padding:3px 8px;color:var(--sec);margin-bottom:6px">Braudel</div>
+<div class="row"><span><b>Agentes del imperio</b> · 7 veces</span></div>
+<div class="row"><span><b>El Mediterráneo</b> · 112 veces</span></div>
+<div class="row" style="border:0"><span class="btn q">Exportar mis subrayados a Markdown</span></div></div></div></div>
+<p class="gp"><b>Qué es:</b> Buscar encuentra una palabra dentro del texto de todos tus libros, como el buscador de Calibre 6. Junto, un botón para sacar tus subrayados en Markdown.</p>
+<p class="gp"><b>Ganas:</b> «¿en qué libro leí sobre…?» por fin tiene respuesta.<br><b>Pierdes:</b> hay que leer e indexar cada libro una vez; ocupa espacio y la primera vez tarda.</p></div>
+</div>
+
+<h2>3. Lo que no traería, y por qué</h2>
+<ul class="no">
+<li><b>Convertir formatos:</b> el lector ya abre MOBI y AZW3 tal cual; convertir solo sirve para otros aparatos, y CB-5 cubre el Kindle.</li>
+<li><b>Pulir libros, editor de libros y editor de índice:</b> son herramientas de quien hace libros, no de quien los lee.</li>
+<li><b>Columnas personalizadas:</b> los estantes (CB-1) y las etiquetas cubren casi todo, sin volver la app una base de datos.</li>
+<li><b>Noticias como libro:</b> fuera del propósito de Gabinete; para artículos está Readwise Reader.</li>
+<li><b>Complementos de terceros:</b> abren la puerta a código ajeno en tu biblioteca; mejor traer lo útil (como Find Duplicates) como función propia.</li>
+<li><b>Servidor completo y OPDS:</b> ya está planeado como la web servida por tu Mac (D8). No lo adelantaría.</li>
+</ul>
+
+<div class="rbox"><b>Mi recomendación: CB-2 y CB-1 primero, luego CB-4 y CB-3.</b> Lo que de verdad te ata a Calibre es <i>administrar</i> una biblioteca grande y desordenada, no convertir ni editar libros. CB-2 (ordenar autores y etiquetas) y CB-1 (estantes) son la mitad de lo que haces en Calibre, y salen rápido porque se apoyan en lo que ya existe. Las dos rinden más cuando traigas tu biblioteca, así que conviene tenerlas listas antes de la mudanza. CB-4 y CB-3 son la limpieza pesada que vendrá después. CB-5 solo si usas un Kindle físico; CB-6 cierra «buscar en todo», pero puede esperar.</div>
+<p class="muted">Para elegir, dicta los códigos en el orden que quieras (por ejemplo «CB-2, CB-1»):</p><div class="codes">CB-1 · CB-2 · CB-3 · CB-4 · CB-5 · CB-6</div>
+</div></body></html>
