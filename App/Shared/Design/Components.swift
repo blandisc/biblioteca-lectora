@@ -39,9 +39,10 @@ extension View {
 
     /// DUO-1 · las barras en el iPhone Duo: en la pantalla de afuera iOS pone las pestañas y la
     /// hora en una franja al costado. Con DUO-1B (`Duo.barsBelow`, falta decidirlo) vuelven abajo
-    /// y arriba, como en cualquier iPhone. iOS le pregunta a lo que va hasta arriba de cada
-    /// presentación: la raíz, el lector, la bienvenida y cada hoja lo declaran. En los demás
-    /// iPhone no hace nada.
+    /// y arriba, como en cualquier iPhone. iOS le pregunta a lo que se ve en cada presentación:
+    /// cada pestaña (puesto en la `TabView` misma no lo lee), el lector, la bienvenida y cada hoja
+    /// lo declaran. iOS 27.2 no lo respeta siempre: al abrir el libro regresa la franja y se queda
+    /// (27 nov 2026). En los demás iPhone no hace nada.
     @ViewBuilder
     func duoBars() -> some View {
         #if os(iOS) && compiler(>=6.4)

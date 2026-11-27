@@ -119,10 +119,10 @@ struct RootView: View {
         #else
         if #available(iOS 18.0, macOS 15.0, *) {
             TabView(selection: $place) {
-                Tab("Mesa", systemImage: "book", value: Place.desk) { MesaScreen() }
-                Tab("Biblioteca", systemImage: "books.vertical", value: Place.library) { LibraryScreen() }
-                Tab("Cuaderno", systemImage: "note.text", value: Place.notebook) { NotebookScreen() }
-                Tab(value: Place.search, role: .search) { SearchScreen() }
+                Tab("Mesa", systemImage: "book", value: Place.desk) { MesaScreen().duoBars() }
+                Tab("Biblioteca", systemImage: "books.vertical", value: Place.library) { LibraryScreen().duoBars() }
+                Tab("Cuaderno", systemImage: "note.text", value: Place.notebook) { NotebookScreen().duoBars() }
+                Tab(value: Place.search, role: .search) { SearchScreen().duoBars() }
             }
         } else {
             TabView(selection: $place) {
