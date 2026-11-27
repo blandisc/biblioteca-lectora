@@ -93,7 +93,7 @@ struct MacBookInspector: View {
     private func many(_ books: [Book]) -> some View {
         Form {
             Section {
-                Text("\(books.count) libros elegidos").font(.headline)
+                Text(books.count.counted("libro elegido", "libros elegidos")).font(.headline)
                 Text("Lo que escribas se aplica a todos. Lo que dejes en blanco no cambia.")
                     .foregroundStyle(.secondary)
             }

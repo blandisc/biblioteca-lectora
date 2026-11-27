@@ -128,7 +128,7 @@ final class AppModel: ObservableObject {
         if !duplicates.isEmpty {
             lines.append(duplicates.count == 1
                 ? "«\(duplicates[0])» ya estaba en tu biblioteca."
-                : "\(duplicates.count) libros ya estaban en tu biblioteca.")
+                : "\(duplicates.count.counted("libro", "libros")) ya estaban en tu biblioteca.")
         }
         if failures > 0 {
             lines.append(failures == 1 ? "Un archivo no se pudo leer." : "\(failures) archivos no se pudieron leer.")

@@ -580,6 +580,68 @@ final class LibraryStore: ObservableObject {
         return changed
     }
 
+    // MARK: Ordenar autores, series y etiquetas (CB-2)
+
+    /// Lo que cambió una operación de la biblioteca entera, para deshacerla.
+    struct CatalogChange {
+        var originals: [Book] = []
+        var rulesBefore: MetadataRules
+        var failed: [String] = []
+    }
+
+    /// Renombra o fusiona un autor, una serie o una etiqueta en todos sus libros. Con autores y
+    /// etiquetas, también deja la regla para lo que llegue después (los libros que importes).
+    @discardableResult
+    func rename(_ rename: CatalogRename) -> CatalogChange {
+        var change = CatalogChange(rulesBefore: rules)
+        for book in books where rename.touches(book) {
+            do {
+                try update(rename.apply(to: book))
+                change.originals.append(book)
+            } catch {
+                change.failed.append(book.title)
+            }
+        }
+        let fresh = rename.from.filter { CatalogRename.key($0) != CatalogRename.key(rename.to) }
+        var learned = rules
+        switch rename.field {
+        case .author:
+            for value in fresh where !learned.authors.contains(where: { CatalogRename.key($0.from) == CatalogRename.key(value) }) {
+                learned.authors.append(.init(from: value, to: rename.to))
+            }
+        case .tag:
+            for value in fresh where !learned.tags.contains(where: { CatalogRename.key($0.from) == CatalogRename.key(value) }) {
+                learned.tags.append(.init(from: value, to: rename.to))
+            }
+        case .series: break
+        }
+        if learned != rules { saveRules(learned) }
+        return change
+    }
+
+    /// Los tomos de una serie como 1, 2, 3… en el orden que ya tenían.
+    @discardableResult
+    func renumber(series: String) -> CatalogChange {
+        var change = CatalogChange(rulesBefore: rules)
+        let tomes = books.filter { $0.series == series }
+        for renumbered in CatalogRename.renumber(tomes) {
+            guard let original = book(id: renumbered.id) else { continue }
+            do {
+                try update(renumbered)
+                change.originals.append(original)
+            } catch {
+                change.failed.append(original.title)
+            }
+        }
+        return change
+    }
+
+    /// Deshace un `rename` o `renumber`: los libros como estaban y las reglas de antes.
+    func restore(_ change: CatalogChange) {
+        for original in change.originals { _ = try? update(original) }
+        if change.rulesBefore != rules { saveRules(change.rulesBefore) }
+    }
+
     // MARK: Lo que se completó solo
 
     private func recordFilled(before: Book, after: Book, addedCover: Bool) {

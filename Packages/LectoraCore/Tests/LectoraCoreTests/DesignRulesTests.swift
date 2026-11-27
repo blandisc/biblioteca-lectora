@@ -577,4 +577,12 @@ final class DesignRulesTests: XCTestCase {
         }
         check(problems, "Un verde escrito fuera de Theme.Green: apunta a Theme.accent, Theme.highlight o Theme.Green.css")
     }
+
+    /// 26 nov 2026: la Mac decía «Renombrar en 1 libros». Una cifra y lo que cuenta salen de
+    /// `counted`, que concuerda «1 libro» y «2 libros».
+    func testCountsAgreeWithTheirNumber() {
+        let nouns = "libros|notas|subrayados|citas|sesiones|portadas|autores|series|etiquetas|palabras"
+        check(hits(#"\\\([^)]*\) (\#(nouns))\b(?!/)"#, in: Self.sources("App")).filter { !$0.contains("== 1") },
+              "Cifra con su sustantivo armada a mano: usa n.counted(\"libro\", \"libros\")")
+    }
 }

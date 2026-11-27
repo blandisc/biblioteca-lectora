@@ -14,7 +14,7 @@ struct SeriesScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ScreenHeading(title: series.name)
-                Text("\(books.count) libros")
+                Text(books.count.counted("libro", "libros"))
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
                     .padding(.top, Theme.Space.xs)

@@ -78,6 +78,9 @@ private struct MacSidebar: View {
     @ObservedObject var library: LibraryStore
     let shelf: [ShelfBook]
     @Binding var selection: MacSection?
+    @Environment(\.undoManager) private var undoManager
+    /// Renombrar o fusionar (CB-2), desde el clic derecho en un autor, serie o etiqueta.
+    @State private var renaming: MacCatalogSheet.Target?
 
     var body: some View {
         let rows = MacBookTable.rows(library: library, shelf: shelf)
@@ -96,13 +99,54 @@ private struct MacSidebar: View {
                 item(.noCover, "photo", rows.filter { !$0.hasCover }.count)
             }
             Section("Explorar") {
-                group("Autores", "person.2", values(rows.flatMap(\.book.authors)), MacSection.author, icon: "person")
-                group("Series", "square.stack", values(rows.compactMap(\.book.series)), MacSection.series, icon: "square.stack")
-                group("Etiquetas", "tag", values(rows.flatMap(\.book.tags)), MacSection.tag, icon: "tag")
-                group("Idiomas", "globe", values(rows.compactMap(\.book.language)), MacSection.language, icon: "globe")
+                group("Autores", "person.2", values(rows.flatMap(\.book.authors)), MacSection.author, icon: "person", field: .author)
+                group("Series", "square.stack", values(rows.compactMap(\.book.series)), MacSection.series, icon: "square.stack", field: .series)
+                group("Etiquetas", "tag", values(rows.flatMap(\.book.tags)), MacSection.tag, icon: "tag", field: .tag)
+                group("Idiomas", "globe", values(rows.compactMap(\.book.language)), MacSection.language, icon: "globe", field: nil)
             }
         }
         .listStyle(.sidebar)
+        #if DEBUG
+        // Capturas: `-screenshot.demo macRename` abre «Renombrar o juntar» con el primer autor;
+        // `-screenshot.query Nombre` además lo renombra así (prueba de punta a punta).
+        .task {
+            guard LaunchOptions.demo == "macRename" else { return }
+            try? await Task.sleep(for: .seconds(3))
+            guard let first = values(for: .author, rows).first?.0 else { return }
+            if let name = UserDefaults.standard.string(forKey: "screenshot.query") {
+                library.rename(CatalogRename(field: .author, from: [first], to: name))
+                selection = .author(name)
+            } else {
+                renaming = .init(field: .author, value: first)
+            }
+        }
+        #endif
+        .sheet(item: $renaming) { target in
+            MacCatalogSheet(target: target, values: values(for: target.field, rows), library: library) { final in
+                // Si estabas viendo lo que cambió de nombre, sigues viéndolo con el nombre nuevo.
+                switch (selection, target.field) {
+                case (.author(target.value), .author): selection = .author(final)
+                case (.series(target.value), .series): selection = .series(final)
+                case (.tag(target.value), .tag): selection = .tag(final)
+                default: break
+                }
+            }
+        }
+    }
+
+    private func values(for field: CatalogRename.Field, _ rows: [MacBookRow]) -> [(String, Int)] {
+        values(rows.flatMap { CatalogRename.values(field, in: $0.book) })
+    }
+
+    /// Los tomos 1, 2, 3…, con ⌘Z para deshacer.
+    private func renumber(_ series: String) {
+        let change = library.renumber(series: series)
+        guard !change.originals.isEmpty else { return }
+        let library = library
+        undoManager?.registerUndo(withTarget: library) { store in
+            MainActor.assumeIsolated { store.restore(change) }
+        }
+        undoManager?.setActionName("Renumerar tomos")
     }
 
     private func item(_ section: MacSection, _ symbol: String, _ count: Int) -> some View {
@@ -112,10 +156,19 @@ private struct MacSidebar: View {
     }
 
     private func group(_ title: String, _ symbol: String, _ values: [(String, Int)],
-                       _ make: @escaping (String) -> MacSection, icon: String) -> some View {
+                       _ make: @escaping (String) -> MacSection, icon: String,
+                       field: CatalogRename.Field?) -> some View {
         DisclosureGroup {
             ForEach(values, id: \.0) { value, count in
                 Label(value, systemImage: icon).badge(count).tag(make(value))
+                    .contextMenu {
+                        if let field {
+                            Button("Renombrar o juntar…") { renaming = .init(field: field, value: value) }
+                            if field == .series {
+                                Button("Renumerar tomos 1, 2, 3…") { renumber(value) }
+                            }
+                        }
+                    }
             }
         } label: {
             Label(title, systemImage: symbol)

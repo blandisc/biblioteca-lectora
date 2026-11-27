@@ -166,7 +166,7 @@ struct SearchScreen: View {
                     }
                     .padding(.top, Theme.Space.s)
                     if found.highlights.count > shown.count {
-                        TextAction(title: "Ver los \(found.highlights.count) subrayados") { showsAllHighlights = true }
+                        TextAction(title: "Ver \(found.highlights.count.counted("subrayado", "subrayados"))") { showsAllHighlights = true }
                     }
                 }
             }
@@ -193,7 +193,7 @@ struct SearchScreen: View {
 
     /// «1 libro · 4 subrayados · 1 nota».
     private func summary(_ found: (books: [ShelfBook], highlights: [Annotation], notes: [Note])) -> String {
-        func count(_ n: Int, _ one: String, _ many: String) -> String? { n == 0 ? nil : "\(n) \(n == 1 ? one : many)" }
+        func count(_ n: Int, _ one: String, _ many: String) -> String? { n == 0 ? nil : n.counted(one, many) }
         return [count(found.books.count, "libro", "libros"),
                 count(found.highlights.count, "subrayado", "subrayados"),
                 count(found.notes.count, "nota", "notas")].compactMap { $0 }.joined(separator: " · ")

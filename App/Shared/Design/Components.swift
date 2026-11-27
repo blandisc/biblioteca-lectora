@@ -679,7 +679,7 @@ struct CoverCell: View {
                     .lineLimit(caption == nil ? 2 : 1)
                     .multilineTextAlignment(.leading)
                 if let count = book.seriesCount, count > 1 {
-                    Text("Serie · \(count) libros")
+                    Text("Serie · \(count.counted("libro", "libros"))")
                         .font(.caption)
                         .foregroundStyle(Theme.secondaryInk)
                 }
@@ -1455,7 +1455,7 @@ struct CabinetArt: View {
 
     /// «1 libro», «1,250 libros», «0 notas».
     private func count(_ value: Int, _ one: String, _ many: String) -> String {
-        "\(value.formatted(.number.locale(.gabinete))) \(value == 1 ? one : many)"
+        value.counted(one, many)
     }
 }
 
@@ -1859,6 +1859,14 @@ extension Double {
     var percentText: String { "\(percentNumber)\u{00A0}%" }
 }
 
+extension Int {
+    /// «1 libro», «1,250 libros», «0 notas»: la cifra concuerda con lo que cuenta, igual en
+    /// toda la app (26 nov 2026: la Mac decía «Renombrar en 1 libros»).
+    func counted(_ one: String, _ many: String) -> String {
+        "\(formatted(.number.locale(.gabinete))) \(self == 1 ? one : many)"
+    }
+}
+
 // MARK: - Sesiones de lectura
 
 /// Cómo se escriben los números de una sesión.
@@ -2031,7 +2039,7 @@ struct WordCounter: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
-        .accessibilityLabel("\(words) palabras en esta sesión. Ver la sesión")
+        .accessibilityLabel("\(words.counted("palabra", "palabras")) en esta sesión. Ver la sesión")
     }
 }
 

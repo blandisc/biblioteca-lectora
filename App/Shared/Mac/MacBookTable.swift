@@ -34,7 +34,7 @@ struct MacBookTable: View {
                 }
             }
             .navigationTitle(section.title)
-            .navigationSubtitle(rows.count == 1 ? "1 libro" : "\(rows.count.formatted(.number.locale(.gabinete))) libros")
+            .navigationSubtitle(rows.count.counted("libro", "libros"))
             .searchable(text: $query, placement: .toolbar, prompt: "Buscar · autor: serie: etiqueta: idioma:")
             .inspector(isPresented: $showsInspector) {
                 MacBookInspector(library: library, ids: selection.intersection(rows.map(\.id)))

@@ -331,6 +331,7 @@ En la Mac, Gabinete es una app de Mac: la mesa de trabajo de tu biblioteca. Vive
 | Ficha | `inspector` a la derecha: con un libro, todos sus datos; con varios, lo que escribas se aplica a todos y lo que dejes en blanco no cambia (`BulkEdit`, con sus pruebas) | `MacBookInspector` |
 | Libro abierto | Cada libro en su propia ventana, con su nombre en la barra: lees con la biblioteca al lado y puedes tener varios abiertos. ⌘W lo cierra | `MacReaderWindow` |
 | Menús | Archivo › Importar libros… (⌘O) y Gabinete › Ajustes… (⌘,), como en toda app de Mac | `LectoraApp` |
+| Ordenar autores, series y etiquetas | Clic derecho en la barra lateral › «Renombrar o juntar…»: escribir un nombre que ya existe es juntar, y los parecidos («Cortázar, Julio», «J. Cortázar») vienen marcados. En series, «Renumerar tomos 1, 2, 3…». ⌘Z deshace. Con autores y etiquetas queda la regla para lo que importes después (CB-2) | `MacCatalogSheet`, `CatalogRename` |
 | Buscar en todo | En la barra lateral (Leer): la misma pantalla Buscar del iPhone, con libros, subrayados y notas (SG-3). La búsqueda de la barra de la tabla sigue siendo solo de libros | `MacLibraryWindow`, `SearchScreen` |
 
 Aquí no aplican las recetas del iPhone (`FilterBar`, `SearchField`, `PrimaryButton`): en la Mac
@@ -402,6 +403,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testExceptionsAreDocumented` | Toda `ds-exception` tiene su motivo en «Excepciones» |
 | `testNoRedPencilLeft` | Decisión del 30 oct 2026: el rojo lápiz se fue; lo tuyo va en verde |
 | `testDatesAndNumbersInSpanish` | Decisión del 18 nov 2026: fechas y porcentajes en español aunque el dispositivo no lo esté (`fecha.es(…)`, `percentText`); desde el 19 nov, todo porcentaje sale de `percentText` («57 %», con espacio que no se parte) |
+| `testCountsAgreeWithTheirNumber` | Las cifras concuerdan con lo que cuentan: «1 libro», nunca «1 libros». Toda cifra con su sustantivo sale de `n.counted("libro", "libros")` (26 nov 2026) |
 | `testNoArithmeticBetweenTokens` | Decisión del 19 nov 2026: ninguna medida se arma sumando tokens; se nombra en `Theme` |
 | `testAccentActionGoesLast` | Decisión del 19 nov 2026: el ícono verde de un encabezado va siempre al final, a la derecha |
 | `testPushedScreensUseTheRecipe` | Decisión del 22 nov 2026: ninguna pantalla arma a mano su fondo, su título en línea ni el color de los botones de la barra (van en tinta, como en iOS 26); usa `.screen()`, `.pushedScreen()` o `.formScreen()` |
