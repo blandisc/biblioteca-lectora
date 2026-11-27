@@ -131,9 +131,10 @@ struct SlitScreen: View {
             } else {
                 // Una sola fila: por frase (HE-B) o palabra (HE-A) a la izquierda, como en toda
                 // la app, y la velocidad a la derecha.
-                HStack(alignment: .center, spacing: Theme.Space.l) {
+                // Con la letra más grande, la velocidad baja bajo frase o palabra.
+                AdaptiveStack(spacing: Theme.Space.l) {
                     FilterBar(items: Array(Slit.Unit.allCases.reversed()), selection: $unit) { $0.name }
-                    pacer
+                    pacer.layoutPriority(1)
                 }
                 Text(hint)
                     .font(.footnote)
@@ -159,7 +160,8 @@ struct SlitScreen: View {
                     .font(.caption)
                     .foregroundStyle(ink.opacity(Theme.Emphasis.folioMuted))
             }
-            .fixedSize()
+            .lineLimit(1)
+            .layoutPriority(1)
             .accessibilityElement(children: .combine)
             .animation(Theme.Motion.select, value: pace)
             Button { pace = min(Slit.wordsPerMinuteRange.upperBound, pace + Slit.wordsPerMinuteStep) } label: {
@@ -167,7 +169,6 @@ struct SlitScreen: View {
             }
             .accessibilityLabel("Más rápido")
         }
-        .fixedSize()
     }
 
     private var hint: String {

@@ -515,6 +515,81 @@ final class DesignRulesTests: XCTestCase {
         check(handMade, "Rótulo con su acción armado en un HStack: usa SectionHeader(title:) { acción }")
     }
 
+    /// Regla 9 (SD-4, 26 nov 2026): con la letra más grande de iOS (AX5) nada se sale de la
+    /// pantalla ni se parte a media palabra, y todo lo que se toca responde en 44 × 44 (SB-4).
+    /// Antes la Mesa decía «GABI / NETE», Ajustes se corría a la izquierda («ARIENCIA»), «Aa» se
+    /// volvía «…», y el engrane, lista o portadas, la ✕ de buscar y el índice A–Z respondían en 13 a 24 pt.
+    func testFitsLargeTextAndFingers() {
+        let components = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }!
+        // Cada pieza de Components.swift con su nombre (de un `struct` al siguiente).
+        var pieces: [(name: String, body: String, start: Int)] = []
+        for (index, line) in components.lines.enumerated() {
+            if let range = line.range(of: #"^(private )?struct \w+"#, options: .regularExpression) {
+                let name = line[range].split(separator: " ").last.map(String.init) ?? ""
+                pieces.append((name, "", index))
+            }
+            if !pieces.isEmpty { pieces[pieces.count - 1].body += line + "\n" }
+        }
+        func owner(_ line: Int) -> String { pieces.last { $0.start <= line }?.name ?? "" }
+
+        // 1. Nada se fija a su ancho: `.fixedSize()` empuja la pantalla de lado con la letra grande.
+        //    Solo los dibujos de Ajustes (las piezas `…Art`), cuya letra tiene tope (`SettingsArt`).
+        var problems = hits(#"\.fixedSize\(\)"#, in: Self.ui).filter { hit in
+            guard hit.hasPrefix(components.path), let number = Int(hit.split(separator: ":")[1]) else { return true }
+            return !owner(number - 1).hasSuffix("Art")
+        }
+        if !(pieces.first { $0.name == "SettingsArt" }?.body.contains("dynamicTypeSize(...") ?? false) {
+            problems.append("SettingsArt: su letra no tiene tope y el dibujo es de medida fija")
+        }
+        check(problems, "Ancho fijo con .fixedSize(): con la letra más grande se sale de la pantalla (usa .layoutPriority(1) o AdaptiveStack)")
+
+        // 2. Los títulos de pantalla crecen con la letra de iOS, y toda letra propia también.
+        let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }!
+        var titles = theme.lines.filter { $0.contains("Font.custom(") && !$0.contains("relativeTo:") }
+        if !(pieces.first { $0.name == "ScreenTitleFont" }?.body.contains("@ScaledMetric") ?? false) { titles.append("ScreenTitleFont sin @ScaledMetric") }
+        if !theme.text.contains("UIFontMetrics(forTextStyle: .largeTitle).scaledFont") { titles.append("UIFont.screenTitle no crece") }
+        titles += hits(#"\.font\(\.screenTitle\("#, in: Self.ui).filter { !$0.contains("screenTitle(size)") }
+        check(titles, "Letra que no crece con el tamaño de texto de iOS (relativeTo:, @ScaledMetric o .screenTitleFont())")
+
+        // 3. Lo que va lado a lado se apila con la letra grande, y los nombres no se cortan en un renglón.
+        let adaptive = ["ScreenHeading", "DeskHeader", "CountLine", "FieldRow", "LinkRow", "SegmentedChoice", "PageSwatchPicker"]
+            .filter { name in !(pieces.first { $0.name == name }?.body.contains("AdaptiveStack") ?? false) }
+            .map { "\($0) no usa AdaptiveStack" }
+        let grows = ["IconTile", "BookRow", "NoteRow", "CoverGrid", "CapsText"]
+            .filter { name in !(pieces.first { $0.name == name }?.body.contains("isAccessibilitySize") ?? false) }
+            .map { "\($0) no cambia con la letra grande" }
+        let reader = Self.ui.first { $0.path.hasSuffix("Reader/ReaderView.swift") }?.text ?? ""
+        let card = ["struct BottomPanel", "struct HighlightCard", "struct SelectionBar"].filter { name in
+            guard let start = reader.range(of: name) else { return true }
+            let rest = reader[start.upperBound...]
+            return !rest[..<(rest.range(of: "\nstruct ")?.lowerBound ?? rest.range(of: "\nprivate struct ")?.lowerBound ?? rest.endIndex)].contains("AdaptiveStack")
+        }.map { "ReaderView \($0) no usa AdaptiveStack" }
+        check(adaptive + grows + card, "Fila que no se acomoda con la letra más grande")
+
+        // 4. Todo lo que se toca responde en 44: las acciones de un encabezado son IconButton o
+        //    AccentIconButton, y toda pieza con un botón usa una medida de 44 (o es grande de por sí).
+        var touch: [String] = []
+        for file in Self.screens {
+            var depth = 0
+            for (index, line) in file.lines.enumerated() {
+                if depth == 0, line.contains("ScreenHeading(title:"), line.hasSuffix("{") { depth = 1; continue }
+                guard depth > 0 else { continue }
+                if line.contains("Button"), !line.contains("IconButton(") { touch.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces))") }
+                depth += line.filter { $0 == "{" }.count - line.filter { $0 == "}" }.count
+            }
+        }
+        let bigByNature: Set = ["PageSwatchPicker", "CoverChoiceCell", "SaveShelfAlert", "RenameShelfAlert", "DeleteShelfConfirmation"]
+        let measure = #"tapTarget|sizeTarget|accentButton|scrubberReach|Size\.control|Size\.row|IconTile|PrimaryButton|TextAction|CloseButton|roundInGlass"#
+        for piece in pieces where !bigByNature.contains(piece.name) {
+            let touches = piece.body.range(of: #"Button\s*[({]|\.onTapGesture|\.gesture\(|Menu \{"#, options: .regularExpression) != nil
+            if touches && piece.body.range(of: measure, options: .regularExpression) == nil { touch.append("\(piece.name): se toca sin medir 44") }
+        }
+        let index = pieces.first { $0.name == "LetterIndex" }?.body ?? ""
+        if !index.contains("tapTarget") { touch.append("LetterIndex: cada letra se toca en menos de 44") }
+        if index.contains("Theme.accent") { touch.append("LetterIndex en verde: es una acción, va en tinta (regla 1)") }
+        check(touch, "Algo se toca en menos de 44 × 44 (SB-4)")
+    }
+
     /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
     /// en toda pieza que los enseña, para que no bailen al cambiar.
     func testFiguresAreExact() {

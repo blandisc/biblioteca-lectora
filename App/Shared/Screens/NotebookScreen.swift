@@ -37,8 +37,7 @@ struct NotebookScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: "Cuaderno") {
-                        Button { showsAccount = true } label: { Image(systemName: "gearshape") }
-                            .accessibilityLabel("Ajustes: conexiones, carpeta y apariencia")
+                        IconButton(systemImage: "gearshape", label: "Ajustes: conexiones, carpeta y apariencia") { showsAccount = true }
                         // El acento verde de la pantalla, siempre al final: escribir una nota.
                         AccentIconButton(systemImage: "plus", label: "Nota nueva") { path.append(NoteRef.new()) }
                     }

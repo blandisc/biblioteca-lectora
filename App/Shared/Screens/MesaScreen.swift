@@ -56,10 +56,11 @@ struct MesaScreen: View {
 
             ThinProgress(value: book.progress)
                 .padding(.top, Theme.Space.xl)
-            HStack {
+            // Con la letra más grande, el avance y la nota uno bajo otro.
+            AdaptiveStack(spacing: Theme.Space.xs) {
                 Text(progressLine(book))
-                Spacer()
-                Text(book.note ?? "")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let note = book.note { Text(note) }
             }
             .font(.footnote)
             .foregroundStyle(Theme.secondaryInk)

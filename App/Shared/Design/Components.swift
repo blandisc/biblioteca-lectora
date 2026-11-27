@@ -94,18 +94,68 @@ struct ScreenHeading<Trailing: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            HStack(alignment: .firstTextBaseline) {
+            // Con la letra más grande el título se queda con todo el ancho y las acciones bajan
+            // a su renglón: antes se partía a media palabra («Bibliotec / a»).
+            AdaptiveStack(rowAlignment: .center) {
                 Text(title)
                     .screenTitleFont()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityAddTraits(.isHeader)
-                Spacer()
-                HStack(spacing: Theme.Space.l) { trailing }
+                // Cada acción ya mide 44 (`IconButton`, `AccentIconButton`): van juntas, sin aire de más.
+                HStack(spacing: 0) { trailing }
                     .font(.icon)
                     .foregroundStyle(Theme.ink)
                     .buttonStyle(.plain)
             }
             Hairline()
         }
+    }
+}
+
+/// Lo que va lado a lado y se apila, uno bajo otro, con la letra de accesibilidad de iOS
+/// (AX1 a AX5): títulos con sus acciones, un conteo y su orden, un nombre y su campo, las
+/// opciones de una fila. Así nada se sale de la pantalla ni se corta a media palabra (SD-4).
+/// Con el tamaño de siempre (y en la Mac) es un `HStack` igual al de antes.
+struct AdaptiveStack<Content: View>: View {
+    var rowAlignment: VerticalAlignment = .center
+    var columnAlignment: HorizontalAlignment = .leading
+    var spacing: CGFloat? = nil
+    @ViewBuilder var content: Content
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: columnAlignment, spacing: spacing))
+            : AnyLayout(HStackLayout(alignment: rowAlignment, spacing: spacing))
+        layout { content }
+    }
+}
+
+/// Ícono de acción en tinta que se toca en 44 aunque se dibuje chico (SB-4): las acciones de
+/// `ScreenHeading` (el engrane del Cuaderno, lista o portadas en la Biblioteca). Antes solo
+/// respondía el dibujo, de unos 20 pt, junto a un «+» que sí medía 44.
+struct IconButton: View {
+    let systemImage: String
+    let label: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.icon)
+                .foregroundStyle(Theme.ink)
+                .dynamicTypeSize(...Theme.Letter.fixedShapeLargest)
+                .sizeTarget()
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityLabel(label)
+    }
+}
+
+extension View {
+    /// Lo que se ve chico pero se toca en 44 × 44 (SB-4): las «A» del tamaño de letra, la ✕ de buscar.
+    func sizeTarget() -> some View {
+        frame(minWidth: Theme.Size.tapTarget, minHeight: Theme.Size.tapTarget).contentShape(Rectangle())
     }
 }
 
@@ -126,6 +176,9 @@ struct BrandMark: View {
             .font(.brandMark)
             .tracking(Theme.Tracking.brandMark)
             .foregroundStyle(Theme.ink)
+            // La marca es una palabra: si no cabe se achica un poco, nunca se parte.
+            .lineLimit(1)
+            .minimumScaleFactor(Theme.Emphasis.labelMinScale)
             .frame(maxWidth: .infinity, alignment: alignment)
             .accessibilityAddTraits(.isHeader)
     }
@@ -146,10 +199,11 @@ struct DeskHeader: View {
 
     var body: some View {
         VStack(spacing: Theme.Space.s) {
-            HStack(alignment: .firstTextBaseline) {
+            // Con la letra más grande, la fecha baja bajo el nombre (antes «GABI / NETE»).
+            AdaptiveStack(rowAlignment: .firstTextBaseline, spacing: Theme.Space.s) {
                 BrandMark(alignment: .leading)
                 CapsText(text: dateLine)
-                    .fixedSize()
+                    .layoutPriority(1)
             }
             Hairline()
                 .overlay(alignment: .trailing) {
@@ -174,6 +228,8 @@ struct SectionLabel: View {
             .font(.sectionLabel)
             .tracking(Theme.Tracking.sectionLabel)
             .foregroundStyle(tone)
+            // Un título largo (o la letra más grande) no se vuelve una columna de versalitas.
+            .lineLimit(Theme.Size.labelLines)
             .accessibilityAddTraits(.isHeader)
     }
 }
@@ -186,6 +242,7 @@ struct CapsText: View {
     var tone: Color = Theme.secondaryInk
     /// Un conteo que puede crecer («Buscando datos en internet…») baja a otro renglón.
     var lines = 1
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Text(text.uppercased())
@@ -193,7 +250,8 @@ struct CapsText: View {
             .tracking(Theme.Tracking.caps)
             .monospacedDigit()
             .foregroundStyle(tone)
-            .lineLimit(lines)
+            // Con la letra más grande baja de renglón en vez de cortarse.
+            .lineLimit(typeSize.isAccessibilitySize ? nil : lines)
     }
 }
 
@@ -208,7 +266,7 @@ struct SectionHeader<Trailing: View>: View {
     var body: some View {
         HStack(spacing: Theme.Space.l) {
             CapsText(text: title)
-                .fixedSize()
+                .layoutPriority(1)
                 .accessibilityAddTraits(.isHeader)
             Hairline()
                 .accessibilityHidden(true)
@@ -233,17 +291,23 @@ struct IconTile<Icon: View>: View {
     /// La acción principal: en tinta, letras claras («Subrayar»).
     var prominent = false
     @ViewBuilder var icon: Icon
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(spacing: Theme.Space.s) {
+        // Con la letra más grande, el ícono va al lado de su nombre y el nombre crece
+        // (antes se achicaba y se cortaba: «Su…», «Co…»).
+        let large = typeSize.isAccessibilitySize
+        let layout = large ? AnyLayout(HStackLayout(spacing: Theme.Space.l)) : AnyLayout(VStackLayout(spacing: Theme.Space.s))
+        layout {
             icon.frame(height: Theme.Space.xl)
             Text(title)
                 .font(.caption.weight(.medium))
-                .lineLimit(1)
-                .minimumScaleFactor(Theme.Emphasis.labelMinScale)
+                .lineLimit(large ? Theme.Size.labelLines : 1)
+                .minimumScaleFactor(large ? Theme.Emphasis.rest : Theme.Emphasis.labelMinScale)
         }
         .foregroundStyle(prominent ? Theme.onInk : Theme.ink)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: large ? .leading : .center)
+        .padding(.horizontal, large ? Theme.Space.l : 0)
         .padding(.vertical, Theme.Space.l)
         .background(prominent ? Theme.ink : Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
         .overlay {
@@ -428,7 +492,8 @@ struct SegmentedChoice<Option: Hashable & Identifiable, Label: View>: View {
     @Namespace private var mark
 
     var body: some View {
-        HStack(spacing: 0) {
+        // Con la letra más grande, una opción bajo otra («Pági / nas» ya no se parte).
+        AdaptiveStack(spacing: 0) {
             ForEach(options) { option in
                 Button { selection = option } label: {
                     label(option)
@@ -505,6 +570,8 @@ struct AccentIconButton: View {
             Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Theme.accent)
+                // Mide 44: el dibujo crece hasta donde cabe en él.
+                .dynamicTypeSize(...Theme.Letter.fixedShapeLargest)
                 .frame(width: Theme.Size.accentButton, height: Theme.Size.accentButton)
                 .contentShape(Rectangle())
         }
@@ -559,9 +626,10 @@ struct CountLine<Trailing: View>: View {
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
-        HStack {
+        // Con la letra más grande, el orden baja bajo el conteo («TÍT…» ya no se corta).
+        AdaptiveStack(spacing: Theme.Space.l) {
             CapsText(text: text, lines: Theme.Size.countLines)
-            Spacer(minLength: Theme.Space.l)
+                .frame(maxWidth: .infinity, alignment: .leading)
             trailing
         }
         .frame(minHeight: Theme.Size.tapTarget)
@@ -688,6 +756,7 @@ struct CoverCell: View {
     let book: ShelfBook
     /// Texto bajo la portada; por omisión, el título.
     var caption: String? = nil
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
@@ -700,7 +769,7 @@ struct CoverCell: View {
                 Text(caption ?? (book.seriesCount != nil ? (book.series ?? book.title) : book.title))
                     .font(.caption)
                     .foregroundStyle(caption == nil ? Theme.ink : Theme.secondaryInk)
-                    .lineLimit(caption == nil ? 2 : 1)
+                    .lineLimit(caption == nil ? (typeSize.isAccessibilitySize ? Theme.Size.coverCaptionLinesLarge : 2) : 1)
                     .multilineTextAlignment(.leading)
                 if let count = book.seriesCount, count > 1 {
                     Text("Serie · \(count.counted("libro", "libros"))")
@@ -715,8 +784,13 @@ struct CoverCell: View {
 /// Cuadrícula de portadas con el espaciado del sistema.
 struct CoverGrid<Content: View>: View {
     @ViewBuilder var content: Content
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: Theme.Space.l, alignment: .top),
-                                count: Theme.Size.gridColumns)
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// Con la letra más grande, dos columnas: en tres, los títulos se partían («Fic-cion…»).
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: Theme.Space.l, alignment: .top),
+              count: typeSize.isAccessibilitySize ? Theme.Size.gridColumnsLarge : Theme.Size.gridColumns)
+    }
 
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: Theme.Space.xl) { content }
@@ -729,8 +803,11 @@ struct BookRow<Trailing: View>: View {
     let book: ShelfBook
     var detail: String? = nil
     @ViewBuilder var trailing: Trailing
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        // Con la letra más grande, título y detalle en dos renglones («Don Quijo…» se cortaba).
+        let lines = typeSize.isAccessibilitySize ? Theme.Size.labelLines : 1
         HStack(spacing: Theme.Space.rowGap) {
             CoverView(title: book.title, author: book.author, style: book.cover, image: book.coverImage)
                 .frame(width: Theme.Size.coverRow)
@@ -738,11 +815,11 @@ struct BookRow<Trailing: View>: View {
                 Text(book.title)
                     .font(.rowTitle)
                     .foregroundStyle(Theme.ink)
-                    .lineLimit(1)
+                    .lineLimit(lines)
                 Text(detail ?? book.caption)
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
-                    .lineLimit(1)
+                    .lineLimit(lines)
             }
             Spacer(minLength: 0)
             trailing
@@ -895,22 +972,37 @@ struct EmptyState: View {
     }
 }
 
-/// Índice A–Z al costado de una lista larga.
+/// Índice A–Z al costado de una lista larga, como el de Contactos: la columna entera se
+/// toca y se recorre con el dedo, en 44 de ancho (cada letra sola medía 18 × 13). En tinta:
+/// es una acción, no el verde de «dónde estás» (regla 1).
 struct LetterIndex: View {
     let onSelect: (String) -> Void
     private let letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".map(String.init)
+    @State private var height: CGFloat = 0
+    @State private var current: String?
 
     var body: some View {
         VStack(spacing: Theme.Space.hair) {
             ForEach(letters, id: \.self) { letter in
-                Button(letter) { onSelect(letter) }
+                Text(letter)
                     .font(.caption2.weight(.semibold)) // ds-exception: índice A–Z
-                    .foregroundStyle(Theme.accent)
-                    .frame(width: Theme.Size.letterIndex)
+                    .foregroundStyle(Theme.ink)
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction { onSelect(letter) }
             }
         }
-        .buttonStyle(.plain)
-        .padding(.trailing, Theme.Space.xs)
+        .frame(width: Theme.Size.tapTarget)
+        .contentShape(Rectangle())
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+        .gesture(DragGesture(minimumDistance: 0)
+            .onChanged { touch in
+                guard height > 0 else { return }
+                let index = Int(touch.location.y / height * CGFloat(letters.count))
+                let letter = letters[min(max(index, 0), letters.count - 1)]
+                if letter != current { current = letter; onSelect(letter) }
+            }
+            .onEnded { _ in current = nil })
+        .sensoryFeedback(.selection, trigger: current) { _, new in new != nil }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Índice alfabético")
     }
@@ -974,16 +1066,25 @@ struct LinkRow: View {
     var marked = false
     var status: Bool? = nil
     var chevron = true
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         HStack(spacing: Theme.Space.s) {
             if marked {
                 StatusDot(on: true)
             }
-            Text(title).foregroundStyle(Theme.ink)
-            Spacer(minLength: Theme.Space.l)
-            if let status { StatusDot(on: status) }
-            if let value { Text(value).foregroundStyle(Theme.secondaryInk).monospacedDigit().lineLimit(1) }
+            // Con la letra más grande, el valor baja bajo el nombre (antes «Fuent / e  Open…»).
+            AdaptiveStack(spacing: Theme.Space.s) {
+                Text(title).foregroundStyle(Theme.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(spacing: Theme.Space.s) {
+                    if let status { StatusDot(on: status) }
+                    if let value {
+                        Text(value).foregroundStyle(Theme.secondaryInk).monospacedDigit()
+                            .lineLimit(typeSize.isAccessibilitySize ? Theme.Size.labelLines : 1)
+                    }
+                }
+            }
             if chevron {
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
@@ -1016,12 +1117,14 @@ struct FieldRow: View {
     let title: String
     let prompt: String
     @Binding var text: String
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(spacing: Theme.Space.l) {
-            Text(title).foregroundStyle(Theme.ink).fixedSize()
+        // Con la letra más grande, el nombre arriba y el campo abajo (antes empujaba la hoja de lado).
+        AdaptiveStack(spacing: Theme.Space.l) {
+            Text(title).foregroundStyle(Theme.ink).layoutPriority(1)
             TextField(prompt, text: $text)
-                .multilineTextAlignment(.trailing)
+                .multilineTextAlignment(typeSize.isAccessibilitySize ? .leading : .trailing)
                 .foregroundStyle(Theme.secondaryInk)
                 .autocorrectionDisabled()
                 #if os(iOS)
@@ -1088,7 +1191,8 @@ struct PageSwatchPicker<Option: Hashable & Identifiable>: View {
     let tone: (Option) -> PageTone
 
     var body: some View {
-        HStack(spacing: Theme.Space.l) {
+        // Con la letra más grande, una hojita bajo otra: lado a lado se salían de la tarjeta.
+        AdaptiveStack(rowAlignment: .top, spacing: Theme.Space.l) {
             ForEach(options) { option in
                 let selected = option == selection
                 Button { withAnimation(Theme.Motion.select) { selection = option } } label: {
@@ -1212,6 +1316,9 @@ struct SettingsArt<Content: View>: View {
 
     var body: some View {
         content
+            // Es un dibujo de medida fija: su letra crece hasta donde cabe en él (lo que dice
+            // también está en las filas de abajo y en lo que lee VoiceOver).
+            .dynamicTypeSize(...Theme.Letter.drawingLargest)
             .frame(maxWidth: .infinity)
             .frame(height: Theme.Size.settingsArt)
             .background(Theme.paper)
@@ -1783,6 +1890,7 @@ struct NoteRow: View {
     var match: String? = nil
     /// ¿Está ese libro en tu biblioteca? Los que no, se ven en gris (no son enlace).
     var isInLibrary: (String) -> Bool = { _ in true }
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var preview: String {
         guard let match, !Found.terms(match).contains(where: { note.title.localizedStandardContains($0) }) else { return note.preview }
@@ -1791,10 +1899,12 @@ struct NoteRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+            // Con la letra más grande, el título y la fecha con sus libros en dos renglones.
+            let lines = typeSize.isAccessibilitySize ? Theme.Size.labelLines : 1
             Text(Found.marked(note.title, match))
                 .font(.rowTitle)
                 .foregroundStyle(Theme.ink)
-                .lineLimit(1)
+                .lineLimit(lines)
             if !preview.isEmpty {
                 Text(Found.marked(preview, match))
                     .font(.subheadline)
@@ -1805,7 +1915,7 @@ struct NoteRow: View {
                 .font(.caption.weight(.medium))
                 .tracking(Theme.Tracking.caps)
                 .monospacedDigit()
-                .lineLimit(1)
+                .lineLimit(lines)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, Theme.Space.l)
@@ -2628,7 +2738,8 @@ struct PlayRingButton: View {
                     .font(.subheadline.weight(.semibold))
             }
             .frame(width: Theme.Size.playRing, height: Theme.Size.playRing)
-            .contentShape(Circle())
+            // El anillo mide 38; se toca en 44.
+            .sizeTarget()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(playing ? "Pausa" : "Reproducir")
@@ -3009,8 +3120,10 @@ struct SearchField: View {
                 .autocorrectionDisabled()
                 .onSubmit(onSubmit)
             if !text.isEmpty {
-                Button { text = ""; onClear() } label: { Image(systemName: "xmark.circle.fill") }
+                Button { text = ""; onClear() } label: { Image(systemName: "xmark.circle.fill").sizeTarget() }
                     .buttonStyle(.plain)
+                    // Se toca en 44; el dibujo queda en su lugar, junto a la orilla del campo.
+                    .padding(.trailing, -Theme.Size.tapBleed)
                     .foregroundStyle(Theme.tertiaryInk)
                     .accessibilityLabel("Borrar la búsqueda")
             }
@@ -3095,7 +3208,7 @@ struct HereMark: View {
             Text(text)
                 .font(.caption.weight(.medium))
                 .foregroundStyle(Theme.accent)
-                .fixedSize()
+                .layoutPriority(1)
             Capsule().fill(Theme.accent).frame(height: Theme.Size.quoteRule)
         }
         .padding(.vertical, Theme.Space.s)

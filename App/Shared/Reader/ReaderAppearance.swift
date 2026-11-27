@@ -209,6 +209,7 @@ struct ReaderAppearanceSheet: View {
     @AppStorage(ReaderKeys.turn) private var turnStyle: ReaderTurnStyle = .matte
     /// El modo de la app: con «Automático», el tema sigue al claro u oscuro de iOS.
     @Environment(\.colorScheme) private var appScheme
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// El alto de la hoja «Aa»: el de su contenido. Para cambiarlo animado se pasa
     /// de un alto al otro (como al arrastrarla); asignado directo, iOS lo cambia de golpe.
     @State private var detent = PresentationDetent.height(Theme.Size.appearanceSheet)
@@ -225,10 +226,7 @@ struct ReaderAppearanceSheet: View {
     }
 
     var body: some View {
-        content
-            // Nunca se aprieta: mientras la hoja cambia de alto, los textos que se
-            // encogen para caber (los de «Fondo») se achicaban y volvían a crecer.
-            .fixedSize(horizontal: false, vertical: true)
+        sized
             // Toda la hoja toma el tema que eliges: papel, tinta y mosaicos.
             .environment(\.colorScheme, palette.scheme ?? appScheme)
             .presentationBackground(palette.background)
@@ -239,13 +237,27 @@ struct ReaderAppearanceSheet: View {
             .sensoryFeedback(.selection, trigger: font)
             .sensoryFeedback(.selection, trigger: turnStyle)
             .onAppear { opened = true }
-            // La hoja mide lo que mide su contenido: sin espacio muerto abajo.
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { resize(to: $0) }
-            // Pegado arriba, aunque la hoja aún no tenga su alto nuevo: lo de arriba nunca
-            // baja; al crecer, la hoja sube y lo nuevo aparece desde abajo.
-            .frame(minHeight: 0, maxHeight: .infinity, alignment: .top)
-            .presentationDetents(detents, selection: $detent)
             .presentationDragIndicator(.visible)
+    }
+
+    @ViewBuilder
+    private var sized: some View {
+        if typeSize.isAccessibilitySize {
+            // Con la letra más grande no cabe en una hoja a su medida: va a todo lo alto y se desplaza.
+            ScrollView { content }
+                .presentationDetents([.large])
+        } else {
+            content
+                // Nunca se aprieta: mientras la hoja cambia de alto, los textos que se
+                // encogen para caber (los de «Fondo») se achicaban y volvían a crecer.
+                .fixedSize(horizontal: false, vertical: true)
+                // La hoja mide lo que mide su contenido: sin espacio muerto abajo.
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { resize(to: $0) }
+                // Pegado arriba, aunque la hoja aún no tenga su alto nuevo: lo de arriba nunca
+                // baja; al crecer, la hoja sube y lo nuevo aparece desde abajo.
+                .frame(minHeight: 0, maxHeight: .infinity, alignment: .top)
+                .presentationDetents(detents, selection: $detent)
+        }
     }
 
     private func resize(to height: CGFloat) {
@@ -296,7 +308,10 @@ struct ReaderAppearanceSheet: View {
     }
 
 
-    private let fontColumns = [GridItem(.flexible(), spacing: Theme.Space.s), GridItem(.flexible(), spacing: Theme.Space.s)]
+    /// Dos columnas de letras; con la letra más grande, una sola («Ne…», «Sa…» se cortaban).
+    private var fontColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: Theme.Space.s), count: typeSize.isAccessibilitySize ? 1 : Theme.Size.fontColumns)
+    }
 
     private var content: some View {
         // Más aire entre secciones (Letra, Página, Fondo) que dentro de cada una.
@@ -310,10 +325,11 @@ struct ReaderAppearanceSheet: View {
                             HStack(spacing: Theme.Space.s) {
                                 Text("Aa")
                                     .font(item.preview(size: Theme.Space.xl))
-                                    .fixedSize()
+                                    .lineLimit(1)
+                                    .layoutPriority(1)
                                 VStack(alignment: .leading, spacing: 0) {
-                                    Text(item.name).font(.subheadline.weight(.medium)).lineLimit(1)
-                                    Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk).lineLimit(1)
+                                    Text(item.name).font(.subheadline.weight(.medium)).lineLimit(labelLines)
+                                    Text(item.detail).font(.caption).foregroundStyle(Theme.secondaryInk).lineLimit(labelLines)
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -355,10 +371,11 @@ struct ReaderAppearanceSheet: View {
 
             VStack(alignment: .leading, spacing: Theme.Space.s) {
             SectionHeader("Fondo")
-            HStack {
+            // Con la letra más grande, un fondo bajo otro, con su nombre al lado.
+            AdaptiveStack {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
-                        VStack(spacing: Theme.Space.s) {
+                        swatchLayout {
                             swatch(for: item)
                                 .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
                                 .overlay {
@@ -368,10 +385,10 @@ struct ReaderAppearanceSheet: View {
                             Text(item.title)
                                 .font(.caption)
                                 .foregroundStyle(item == theme ? Theme.ink : Theme.secondaryInk)
-                                .lineLimit(1)
+                                .lineLimit(labelLines)
                                 .minimumScaleFactor(Theme.Emphasis.labelMinScale)
                         }
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, alignment: typeSize.isAccessibilitySize ? .leading : .center)
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(item == theme ? .isSelected : [])
@@ -395,6 +412,12 @@ struct ReaderAppearanceSheet: View {
         .foregroundStyle(Theme.ink)
         // Abajo ya hay la orilla del iPhone: sin margen extra, sin espacio muerto.
         .padding([.horizontal, .top], Theme.Space.xl)
+    }
+
+    private var labelLines: Int { typeSize.isAccessibilitySize ? Theme.Size.labelLines : 1 }
+
+    private var swatchLayout: AnyLayout {
+        typeSize.isAccessibilitySize ? AnyLayout(HStackLayout(spacing: Theme.Space.l)) : AnyLayout(VStackLayout(spacing: Theme.Space.s))
     }
 
     private var sizeRow: some View {
@@ -472,7 +495,8 @@ private struct TurnStylePicker: View {
     }
 
     var body: some View {
-        HStack(spacing: Theme.Space.s) {
+        // Con la letra más grande, un estilo bajo otro, cada uno con su nombre entero.
+        AdaptiveStack(spacing: Theme.Space.s) {
             ForEach(Array(ReaderTurnStyle.allCases.enumerated()), id: \.element) { index, item in
                 Button { selection = item } label: {
                     IconTile(title: item.name, selected: item == selection) {
@@ -500,9 +524,3 @@ private struct TurnStylePicker: View {
     }
 }
 
-private extension View {
-    /// Las dos «A» del tamaño se ven chicas pero se tocan en 44 pt.
-    func sizeTarget() -> some View {
-        frame(minWidth: Theme.Size.tapTarget, minHeight: Theme.Size.tapTarget).contentShape(Rectangle())
-    }
-}

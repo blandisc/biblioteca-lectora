@@ -9,7 +9,7 @@ Todo valor visual es un **token**; toda pieza repetida es un **componente**; tod
 sigue una **receta**; toda regla tiene una **prueba** que falla si alguien la rompe. Lo nuevo
 se arma con lo que ya hay: si falta algo, se agrega aquí primero.
 
-## Las ocho reglas de la libreta
+## Las nueve reglas de la libreta
 
 Cada regla dice lo que nota quien usa la app; la medida exacta vive en `Theme` con su nombre.
 
@@ -23,6 +23,7 @@ Cada regla dice lo que nota quien usa la app; la medida exacta vive en `Theme` c
 | 6 | **Botón principal oscuro en los dos modos** | «Seguir leyendo» y «Nota nueva» en verde fichero con letra clara, también en oscuro, con un filo finísimo | `testMainActionIsDarkInBothModes`, `testOneMainActionPerScreen` |
 | 7 | **Te hablo de tú y digo qué pasó** | Los avisos dicen qué pasó en primera persona («No pude abrir el libro», nunca «No se pudo» ni «Aviso»), y su botón a dónde vuelves («Volver a la ficha»). Los botones dicen qué hacen: nunca «Cancelar», «OK» ni «Listo» a secas; salir sin cambiar es «Dejar como está». Mientras algo tarda, digo qué estoy haciendo | `testNoticesSayWhatHappened`, `testButtonsSayWhatTheyDo`, `testWaitingSaysWhat` |
 | 8 | **Lo mismo se llama igual en el iPhone y la Mac** | Un libro está «Leyendo», «Por leer» o «Leído» por la misma regla en las dos; añadir libros, buscar datos, lo que haces con el texto elegido y los datos de un libro tienen un solo nombre y un solo ícono; los autores se separan con « & » | `testSameWordsOnBothPlatforms`, `ReadingStateTests` |
+| 9 | **Cabe con la letra más grande y se toca con el dedo** | Con la letra más grande de iOS (AX5) nada se sale de la pantalla ni se parte a media palabra: los títulos crecen, lo que va lado a lado se pone uno bajo otro y los nombres usan dos renglones en vez de cortarse. Todo lo que se toca responde en 44 × 44 aunque se dibuje chico (SB-4) | `testFitsLargeTextAndFingers` |
 
 ### Las reglas de la casa (interoperabilidad)
 
@@ -34,7 +35,7 @@ Gabinete cumple el sistema base común a todas las apps de Fernando
 | SB-1 | Botones y avisos que dicen qué hacen («Crear nota», no «Crear» u «OK») | `tools/sistema-base/revisar.py` |
 | SB-2 | Solo la escala 4 · 8 · 16 · 24 · 32 · 48 · 64. Desde el 26 nov 2026 Gabinete no arrastra nada heredado: se fueron el 12 y el 6 | `revisar.py`, `testSpacingKeepsTheHouseScale` |
 | SB-3 | Ninguna letra de menos de 12 | `revisar.py`, `testNoTextUnderTwelve` |
-| SB-4 | Todo lo que se toca responde en 44 × 44 | `revisar.py`, `Size.tapTarget` en cada pieza que se toca |
+| SB-4 | Todo lo que se toca responde en 44 × 44 | `revisar.py`, `testFitsLargeTextAndFingers` (regla 9) |
 | D2-B | La negrita solo en el título más grande y en cifras; lo demás en seminegrita | `testBoldOnlyForTitlesAndFigures` |
 
 ## Regla
@@ -119,8 +120,8 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 ### Tamaño (`Theme.Size`)
 
-`tapTarget 44 · tapBleed 12 (lo que el toque de un ícono sobresale de su dibujo) · row 52 (fila de libreta) · tabMark 16 × 2 (el trazo del filtro elegido) · pageSwatch 78, swatchLine 3, swatchLines (las hojitas de Apariencia) · statusDot 6, statusDotLine 1 · equalizerHeight 12 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
-coverMini 26 · letterIndex 18 · gridColumns 3 · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
+`tapTarget 44 (`.sizeTarget()` lo da a lo que se ve chico) · labelLines 2 (renglones de una etiqueta con la letra más grande) · tapBleed 12 (lo que el toque de un ícono sobresale de su dibujo) · row 52 (fila de libreta) · tabMark 16 × 2 (el trazo del filtro elegido) · pageSwatch 78, swatchLine 3, swatchLines (las hojitas de Apariencia) · statusDot 6, statusDotLine 1 · equalizerHeight 12 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
+coverMini 26 · gridColumns 3 (con la letra más grande, `gridColumnsLarge` 2 y el título en `coverCaptionLinesLarge` 3 renglones) · fontColumns 2 (las letras de «Aa») · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageBarThin 4 · footerPreview 64 · footerPicker 320 (el globo del pie) · deskMark 16 × 4 (el trazo verde del encabezado de la Mesa) · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
@@ -156,6 +157,8 @@ El modo oscuro se queda neutro; solo cambia el verde.
 | Token | Fuente | Uso |
 |---|---|---|
 | `.screenTitle` | New York `Letter.screenTitle` (30) medium, crece con el tamaño de texto (`.screenTitleFont()`, y `UIFont.screenTitle` en los títulos grandes del sistema) | Título de pantalla |
+| `Letter.fixedShapeLargest` | Hasta `.xxxLarge` | Tope de la letra dentro de una forma de 44: `roundInGlass`, `glassCircle`, `IconButton`, `AccentIconButton` |
+| `Letter.drawingLargest` | `.large` | Los dibujos de Ajustes (`SettingsArt`) no crecen: lo que dicen está en sus filas y en VoiceOver |
 | `.bookTitle` | New York 28 medium | Libro protagonista (Mesa, ficha), títulos de estado vacío |
 | `.rowTitle` | New York 17 | Títulos en filas, citas |
 | `.quote` | New York 17 itálica | «Donde lo dejaste» |
@@ -186,7 +189,9 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `.pushedScreen(título)` | Receta de pantalla empujada u hoja: papel, título en línea, controles del contenido en `accent`; los botones de la barra de vidrio, en tinta como en iOS 26 | Ficha, serie, nota, Diario, Por revisar, Lector › herramientas, Sesión, Llevar a una nota, Traer de Calibre, Bienvenida |
 | `.inlineTitle(título)` | Título pequeño en la barra (lo usan `.pushedScreen` y los formularios empujados) | Conexión, Editar datos, Buscar con otros datos |
 | `.screenContent()` | Margen `gutter`, aire `screenTop`/`screenBottom`, tinta | Todo contenido con scroll |
-| `ScreenHeading` | Título serif + acciones a la derecha y una línea finísima debajo (SD-3) | Biblioteca, Cuaderno, Buscar, Ajustes |
+| `ScreenHeading` | Título serif + acciones a la derecha y una línea finísima debajo (SD-3); sus acciones son `IconButton` o `AccentIconButton`, y con la letra más grande bajan bajo el título (SD-4) | Biblioteca, Cuaderno, Buscar, Ajustes |
+| `AdaptiveStack` | Lo que va lado a lado y, con la letra de accesibilidad de iOS (AX1–AX5), uno bajo otro; con el tamaño de siempre y en la Mac es el `HStack` de antes (SD-4) | Encabezados, conteo y orden, nombre y campo, opciones en fila, tarjeta y barras del lector |
+| `IconButton` | Ícono de acción en tinta que se toca en 44 aunque se dibuje chico (`.sizeTarget()`) | Engrane del Cuaderno, lista o portadas de la Biblioteca |
 | `PrimaryButton` | Acción principal en `action`, oscura en los dos modos, con filo finísimo (una por pantalla) | «Seguir leyendo», «Leer», estado vacío |
 | `TextAction` | Acción de texto en tinta, que se toca en 44 (las acciones no van en verde) | «Todo bien», «Ver los N subrayados», «Borrar recientes», «Crear nota» |
 | `CapsText` | Versalitas de interfaz: mayúsculas chicas, espaciadas (`Tracking.caps`) y con cifras exactas. Toda versalita sale de aquí | Fecha de la Mesa, conteos, rótulos |
@@ -237,7 +242,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `.errorAlert`, `.noticeAlert` | Aviso de un solo botón: el título dice qué pasó en primera persona («No pude abrir el libro»), el botón a dónde vuelves («Volver a la ficha») | Todo aviso de error o de algo que terminó |
 | `LinkRow` | Fila de libreta (`Size.row`): título, valor, flecha y línea finísima debajo; con `marked` o `status`, su punto | «Por revisar», Ajustes |
 | `StatTrio` | Tres cifras grandes con su rótulo en versalitas, centradas | Diario |
-| `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
+| `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z (en tinta; la columna entera se toca y se recorre con el dedo en 44 de ancho, como en Contactos) | — |
 | `MiniPlayer` | Reproductor sobre el dock | Raíz |
 | `BrandMark` | «GABINETE» en Cinzel, centrado (o a la izquierda) | Bienvenida, dentro de `DeskHeader` |
 | `DeskHeader` | Encabezado de la Mesa: «GABINETE» a la izquierda, la fecha de hoy en versalitas a la derecha y una línea finísima que acaba en un trazo verde (`Size.deskMark`); MT-F, 25 nov 2026 | Arriba de la Mesa |
@@ -444,6 +449,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testOnlyPiecesPaintTheAccent` | Regla 1 (26 nov 2026): ninguna pantalla usa el verde directo; las acciones van en tinta (`TextAction`) |
 | `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `SectionHeader` o `CountLine`, nunca a mano |
 | `testSectionsUseTheirHeader` | Regla 3 (SD-2, 26 nov 2026): toda sección se anuncia con `SectionHeader` y su acción va dentro, no en un `HStack` a mano; `SectionLabel` solo para el «Nº» y el capítulo |
+| `testFitsLargeTextAndFingers` | Regla 9 y SB-4 (SD-4, 26 nov 2026): nada usa `.fixedSize()` (solo los dibujos `…Art`, con tope de letra); los títulos y las letras propias crecen (`@ScaledMetric`, `relativeTo:`); encabezados, conteos, campos, opciones en fila y la tarjeta y barras del lector usan `AdaptiveStack`; las acciones de un encabezado son `IconButton` o `AccentIconButton`, toda pieza con un botón mide 44, y el índice A–Z se toca en 44 y va en tinta |
 | `testFiguresAreExact` | Regla 4: toda pieza que enseña cifras las pone del mismo ancho |
 | `testOneGreenForEverything` | Un solo verde: ningún color con tono verde se escribe fuera de `Theme.Green` (ni en `Theme.swift`, ni en pantallas, piezas o el libro), `action` y el color del sistema salen de él, y `reader.js` no escribe ningún color |
 | `testSpacingKeepsTheHouseScale` | Regla 5 y SB-2 de la casa: sin 12 ni 6, y nada heredado en `sistema-base.json` |

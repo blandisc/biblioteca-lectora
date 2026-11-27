@@ -159,6 +159,9 @@ enum Theme {
     enum Size {
         /// Área mínima de toque (HIG y SB-4).
         static let tapTarget: CGFloat = 44
+        /// Renglones de una etiqueta que con la letra más grande ya no cabe en uno (un mosaico,
+        /// una fila de libro, el libro sobre la tarjeta del lector).
+        static let labelLines = 2
         /// Lo que el área de toque de un ícono (44) sobresale de su dibujo: se compensa para
         /// que el botón no empuje lo de al lado.
         static let tapBleed: CGFloat = 12
@@ -204,10 +207,13 @@ enum Theme {
         static let coverEditor: CGFloat = 84
         /// Alto mínimo de un campo de texto largo (sinopsis).
         static let textEditor: CGFloat = 120
-        /// Ancho del índice A–Z.
-        static let letterIndex: CGFloat = 18
         /// Columnas de la cuadrícula de portadas.
         static let gridColumns = 3
+        /// Con la letra más grande: dos columnas y el título bajo la portada en hasta tres renglones.
+        static let gridColumnsLarge = 2
+        static let coverCaptionLinesLarge = 3
+        /// Columnas de las letras en «Aa» (una sola con la letra más grande).
+        static let fontColumns = 2
         static let hairline: CGFloat = 0.5
         static let progress: CGFloat = 2
         static let quoteRule: CGFloat = 2
@@ -578,6 +584,12 @@ extension Theme {
     enum Letter {
         /// El título de pantalla con el tamaño de texto de siempre; crece con él (`.largeTitle`).
         static let screenTitle: CGFloat = 30
+        /// Hasta dónde crece la letra dentro de una forma de medida fija (los dibujos de Ajustes,
+        /// los círculos de 44 del lector): más grande ya no cabría en ella.
+        static let fixedShapeLargest: DynamicTypeSize = .xxxLarge
+        /// Los dibujos de Ajustes (`SettingsArt`) no crecen: son ilustraciones de medida fija
+        /// y lo que dicen está también en sus filas y en lo que lee VoiceOver.
+        static let drawingLargest: DynamicTypeSize = .large
     }
 }
 
@@ -660,6 +672,8 @@ extension View {
     /// Botón redondo dentro del vidrio: ícono o «Aa» en un círculo apenas marcado, de 44 pt.
     func roundInGlass() -> some View {
         self.font(.body.weight(.semibold))
+            // El círculo mide 44: con la letra más grande, «Aa» se volvía «…».
+            .dynamicTypeSize(...Theme.Letter.fixedShapeLargest)
             .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
             .background(Theme.ink.opacity(Theme.Emphasis.inGlass), in: Circle())
             .contentShape(Circle())
@@ -668,6 +682,11 @@ extension View {
     /// Botón redondo de vidrio: Liquid Glass en iOS/macOS 26, material en versiones anteriores.
     @ViewBuilder
     func glassCircle() -> some View {
+        dynamicTypeSize(...Theme.Letter.fixedShapeLargest).glassCircleSurface()
+    }
+
+    @ViewBuilder
+    private func glassCircleSurface() -> some View {
         #if compiler(>=6.2)
         if #available(iOS 26.0, macOS 26.0, *) {
             self.glassEffect(.regular.interactive(), in: .circle)

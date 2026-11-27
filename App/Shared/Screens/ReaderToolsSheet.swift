@@ -137,7 +137,7 @@ struct ReaderToolsSheet: View {
                         .font(.footnote)
                         .monospacedDigit()
                         .foregroundStyle(Theme.secondaryInk)
-                        .fixedSize()
+                        .layoutPriority(1)
                 }
             } else if !controller.searchResults.isEmpty {
                 Text(resultsLine)

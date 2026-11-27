@@ -37,12 +37,10 @@ struct LibraryScreen: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         ScreenHeading(title: "Biblioteca") {
-                            Button {
+                            IconButton(systemImage: layout == .covers ? "list.bullet" : "square.grid.2x2",
+                                       label: layout == .covers ? "Ver como lista" : "Ver portadas") {
                                 withAnimation(Theme.Motion.standard) { layout = layout == .covers ? .list : .covers }
-                            } label: {
-                                Image(systemName: layout == .covers ? "list.bullet" : "square.grid.2x2")
                             }
-                            .accessibilityLabel(layout == .covers ? "Ver como lista" : "Ver portadas")
                             // El único acento verde de la pantalla.
                             AccentIconButton(systemImage: LibraryAction.addBooks.symbol, label: LibraryAction.addBooks.title) { model.importing = true }
                         }

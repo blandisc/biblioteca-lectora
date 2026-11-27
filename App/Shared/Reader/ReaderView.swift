@@ -704,8 +704,9 @@ private struct BottomPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // El capítulo, completo y con la letra del libro; encima, su número (o el
-            // libro, si el capítulo no lo trae). Tocarlo abre el índice.
-            HStack(spacing: Theme.Space.s) {
+            // libro, si el capítulo no lo trae). Tocarlo abre el índice. Con la letra más
+            // grande, buscar, «Aa» y «Guiada» bajan bajo el capítulo (antes «Aa» era «…»).
+            AdaptiveStack(spacing: Theme.Space.s) {
             Button(action: onContents) {
                 VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                     SectionLabel(text: heading.eyebrow, tone: Theme.ink.opacity(Theme.Emphasis.glassText))
@@ -762,14 +763,15 @@ private struct BottomPanel: View {
 
             // La página (arrastrando: a cuál vas) y, a la derecha, las palabras de la
             // sesión. Todo en gris y sin íconos: lo que manda es el capítulo.
-            HStack(spacing: Theme.Space.l) {
+            // Con la letra más grande, una bajo otra («Pág. 1…» y «0 pal…» se cortaban).
+            AdaptiveStack(spacing: 0) {
                 Text(position)
                     .monospacedDigit()
                     .foregroundStyle(dragValue == nil ? Theme.ink.opacity(Theme.Emphasis.glassText) : Theme.ink)
                     .contentTransition(.numericText())
                     .animation(Theme.Motion.press, value: position)
                     .lineLimit(1)
-                Spacer(minLength: 0)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 // Tras saltar con la barra, volver a donde ibas (como en Libros de Apple).
                 if let origin, dragValue == nil {
                     Button {
@@ -834,7 +836,7 @@ private struct HighlightCard: View {
                 CloseButton(label: "Cerrar el subrayado") { perform(.close) }
                     .padding(.vertical, -Theme.Space.s)
             }
-            HStack(spacing: Theme.Space.s) {
+            AdaptiveStack(spacing: Theme.Space.s) {
                 action(.note, annotation.note == nil ? SelectionAction.note.title : "Editar nota", SelectionAction.note.symbol)
                 action(.toNote, SelectionAction.toNote.title, SelectionAction.toNote.symbol)
                 action(.copy, SelectionAction.copy.title, SelectionAction.copy.symbol)
@@ -862,7 +864,8 @@ private struct SelectionBar: View {
     let perform: (Action) -> Void
 
     var body: some View {
-        HStack(spacing: Theme.Space.s) {
+        // Con la letra más grande, una acción bajo otra, cada una con su nombre entero.
+        AdaptiveStack(spacing: Theme.Space.s) {
             Button { perform(.underline) } label: {
                 IconTile(symbol: SelectionAction.highlight.symbol, title: SelectionAction.highlight.title, prominent: true)
             }
