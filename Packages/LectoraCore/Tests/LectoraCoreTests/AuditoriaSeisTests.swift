@@ -103,7 +103,7 @@ final class AuditoriaSeisTests: XCTestCase {
         XCTAssertFalse(table.contains("anchor: .top") || table.contains("anchor: .center") || table.contains(": .center : .top"))
         XCTAssertTrue(table.contains("static let middleLeading = UnitPoint(x: 0, y: 0.5)") && table.contains(".topLeading"))
         // Más angosta que la última vez: los anchos guardados se vuelven a repartir.
-        XCTAssertTrue(table.contains("if next.widthStep < savedStep {") && table.contains("Self.keepingVisibility(of: columns)"))
+        XCTAssertTrue(table.contains("if next.widthStep < savedStep { columns = Self.withoutWidths(columns) }"))
         // Angosta: el título se queda con el espacio.
         XCTAssertEqual(table.components(separatedBy: "roomy ?").count - 1, 3, "Etiquetas, Avance y Agregado piden poco")
     }
@@ -211,8 +211,8 @@ final class AuditoriaSeisTests: XCTestCase {
         XCTAssertEqual(reverted.rating, 4, "Y lo demás que cambiaste, también")
         XCTAssertEqual(reverted.title, "Ficciones (1944)")
 
-        let restore = body(of: "func restore(_ change: CatalogChange) -> String? {", in: store)
-        guard let check = restore.range(of: "if let current = lock.current { return current.reason }"),
+        let restore = body(of: "func restore(_ change: CatalogChange) -> CatalogChange {", in: store)
+        guard let check = restore.range(of: "undone.refused = current.reason"),
               let first = restore.range(of: "update(") ?? restore.range(of: "saveRules(") else {
             return XCTFail("Deshacer mira el candado antes de tocar nada")
         }
@@ -222,11 +222,9 @@ final class AuditoriaSeisTests: XCTestCase {
         for signature in ["func rename(_ rename: CatalogRename) -> CatalogChange {", "func renumber(series: String) -> CatalogChange {"] {
             XCTAssertTrue(body(of: signature, in: store).contains("change.changed.append(try update("), signature)
         }
-        // El ⌘Z rechazado se queda para después.
+        // El ⌘Z rechazado se hace en cuanto termina el otro trabajo (auditoría 7, B3).
         let window = source("MacLibraryWindow.swift")
-        let register = body(of: "func registerUndo(_ change: CatalogChange, named name: String, in undoManager: UndoManager?) {", in: window)
-        XCTAssertTrue(register.contains("guard let refused = store.restore(change) else { return }")
-                      && register.contains("store.registerUndo(change, named: name, in: undoManager)"))
+        XCTAssertTrue(window.contains("let job = restoreWhenFree(change, named: name)"))
         XCTAssertFalse(source("MacCatalogSheet.swift").contains("store.restore(change)"), "Las dos entradas usan el mismo deshacer")
         XCTAssertFalse(window.contains("MainActor.assumeIsolated { store.restore(change) }"))
     }

@@ -28,9 +28,11 @@ struct MacBookTable: View {
     /// tabla se vuelve a armar y reparte de nuevo sus columnas. Antes se quedaban con los anchos de
     /// la primera vez y «Serie», «Estado» y «Formato» quedaban bajo la ficha (auditoría 4).
     @State private var widthStep = 0
-    /// El ancho (en pasos) con que se armó la tabla la última vez, también en otra sesión: si ahora
-    /// es más angosta, los anchos guardados de las columnas no caben (auditoría 6, U1).
+    /// El ancho (en pasos) con que se armó cada tabla la última vez, también en otra sesión: si ahora
+    /// es más angosta, sus anchos guardados no caben (auditoría 6, U1). Uno por tabla (auditoría 7,
+    /// M1): con uno solo, abrir la ficha (más angosta) borraba los anchos y el orden de las dos.
     @SceneStorage("mac.columnas.paso") private var savedStep = 0
+    @SceneStorage("mac.columnas.ficha.paso") private var savedNarrowStep = 0
     /// Cómo está armada la tabla: con o sin ficha y con qué ancho ya quieto (auditorías 5 y 6). Se
     /// rearma una sola vez cuando el ancho se queda quieto, también al abrir la ficha (antes se
     /// rearmaba al abrirla y otra vez 350 ms después, al terminar de cambiar el ancho).
@@ -199,13 +201,16 @@ struct MacBookTable: View {
             let next = TableLayoutKey(inspector: showsInspector, widthStep: widthStep)
             guard next != layout else { return }
             visible.anchor = currentRows().first { visible.ids.contains($0.id) }?.id
-            // Más angosta que la última vez: los anchos guardados dejaban la tabla más ancha que la
-            // vista, corrida de lado y sin título. Se vuelven a repartir; lo que escondiste se queda.
-            if next.widthStep < savedStep {
-                columns = Self.keepingVisibility(of: columns)
-                narrowColumns = Self.keepingVisibility(of: narrowColumns)
+            // Más angosta que la última vez que se armó esa tabla: sus anchos guardados la dejaban más
+            // ancha que la vista, corrida de lado y sin título. Se vuelven a repartir; lo que
+            // escondiste y el orden en que pusiste las columnas se quedan. La otra tabla no se toca.
+            if next.inspector {
+                if next.widthStep < savedNarrowStep { narrowColumns = Self.withoutWidths(narrowColumns) }
+                savedNarrowStep = next.widthStep
+            } else {
+                if next.widthStep < savedStep { columns = Self.withoutWidths(columns) }
+                savedStep = next.widthStep
             }
-            savedStep = next.widthStep
             layout = next
         }
         // De papel (MX-B): la tabla sobre el papel de Gabinete, sin franjas.
@@ -297,11 +302,13 @@ struct MacBookTable: View {
             .defaultVisibility(.hidden)
     }
 
-    /// Las mismas columnas a la vista, sin los anchos guardados.
-    static func keepingVisibility(of old: TableColumnCustomization<MacBookRow>) -> TableColumnCustomization<MacBookRow> {
+    /// Las mismas columnas a la vista y en el mismo orden, sin los anchos guardados.
+    static func withoutWidths(_ old: TableColumnCustomization<MacBookRow>) -> TableColumnCustomization<MacBookRow> {
         var fresh = TableColumnCustomization<MacBookRow>()
         for column in sortColumns { fresh[visibility: column.id] = old[visibility: column.id] }
-        return fresh
+        guard let saved = try? JSONEncoder().encode(old), let clean = try? JSONEncoder().encode(fresh) else { return fresh }
+        let ordered = ColumnLayout.keepingOrder(of: saved, in: clean)
+        return (try? JSONDecoder().decode(TableColumnCustomization<MacBookRow>.self, from: ordered)) ?? fresh
     }
 
     /// Una tabla angosta: las columnas de a lado piden poco y el título se queda con el espacio.

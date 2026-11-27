@@ -80,6 +80,9 @@ final class LibraryStore: ObservableObject {
     }
     private var batchTask: Task<Void, Never>?
     private var batchToken: UUID?
+    /// La vuelta que busca de nuevo lo pendiente (auditoría 7, M4): una a la vez.
+    private var lookupRetry: Task<Void, Never>?
+    private var lookupRetryToken: UUID?
     /// Registros de internet que deshiciste en un libro («openlibrary:OL1W»): ya no se le
     /// aplican solos; si vuelven a salir, van a «Por revisar» (auditoría 1).
     private var declined: [UUID: Set<String>] = [:]
@@ -150,7 +153,9 @@ final class LibraryStore: ObservableObject {
         waiting.forEach { $0.resume() }
         // Lo que se quedó sin guardar mientras corría (auditoría 6, M2) se busca de nuevo ya, no
         // hasta volver a abrir la app.
-        if lock.current == nil, !pendingLookup.isEmpty {
+        // Una sola vuelta a la vez y con pausa entre libros (auditoría 7, M4): antes cada candado
+        // que se soltaba lanzaba otra, sin pausa, y salían cientos de consultas seguidas.
+        if lock.current == nil, !pendingLookup.isEmpty, lookupRetry == nil {
             Task { [weak self] in await self?.retryPendingLookups() }
         }
     }
@@ -187,6 +192,26 @@ final class LibraryStore: ObservableObject {
         log = ChangeLog(directory: root.appendingPathComponent(".lectora/registro", isDirectory: true), deviceID: device)
         clock = HybridLogicalClock(node: device)
         reload()
+        removeLeftoverCopies()
+    }
+
+    /// Quita las carpetas de trabajo que dejó un movimiento que no terminó (la app se cerró o se
+    /// trabó a media copia, auditoría 7, M2): en el Gabinete en uso y en cada carpeta a la que
+    /// este aparato empezó a copiar. Solo las de nombre exacto `.gabinete-copia-<token>-…`; las de
+    /// otro aparato, cuando llevan un día sin tocarse (podría estar copiando ahora).
+    private func removeLeftoverCopies() {
+        let pending = CabinetLocation.pendingStagings()
+        let mine = Set(pending.map(\.token))
+        let places = [cabinet] + pending.compactMap(\.destination)
+        let folders = [CabinetLocation.libraryFolder, CabinetLocation.notesFolder]
+        Task.detached(priority: .utility) {
+            for place in places {
+                let accessing = place.startAccessingSecurityScopedResource()
+                StagedMove.removeLeftovers(in: place, folders: folders, mine: mine)
+                if accessing { place.stopAccessingSecurityScopedResource() }
+            }
+            await MainActor.run { CabinetLocation.forgetStaging(tokens: mine) }
+        }
     }
 
     /// La biblioteca del Gabinete en uso: la carpeta que elegiste (p. ej. en
@@ -266,6 +291,10 @@ final class LibraryStore: ObservableObject {
         // si iCloud bajaba ahí las de otro aparato a media copia, se contaban como mías y, si algo
         // fallaba, se borraban. Si falla, se quitan solo las de trabajo.
         let staged = StagedMove(destination: destination, folders: topFolders)
+        // Si la app se cierra a media copia, al abrirla quito la carpeta de trabajo (auditoría 7).
+        let earlier = Set(CabinetLocation.pendingStagings().map(\.token))
+        CabinetLocation.rememberStaging(token: staged.token, destination: destination)
+        defer { CabinetLocation.forgetStaging(tokens: [staged.token]) }
         // Lo que la app escribe mientras muevo queda anotado: la última pasada copia solo eso.
         let journal = WriteJournal.shared
         journal.begin()
@@ -274,6 +303,8 @@ final class LibraryStore: ObservableObject {
             let incomplete = try await Task.detached(priority: .userInitiated) { () -> (copied: Int, expected: Int)? in
                 let manager = FileManager.default
                 try manager.createDirectory(at: destination, withIntermediateDirectories: true)
+                // Lo que dejó ahí un movimiento anterior que no terminó, antes de copiar (auditoría 7).
+                StagedMove.removeLeftovers(in: destination, folders: topFolders, mine: earlier)
                 var expected = 0, copied = 0, complete = true
                 for folder in topFolders {
                     let from = source.appendingPathComponent(folder), to = staged.staging(folder)
@@ -321,6 +352,15 @@ final class LibraryStore: ObservableObject {
                 placed = try staged.place()
             } catch StagedMove.Failure.occupied(let folder) {
                 throw LocationError.occupied(folder)
+            }
+            // Cada carpeta que copié está en su lugar: si una carpeta de trabajo desapareció (la quitó
+            // alguien más), no doy el movimiento por hecho ni borro tu copia de aquí.
+            let missing = topFolders.filter {
+                FileManager.default.fileExists(atPath: source.appendingPathComponent($0).path) && !placed.contains($0)
+            }
+            guard missing.isEmpty else {
+                staged.takeBack(placed)
+                throw LocationError.incomplete(copied: placed.count, expected: placed.count + missing.count)
             }
             do {
                 try CabinetLocation.remember(destination)
@@ -370,6 +410,7 @@ final class LibraryStore: ObservableObject {
         state = LibraryState()
         books = []
         reviews = [:]
+        stopPendingLookups()
         pendingLookup = []
         filled = [:]
         declined = [:]
@@ -1181,6 +1222,8 @@ final class LibraryStore: ObservableObject {
         /// que cambió, sobre el libro de ahora (auditoría 6).
         var changed: [Book] = []
         var rulesBefore: MetadataRules
+        /// Cómo dejó las reglas (auditoría 7, M5): deshacer quita o regresa solo las que tocó.
+        var rulesAfter: MetadataRules
         var failed: [String] = []
         /// Por qué no cambié nada: otro trabajo de toda la biblioteca corre (auditoría 5).
         var refused: String?
@@ -1190,7 +1233,7 @@ final class LibraryStore: ObservableObject {
     /// etiquetas, también deja la regla para lo que llegue después (los libros que importes).
     @discardableResult
     func rename(_ rename: CatalogRename) -> CatalogChange {
-        var change = CatalogChange(rulesBefore: rules)
+        var change = CatalogChange(rulesBefore: rules, rulesAfter: rules)
         // Cambia muchos libros a la vez: no mientras ordeno, muevo o traigo de Calibre (auditoría 5).
         if let current = lock.current {
             change.refused = current.reason
@@ -1218,13 +1261,14 @@ final class LibraryStore: ObservableObject {
         case .series: break
         }
         if learned != rules { saveRules(learned) }
+        change.rulesAfter = learned
         return change
     }
 
     /// Los tomos de una serie como 1, 2, 3… en el orden que ya tenían.
     @discardableResult
     func renumber(series: String) -> CatalogChange {
-        var change = CatalogChange(rulesBefore: rules)
+        var change = CatalogChange(rulesBefore: rules, rulesAfter: rules)
         if let current = lock.current {
             change.refused = current.reason
             return change
@@ -1244,18 +1288,64 @@ final class LibraryStore: ObservableObject {
 
     /// Deshace un `rename` o `renumber`: los libros como estaban y las reglas de antes. Nunca a
     /// medias (auditoría 6, M3): si otro trabajo de toda la biblioteca corre, no toco nada y
-    /// devuelvo por qué, para que el deshacer se quede para después. Solo regresan los datos que
-    /// ese cambio tocó, sobre el libro de ahora: lo que cambiaste después se queda.
+    /// devuelvo por qué (`refused`). Solo regresan los datos que ese cambio tocó, sobre el libro de
+    /// ahora: lo que cambiaste después se queda. Y de las reglas, solo las que ese cambio añadió o
+    /// cambió y siguen como las dejó (auditoría 7, M5). Devuelve lo que hizo, como otro cambio:
+    /// deshacerlo es rehacer (⌘⇧Z, auditoría 7, B3).
     @discardableResult
-    func restore(_ change: CatalogChange) -> String? {
-        if let current = lock.current { return current.reason }
+    func restore(_ change: CatalogChange) -> CatalogChange {
+        var undone = CatalogChange(rulesBefore: rules, rulesAfter: rules)
+        if let current = lock.current {
+            undone.refused = current.reason
+            return undone
+        }
         for (original, changed) in zip(change.originals, change.changed) {
             guard let current = current(original.id) else { continue }
             let reverted = Book.revertingEdits(to: original, from: changed, onto: current)
-            if reverted != current { _ = try? update(reverted) }
+            guard reverted != current, let saved = try? update(reverted) else { continue }
+            undone.originals.append(current)
+            undone.changed.append(saved)
         }
-        if change.rulesBefore != rules { saveRules(change.rulesBefore) }
-        return nil
+        let rulesNow = rules.undoing(from: change.rulesBefore, after: change.rulesAfter)
+        if rulesNow != rules { saveRules(rulesNow) }
+        undone.rulesAfter = rulesNow
+        return undone
+    }
+
+    /// Deshace (o rehace) `change` en cuanto la biblioteca esté libre, de una vez: si ahora corre
+    /// otro trabajo, te digo que lo haré al terminar y espero su turno (auditoría 7, B3). Así ⌘Z
+    /// no se vuelve a anotar como algo nuevo, que borraba lo que podías rehacer.
+    func restoreWhenFree(_ change: CatalogChange, named name: String) -> PendingRestore {
+        let job = PendingRestore()
+        let first = restore(change)
+        guard let refused = first.refused else {
+            job.done = first
+            return job
+        }
+        explain("Todavía no deshice «\(name)»", refused + " Lo deshago yo en cuanto termine.")
+        Task { [weak self] in
+            while let self, !job.cancelled {
+                guard self.lock.current != nil else {
+                    job.done = self.restore(change)
+                    return
+                }
+                await withCheckedContinuation { self.lockWaiters.append($0) }
+            }
+        }
+        return job
+    }
+
+    /// Un deshacer que espera a que termine otro trabajo: rehacer antes de que corra lo cancela.
+    final class PendingRestore {
+        var done: CatalogChange?
+        var cancelled = false
+
+        /// Lo cancela si todavía no corrió. Devuelve true si lo canceló.
+        func cancel() -> Bool {
+            guard done == nil else { return false }
+            cancelled = true
+            return true
+        }
     }
 
     // MARK: Lo que se completó solo
@@ -1661,6 +1751,14 @@ final class LibraryStore: ObservableObject {
         batchTask = nil
         batchToken = nil
         batch?.stopped = true
+        stopPendingLookups()
+    }
+
+    /// Detiene la vuelta de lo pendiente (al mover el Gabinete o cambiar de biblioteca).
+    private func stopPendingLookups() {
+        lookupRetry?.cancel()
+        lookupRetry = nil
+        lookupRetryToken = nil
     }
 
     /// Quita el aviso del resultado.
@@ -1669,12 +1767,35 @@ final class LibraryStore: ObservableObject {
         batch = nil
     }
 
-    /// Vuelve a buscar los libros que se quedaron sin buscar por falta de internet.
+    /// Vuelve a buscar los libros que se quedaron sin buscar por falta de internet. Una vuelta a la
+    /// vez (si ya hay una, espera a esa), con la misma pausa entre libros que la búsqueda en lote,
+    /// y se puede detener (auditoría 7, M4).
     func retryPendingLookups() async {
-        for id in pendingLookup where book(id: id) != nil {
-            let decision = await identify(id)
-            if decision == .unreachable || decision == .busy { break }
+        if let lookupRetry { return await lookupRetry.value }
+        guard !pendingLookup.isEmpty, batchTask == nil else { return }
+        let token = UUID()
+        lookupRetryToken = token
+        let task = Task { [weak self] in
+            guard let ids = self?.pendingLookup.sorted(by: { $0.uuidString < $1.uuidString }) else { return }
+            var asked = false
+            for id in ids {
+                guard let self, !Task.isCancelled, self.lookupRetryToken == token else { break }
+                guard self.pendingLookup.contains(id), self.book(id: id) != nil else { continue }
+                if asked {
+                    try? await Task.sleep(for: BatchLookup.pause)
+                    guard !Task.isCancelled, self.lookupRetryToken == token else { break }
+                }
+                asked = true
+                let decision = await self.identify(id)
+                if decision == .unreachable || decision == .busy { break }
+            }
+            if self?.lookupRetryToken == token {
+                self?.lookupRetry = nil
+                self?.lookupRetryToken = nil
+            }
         }
+        lookupRetry = task
+        await task.value
     }
 
     private var reviewsURL: URL {

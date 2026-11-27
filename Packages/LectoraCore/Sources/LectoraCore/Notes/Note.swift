@@ -26,15 +26,14 @@ public struct Note: Identifiable, Hashable, Sendable {
         Self.title(of: text) ?? fileName
     }
 
-    /// Las primeras líneas después del título, en texto plano (para la lista).
+    /// Las primeras líneas después del título, en texto plano (para la lista). Solo aquí se quitan
+    /// las cercas, las comillas de código y las marcas de una lista (auditoría 7: en el título
+    /// cambiaban el nombre del archivo).
     public var preview: String {
         let lines = text.components(separatedBy: .newlines)
         let firstText = lines.firstIndex { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        let body = lines.dropFirst((firstText ?? 0) + 1)
-            .map { NoteMarkdown.plain($0) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
-        return String(body.prefix(240))
+        let body = Array(lines.dropFirst((firstText ?? 0) + 1))
+        return String(NoteMarkdown.previewLines(body).filter { !$0.isEmpty }.joined(separator: " ").prefix(240))
     }
 
     /// Títulos de los libros enlazados con `[[ ]]`, en orden y sin repetir.
@@ -48,6 +47,10 @@ public struct Note: Identifiable, Hashable, Sendable {
         return bookLinks.contains { NoteMarkdown.key($0) == key }
     }
 
+    /// El título: la primera línea con texto, sin `#`. De él sale el nombre del archivo, así que
+    /// se lee siempre igual (auditoría 7): «# 1. Introducción» es «1. Introducción» y «`git`»
+    /// conserva sus comillas. Si cambiara la forma de leerlo, tus notas cambiarían de nombre solas
+    /// y se romperían sus enlaces en Obsidian.
     static func title(of text: String) -> String? {
         for line in text.components(separatedBy: .newlines) {
             var trimmed = line.trimmingCharacters(in: .whitespaces)
@@ -157,19 +160,17 @@ public enum NoteMarkdown {
         return output + rest
     }
 
-    /// Texto plano de una línea: sin `#`, `>`, `[[ ]]`, enlaces ni énfasis.
+    /// Texto plano de una línea: sin `#`, `>`, `[[ ]]`, enlaces ni énfasis. Es la forma de leer el
+    /// título y no cambia (auditoría 7): de ella sale el nombre del archivo de la nota. Lo que solo
+    /// sirve para la vista previa (cercas, comillas de código, listas) va en `previewLines`.
     public static func plain(_ line: String) -> String {
         var text = line.trimmingCharacters(in: .whitespaces)
-        // Las cercas de un bloque de código no son texto (auditoría 6: «``` código…» en el Cuaderno).
-        if isComment(text) || fence(line) != nil { return "" }
+        if isComment(text) { return "" }
         while text.hasPrefix("#") || text.hasPrefix(">") {
             text.removeFirst()
             text = text.trimmingCharacters(in: .whitespaces)
         }
-        // Los guiones y números de una lista, y la casilla de una tarea (auditoría 6).
-        if let marker = text.range(of: #"^(?:[-*+]|\d{1,9}[.)])\s+(?:\[[ xX]\]\s+)?"#, options: .regularExpression) {
-            text.removeSubrange(marker)
-        }
+        if text.hasPrefix("- ") || text.hasPrefix("* ") { text.removeFirst(2) }
         // [[Título|texto]] → texto; [[Título]] → Título
         var output = ""
         var rest = text[...]
@@ -187,9 +188,39 @@ public enum NoteMarkdown {
             let label = output[open.upperBound..<middle.lowerBound]
             output.replaceSubrange(open.lowerBound..<close.upperBound, with: label)
         }
-        return output.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "`", with: "")
+        return output.replacingOccurrences(of: "**", with: "")
             .replacingOccurrences(of: "__", with: "")
             .trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Las líneas del cuerpo de una nota en texto plano, para la vista previa: sin cercas de
+    /// código («``` código…» en el Cuaderno, auditoría 6), sin comillas de código, sin la casilla
+    /// de una tarea y sin las marcas de una lista. Un número solo es de una lista si al lado hay
+    /// otro renglón de lista (auditoría 7): «1984. Fue el año» solo es un párrafo tuyo.
+    public static func previewLines(_ lines: [String]) -> [String] {
+        let bullet = #"^(?:[-*+])\s+(?:\[[ xX]\]\s+)?"#
+        let number = #"^\d{1,9}[.)]\s+(?:\[[ xX]\]\s+)?"#
+        func unquoted(_ line: String) -> String {
+            var text = line.trimmingCharacters(in: .whitespaces)
+            while text.hasPrefix(">") { text = text.dropFirst().trimmingCharacters(in: .whitespaces) }
+            return text
+        }
+        let bare = lines.map(unquoted)
+        func isItem(_ index: Int) -> Bool {
+            bare.indices.contains(index)
+                && (bare[index].range(of: bullet, options: .regularExpression) != nil
+                    || bare[index].range(of: number, options: .regularExpression) != nil)
+        }
+        return lines.indices.map { index in
+            if fence(lines[index]) != nil { return "" }
+            var text = bare[index]
+            if let marker = text.range(of: bullet, options: .regularExpression) {
+                text.removeSubrange(marker)
+            } else if let marker = text.range(of: number, options: .regularExpression), isItem(index - 1) || isItem(index + 1) {
+                text.removeSubrange(marker)
+            }
+            return plain(text).replacingOccurrences(of: "`", with: "")
+        }
     }
 
     /// La marca de la nota de una sesión de lectura: un comentario que no se ve (ni en Gabinete

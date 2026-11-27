@@ -170,15 +170,19 @@ final class AppModel: ObservableObject {
         if failures.count == 1, let failure = failures.first {
             lines.append(failure.localizedDescription)
         } else if !failures.isEmpty {
-            let names = failures.compactMap { error -> String? in
-                if case LibraryStore.LibraryError.unreadable(let name, _) = error { return "«\(name)»" }
-                return nil
-            }
-            lines.append("\(failures.count.counted("archivo no entró", "archivos no entraron")) a tu biblioteca"
-                + (names.isEmpty ? "." : ": \(names.prefix(Theme.Lists.preview).joined(separator: ", "))\(names.count > Theme.Lists.preview ? "…" : "").")
-                + " No los pude abrir como libros.")
+            // Agrupados por su porqué (auditoría 7): no todo lo que no entró es un libro que no abrí.
+            lines += ImportFailure.lines(failures.map(Self.importFailure), preview: Theme.Lists.preview)
         }
         if !lines.isEmpty { importReport = lines.joined(separator: " ") }
+    }
+
+    /// Por qué no entró un archivo, para agruparlo con los que no entraron por lo mismo.
+    static func importFailure(_ error: Error) -> ImportFailure {
+        switch error {
+        case LibraryStore.LibraryError.unreadable(let name, _): .unreadable(name: name)
+        case LibraryStore.LibraryError.stillDownloading(let title): .stillDownloading(title: title)
+        default: .refused(reason: error.localizedDescription)
+        }
     }
 
     /// Capturas automáticas: importa los libros de `Documents/Semilla` si la biblioteca está vacía.

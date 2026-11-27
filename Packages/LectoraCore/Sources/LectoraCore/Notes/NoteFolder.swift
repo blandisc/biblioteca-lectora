@@ -1,7 +1,7 @@
 import Foundation
 
 /// La carpeta `Gabinete/Notas/`: un archivo `.md` por nota. El nombre del
-/// archivo sale del título; si cambias el título, el archivo se renombra.
+/// archivo sale del título; si cambias el título, el archivo se renombra (y solo entonces).
 public struct NoteFolder: Sendable {
     public let url: URL
     public static let fileExtension = "md"
@@ -49,7 +49,7 @@ public struct NoteFolder: Sendable {
                 throw NoteFolderError.notDownloaded
             }
             name = fileName
-            if wanted != fileName, !CloudFile.isTaken(file(for: wanted)) {
+            if wanted != fileName, titleChanged(in: fileName, to: wanted), !CloudFile.isTaken(file(for: wanted)) {
                 do {
                     try FileManager.default.moveItem(at: file(for: fileName), to: file(for: wanted))
                     WriteJournal.shared.note(file(for: fileName))
@@ -67,6 +67,15 @@ public struct NoteFolder: Sendable {
         try Data(text.utf8).write(to: destination, options: .atomic)
         WriteJournal.shared.note(destination)
         return Note(fileName: name, text: text, modifiedAt: Date())
+    }
+
+    /// ¿Cambiaste el título? Gabinete nunca cambia el nombre de tus notas por su cuenta (auditoría 7):
+    /// el archivo se renombra solo si el título que tenía en la carpeta da otro nombre. Una nota con
+    /// un nombre distinto de su título (hecha en Obsidian, o «Ideas 2») se queda con el suyo; si no
+    /// puedo leer lo que había, cuenta como cambiado (lo de antes).
+    private func titleChanged(in fileName: String, to wanted: String) -> Bool {
+        guard let data = try? Data(contentsOf: file(for: fileName)) else { return true }
+        return Self.fileName(forTitle: Note.title(of: String(decoding: data, as: UTF8.self)) ?? "") != wanted
     }
 
     /// Notas de muestra que se escriben una sola vez: la que ya existe con ese título se

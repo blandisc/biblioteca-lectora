@@ -331,15 +331,30 @@ private struct MacSidebar: View {
 
 extension LibraryStore {
     /// ⌘Z de un cambio de toda la biblioteca (renombrar, juntar, renumerar). Deshacer nunca deja
-    /// las cosas a medias (auditoría 6): si otro trabajo corre, no toco nada, te digo por qué y el
-    /// deshacer se queda para cuando termine (se vuelve a anotar en cuanto acaba este intento).
+    /// las cosas a medias (auditoría 6): si otro trabajo corre, te digo por qué y lo deshago yo en
+    /// cuanto termine. Lo deshecho se puede rehacer con ⌘⇧Z, y rehacer se puede deshacer otra vez
+    /// (auditoría 7, B3: antes deshacer no dejaba nada que rehacer y volver a anotarlo borraba la
+    /// lista de rehacer).
     func registerUndo(_ change: CatalogChange, named name: String, in undoManager: UndoManager?) {
         guard let undoManager, !change.originals.isEmpty else { return }
         undoManager.registerUndo(withTarget: self) { store in
+            MainActor.assumeIsolated { store.perform(change, named: name, in: undoManager) }
+        }
+        undoManager.setActionName(name)
+    }
+
+    /// Deshace (o rehace) `change` y anota lo contrario en el mismo paso: lo que se anota mientras
+    /// se deshace va a la lista de rehacer, y al revés.
+    private func perform(_ change: CatalogChange, named name: String, in undoManager: UndoManager) {
+        let job = restoreWhenFree(change, named: name)
+        undoManager.registerUndo(withTarget: self) { store in
             MainActor.assumeIsolated {
-                guard let refused = store.restore(change) else { return }
-                store.explain("Todavía no deshice «\(name)»", refused + " Lo puedes deshacer con ⌘Z cuando termine.")
-                DispatchQueue.main.async { store.registerUndo(change, named: name, in: undoManager) }
+                if job.cancel() {
+                    // Todavía no corría: no hay nada que regresar; queda otra vez por deshacer.
+                    store.registerUndo(change, named: name, in: undoManager)
+                } else if let done = job.done {
+                    store.perform(done, named: name, in: undoManager)
+                }
             }
         }
         undoManager.setActionName(name)

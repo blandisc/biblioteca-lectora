@@ -28,6 +28,24 @@ public struct MetadataRules: Codable, Equatable, Sendable {
 
     public var isEmpty: Bool { authors.isEmpty && tags.isEmpty }
 
+    /// Deshace en las reglas de ahora solo lo que hizo un cambio que las llevó de `before` a
+    /// `after` (auditoría 7, M5): la regla que añadió se quita y la que cambió regresa como
+    /// estaba, y solo si siguen como las dejó. Las que hiciste o cambiaste después se quedan;
+    /// antes deshacer ponía todas las reglas de antes encima.
+    public func undoing(from before: MetadataRules, after: MetadataRules) -> MetadataRules {
+        MetadataRules(authors: Self.undoing(authors, before: before.authors, after: after.authors),
+                      tags: Self.undoing(tags, before: before.tags, after: after.tags))
+    }
+
+    private static func undoing(_ current: [Rule], before: [Rule], after: [Rule]) -> [Rule] {
+        let old = Dictionary(before.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let touched = Dictionary(after.filter { old[$0.id] != $0 }.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return current.compactMap { rule in
+            guard let left = touched[rule.id], left == rule else { return rule }
+            return old[rule.id]
+        }
+    }
+
     public func apply(to book: Book) -> Book {
         guard !isEmpty else { return book }
         var book = book
