@@ -160,7 +160,7 @@ struct MacBookTable: View {
     }
 
     private func lookUp(_ ids: Set<UUID>) {
-        Task { for id in ids { _ = await library.identify(id) } }
+        library.lookUpMany(Array(ids))
     }
 
     private func reveal(_ ids: Set<UUID>) {

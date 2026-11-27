@@ -71,9 +71,49 @@ struct MacLibraryWindow: View {
             default: MacBookTable(library: model.library, section: section ?? .all)
             }
         }
+        // Buscar datos en lote (CB-4): cómo va, en cualquier sección.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if let batch = model.library.batch {
+                MacBatchBar(progress: batch, stop: model.library.stopBatch, close: model.library.clearBatch)
+            }
+        }
         // El tamaño ideal es con el que abre la primera vez (si no, abría en el mínimo).
         .frame(minWidth: Theme.Mac.window.width, idealWidth: Theme.Mac.defaultWindow.width,
                minHeight: Theme.Mac.window.height, idealHeight: Theme.Mac.defaultWindow.height)
+    }
+}
+
+/// Abajo de la ventana mientras se buscan datos de muchos libros (CB-4): cuántos van, con
+/// «Detener»; al terminar, el resumen («22 completados · 6 a Por revisar»).
+private struct MacBatchBar: View {
+    let progress: BatchLookup.Progress
+    let stop: () -> Void
+    let close: () -> Void
+
+    var body: some View {
+        HStack(spacing: Theme.Space.l) {
+            if progress.finished {
+                Image(systemName: progress.stopped ? "stop.circle" : "checkmark.circle")
+                    .foregroundStyle(Theme.accent)
+                Text(progress.stopped ? "Detenido · \(progress.summary)" : progress.summary)
+                Spacer()
+                Button("Cerrar aviso", action: close)
+            } else {
+                Text("Buscando datos · \(progress.done) de \(progress.total.counted("libro", "libros"))")
+                    .monospacedDigit()
+                ProgressView(value: Double(progress.done), total: Double(max(progress.total, 1)))
+                    .frame(maxWidth: Theme.Mac.batchProgress)
+                Spacer()
+                Text("Sigue aunque cierres la ventana")
+                    .foregroundStyle(Theme.secondaryInk)
+                Button("Detener búsqueda", action: stop)
+            }
+        }
+        .font(.callout)
+        .padding(.horizontal, Theme.Space.l)
+        .padding(.vertical, Theme.Space.s)
+        .background(.bar)
+        .overlay(alignment: .top) { Divider() }
     }
 }
 
@@ -132,9 +172,14 @@ private struct MacSidebar: View {
         }
         .listStyle(.sidebar)
         #if DEBUG
-        // Capturas: `-screenshot.demo macRename` abre «Renombrar o juntar» con el primer autor;
+        // Capturas: `-screenshot.demo macBatch` busca datos de los incompletos; `macRename` abre «Renombrar o juntar» con el primer autor;
         // `-screenshot.query Nombre` además lo renombra así (prueba de punta a punta).
         .task {
+            if LaunchOptions.demo == "macBatch" {
+                // Buscar datos de los incompletos, como el clic derecho en «Todos los libros».
+                library.lookUpMany(library.incompleteBooks())
+                return
+            }
             guard LaunchOptions.demo == "macRename" else { return }
             try? await Task.sleep(for: .seconds(3))
             guard let first = values(for: .author, rows).first?.0 else { return }
@@ -191,6 +236,20 @@ private struct MacSidebar: View {
         Label(section == .all ? "Todos los libros" : section.title, systemImage: symbol)
             .badge(count)
             .tag(section)
+            .contextMenu {
+                // CB-4: datos para muchos libros a la vez.
+                let ids = lookupTargets(for: section)
+                Button("Buscar datos de \(ids.count.counted("libro", "libros"))\(section == .all ? " incompletos" : "")…") {
+                    library.lookUpMany(ids)
+                }
+                .disabled(ids.isEmpty || library.batch.map { !$0.finished } == true)
+            }
+    }
+
+    /// En «Todos», solo los incompletos; en las demás vistas, todos los de la vista.
+    private func lookupTargets(for section: MacSection) -> [UUID] {
+        if section == .all { return library.incompleteBooks() }
+        return MacBookTable.rows(library: library, shelf: shelf).filter(section.contains).map(\.id)
     }
 
     private func group(_ title: String, _ symbol: String, _ values: [(String, Int)],

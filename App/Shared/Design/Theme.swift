@@ -86,6 +86,8 @@ enum Theme {
         static let column: CGFloat = 110
         /// Gabinete › Ajustes… (⌘,).
         static let settings = CGSize(width: 560, height: 720)
+        /// La barra de avance de «Buscar datos» en lote (CB-4).
+        static let batchProgress: CGFloat = 220
         /// Renombrar o fusionar un autor, una serie o una etiqueta (CB-2).
         static let catalogSheet = CGSize(width: 420, height: 220)
         /// Lo más chica que puede ser la ventana de un libro.

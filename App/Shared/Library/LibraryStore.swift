@@ -51,6 +51,9 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var rules = MetadataRules()
     /// Estantes: búsquedas guardadas con nombre (CB-1). En la carpeta: viajan con la biblioteca.
     @Published private(set) var shelves: [SavedShelf] = []
+    /// Buscar datos de muchos libros a la vez (CB-4): cómo va. Sigue aunque cierres la ventana.
+    @Published private(set) var batch: BatchLookup.Progress?
+    private var batchTask: Task<Void, Never>?
     /// Avance de una importación en curso.
     @Published private(set) var progress: (done: Int, total: Int)?
 
@@ -715,6 +718,51 @@ final class LibraryStore: ObservableObject {
     /// «Mantener mis datos»: sale de la bandeja sin cambiar nada.
     func dismissReview(_ bookID: UUID) {
         setReview(bookID, candidates: nil)
+    }
+
+    // MARK: Buscar datos en lote (CB-4)
+
+    /// Los libros a los que les falta portada, sinopsis, ISBN, editorial o año.
+    func incompleteBooks() -> [UUID] {
+        books.filter { BatchLookup.needsData($0, hasCover: coverURL(for: $0) != nil) }.map(\.id)
+    }
+
+    /// Busca datos para muchos libros, uno tras otro y con pausa para no saturar Open Library.
+    /// Lo seguro se completa solo; lo dudoso va a «Por revisar». Sin internet, lo que falta
+    /// queda pendiente y se reintenta solo. Una búsqueda en lote a la vez.
+    func lookUpMany(_ ids: [UUID]) {
+        guard batchTask == nil else { return }
+        let ids = ids.filter { book(id: $0) != nil }
+        guard !ids.isEmpty else { return }
+        batch = BatchLookup.Progress(total: ids.count)
+        batchTask = Task { [weak self] in
+            for (index, id) in ids.enumerated() {
+                guard let self, !Task.isCancelled else { break }
+                let decision = await self.identify(id)
+                self.batch?.record(decision)
+                if decision == .unreachable {
+                    let rest = ids.dropFirst(index + 1)
+                    for other in rest { self.setPending(other, true) }
+                    self.batch?.pending += rest.count
+                    break
+                }
+                try? await Task.sleep(for: BatchLookup.pause)
+            }
+            self?.batchTask = nil
+        }
+    }
+
+    /// Detiene la búsqueda en lote; lo ya completado se queda.
+    func stopBatch() {
+        batchTask?.cancel()
+        batchTask = nil
+        batch?.stopped = true
+    }
+
+    /// Quita el aviso del resultado.
+    func clearBatch() {
+        guard batchTask == nil else { return }
+        batch = nil
     }
 
     /// Vuelve a buscar los libros que se quedaron sin buscar por falta de internet.
