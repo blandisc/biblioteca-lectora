@@ -103,4 +103,23 @@ final class NotesTests: XCTestCase {
         // Una nota que escribes tú con el mismo título sí se guarda aparte.
         XCTAssertEqual(try folder.save(text: "# Ideas sueltas\n\nOtra.").fileName, "Ideas sueltas 2")
     }
+    /// Auditoría de medios (27 nov 2026): cada dispositivo recordaba la nota de una sesión por su
+    /// cuenta y una sesión podía acabar con dos notas. La nota lleva una marca que no se ve y que
+    /// viaja con el archivo: cualquier dispositivo encuentra la misma.
+    func testSessionNoteIsFoundByItsMarkerOnAnyDevice() throws {
+        let folder = NoteFolder(url: FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true))
+        defer { try? FileManager.default.removeItem(at: folder.url) }
+        let session = UUID(), other = UUID()
+        let text = "# Rayuela, 27 de noviembre\n\(NoteMarkdown.sessionMarker(session))\n\nSesión de 20 min."
+        let saved = try folder.save(text: text)
+        // Otro dispositivo, sin ningún registro propio, solo con la carpeta: la misma nota.
+        XCTAssertEqual(NoteMarkdown.note(forSession: session, in: folder.all())?.fileName, saved.fileName)
+        XCTAssertNil(NoteMarkdown.note(forSession: other, in: folder.all()))
+        // La marca no se ve: ni en la nota, ni en su vista previa, ni cambia el título.
+        let note = try XCTUnwrap(folder.all().first)
+        XCTAssertEqual(note.title, "Rayuela, 27 de noviembre")
+        XCTAssertFalse(note.preview.contains("gabinete:sesion"))
+        XCTAssertEqual(NoteMarkdown.blocks(note.text), [.heading("Rayuela, 27 de noviembre"), .paragraph("Sesión de 20 min.")])
+    }
 }

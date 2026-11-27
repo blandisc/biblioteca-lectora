@@ -2,6 +2,7 @@
 """Crea un EPUB de muestra (texto de dominio público) para las capturas."""
 import sys
 import zipfile
+from xml.sax.saxutils import escape, quoteattr
 
 CHAPTERS = [
     ("Capítulo primero", [
@@ -30,6 +31,11 @@ def xhtml(title, paragraphs):
 
 def main(out, title="Don Quijote de la Mancha", author="Miguel de Cervantes",
          language="es", series=None, index=None, isbn=None, year=None):
+    # Lo que llega de la línea de órdenes va escapado: un «&» en el autor («Bioy & Borges»)
+    # dejaba el content.opf roto y el libro no se importaba.
+    raw_title = title
+    title, author, language = escape(title), escape(author), escape(language)
+    isbn, year = (escape(isbn) if isbn else None), (escape(year) if year else None)
     with zipfile.ZipFile(out, "w") as z:
         z.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
         z.writestr("META-INF/container.xml", """<?xml version="1.0"?>
@@ -49,13 +55,13 @@ def main(out, title="Don Quijote de la Mancha", author="Miguel de Cervantes",
         z.writestr("OEBPS/content.opf", f"""<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id">
 <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-<dc:identifier id="id">urn:lectora:{abs(hash(title))}</dc:identifier>
+<dc:identifier id="id">urn:lectora:{abs(hash(raw_title))}</dc:identifier>
 <dc:title>{title}</dc:title>
 <dc:creator>{author}</dc:creator>
 <dc:language>{language}</dc:language>
 {f'<dc:identifier>urn:isbn:{isbn}</dc:identifier>' if isbn else ''}
 {f'<dc:date>{year}</dc:date>' if year else ''}
-{f'<meta name="calibre:series" content="{series}"/><meta name="calibre:series_index" content="{index or 1}"/>' if series else ''}
+{f'<meta name="calibre:series" content={quoteattr(series)}/><meta name="calibre:series_index" content={quoteattr(str(index or 1))}/>' if series else ''}
 <meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>
 </metadata>
 <manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>{''.join(items)}</manifest>

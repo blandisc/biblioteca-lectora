@@ -82,6 +82,8 @@ struct RootView: View {
                 SessionSummarySheet(session: session).environmentObject(model)
             }
             .noticeAlert("No añadí todos tus libros", message: $model.importReport, back: "Ver mis libros")
+            // Un archivo de `.lectora` que no pude leer: lo digo una vez, en el iPhone y en la Mac.
+            .modifier(LibraryNotice(library: model.library))
             #if os(iOS)
             .fullScreenCover(item: $model.openBook) { book in
                 ReaderView(bookFile: book.url, bookID: book.bookID, startCFI: book.startCFI)
@@ -142,5 +144,15 @@ private struct WelcomeCover: ViewModifier {
         // Mide lo que mide su paso (`Theme.Mac.welcome` de ancho), sin pasar de la ventana más chica.
         content.sheet(isPresented: $isPresented) { WelcomeScreen().environmentObject(model) }
         #endif
+    }
+}
+
+/// El aviso de la biblioteca (`LibraryStore.notice`): se observa la biblioteca misma, así el
+/// aviso sale en cuanto lo pone, sin esperar a que cambie otra cosa.
+private struct LibraryNotice: ViewModifier {
+    @ObservedObject var library: LibraryStore
+
+    func body(content: Content) -> some View {
+        content.noticeAlert("No pude leer un archivo de tu Gabinete", message: $library.notice, back: "Volver a mi biblioteca")
     }
 }

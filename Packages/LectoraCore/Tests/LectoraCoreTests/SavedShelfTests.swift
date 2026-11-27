@@ -11,8 +11,18 @@ final class SavedShelfTests: XCTestCase {
     }
 
     func testSuggestedName() {
-        XCTAssertEqual(SavedShelf.suggestedName(for: "etiqueta:historia idioma:en"), "Historia · En")
+        XCTAssertEqual(SavedShelf.suggestedName(for: "etiqueta:historia idioma:en"), "Historia · Inglés")
         XCTAssertEqual(SavedShelf.suggestedName(for: "autor:\"julio cortázar\" estado:leyendo"), "Julio cortázar · Leyendo")
+    }
+
+    /// Auditoría de medios (27 nov 2026): el estante enseñaba su búsqueda cruda
+    /// («AUTOR:ASIMOV SERIE:FUNDACIÓN»); ahora la dice en palabras.
+    func testDescribeSaysTheQueryInWords() {
+        XCTAssertEqual(SavedShelf.describe("autor:asimov serie:fundación"), "de Asimov · serie Fundación")
+        XCTAssertEqual(SavedShelf.describe("autor:julio cortázar idioma:es"), "de Julio cortázar · en español")
+        XCTAssertEqual(SavedShelf.describe("ciudad etiqueta:viaje"), "con «ciudad» · etiqueta Viaje")
+        XCTAssertEqual(SavedShelf.describe("estado:leyendo"), "Leyendo")
+        XCTAssertFalse(SavedShelf.describe("autor:asimov serie:fundación").contains(":"))
     }
 
     func testRoundTrip() throws {

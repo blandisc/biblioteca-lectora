@@ -157,6 +157,7 @@ public enum NoteMarkdown {
     /// Texto plano de una línea: sin `#`, `>`, `[[ ]]`, enlaces ni énfasis.
     public static func plain(_ line: String) -> String {
         var text = line.trimmingCharacters(in: .whitespaces)
+        if isComment(text) { return "" }
         while text.hasPrefix("#") || text.hasPrefix(">") {
             text.removeFirst()
             text = text.trimmingCharacters(in: .whitespaces)
@@ -184,6 +185,27 @@ public enum NoteMarkdown {
             .trimmingCharacters(in: .whitespaces)
     }
 
+    /// La marca de la nota de una sesión de lectura: un comentario que no se ve (ni en Gabinete
+    /// ni en Obsidian) y viaja con el archivo. Así cualquier dispositivo encuentra la misma nota;
+    /// antes cada uno recordaba la suya y una sesión podía acabar con dos notas.
+    public static func sessionMarker(_ id: UUID) -> String {
+        "<!-- gabinete:sesion \(id.uuidString) -->"
+    }
+
+    /// La nota de esa sesión, si ya existe en la carpeta.
+    public static func note(forSession id: UUID, in notes: [Note]) -> Note? {
+        let marker = sessionMarker(id)
+        return notes.first { note in
+            note.text.components(separatedBy: .newlines).contains { $0.trimmingCharacters(in: .whitespaces) == marker }
+        }
+    }
+
+    /// Un comentario de Markdown en un renglón (`<!-- … -->`): no se enseña.
+    public static func isComment(_ line: String) -> Bool {
+        let text = line.trimmingCharacters(in: .whitespaces)
+        return text.hasPrefix("<!--") && text.hasSuffix("-->")
+    }
+
     /// Bloques de una nota para mostrarla: título, párrafos y citas.
     public enum Block: Equatable, Sendable {
         case heading(String)
@@ -207,6 +229,8 @@ public enum NoteMarkdown {
             let line = raw.trimmingCharacters(in: .whitespaces)
             if line.isEmpty {
                 flush()
+            } else if isComment(line) {
+                continue
             } else if line.hasPrefix("#") {
                 flush()
                 blocks.append(.heading(line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)))

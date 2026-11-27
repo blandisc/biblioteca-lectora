@@ -235,27 +235,31 @@ struct SessionDetail: View {
 /// el resumen; las siguientes abre la misma (RB-7a, 26 nov 2026: creaba una nota en silencio,
 /// no dejaba escribir, y dos toques daban dos notas iguales).
 enum SessionNote {
-    /// Qué nota se creó para cada sesión, en este dispositivo.
+    /// Lo que recordaba cada dispositivo antes de la marca: solo para las notas de entonces.
     private static let key = "sesiones.notas"
 
+    /// La nota se encuentra por su marca (`NoteMarkdown.sessionMarker`), que viaja en el archivo:
+    /// abierta desde otro dispositivo es la misma nota, no una segunda.
     @MainActor
     static func open(_ session: ReadingSession, bookTitle: String) throws -> NoteRef {
         let notes = NotesStore.shared
-        var made = UserDefaults.standard.dictionary(forKey: key) as? [String: String] ?? [:]
+        if let found = NoteMarkdown.note(forSession: session.id, in: notes.notes) {
+            return NoteRef(fileName: found.fileName, writes: true)
+        }
+        let made = UserDefaults.standard.dictionary(forKey: key) as? [String: String] ?? [:]
         if let fileName = made[session.id.uuidString], notes.note(fileName: fileName) != nil {
             return NoteRef(fileName: fileName, writes: true)
         }
         let day = session.start.es(.dateTime.day().month(.wide))
         let text = """
         # \(bookTitle), \(day)
+        \(NoteMarkdown.sessionMarker(session.id))
 
         Sesión de \(ReadingFormat.duration(session.readingSeconds)) en [[\(bookTitle)]]: \(session.words.counted("palabra", "palabras", shown: ReadingFormat.words(session.words))), \(ReadingFormat.duration(session.seconds(in: .immersed))) inmersa.
 
 
         """
         guard let note = try notes.save(text: text, fileName: nil) else { return .new(draft: text) }
-        made[session.id.uuidString] = note.fileName
-        UserDefaults.standard.set(made, forKey: key)
         return NoteRef(fileName: note.fileName, writes: true)
     }
 }
@@ -268,7 +272,7 @@ extension View {
                 NoteScreen(ref: ref)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button("Cerrar la nota") { item.wrappedValue = nil }
+                            BarButton("Cerrar la nota") { item.wrappedValue = nil }
                         }
                     }
             }
