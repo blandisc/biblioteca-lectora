@@ -27,7 +27,7 @@ struct LookupCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             HStack(alignment: .center, spacing: Theme.Space.l) {
-                Text(term)
+                WholeWordsText(term)
                     .font(isEntry ? .bookTitle : .prose)
                     .italic(!isEntry)
                     .lineLimit(Theme.Reader.highlightLines)

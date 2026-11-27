@@ -377,7 +377,7 @@ final class ConnectorsStore: ObservableObject {
         if hardcoverID == nil {
             let isbn = book.identifiers["isbn"]
             guard let match = try await client.find(title: book.title, authors: book.authors, isbn: isbn) else {
-                throw ConnectorError.unexpected("No encontré «\(book.title)» en Hardcover.")
+                throw ConnectorError.unexpected("No encontré «\(book.title.isolated)» en Hardcover.")
             }
             hardcoverID = match.id
             pages = match.pages

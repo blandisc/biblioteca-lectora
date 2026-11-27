@@ -25,14 +25,14 @@ struct BookDetailScreen: View {
                     if let number = record?.calibreID {
                         SectionLabel(text: "Nº \(number)")
                     }
-                    Text(live.title)
+                    WholeWordsText(live.title)
                         .font(.bookTitle)
                         .multilineTextAlignment(.center)
                     Text(live.author)
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)
                     if let series = live.series {
-                        Text(live.seriesIndex.flatMap(ShelfBook.number).map { "\(series) · libro \($0)" } ?? series)
+                        Text(live.seriesIndex.flatMap(ShelfBook.number).map { "\(series.isolated) · libro \($0)" } ?? series)
                             .font(.subheadline)
                             .foregroundStyle(Theme.secondaryInk)
                     }

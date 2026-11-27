@@ -430,12 +430,15 @@ struct ReaderAppearanceSheet: View {
 
             VStack(alignment: .leading, spacing: Theme.Space.s) {
             SectionHeader("Fondo")
-            // Con la letra más grande, un fondo bajo otro, con su nombre al lado.
-            AdaptiveStack {
+            // Con la letra más grande, un fondo bajo otro, con su nombre al lado. Lado a lado, los
+            // círculos van arriba y un nombre de dos renglones («Noche cálida») crece hacia abajo.
+            AdaptiveStack(rowAlignment: .top) {
                 ForEach(ReaderTheme.allCases) { item in
                     Button { theme = item } label: {
                         swatchLayout {
                             swatch(for: item)
+                                // El «Aa» cabe en su círculo de 44: con AX5 salía «…» (auditoría 8).
+                                .dynamicTypeSize(...Theme.Letter.fixedShapeLargest)
                                 .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
                                 .overlay {
                                     Circle().strokeBorder(item == theme ? Theme.ink : Theme.track,

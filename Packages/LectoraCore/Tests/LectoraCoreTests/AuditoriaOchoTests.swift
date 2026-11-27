@@ -80,8 +80,8 @@ final class AuditoriaOchoTests: XCTestCase {
         XCTAssertTrue(store.contains("case .downloadingLibrary:\n                EmptyCopy.cabinetWhileDownloading"))
 
         let settings = source("SettingsScreen.swift", in: "App/Shared/Screens")
-        XCTAssertEqual(settings.components(separatedBy: ".disabled(busy || model.cabinetChangeBlocked != nil)").count - 1, 2,
-                       "«Mover a iCloud Drive u otra carpeta» y «Volver a la carpeta de este dispositivo» se ven apagados")
+        XCTAssertEqual(settings.components(separatedBy: ".disabled(busy || model.cabinetChangeBlocked != nil)").count - 1, 3,
+                       "«Mover a iCloud Drive u otra carpeta», «Volver a la carpeta de este dispositivo» y «Ordenar la biblioteca» se ven apagados")
         XCTAssertTrue(settings.contains("if let blocked = model.cabinetChangeBlocked ?? model.addBooksBlocked, !busy {\n                ReasonLine(blocked)"),
                       "Y dicen por qué, completo")
         XCTAssertTrue(source("AppModel.swift").contains("library.waitingForCloud ? EmptyCopy.cabinetWhileDownloading : nil"))

@@ -346,6 +346,8 @@ enum Theme {
         static let authorTop: CGFloat = 0.06
         static let authorTracking: CGFloat = 0.6
         static let titleMinScale: CGFloat = 0.7
+        /// Los pasos de la letra del título dibujado cuando su palabra más ancha no cabe (`WholeWordsText`).
+        static let titleScales: [CGFloat] = [1, 0.9, 0.8, 0.7]
         /// Lomo: sombra del borde izquierdo, nunca menor que `spineMin` puntos.
         static let spine: CGFloat = 0.05
         static let spineMin: CGFloat = 3
@@ -651,7 +653,8 @@ extension Theme {
         /// y lo que dicen está también en sus filas y en lo que lee VoiceOver.
         static let drawingLargest: DynamicTypeSize = .large
         /// Hasta dónde crece la letra de lo que flota sobre el libro (la tarjeta de abajo, la barra
-        /// de lo elegido, la tarjeta del subrayado): con AX5 la tarjeta tapaba casi media página.
+        /// de lo elegido, la tarjeta del subrayado) o queda fijo al pie de una lista (`BottomBar`):
+        /// con AX5 la tarjeta tapaba casi media página y la barra de «Por revisar», media lista.
         static let readerChromeLargest: DynamicTypeSize = .accessibility1
     }
 }

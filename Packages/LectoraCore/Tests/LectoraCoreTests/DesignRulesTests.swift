@@ -929,6 +929,49 @@ final class DesignRulesTests: XCTestCase {
         let note = Self.sources("Packages/LectoraCore/Sources").first { $0.path.hasSuffix("Notes/Note.swift") }?.text ?? ""
         if !note.contains(".clipped(to: Self.previewLetters)") { cut.append("Note.preview no corta entre palabras con «…»") }
         check(cut, "Un texto que se lee a medias: la razón de algo apagado va entera (ReasonLine) y lo cortado, entre palabras y con «…» (clipped(to:))")
+
+        // 13. Auditoría 8 (27 nov 2026): con AX5 salía «Wake-/field», «Los detec-/tives» y
+        //     «conquista-/dores», y en una nota `joined(sepa-/rator:`. Nada se parte a media palabra:
+        //     todo título de libro o de nota es `WholeWordsText` (si su palabra más ancha no cabe, la
+        //     letra baja un paso), el código corre de lado y el pie de una portada no deja «·» colgando.
+        var split: [String] = []
+        let whole = Self.piece("WholeWordsText")
+        if !whole.contains("ViewThatFits(in: .horizontal)") || !whole.contains("WordWidthLayout") || !whole.contains("titleScales") {
+            split.append("WholeWordsText: no baja la letra cuando su palabra más ancha no cabe")
+        }
+        for name in ["CoverCell", "BookRow", "NoteRow", "TitleDetailRow", "NoteBody", "CandidateRow"] where !Self.piece(name).contains("WholeWordsText(") {
+            split.append("\(name): su título puede partirse a media palabra")
+        }
+        if !(Self.sources("App/Shared/Design").first { $0.path.hasSuffix("CoverView.swift") }?.text ?? "").contains("WholeWordsText(title)") {
+            split.append("CoverView: el título de la portada dibujada puede partirse")
+        }
+        // Fuera de la Mac (allá se corta con «…» en un renglón), un título nunca va en un `Text` suelto.
+        split += hits(#"\bText\((book|live|candidate)\??\.title\)|\bText\((bookTitle|term)\)"#,
+                      in: Self.ui.filter { !$0.path.hasPrefix("App/Shared/Mac/") })
+        let code = Self.piece("NoteBody")
+        if !code.contains("ScrollView(.horizontal)") || !code.contains(".fixedSize(horizontal: true, vertical: false)") {
+            split.append("NoteBody: un renglón de código se parte en vez de correr de lado")
+        }
+        if !Self.piece("CoverCell").contains("components(separatedBy: \" · \")") {
+            split.append("CoverCell: «Nuevo ·…» con la letra grande; el estado y el autor no bajan a su renglón")
+        }
+        check(split, "Una palabra partida a media palabra con la letra grande (regla 9)")
+
+        // 14. Auditoría 8: en Aa › Fondo la muestra «Aa» salía «…» con AX5 y el círculo de «Noche
+        //     cálida» quedaba más arriba. La muestra tiene tope de letra y los círculos van arriba.
+        if !appearance.text.contains("swatch(for: item)\n                                // El «Aa» cabe en su círculo de 44: con AX5 salía «…» (auditoría 8).\n                                .dynamicTypeSize(...Theme.Letter.fixedShapeLargest)")
+            || !appearance.text.contains("AdaptiveStack(rowAlignment: .top) {\n                ForEach(ReaderTheme.allCases)") {
+            XCTFail("Aa › Fondo: la muestra «Aa» no tiene tope o los círculos no van arriba")
+        }
+        // Lo fijo al pie de una lista (`BottomBar`) tiene tope de letra, como lo que flota sobre el libro.
+        if !Self.piece("BottomBar").contains("dynamicTypeSize(...Theme.Letter.readerChromeLargest)") {
+            XCTFail("BottomBar: con AX5 la barra fija llena media lista")
+        }
+        // 15. Auditoría 8: con la guía de renglón asomaba una franja gris en la orilla izquierda,
+        //     a la altura del renglón. Solo se aclara el texto; las orillas siguen en penumbra.
+        if !Self.piece("GuideShade").contains("paper.frame(width: Theme.Reader.textMargin)") {
+            XCTFail("GuideShade: el renglón se aclara de orilla a orilla y asoma la sombra de la página")
+        }
     }
 
     /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
@@ -1161,7 +1204,7 @@ final class DesignRulesTests: XCTestCase {
             }
         }
         check(handMade, "Aviso armado a mano: usa .errorAlert o .noticeAlert")
-        let titles = hits(#"(errorAlert|noticeAlert|\.alert|confirmationDialog)\("(Aviso|Nota|Error|Atención|Importación|[^" ]+|[^" ]+ [^" ]+)""#, in: Self.ui)
+        let titles = hits(#"(errorAlert|noticeAlert|\.alert|\.question|confirmationDialog)\("(Aviso|Nota|Error|Atención|Importación|[^" ]+|[^" ]+ [^" ]+)""#, in: Self.ui)
         check(titles, "Aviso cuyo título no dice qué pasó (tres palabras o más, nunca «Aviso» ni «Nota»)")
         // Auditoría de medios (27 nov 2026): «Se borra el archivo», «Se borra la llave», «Se copian
         // tus libros» seguían impersonales. Lo que hago lo digo yo: «Borro», «Copio», «La guardo».
@@ -1214,6 +1257,17 @@ final class DesignRulesTests: XCTestCase {
         check(problems, "Dos textos pegados: sepáralos (un espacio, « · », un salto de renglón)")
     }
 
+    /// Regla 8 (auditoría 8, 27 nov 2026): un título en hebreo o árabe revolvía su renglón
+    /// («% de 31 % a 36 · שלום עליכם»). Un nombre que pones tú (título, autor, serie) junto a otras
+    /// palabras o cifras («·», «…») va aislado (`.isolated`) y no se lleva lo de alrededor.
+    func testNamesKeepTheirDirection() {
+        let name = #"\\\((?:[\w?!]+\.)*(title|author|series|bookTitle|name)\)"#
+        let problems = hits(#""[^"\n]*(·|«)[^"\n]*"# + name + #"|"# + name + #"[^"\n]*(·|»)"#, in: Self.ui)
+            // Lo que va dentro de una nota (`[[Título]]`) se escribe tal cual; el nombre del aparato no es tuyo.
+            .filter { !$0.contains("accessibilityLabel") && !$0.contains("[[") && !$0.contains("device.") }
+        check(problems, "Un nombre junto a cifras o «·» sin aislar: usa .isolated")
+    }
+
     /// Regla 8 (auditoría de medios, 27 nov 2026): a quien usa la app se le habla en palabras, no
     /// con lo que entiende la máquina. El estante decía «3 LIBROS · AUTOR:ASIMOV SERIE:FUNDACIÓN»,
     /// la nota «Notas/El silencio en Rulfo.md», el Cuaderno «EN NOTAS» y Buscar enseñaba
@@ -1228,6 +1282,9 @@ final class DesignRulesTests: XCTestCase {
         problems += hits(#"prompt: "[^"]*\w+:[ "]"#, in: Self.ui)
         // Auditoría 3: la bienvenida decía «Notas (Markdown)» y el dibujo de Ajustes «Markdown».
         problems += hits(#""[^"]*\bMarkdown\b[^"]*""#, in: Self.ui)
+        // Auditoría 8: el Cuaderno vacío decía «Enlaza libros con [[», Buscar «Con «autor:» o «serie:»»
+        // y Calibre «la que tiene metadata.db». Ni sintaxis ni nombres de archivo en lo que lees.
+        problems += hits(#""[^"]* (con \[\[|«\w+:»|metadata\.(db|opf))"#, in: Self.ui + Self.sources("Packages/LectoraCore/Sources"))
         check(problems, "Sintaxis a la vista: dilo en palabras (SavedShelf.describe, la fecha, NoteMarkdown.plain)")
     }
 
@@ -1245,15 +1302,24 @@ final class DesignRulesTests: XCTestCase {
         // `role: .cancel` y diciendo qué conservas («Conservar la nota», «Seguir conectado»).
         var noStay: [String] = []
         for file in Self.ui {
-            for (index, line) in file.lines.enumerated() where line.contains(".confirmationDialog(") || line.contains(".alert(") {
+            for (index, line) in file.lines.enumerated() where line.contains(".question(") || line.contains(".alert(") {
                 let rest = file.lines[(index + 1)...].prefix(14)
-                let block = rest.prefix { !$0.contains("} message:") && !$0.contains(".confirmationDialog(") && !$0.contains(".alert(") }
+                let block = rest.prefix { !$0.contains("} message:") && !$0.contains(".question(") && !$0.contains(".alert(") }
                 if !block.joined().contains("role: .cancel") {
                     noStay.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces).prefix(100))")
                 }
             }
         }
         check(noStay, "Pregunta sin botón para quedarse: agrega Button(\"Conservar…\", role: .cancel)")
+        // Auditoría 8: «¿Ordenar tu biblioteca como Calibre?» y «¿Mantener los datos de N libros?»
+        // salían como globo (iOS 26 cuelga `confirmationDialog` de lo que la abre) y escondían el botón
+        // para quedarse. Toda pregunta va con `.question`, un aviso al centro con sus dos botones.
+        check(hits(#"\.confirmationDialog\("#, in: Self.ui),
+              "Pregunta como globo: usa .question, que deja a la vista el botón para quedarse")
+        if !(Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }?.text ?? "")
+            .contains("func question<A: View, M: View>(_ title: String, isPresented: Binding<Bool>,") {
+            XCTFail("Falta .question en Components.swift")
+        }
     }
 
     /// Regla 7: mientras algo tarda, digo qué estoy haciendo («Buscando portadas…»), no una

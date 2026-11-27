@@ -75,8 +75,7 @@ struct NoteScreen: View {
             }
             .environment(\.openURL, OpenURLAction(handler: open))
             .navigationDestination(item: $linkedBook) { BookDetailScreen(book: $0) }
-            .confirmationDialog("¿Borrar «\(note?.title ?? "esta nota")»?", isPresented: $confirmingDelete,
-                                titleVisibility: .visible) {
+            .question("¿Borrar «\((note?.title ?? "esta nota").isolated)»?", isPresented: $confirmingDelete) {
                 Button("Borrar nota", role: .destructive) { deleteNote() }
                 Button("Conservar la nota", role: .cancel) {}
             } message: {

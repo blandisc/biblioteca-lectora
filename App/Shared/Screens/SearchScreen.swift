@@ -65,7 +65,7 @@ struct SearchScreen: View {
                     } else {
                         let found = (books: books, highlights: highlights, notes: notes)
                         if found.books.isEmpty && found.highlights.isEmpty && found.notes.isEmpty {
-                            EmptyState(title: "Sin resultados para «\(term)»",
+                            EmptyState(title: "Sin resultados para «\(term.isolated)»",
                                        message: "Busqué cada palabra en títulos, autores, series y etiquetas, en tus subrayados y en tus notas. Para buscar dentro de un libro, ábrelo y toca la lupa.")
                         } else {
                             results(found)
@@ -108,7 +108,7 @@ struct SearchScreen: View {
     private var start: some View {
         if recents.isEmpty && recentlyOpened.isEmpty {
             EmptyState(title: "Busca en tu Gabinete",
-                       message: "Encuentra un libro por su título, su autor o su serie, o una idea entre tus subrayados y tus notas. Con «autor:» o «serie:» ves solo los de ese autor o esa serie.")
+                       message: "Encuentra un libro por su título, su autor o su serie, o una idea entre tus subrayados y tus notas. Para ver solo los de un autor o una serie, escribe «autor» o «serie», dos puntos y su nombre.")
         }
         if !recents.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
@@ -130,7 +130,7 @@ struct SearchScreen: View {
                     .padding(.bottom, Theme.Space.xs)
                 ForEach(recentlyOpened) { book in
                     NavigationLink(value: book) {
-                        BookRow(book: book, detail: "\(book.author) · \(book.progress.percentText) leído")
+                        BookRow(book: book, detail: "\(book.author.isolated) · \(book.progress.percentText) leído")
                     }
                     .buttonStyle(.plain)
                 }
@@ -147,7 +147,13 @@ struct SearchScreen: View {
                 .font(.footnote)
                 .foregroundStyle(Theme.secondaryInk)
                 .padding(.top, Theme.Space.l)
-            if !found.books.isEmpty {
+            // Guardado una vez, ya no se ofrece otra vez: digo dónde quedó y te llevo a él (auditoría 8).
+            if let shelf = SavedShelf.saved(term, in: model.library.shelves) {
+                NavigationLink(value: ShelfRef(id: shelf.id)) {
+                    LinkRow(title: "Guardados en tu estante «\(shelf.name.isolated)»")
+                }
+                .buttonStyle(.plain)
+            } else if !found.books.isEmpty {
                 TextAction(title: "Guardar estos libros como estante") { savingShelf = term }
             }
             if !found.books.isEmpty {
@@ -209,6 +215,6 @@ struct SearchScreen: View {
     /// «Agentes del imperio · 12 nov».
     private func label(for highlight: Annotation) -> String {
         let title = model.shelfBook(id: highlight.bookID.uuidString)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled
-        return "\(title) · \(highlight.createdAt.esDayMonth)"
+        return "\(title.isolated) · \(highlight.createdAt.esDayMonth)"
     }
 }

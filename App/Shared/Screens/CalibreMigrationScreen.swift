@@ -112,9 +112,9 @@ private struct ChooseStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             SectionHeader("Una sola vez")
-            Text("Elige la carpeta de tu biblioteca de Calibre, la que tiene metadata.db (en Calibre: botón Biblioteca › Abrir la carpeta).")
+            Text("Elige la carpeta de tu biblioteca de Calibre: la que se abre en Calibre con el botón Biblioteca › Abrir la carpeta.")
                 .font(.body)
-            Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no la toco. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
+            Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no la toco. Desde ahí, Gabinete es el dueño del catálogo y deja los datos de cada libro en su carpeta, al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             if let blocked {

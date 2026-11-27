@@ -172,7 +172,7 @@ final class AppModel: ObservableObject {
         var lines: [String] = []
         if !duplicates.isEmpty {
             lines.append(duplicates.count == 1
-                ? "«\(duplicates[0])» ya estaba en tu biblioteca."
+                ? "«\(duplicates[0].isolated)» ya estaba en tu biblioteca."
                 : "\(duplicates.count.counted("libro", "libros")) ya estaban en tu biblioteca.")
         }
         // Qué archivo no entró y por qué (RB-4), no solo cuántos.

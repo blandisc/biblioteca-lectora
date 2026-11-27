@@ -78,7 +78,10 @@ struct NotebookScreen: View {
     /// «4 NOTAS · EN NOTAS» se leía raro.
     @ViewBuilder
     private var summary: some View {
+        // Sin nada que contar no digo «0 notas» junto a «Sin notas todavía» (auditoría 8).
         switch part {
+        case .notes where notes.isEmpty, .highlights where highlights.isEmpty:
+            EmptyView()
         case .notes:
             CountLine(text: notes.count.counted("nota", "notas"))
         case .highlights:
@@ -92,7 +95,7 @@ struct NotebookScreen: View {
     private var notesList: some View {
         if notes.isEmpty {
             EmptyState(title: "Sin notas todavía",
-                       message: "Escribe ideas, resúmenes o lo que te dejó un libro. Enlaza libros con [[ y lleva tus subrayados a una nota desde el lector. Cada nota es un archivo de texto en la carpeta Notas de tu Gabinete, que abre también Obsidian.",
+                       message: "Escribe ideas, resúmenes o lo que te dejó un libro. Para enlazar un libro, abre dos corchetes y elige su título de tu biblioteca; desde el lector llevas tus subrayados a una nota. Cada nota es un archivo de texto en la carpeta Notas de tu Gabinete, que abre también Obsidian.",
                        actionTitle: "Nota nueva", systemImage: "plus") { path.append(NoteRef.new()) }
         } else {
             LazyVStack(spacing: 0) {

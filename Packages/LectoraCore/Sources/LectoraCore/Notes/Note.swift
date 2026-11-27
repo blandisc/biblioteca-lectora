@@ -230,8 +230,19 @@ public enum NoteMarkdown {
             } else if let marker = text.range(of: number, options: .regularExpression), isItem(index - 1) || isItem(index + 1) {
                 text.removeSubrange(marker)
             }
-            return plain(text).replacingOccurrences(of: "`", with: "")
+            return withoutEmphasis(plain(text).replacingOccurrences(of: "`", with: ""))
         }
+    }
+
+    /// Sin la cursiva de Markdown: «*cursiva*» y «_cursiva_» se leen «cursiva» (la negrita ya se
+    /// iba y la cursiva se quedaba, auditoría 8). Solo cuando la marca abre y cierra junto a una
+    /// palabra: `snake_case`, «2*3*4» y un asterisco suelto («5 * 3») se quedan como están.
+    static func withoutEmphasis(_ line: String) -> String {
+        let star = #"(?<![\p{L}\p{N}*\\])\*(?=[^\s*])([^*\n]*?[^\s*\\])\*(?![\p{L}\p{N}*])"#
+        let under = #"(?<![\p{L}\p{N}_\\])_(?=[^\s_])([^_\n]*?[^\s_\\])_(?![\p{L}\p{N}_])"#
+        return line
+            .replacingOccurrences(of: star, with: "$1", options: .regularExpression)
+            .replacingOccurrences(of: under, with: "$1", options: .regularExpression)
     }
 
     /// La marca de la nota de una sesión de lectura: un comentario que no se ve (ni en Gabinete

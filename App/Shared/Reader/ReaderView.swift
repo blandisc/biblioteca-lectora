@@ -288,7 +288,7 @@ extension ReaderView {
         content
         .sheet(item: $controller.noteLinkTarget) { annotation in
             NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
-                controller.notice = "Quedó en «\(saved.title)»."
+                controller.notice = "Quedó en «\(saved.title.isolated)»."
             }
         }
         .alert("Tu nota sobre el pasaje", isPresented: Binding(
@@ -299,7 +299,7 @@ extension ReaderView {
             Button("Guardar la nota") { controller.saveNote(noteText); noteText = "" }
             Button("Descartar la nota", role: .cancel) { noteText = "" }
         } message: {
-            Text(controller.noteTarget.map { "«\($0.quote)»" } ?? "")
+            Text(controller.noteTarget.map { "«\($0.quote.isolated)»" } ?? "")
         }
         .errorAlert("No pude abrir el libro", message: $controller.errorMessage, back: "Volver a la biblioteca") { dismiss() }
         .errorAlert("No pude guardar el subrayado", message: $controller.saveError, back: "Seguir leyendo")
@@ -647,7 +647,9 @@ extension ReaderView {
 
     private func applyStyle() {
         controller.setColors(text: palette.text, link: palette.link)
-        controller.setFont(family: font.css, scale: scale * Self.systemTextScale)
+        // Con la letra de accesibilidad, a la izquierda: justificado dejaba huecos enormes entre
+        // palabras en un renglón de tres o cuatro (auditoría 8).
+        controller.setFont(family: font.css, scale: scale * Self.systemTextScale, justify: !dynamicTypeSize.isAccessibilitySize)
         controller.setScrolled(flow == .scrolled)
         #if os(iOS)
         controller.pageBackground = UIColor(palette.background)

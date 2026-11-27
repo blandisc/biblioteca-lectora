@@ -30,7 +30,7 @@ struct ConnectorScreen: View {
         .formScreen()
         .inlineTitle(connector.title)
         .errorAlert("No pude conectarme", message: $errorMessage, back: "Volver a la conexión")
-        .confirmationDialog("¿Desconectar \(connector.title) de tu Gabinete?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
+        .question("¿Desconectar \(connector.title) de tu Gabinete?", isPresented: $confirmingDisconnect) {
             Button("Desconectar \(connector.title)", role: .destructive) { store.disconnect(connector) }
             Button("Seguir conectado", role: .cancel) {}
         } message: {

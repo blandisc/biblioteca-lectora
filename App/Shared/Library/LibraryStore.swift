@@ -34,8 +34,8 @@ final class LibraryStore: ObservableObject {
             case .busy(let work): work.reason
             case .downloadingFromCloud: EmptyCopy.addWhileDownloading
             case .stillDownloading(let title):
-                "Todavía estoy bajando de iCloud un archivo de «\(title)». Vuelve a intentarlo en un momento."
-            case .unreadable(let name, let reason): "«\(name)» no entró a tu biblioteca. \(reason)"
+                "Todavía estoy bajando de iCloud un archivo de «\(title.isolated)». Vuelve a intentarlo en un momento."
+            case .unreadable(let name, let reason): "«\(name.isolated)» no entró a tu biblioteca. \(reason)"
             case .bookNotFound: "No encontré ese libro en la biblioteca."
             case .folderTaken: "Ya hay otro libro con ese título y autor en la carpeta."
             case .coverUnavailable: "No pude bajar esa portada. Prueba con otra."
@@ -266,7 +266,7 @@ final class LibraryStore: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .occupied(let folder):
-                "Esa carpeta ya tiene una carpeta «\(folder)». Para no tocarla, elige otra carpeta o crea una nueva para tu Gabinete."
+                "Esa carpeta ya tiene una carpeta «\(folder.isolated)». Para no tocarla, elige otra carpeta o crea una nueva para tu Gabinete."
             case .insideItself:
                 "No puedo mover el Gabinete dentro de sí mismo. Elige una carpeta que esté fuera de él."
             case .alreadyHasLibrary:
@@ -983,6 +983,9 @@ final class LibraryStore: ObservableObject {
     @discardableResult
     func tidy() async -> TidyReport {
         var report = TidyReport()
+        // Mientras bajo tu biblioteca de iCloud no ordeno (auditoría 8): movería carpetas que todavía
+        // no llegan, igual que mover el Gabinete, cambiar de carpeta o traer de Calibre.
+        guard !waitingForCloud else { return report }
         guard lock.begin(.tidying) else { return report }
         deferBooks()
         defer {
@@ -1178,10 +1181,21 @@ final class LibraryStore: ObservableObject {
         }
         var urls: [URL] = []
         for candidate in candidates {
-            let options = await service.coverOptions(for: candidate, language: book.language, title: book.title, limit: 8)
-            for url in options where !urls.contains(url) { urls.append(url) }
+            urls += await service.coverOptions(for: candidate, language: book.language, title: book.title, limit: 8)
         }
-        return Array(urls.prefix(Theme.Lists.coverOptions))
+        // Sin repetir (auditoría 8): por dirección y, ya bajadas, por sus bytes; ni la que ya tiene.
+        let wanted = Array(CoverDedupe.distinct(urls).prefix(Theme.Lists.coverOptions))
+        let service = service
+        let downloaded = await withTaskGroup(of: (Int, Data?).self) { group in
+            for (index, url) in wanted.enumerated() {
+                group.addTask { (index, await service.coverData(at: url).flatMap { CoverImaging.jpeg(from: $0) }) }
+            }
+            var found = [Data?](repeating: nil, count: wanted.count)
+            for await (index, data) in group { found[index] = data }
+            return found
+        }
+        let current = coverURL(for: book).flatMap { try? Data(contentsOf: $0) }
+        return CoverDedupe.distinct(zip(wanted, downloaded).map { (url: $0, data: $1) }, current: current)
     }
 
     /// Cambia la portada por la elegida en la cuadrícula.
@@ -1376,7 +1390,7 @@ final class LibraryStore: ObservableObject {
             job.done = first
             return job
         }
-        explain("Todavía no deshice «\(name)»", refused + " Lo deshago yo en cuanto termine.")
+        explain("Todavía no deshice «\(name.isolated)»", refused + " Lo deshago yo en cuanto termine.")
         Task { [weak self] in
             while let self, !job.cancelled {
                 guard self.lock.current != nil else {
@@ -1504,7 +1518,7 @@ final class LibraryStore: ObservableObject {
     struct UndoFailed: LocalizedError {
         let titles: [String]
         var errorDescription: String? {
-            "No pude deshacer \(titles.count.counted("libro", "libros")): \(titles.map { "«\($0)»" }.joined(separator: ", ")). "
+            "No pude deshacer \(titles.count.counted("libro", "libros")): \(titles.map { "«\($0.isolated)»" }.joined(separator: ", ")). "
                 + "Los demás sí regresaron a «Por revisar»; vuelve a intentarlo con esos."
         }
     }

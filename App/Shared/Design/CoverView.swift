@@ -50,8 +50,10 @@ struct CoverView: View {
                             .font(.system(size: width * Theme.CoverArt.authorTop)) // ds-exception: portada dibujada
                             .spaced(Theme.CoverArt.authorTracking, author)
                     }
-                    Text(title)
-                        .font(.system(size: width * Theme.CoverArt.title, design: .serif)) // ds-exception: portada dibujada
+                    // Sin partir una palabra (regla 9): si la más ancha no cabe, la letra baja un paso.
+                    WholeWordsText(title) { scale in
+                        .system(size: width * Theme.CoverArt.title * scale, design: .serif) // ds-exception: portada dibujada
+                    }
                         .italic(style.illustration == .windmill)
                         .multilineTextAlignment(style.illustration == .windmill ? .center : .leading)
                         .lineLimit(4)

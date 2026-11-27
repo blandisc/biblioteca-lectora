@@ -66,6 +66,12 @@ struct ReviewScreen: View {
                     EmptyState(title: "Todo en orden", message: "No hay libros pendientes de revisar.")
                 } else if !pending.isEmpty {
                     bulkActions.padding(.top, Theme.Space.s)
+                    if choosing {
+                        Text("Los que elijas se quedan con los datos que tienen ahora.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryInk)
+                            .padding(.bottom, Theme.Space.s)
+                    }
                     LazyVStack(spacing: 0) {
                         ForEach(pending) { book in
                             if let id = book.bookID { row(book, id) }
@@ -91,9 +97,9 @@ struct ReviewScreen: View {
         }
         .pushedScreen()
         .disabled(working)
-        .confirmationDialog(confirming?.title ?? "", isPresented: Binding(
+        .question(confirming?.title ?? "", isPresented: Binding(
             get: { confirming != nil }, set: { if !$0 { confirming = nil } }
-        ), titleVisibility: .visible, presenting: confirming) { batch in
+        ), presenting: confirming) { batch in
             Button(batch.action) { run(batch) }
             Button("Dejarlos por revisar", role: .cancel) {}
         } message: { batch in
@@ -176,7 +182,9 @@ struct ReviewScreen: View {
     }
 
     private func keepTitle(_ count: Int) -> String {
-        count == 0 ? "Elige los libros que se quedan como están" : "Mantener los datos de \(count.counted("libro", "libros"))"
+        // Corto: con la letra más grande la barra ocupaba cuatro renglones (auditoría 8). Lo que
+        // hace se explica arriba, sobre la lista.
+        count == 0 ? "Elige los libros" : "Mantener los datos de \(count.counted("libro", "libros"))"
     }
 
     private func run(_ batch: ReviewBatch) {
@@ -470,7 +478,7 @@ struct CandidatePreview: View {
                     HStack(alignment: .top, spacing: Theme.Space.l) {
                         CandidateCover(candidate: candidate, width: Theme.Size.coverEditor)
                         VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                            Text(candidate.title).font(.rowTitle).foregroundStyle(Theme.ink)
+                            WholeWordsText(candidate.title).font(.rowTitle).foregroundStyle(Theme.ink)
                             Text(candidate.authors.first ?? "").font(.subheadline).foregroundStyle(Theme.secondaryInk)
                             Text("\(candidate.verdict) · \(candidate.source.rawValue)")
                                 .font(.caption)
@@ -509,7 +517,7 @@ struct CandidatePreview: View {
                                    old: book?.language.map(BookFields.languageName))
                         CompareRow(label: "ISBN", new: preview.identifiers["isbn"], old: book?.identifiers["isbn"])
                         CompareRow(label: "Serie", new: preview.series.map { name in
-                            preview.seriesIndex.flatMap(ShelfBook.number).map { "\(name) · \($0)" } ?? name
+                            preview.seriesIndex.flatMap(ShelfBook.number).map { "\(name.isolated) · \($0)" } ?? name
                         }, old: book?.series)
                         CompareRow(label: "Géneros", new: preview.tags.joined(separator: ", "), old: book?.tags.joined(separator: ", "))
                     }

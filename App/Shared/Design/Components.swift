@@ -657,6 +657,8 @@ struct PrimaryButton: View {
     var systemImage: String? = nil
     var fillsWidth = false
     let action: () -> Void
+    /// Apagado se ve apagado (regla 7): sin el verde, en el gris de un campo.
+    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         Button(action: action) {
@@ -668,10 +670,10 @@ struct PrimaryButton: View {
                 }
             }
             .font(.body.weight(.medium))
-            .foregroundStyle(Theme.onAction)
+            .foregroundStyle(isEnabled ? Theme.onAction : Theme.secondaryInk)
             .padding(.horizontal, Theme.Space.buttonX)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Theme.Size.control)
-            .background(Theme.action, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .background(isEnabled ? Theme.action : Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
                     .strokeBorder(Theme.ink.opacity(Theme.Emphasis.actionEdge), lineWidth: Theme.Size.hairline)
@@ -726,12 +728,13 @@ struct RoundIconButton: View {
 struct TextAction: View {
     let title: String
     let action: () -> Void
+    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(isEnabled ? Theme.ink : Theme.tertiaryInk)
                 .frame(minHeight: Theme.Size.tapTarget)
                 .contentShape(Rectangle())
         }
@@ -976,11 +979,26 @@ struct CoverCell: View {
                 ShelfCover(book: book)
             }
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text(caption ?? (book.seriesCount != nil ? (book.series ?? book.title) : book.title))
+                if let caption {
+                    // «Nuevo · Kahneman» en un renglón si cabe; si no, el estado arriba y el autor
+                    // abajo, sin el «·» colgando ni «Nuevo ·…» (regla 9, auditoría 8).
+                    ViewThatFits(in: .horizontal) {
+                        Text(caption).lineLimit(1)
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(caption.components(separatedBy: " · ").enumerated()), id: \.offset) { _, part in
+                                WholeWordsText(part).lineLimit(Theme.Size.labelLines)
+                            }
+                        }
+                    }
                     .font(.caption)
-                    .foregroundStyle(caption == nil ? Theme.ink : Theme.secondaryInk)
-                    .lineLimit(caption == nil ? (typeSize.isAccessibilitySize ? Theme.Size.coverCaptionLinesLarge : 2) : 1)
-                    .multilineTextAlignment(.leading)
+                    .foregroundStyle(Theme.secondaryInk)
+                } else {
+                    WholeWordsText(book.seriesCount != nil ? (book.series ?? book.title) : book.title)
+                        .font(.caption)
+                        .foregroundStyle(Theme.ink)
+                        .lineLimit(typeSize.isAccessibilitySize ? Theme.Size.coverCaptionLinesLarge : 2)
+                        .multilineTextAlignment(.leading)
+                }
                 if let count = book.seriesCount, count > 1 {
                     Text("Serie · \(count.counted("libro", "libros"))")
                         .font(.caption)
@@ -1036,7 +1054,7 @@ struct BookRow<Trailing: View>: View {
             CoverView(title: book.title, author: book.author, style: book.cover, image: book.coverImage)
                 .frame(width: Theme.Size.coverRow)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text(book.title)
+                WholeWordsText(book.title)
                     .font(.rowTitle)
                     .foregroundStyle(Theme.ink)
                     .lineLimit(lines)
@@ -1087,6 +1105,79 @@ struct ThinProgress: View {
 
 // MARK: - Texto
 
+/// Un título que nunca parte una palabra con guion (regla 9, auditoría 8: «Wake-/field», «Los
+/// detec-/tives», «conquista-/dores» con la letra más grande). SwiftUI parte la palabra que no
+/// cabe en el renglón y no deja apagarlo; aquí, si la palabra más ancha no cabe a lo ancho, la
+/// letra baja un paso a la vez (el tamaño de texto de iOS, o la escala de una letra de medida
+/// fija) hasta que cabe entera. Lo demás lo pone quien lo usa: `.font`, `.lineLimit`, la alineación.
+/// Lo usan todos los títulos de libro y de nota, bajo una portada y en la portada dibujada.
+struct WholeWordsText: View {
+    /// El texto, con lo que lo marca (lo buscado en verde, en `NoteRow`).
+    let text: AttributedString
+    /// Para la letra de medida fija (la portada dibujada): la letra a cada escala.
+    var fixedFont: ((CGFloat) -> Font)? = nil
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    init(_ text: String, fixedFont: ((CGFloat) -> Font)? = nil) {
+        self.init(AttributedString(text), fixedFont: fixedFont)
+    }
+
+    init(_ text: AttributedString, fixedFont: ((CGFloat) -> Font)? = nil) {
+        self.text = text
+        self.fixedFont = fixedFont
+    }
+
+    var body: some View {
+        // La primera que cabe: la letra de ahora y, si su palabra más ancha no cabe, la siguiente.
+        ViewThatFits(in: .horizontal) {
+            if let fixedFont {
+                ForEach(Theme.CoverArt.titleScales, id: \.self) { scale in candidate.font(fixedFont(scale)) }
+            } else {
+                ForEach(Self.steps(from: typeSize), id: \.self) { size in candidate.dynamicTypeSize(size) }
+            }
+        }
+    }
+
+    /// El título, que a lo ancho dice medir lo que su palabra más ancha (`WordWidthLayout`).
+    private var candidate: some View {
+        WordWidthLayout {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Self.words(String(text.characters)), id: \.self) { Text(verbatim: $0) }
+            }
+            .fixedSize(horizontal: true, vertical: true)
+            .hidden()
+            Text(text)
+        }
+    }
+
+    /// Las palabras del texto, sin repetir.
+    static func words(_ text: String) -> [String] {
+        var seen = Set<String>()
+        return text.split(whereSeparator: \.isWhitespace).map(String.init).filter { seen.insert($0).inserted }
+    }
+
+    /// Del tamaño de texto de ahora hacia abajo.
+    static func steps(from size: DynamicTypeSize) -> [DynamicTypeSize] {
+        DynamicTypeSize.allCases.filter { $0 <= size }.reversed()
+    }
+}
+
+/// Mide un texto (el segundo) como si su ancho ideal fuera el de su palabra más ancha (el
+/// primero, escondido): así `ViewThatFits` sabe si cabe sin partir ninguna palabra.
+private struct WordWidthLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard subviews.count == 2 else { return .zero }
+        let width = proposal.width ?? subviews[0].sizeThatFits(.unspecified).width
+        return subviews[1].sizeThatFits(ProposedViewSize(width: width, height: proposal.height))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 2 else { return }
+        subviews[0].place(at: bounds.origin, proposal: .zero)
+        subviews[1].place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
+    }
+}
+
 /// Cita con la raya de lápiz: «Donde lo dejaste» y los subrayados del Cuaderno.
 struct QuoteBlock: View {
     var label: String? = nil
@@ -1129,7 +1220,7 @@ struct QuoteBlock: View {
                     .font(.caption)
                     .foregroundStyle(Theme.secondaryInk)
             }
-            Text(Found.marked(italic ? "«\(text)»" : text, match))
+            Text(Found.marked(italic ? "«\(text.isolated)»" : text, match))
                 .font(italic ? .quote : .rowTitle)
                 .lineSpacing(Theme.Space.xs)
             if let note {
@@ -1312,6 +1403,8 @@ struct SecondaryButton: View {
     let title: String
     var systemImage: String? = nil
     let action: () -> Void
+    /// Apagado se ve apagado (regla 7): en «Por revisar» seguía en tinta sin poderse tocar.
+    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         Button(action: action) {
@@ -1319,9 +1412,18 @@ struct SecondaryButton: View {
                 if let systemImage { Label(title, systemImage: systemImage) } else { Text(title) }
             }
             .font(.body.weight(.medium))
-            .foregroundStyle(Theme.ink)
+            .foregroundStyle(isEnabled ? Theme.ink : Theme.secondaryInk)
+            .multilineTextAlignment(.center)
+            // Su aire a los lados, como el principal: un texto largo llenaba el botón de orilla a orilla.
+            .padding(.horizontal, Theme.Space.buttonX)
             .frame(maxWidth: .infinity, minHeight: Theme.Size.control)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .background(isEnabled ? Theme.field : Theme.paper, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+            .overlay {
+                if !isEnabled {
+                    RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
+                        .strokeBorder(Theme.track, lineWidth: Theme.Size.hairline)
+                }
+            }
         }
         .buttonStyle(PressableStyle())
     }
@@ -1334,6 +1436,8 @@ struct BottomBar<Content: View>: View {
 
     var body: some View {
         content
+            // Tope de letra, como lo que flota sobre el libro: con AX5 la barra llenaba media lista.
+            .dynamicTypeSize(...Theme.Letter.readerChromeLargest)
             .gutter()
             .padding(.vertical, Theme.Space.s)
             .frame(maxWidth: .infinity)
@@ -1347,12 +1451,13 @@ struct BottomBar<Content: View>: View {
 struct QuietButton: View {
     let title: String
     let action: () -> Void
+    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.subheadline)
-                .foregroundStyle(Theme.secondaryInk)
+                .foregroundStyle(isEnabled ? Theme.secondaryInk : Theme.tertiaryInk)
                 .frame(maxWidth: .infinity, minHeight: Theme.Size.control)
                 .contentShape(Rectangle())
         }
@@ -2017,7 +2122,7 @@ struct CabinetArt: View {
             switch self {
             case .device(let kind): kind.here
             case .iCloud(let path): path.map { "iCloud Drive › \($0)" } ?? "iCloud Drive"
-            case .folder(let name): "En «\(name)»"
+            case .folder(let name): "En «\(name.isolated)»"
             }
         }
 
@@ -2220,7 +2325,7 @@ struct CandidateRow: View {
         HStack(alignment: .top, spacing: Theme.Space.rowGap) {
             CandidateCover(candidate: candidate, width: Theme.Size.coverRow)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text(candidate.title)
+                WholeWordsText(candidate.title)
                     .font(.rowTitle)
                     .foregroundStyle(Theme.ink)
                     .lineLimit(2)
@@ -2432,7 +2537,7 @@ struct NoteRow: View {
         VStack(alignment: .leading, spacing: Theme.Space.xxs) {
             // Con la letra más grande, el título y la fecha con sus libros en dos renglones.
             let lines = typeSize.isAccessibilitySize ? Theme.Size.labelLines : 1
-            Text(Found.marked(note.title, match))
+            WholeWordsText(Found.marked(note.title, match))
                 .font(.rowTitle)
                 .foregroundStyle(Theme.ink)
                 .lineLimit(lines)
@@ -2491,7 +2596,7 @@ struct NoteBody: View {
             ForEach(Array(NoteMarkdown.blocks(text).enumerated()), id: \.offset) { index, block in
                 switch block {
                 case .heading(let title):
-                    Text(title)
+                    WholeWordsText(title)
                         .font(index == 0 ? Font.bookTitle : Font.rowTitle.weight(.semibold))
                         .padding(.bottom, index == 0 ? Theme.Space.xs : 0)
                 case .paragraph(let paragraph):
@@ -2501,12 +2606,17 @@ struct NoteBody: View {
                 case .quote(let quote):
                     quoteView(quote)
                 case .code(let code):
-                    // Tal cual, renglón por renglón y sin enlaces: es tuyo (auditoría 6).
-                    Text(verbatim: code)
-                        .font(.code)
-                        .padding(Theme.Space.s)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+                    // Tal cual, renglón por renglón y sin enlaces: es tuyo (auditoría 6). Un renglón
+                    // largo no se parte («joined(sepa-/rator:», auditoría 8): el bloque corre de lado.
+                    ScrollView(.horizontal) {
+                        Text(verbatim: code)
+                            .font(.code)
+                            .fixedSize(horizontal: true, vertical: false)
+                            .padding(Theme.Space.s)
+                    }
+                    .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
                 }
             }
         }
@@ -2610,7 +2720,7 @@ struct TitleDetailRow<Trailing: View>: View {
     var body: some View {
         HStack(spacing: Theme.Space.rowGap) {
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text(title)
+                WholeWordsText(title)
                     .font(.rowTitle)
                     .foregroundStyle(Theme.ink)
                 if let detail {
@@ -2666,13 +2776,13 @@ enum EmptyCopy {
     static let addWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para añadir libros o traer los de Calibre."
     /// Por qué no muevo tu Gabinete ni cambio de carpeta mientras bajo tu biblioteca (auditoría 8):
     /// la copia saldría a medias. Lo dicen Ajustes y el aviso si algo lo pide.
-    static let cabinetWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para mover tu Gabinete, cambiar de carpeta o traer los libros de Calibre."
+    static let cabinetWhileDownloading = "Estoy bajando tu biblioteca de iCloud. Espera a que termine para mover tu Gabinete, cambiar de carpeta, ordenar la biblioteca o traer los libros de Calibre."
     /// El título del aviso cuando tocaste algo que añade libros mientras bajo la tuya.
     static let addWhileDownloadingTitle = "Todavía no puedo añadir libros"
     /// Volver a la bienvenida desde una biblioteca que no bajó.
     static let openWelcome = "Volver a la bienvenida"
     static func noMatch(_ what: String) -> (title: String, message: String) {
-        ("Ningún libro aquí", "Ningún libro coincide con «\(what)».")
+        ("Ningún libro aquí", "Ningún libro coincide con «\(what.isolated)».")
     }
     /// La salida de un filtro que no deja nada: volver a todos los libros, sin buscar dónde.
     static let showAll = "Ver todos los libros"
@@ -2836,6 +2946,21 @@ extension View {
         oneButtonAlert(title, message: message, back: back, onBack: onBack)
     }
 
+    /// Una pregunta antes de hacer algo («¿Borrar la nota?»): un aviso al centro con su botón
+    /// para quedarse siempre a la vista (regla 7). Como `confirmationDialog`, en iOS 26 salía como
+    /// globo colgado de lo que la abrió, escondía el botón para quedarse y en «Por revisar» apuntaba
+    /// a un párrafo (auditoría 8).
+    func question<A: View, M: View>(_ title: String, isPresented: Binding<Bool>,
+                                    @ViewBuilder actions: () -> A, @ViewBuilder message: () -> M) -> some View {
+        alert(title, isPresented: isPresented, actions: actions, message: message)
+    }
+
+    /// La pregunta sobre algo en particular (el lote de «Por revisar»).
+    func question<T, A: View, M: View>(_ title: String, isPresented: Binding<Bool>, presenting data: T?,
+                                       @ViewBuilder actions: (T) -> A, @ViewBuilder message: (T) -> M) -> some View {
+        alert(title, isPresented: isPresented, presenting: data, actions: actions, message: message)
+    }
+
     /// Algo que conviene saber (salió bien, o salió a medias): título que dice qué pasó
     /// («Tu nota quedó guardada»), nunca «Aviso» ni «Nota».
     func noticeAlert(_ title: String, message: Binding<String?>, back: String, onBack: @escaping () -> Void = {}) -> some View {
@@ -2879,7 +3004,7 @@ struct SaveShelfAlert: ViewModifier {
                 Button("Dejar sin guardar", role: .cancel) { query = nil }
             } message: {
                 // Corto: en un iPhone chico, con la búsqueda entera y el nombre, no cabía.
-                Text("Se llena solo con esta búsqueda. Vacío, lo llamo «\(suggested)».")
+                Text("Se llena solo con esta búsqueda. Vacío, lo llamo «\(suggested.isolated)».")
             }
             .onChange(of: query) { _, _ in name = "" }
     }
@@ -2919,9 +3044,9 @@ struct DeleteShelfConfirmation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .confirmationDialog("¿Borrar el estante «\(shelf?.name ?? "")»?", isPresented: Binding(
+            .question("¿Borrar el estante «\((shelf?.name ?? "").isolated)»?", isPresented: Binding(
                 get: { shelf != nil }, set: { if !$0 { shelf = nil } }
-            ), titleVisibility: .visible) {
+            )) {
                 Button("Borrar el estante", role: .destructive) {
                     if let shelf { delete(shelf) }
                     shelf = nil
@@ -3280,7 +3405,14 @@ struct GuideShade: View {
         GeometryReader { proxy in
             VStack(spacing: 0) {
                 paper.frame(height: max(0, band.lowerBound))
-                Color.clear.frame(height: band.upperBound - band.lowerBound)
+                // Solo el renglón se aclara: las orillas siguen en penumbra, para que la
+                // sombra de la página en la orilla no asome como una franja gris.
+                HStack(spacing: 0) {
+                    paper.frame(width: Theme.Reader.textMargin)
+                    Color.clear
+                    paper.frame(width: Theme.Reader.textMargin)
+                }
+                .frame(height: band.upperBound - band.lowerBound)
                 paper.frame(height: max(0, proxy.size.height - band.upperBound))
             }
             .opacity(Theme.Reader.guideShade)
@@ -3645,7 +3777,7 @@ struct SessionRow: View {
                 HStack(spacing: Theme.Space.xs) {
                     Text(session.start.es(.dateTime.weekday(.abbreviated).day().hour().minute()))
                     if let bookTitle {
-                        Text("· \(bookTitle)").font(.rowTitle).lineLimit(1)
+                        Text("· \(bookTitle.isolated)").font(.rowTitle).lineLimit(1)
                     }
                 }
                 .font(.subheadline)
@@ -3685,7 +3817,7 @@ struct ShareCard: View {
             }
             .padding(.top, Theme.Space.xl)
             if let quote {
-                Text("«\(quote)»")
+                Text("«\(quote.isolated)»")
                     .font(.quote)
                     .lineLimit(4)
                     .padding(.top, Theme.Space.l)
@@ -3984,7 +4116,7 @@ struct SearchStepper: View {
             arrow("chevron.left", "Resultado anterior", enabled: canGoBack, action: onBack)
             Button(action: onList) {
                 VStack(spacing: 0) {
-                    Text("\(position) · «\(query)»")
+                    Text("\(position) · «\(query.isolated)»")
                         .font(.subheadline.weight(.medium))
                         .monospacedDigit()
                         .lineLimit(1)

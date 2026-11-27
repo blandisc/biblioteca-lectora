@@ -145,7 +145,7 @@ struct ReaderToolsSheet: View {
                     .foregroundStyle(Theme.secondaryInk)
             }
             if searchIsEmpty && controller.searchedQuery.count >= 2 {
-                EmptyState(title: "No aparece «\(controller.searchedQuery)» en este libro",
+                EmptyState(title: "No aparece «\(controller.searchedQuery.isolated)» en este libro",
                            message: "Busqué en todo el libro, sin importar acentos ni mayúsculas. Revisa cómo se escribe o prueba con una sola palabra.")
             }
             if controller.searchResults.isEmpty && controller.searchProgress == nil {
