@@ -131,11 +131,15 @@ struct SettingsScreen: View {
             .background(Theme.sunken.ignoresSafeArea())
             .pushedScreen()
             .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
+            #if os(iOS)
+            // En la Mac, Ajustes es su propia ventana: se cierra con el botón rojo o ⌘W, y
+            // «Listo» no hacía nada.
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Listo") { dismiss() }
                 }
             }
+            #endif
         }
         .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
             switch result {

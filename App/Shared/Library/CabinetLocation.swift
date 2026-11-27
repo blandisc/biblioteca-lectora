@@ -38,9 +38,13 @@ enum CabinetLocation {
         cabinet.standardizedFileURL == local.standardizedFileURL
     }
 
-    /// ¿Ya hay una biblioteca de Gabinete en esa carpeta?
+    /// ¿Ya hay una biblioteca de Gabinete en esa carpeta? Pide permiso a la carpeta mientras
+    /// mira (A5: en el iPhone, sin permiso, una carpeta de iCloud recién elegida siempre se veía
+    /// vacía y se ofrecía «Mover» en vez de «Abrir»).
     static func hasLibrary(in cabinet: URL) -> Bool {
-        FileManager.default.fileExists(atPath: library(in: cabinet).appendingPathComponent(".lectora").path)
+        let accessing = cabinet.startAccessingSecurityScopedResource()
+        defer { if accessing { cabinet.stopAccessingSecurityScopedResource() } }
+        return FileManager.default.fileExists(atPath: library(in: cabinet).appendingPathComponent(".lectora").path)
     }
 
     /// «iCloud Drive › Gabinete», «En este iPhone», o el nombre de la carpeta.

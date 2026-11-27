@@ -69,10 +69,11 @@ struct SavedShelfScreen: View {
         }
         .confirmationDialog("¿Borrar el estante «\(shelf?.name ?? "")»?", isPresented: $confirmingDelete,
                             titleVisibility: .visible) {
-            Button("Borrar estante", role: .destructive) {
+            Button("Borrar el estante", role: .destructive) {
                 model.library.removeShelf(id: ref.id)
                 dismiss()
             }
+            Button("Conservar el estante", role: .cancel) {}
         } message: {
             Text("Tus libros se quedan donde están; solo se va el estante.")
         }
