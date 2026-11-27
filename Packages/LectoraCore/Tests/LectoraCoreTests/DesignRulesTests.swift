@@ -647,6 +647,24 @@ final class DesignRulesTests: XCTestCase {
         if index.contains("Theme.accent") { touch.append("LetterIndex en verde: es una acción, va en tinta (regla 1)") }
         check(touch, "Algo se toca en menos de 44 × 44 (SB-4)")
 
+        // 4b. Auditoría 1 (27 nov 2026): el índice A–Z pisaba «TÍTULO ⇅» y la orilla de las filas, y con
+        //     AX5 corría de la barra de estado a la de pestañas tapando los nombres. Lo que flota sobre
+        //     una lista le deja su lugar: el índice tiene tope de letra y cabe en su alto (enseña menos
+        //     letras), y toda pantalla que lo pone lo esconde con la letra más grande, le deja libre su
+        //     columna (`Space.letterIndex`) y lo empieza debajo de su conteo.
+        var overlay: [String] = []
+        if !index.contains("dynamicTypeSize(...") { overlay.append("LetterIndex: su letra crece sin tope") }
+        if !index.contains("ViewThatFits(in: .vertical)") { overlay.append("LetterIndex: si no caben las 27 letras se sale de su alto") }
+        if !index.contains("isAccessibilitySize") { overlay.append("LetterIndex: no dice que con la letra más grande no se enseña") }
+        for file in Self.screens where file.text.contains("LetterIndex {") {
+            if !file.text.contains("LetterIndex.shows(at:") { overlay.append("\(file.path): enseña el índice A–Z con la letra más grande") }
+            if !file.text.contains("Theme.Space.letterIndex") { overlay.append("\(file.path): la lista no le deja libre su columna al índice A–Z") }
+            if file.text.range(of: #"LetterIndex \{[\s\S]*?\.padding\(\.top, \w+Top\)"#, options: .regularExpression) == nil {
+                overlay.append("\(file.path): el índice A–Z no empieza debajo del conteo y el orden")
+            }
+        }
+        check(overlay, "Algo flota sobre la lista y tapa lo que hay debajo")
+
         // 5. En la Mac (MX-B, 26 nov 2026) lo largo de la tabla se corta con «…» en un renglón: toda
         //    celda es `MacCell`, que lo hace; antes eran `Text` sueltos que podían partirse.
         var mac = hits(#"TableColumn\(.*\{ \(row: MacBookRow\) in Text\("#, in: Self.ui.filter { $0.path.hasPrefix("App/Shared/Mac/") })
@@ -676,6 +694,10 @@ final class DesignRulesTests: XCTestCase {
         var wrap: [String] = []
         if !Self.piece("StatTrio").contains("labelLines") { wrap.append("StatTrio: su leyenda se corta en un renglón") }
         if Self.piece("FilterBar").contains("ScrollView(.horizontal") || !Self.piece("FilterBar").contains("WrapRows") { wrap.append("FilterBar: las opciones se cortan en la orilla") }
+        // Auditoría 1: «Posibles duplicad». Lo que es más ancho que un renglón entero recibe ese
+        // ancho y parte su texto; con la medida ideal se cortaba aunque bajara de renglón.
+        if !Self.piece("WrapRows").contains("sizeThatFits(ProposedViewSize(width: width") { wrap.append("WrapRows: una opción más ancha que el renglón se corta") }
+        if Self.piece("FilterBar").contains(".lineLimit(") { wrap.append("FilterBar: una opción no puede usar dos renglones") }
         check(wrap, "Texto que se corta en vez de bajar de renglón")
 
         // 10. UX-3a: «Editar datos» no se veía: con dos botones de texto en la barra, iOS esconde el

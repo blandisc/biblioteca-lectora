@@ -12,6 +12,10 @@ struct LibraryScreen: View {
     /// Capturas: `-screenshot.filter Leyendo` abre con ese filtro elegido (UX-2a).
     @State private var filter: LibraryFilter = .all
     @State private var path = NavigationPath()
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// Dónde termina el renglón del conteo y el orden: el índice A–Z empieza debajo.
+    @State private var letterIndexTop: CGFloat = 0
+    private static let contentSpace = "biblioteca"
 
     private var books: [ShelfBook] {
         sort.sorted(model.shelf.filter(filter.includes))
@@ -31,8 +35,15 @@ struct LibraryScreen: View {
         }
     }
 
+    /// El índice solo tiene sentido con la lista ordenada por título y más libros de los que
+    /// caben en una pantalla (con dos, eran 27 letras de adorno), y no con la letra más grande.
+    private func showsLetterIndex(_ books: [ShelfBook]) -> Bool {
+        layout == .list && sort == .title && books.count >= Self.letterIndexMinimum && LetterIndex.shows(at: typeSize)
+    }
+
     var body: some View {
         let books = self.books
+        let indexed = showsLetterIndex(books)
         return NavigationStack(path: $path) {
             ScrollViewReader { scroller in
                 ScrollView {
@@ -49,53 +60,59 @@ struct LibraryScreen: View {
                         FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
                             .padding(.top, Theme.Space.s)
 
-                        CountLine(text: summary(books)) {
-                            SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
-                        }
-
-                        if !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
-                            NavigationLink(value: ReviewInboxRef()) {
-                                // El número es lo que espera una decisión tuya; lo que se completó solo se
-                                // cuenta solo cuando no queda nada dudoso.
-                                LinkRow(title: "Por revisar", value: "\(model.library.reviews.isEmpty ? model.library.filled.count : model.library.reviews.count)",
-                                        marked: !model.library.reviews.isEmpty)
+                        // Del conteo para abajo, todo deja libre la columna del índice A–Z.
+                        VStack(alignment: .leading, spacing: 0) {
+                            CountLine(text: summary(books)) {
+                                SortMenu(options: LibrarySort.allCases, selection: $sort) { $0.rawValue }
                             }
-                            .buttonStyle(.plain)
-                            .padding(.top, Theme.Space.l)
-                        }
+                            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.contentSpace)).maxY } action: { letterIndexTop = $0 }
 
-                        // Estantes (CB-1): búsquedas guardadas que se llenan solas.
-                        ForEach(model.library.shelves) { shelf in
-                            NavigationLink(value: ShelfRef(id: shelf.id)) {
-                                LinkRow(title: shelf.name, value: "\(model.library.books.filter(shelf.contains).count)")
+                            if !model.library.reviews.isEmpty || !model.library.filled.isEmpty {
+                                NavigationLink(value: ReviewInboxRef()) {
+                                    // El número es lo que espera una decisión tuya; lo que se completó solo se
+                                    // cuenta solo cuando no queda nada dudoso.
+                                    LinkRow(title: "Por revisar", value: "\(model.library.reviews.isEmpty ? model.library.filled.count : model.library.reviews.count)",
+                                            marked: !model.library.reviews.isEmpty)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.top, Theme.Space.l)
                             }
-                            .buttonStyle(.plain)
-                        }
 
-                        if model.shelf.isEmpty {
-                            EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
-                                       actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
-                        } else if books.isEmpty {
-                            EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message,
-                                       actionTitle: EmptyCopy.showAll) { filter = .all }
-                        } else {
-                            switch layout {
-                            case .covers: grid(coverItems(books)).padding(.top, Theme.Space.l)
-                            case .list: list(books).padding(.top, Theme.Space.s)
+                            // Estantes (CB-1): búsquedas guardadas que se llenan solas.
+                            ForEach(model.library.shelves) { shelf in
+                                NavigationLink(value: ShelfRef(id: shelf.id)) {
+                                    LinkRow(title: shelf.name, value: "\(model.library.books.filter(shelf.contains).count)")
+                                }
+                                .buttonStyle(.plain)
+                            }
+
+                            if model.shelf.isEmpty {
+                                EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
+                                           actionTitle: LibraryAction.addBooks.title, systemImage: LibraryAction.addBooks.symbol) { model.importing = true }
+                            } else if books.isEmpty {
+                                EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message,
+                                           actionTitle: EmptyCopy.showAll) { filter = .all }
+                            } else {
+                                switch layout {
+                                case .covers: grid(coverItems(books)).padding(.top, Theme.Space.l)
+                                case .list: list(books).padding(.top, Theme.Space.s)
+                                }
                             }
                         }
+                        .padding(.trailing, indexed ? Theme.Space.letterIndex : 0)
                     }
                     .screenContent()
+                    .coordinateSpace(.named(Self.contentSpace))
                 }
                 .overlay(alignment: .trailing) {
-                    // El índice solo tiene sentido con la lista ordenada por título y más
-                    // libros de los que caben en una pantalla (con dos, eran 27 letras de adorno).
-                    if layout == .list && sort == .title && books.count >= Self.letterIndexMinimum {
+                    if indexed {
                         LetterIndex { letter in
                             if let target = books.first(where: { $0.sortTitle.firstLetter == letter }) {
                                 withAnimation(Theme.Motion.standard) { scroller.scrollTo(target.id, anchor: .top) }
                             }
                         }
+                        .frame(maxHeight: .infinity)
+                        .padding(.top, letterIndexTop)
                     }
                 }
             }
@@ -166,7 +183,5 @@ struct LibraryScreen: View {
                 .id(book.id)
             }
         }
-        // Deja libre la columna del índice A–Z.
-        .padding(.trailing, sort == .title ? Theme.Space.s : 0)
     }
 }

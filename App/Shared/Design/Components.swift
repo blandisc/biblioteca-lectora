@@ -770,7 +770,8 @@ struct FilterBar<Item: Hashable & Identifiable>: View {
     }
 }
 
-/// Acomoda en renglones, de izquierda a derecha: lo que no cabe pasa entero al siguiente.
+/// Acomoda en renglones, de izquierda a derecha: lo que no cabe pasa entero al siguiente, y
+/// lo que es más ancho que un renglón entero parte su texto en vez de cortarse.
 private struct WrapRows: Layout {
     let spacing: CGFloat
 
@@ -778,7 +779,10 @@ private struct WrapRows: Layout {
         var rows: [[(index: Int, size: CGSize)]] = [[]]
         var used: CGFloat = 0
         for (index, view) in subviews.enumerated() {
-            let size = view.sizeThatFits(.unspecified)
+            // Lo que no cabe ni solo en un renglón recibe el ancho entero y parte su texto en
+            // dos renglones o más: antes se cortaba en la orilla («Posibles duplicad», AX5).
+            var size = view.sizeThatFits(.unspecified)
+            if size.width > width { size = view.sizeThatFits(ProposedViewSize(width: width, height: nil)) }
             if !rows[rows.count - 1].isEmpty && used + spacing + size.width > width {
                 rows.append([])
                 used = 0
@@ -1091,23 +1095,38 @@ struct EmptyState: View {
 
 /// Índice A–Z al costado de una lista larga, como el de Contactos: la columna entera se
 /// toca y se recorre con el dedo, en 44 de ancho (cada letra sola medía 18 × 13). En tinta:
-/// es una acción, no el verde de «dónde estás» (regla 1).
+/// es una acción, no el verde de «dónde estás» (regla 1). Cabe en el alto que le dejan: su
+/// letra tiene tope y, si aun así no caben las 27, enseña una de cada dos o de cada tres
+/// (el dedo sigue llegando a todas). Quien lo pone le deja libre su columna
+/// (`Space.letterIndex`) y no lo enseña con la letra más grande (`shows`), donde tapaba las
+/// filas de arriba abajo (auditoría 1, 27 nov 2026).
 struct LetterIndex: View {
     let onSelect: (String) -> Void
-    private let letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".map(String.init)
+    private static let letters = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".map(String.init)
+    /// De cuántas en cuántas letras se enseña, de más a menos, hasta que quepa.
+    private static let strides = [1, 2, 3]
     @State private var height: CGFloat = 0
     @State private var current: String?
 
+    /// Con la letra más grande (AX1 a AX5) el índice no cabe sin tapar las filas.
+    static func shows(at size: DynamicTypeSize) -> Bool { !size.isAccessibilitySize }
+
     var body: some View {
-        VStack(spacing: Theme.Space.hair) {
-            ForEach(letters, id: \.self) { letter in
-                Text(letter)
-                    .font(.caption2.weight(.semibold)) // ds-exception: índice A–Z
-                    .foregroundStyle(Theme.ink)
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction { onSelect(letter) }
+        let letters = Self.letters
+        ViewThatFits(in: .vertical) {
+            ForEach(Self.strides, id: \.self) { step in
+                VStack(spacing: Theme.Space.hair) {
+                    ForEach(Array(stride(from: 0, to: letters.count, by: step)), id: \.self) { index in
+                        Text(letters[index])
+                            .font(.caption2.weight(.semibold)) // ds-exception: índice A–Z
+                            .foregroundStyle(Theme.ink)
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityAction { onSelect(letters[index]) }
+                    }
+                }
             }
         }
+        .dynamicTypeSize(...Theme.Letter.fixedShapeLargest)
         .frame(width: Theme.Size.tapTarget)
         .contentShape(Rectangle())
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }

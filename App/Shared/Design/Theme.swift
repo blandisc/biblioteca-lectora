@@ -135,6 +135,10 @@ enum Theme {
         static let rowGap: CGFloat = 16
         /// Interior horizontal de un botón principal.
         static let buttonX: CGFloat = 24
+        /// Lo que una lista con índice A–Z deja libre a su derecha, además del margen: la columna
+        /// del índice (44) menos el margen (24), y aire. Sin esto las letras pisaban el orden y la
+        /// orilla de las filas (auditoría 1, 27 nov 2026).
+        static let letterIndex: CGFloat = 24
         /// Margen lateral de toda pantalla. Igual a la izquierda y a la derecha, y el mismo
         /// del texto del libro (`Reader.textMargin`).
         static let gutter: CGFloat = 24
