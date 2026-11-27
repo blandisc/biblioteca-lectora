@@ -125,7 +125,6 @@ final class AuditoriaUnoTests: XCTestCase {
     /// Comprueba el cambio de mayúsculas en `base`: dos libros del mismo autor, uno tras otro.
     private func checkCaseOnlyRename(in base: URL) throws {
         let root = try tempDir(in: base)
-        let sensitive = try isCaseSensitive(root)
         let rayuela = try makeBook(root, author: "julio cortázar", title: "Rayuela (1)")
         let cuentos = try makeBook(root, author: "julio cortázar", title: "Bestiario (2)")
         let newAuthor = root.appendingPathComponent("Julio Cortázar")
@@ -138,12 +137,12 @@ final class AuditoriaUnoTests: XCTestCase {
         let second = try FolderMove.moveBookFolder(cuentos, to: newAuthor.appendingPathComponent("Bestiario (2)"))
         XCTAssertTrue(FileManager.default.fileExists(atPath: second.appendingPathComponent("libro.epub").path))
         XCTAssertFalse(names(in: root).contains { $0.hasPrefix(".gabinete-") }, "Nada se queda escondido")
-        if sensitive {
-            XCTAssertEqual(names(in: root), ["Julio Cortázar"], "La carpeta vieja se quita al quedar vacía")
-            XCTAssertEqual(names(in: newAuthor), ["Bestiario (2)", "Rayuela (1)"])
-        } else {
-            XCTAssertEqual(names(in: root).count, 1)
-        }
+        // En cualquier disco, los dos se quedan en la carpeta que ya existe, con su nombre del
+        // disco: nunca dos carpetas que solo cambian en mayúsculas (auditoría 2).
+        XCTAssertEqual(names(in: root), ["julio cortázar"])
+        XCTAssertEqual(names(in: root.appendingPathComponent("julio cortázar")), ["Bestiario (2)", "Rayuela (1)"])
+        XCTAssertEqual(first.deletingLastPathComponent().lastPathComponent, "julio cortázar")
+        XCTAssertEqual(second.deletingLastPathComponent().lastPathComponent, "julio cortázar")
 
         // Un solo libro del autor: en cualquier disco, la carpeta queda con las mayúsculas nuevas.
         let solo = try makeBook(root, author: "jorge luis borges", title: "Ficciones (3)")

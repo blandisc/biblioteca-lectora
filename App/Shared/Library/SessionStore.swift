@@ -7,8 +7,9 @@ enum SessionKeys {
     static let counter = "sesiones.contador"
     /// Mostrar el resumen al cerrar el libro.
     static let summary = "sesiones.resumen"
-    /// Sesiones que aún no se pudieron escribir (el registro seguía en iCloud sin bajar).
-    static let unsaved = "sesiones.pendientes"
+    /// Sesiones que aún no se pudieron escribir, de antes de que cada Gabinete tuviera las suyas
+    /// (auditoría 2): solo se pasan al Gabinete que tiene esos libros.
+    static let legacyUnsaved = "sesiones.pendientes"
 }
 
 /// Las sesiones de lectura del Gabinete (`Biblioteca/.lectora/sesiones/`), de
@@ -21,6 +22,11 @@ final class SessionStore: ObservableObject {
     /// La sesión que acaba de terminar, para el resumen al cerrar el libro.
     @Published var justFinished: ReadingSession?
     private var log: SessionLog
+    /// Lo pendiente del Gabinete de este diario (auditoría 2): nunca se escribe en el de otro.
+    private var pending: PendingWrites
+    private var retryTask: Task<Void, Never>?
+    /// En `pendientes/<gabinete>/`.
+    static let pendingName = "sesiones.json"
 
     /// Una sesión de menos de esto (leyendo de verdad) no se guarda.
     static let minimumReading: TimeInterval = 60
@@ -28,7 +34,9 @@ final class SessionStore: ObservableObject {
     static let minimumForSummary: TimeInterval = 120
 
     init(root: URL? = nil) {
-        log = SessionLog(directory: Self.folder(in: root ?? LibraryStore.shared.root), device: AnnotationStore.deviceID)
+        let root = root ?? LibraryStore.shared.root
+        log = SessionLog(directory: Self.folder(in: root), device: AnnotationStore.deviceID)
+        pending = PendingWrites.forCabinet(root.deletingLastPathComponent())
         reload()
     }
 
@@ -41,10 +49,14 @@ final class SessionStore: ObservableObject {
         let folder = Self.folder(in: root)
         guard folder != log.directory else { return }
         log = SessionLog(directory: folder, device: AnnotationStore.deviceID)
+        pending = PendingWrites.forCabinet(root.deletingLastPathComponent())
+        retryTask?.cancel()
+        retryTask = nil
         reload()
     }
 
     func reload() {
+        adoptLegacyUnsaved()
         writeUnsaved()
         let saved = log.readAll()
         let ids = Set(saved.map(\.id))
@@ -52,30 +64,58 @@ final class SessionStore: ObservableObject {
         sessions = (saved + unsaved.filter { !ids.contains($0.id) }).sorted { $0.start < $1.start }
     }
 
-    /// Sesiones que esperan a que iCloud baje tu registro (auditoría 1): se guardan aquí, no se
-    /// pierden al cerrar la app, y se escriben en cuanto el registro está en el dispositivo.
+    /// Sesiones que esperan a que iCloud baje tu registro (auditoría 1): se guardan en el
+    /// dispositivo, junto al Gabinete al que pertenecen, no se pierden al cerrar la app y se
+    /// escriben en cuanto el registro está en el dispositivo (auditoría 2).
     private var unsaved: [ReadingSession] {
-        get {
-            UserDefaults.standard.data(forKey: SessionKeys.unsaved)
-                .flatMap { try? JSONDecoder().decode([ReadingSession].self, from: $0) } ?? []
-        }
-        set {
-            if newValue.isEmpty {
-                UserDefaults.standard.removeObject(forKey: SessionKeys.unsaved)
-            } else {
-                UserDefaults.standard.set(try? JSONEncoder().encode(newValue), forKey: SessionKeys.unsaved)
-            }
+        get { pending.value(Self.pendingName, as: [ReadingSession].self) ?? [] }
+        set { pending.set(newValue.isEmpty ? nil : newValue, Self.pendingName) }
+    }
+
+    /// Las pendientes de antes (una sola lista para todos los Gabinetes) pasan a este solo si
+    /// son de libros que están en él; las demás esperan a que abras su Gabinete.
+    private func adoptLegacyUnsaved() {
+        let defaults = UserDefaults.standard
+        guard let data = defaults.data(forKey: SessionKeys.legacyUnsaved),
+              let legacy = try? JSONDecoder().decode([ReadingSession].self, from: data) else { return }
+        let library = LibraryStore.shared
+        guard Self.folder(in: library.root) == log.directory else { return }
+        let mine = legacy.filter { library.book(id: $0.bookID) != nil }
+        guard !mine.isEmpty else { return }
+        unsaved += mine
+        let rest = legacy.filter { library.book(id: $0.bookID) == nil }
+        if rest.isEmpty {
+            defaults.removeObject(forKey: SessionKeys.legacyUnsaved)
+        } else {
+            defaults.set(try? JSONEncoder().encode(rest), forKey: SessionKeys.legacyUnsaved)
         }
     }
 
-    /// Escribe lo pendiente. Devuelve si quedó todo escrito.
+    /// Escribe lo pendiente. Devuelve si quedó todo escrito; si no, reintenta cada poco.
     @discardableResult
     private func writeUnsaved() -> Bool {
-        let pending = unsaved
-        guard !pending.isEmpty else { return true }
-        guard (try? log.append(pending)) != nil else { return false }
+        let waiting = unsaved
+        guard !waiting.isEmpty else { return true }
+        guard (try? log.append(waiting)) != nil else {
+            keepRetrying()
+            return false
+        }
         unsaved = []
         return true
+    }
+
+    /// Mientras iCloud baja tu registro, vuelve a intentarlo cada poco.
+    private func keepRetrying() {
+        guard retryTask == nil else { return }
+        let folder = log.directory
+        retryTask = Task { [weak self] in
+            for _ in 0..<CloudFiles.waitAttempts {
+                try? await Task.sleep(for: CloudFiles.settle)
+                guard !Task.isCancelled, let self, self.log.directory == folder else { break }
+                if self.writeUnsaved() { break }
+            }
+            if !Task.isCancelled { self?.retryTask = nil }
+        }
     }
 
     /// Al volver a la app: pide a iCloud las sesiones de tus otros dispositivos y vuelve a leer.

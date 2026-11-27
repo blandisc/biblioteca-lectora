@@ -36,7 +36,15 @@ nuestro queda fuera.
   reglas, lo completado, por revisar y las sesiones de lectura.
 - Lo que iCloud todavía no baja nunca se pisa ni se borra: la app pide bajarlo, espera y te
   dice que vuelvas a intentar (auditoría 1; `AuditoriaUnoTests`, y solo `ChangeLog`,
-  `SessionLog`, `NoteFolder` y `SideFile` escriben en la carpeta).
+  `SessionLog`, `NoteFolder` y `SideFile` escriben en la carpeta). Lo que guardo mientras
+  iCloud baja no se pierde aunque cierres la app: espera en el dispositivo, con su Gabinete
+  (`PendingWrites`, nunca dentro de la carpeta), y se escribe solo en cuanto baja, al volver
+  a la app o al abrirla; si algo se iba a tirar después (juntar duplicados), no se tira
+  (auditoría 2; `AuditoriaDosTests`).
+- Una carpeta nunca tiene una gemela que solo cambia en mayúsculas: iCloud y la Mac no las
+  distinguen y el iPhone sí. Si ya existe con otras mayúsculas, el libro entra a ella y el
+  catálogo guarda el nombre que tiene en el disco (`FolderMove.createFolder`,
+  `moveBookFolder`; auditoría 2, `AuditoriaDosTests`, también en un disco sensible).
 - `Notas/`: Markdown normal, legible por Obsidian o cualquier editor.
 - Si borras Gabinete, todo sigue ahí y se abre con Calibre y Obsidian.
 

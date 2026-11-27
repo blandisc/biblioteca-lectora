@@ -128,6 +128,9 @@ enum CloudFiles {
     static let settle: Duration = .seconds(3)
     /// Cada cuánto se pregunta si ya bajó un archivo.
     static let poll: Duration = .milliseconds(500)
+    /// Cuántas veces (cada `settle`) se reintenta escribir lo que espera a iCloud: unos dos
+    /// minutos; después, al volver a la app o al abrirla.
+    static let waitAttempts = 40
 
     /// El archivo no está bajado: en su lugar hay un «.nombre.icloud».
     static func isPlaceholder(_ file: URL) -> Bool { CloudFile.isPlaceholder(file) }

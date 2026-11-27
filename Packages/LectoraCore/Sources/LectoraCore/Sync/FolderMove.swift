@@ -45,50 +45,114 @@ public enum FolderMove {
         }
     }
 
-    /// Lleva la carpeta de un libro (`Autor/Título (id)`) a `destination` cuando el autor solo
-    /// cambia en mayúsculas («julio cortázar» → «Julio Cortázar»). Se mueve solo la carpeta del
-    /// libro, nunca la del autor entera: los demás libros de ese autor siguen donde el catálogo
-    /// dice (auditoría 1). Devuelve dónde quedó:
-    /// - En un disco que distingue mayúsculas (el iPhone): en la carpeta de autor nueva (se crea
-    ///   si falta) y la vieja se quita si se queda vacía.
-    /// - En uno que no (la Mac, iCloud): las dos son la misma carpeta. Si el libro es lo único
-    ///   que tiene, la carpeta del autor cambia de nombre; si hay otros, el libro se queda en
+    /// Lleva la carpeta de un libro (`Autor/Título (id)`) a `destination` (otro título, otro
+    /// autor o solo otras mayúsculas). Se mueve solo la carpeta del libro, nunca la del autor
+    /// entera: los demás libros de ese autor siguen donde el catálogo dice (auditoría 1). Nunca
+    /// deja dos carpetas hermanas que solo cambian en mayúsculas, en ningún disco (auditoría 2):
+    /// iCloud no las distingue y en la Mac una se renombraría sola. Devuelve dónde quedó:
+    /// - Si ya hay una carpeta de autor con ese nombre sin contar mayúsculas, el libro entra a
     ///   ella con el nombre que tiene en el disco.
+    /// - Si esa carpeta es la suya y el libro es lo único que tiene, la carpeta del autor cambia
+    ///   de nombre (por un nombre temporal) y queda con las mayúsculas nuevas.
+    /// - Si no hay ninguna, se crea con el nombre pedido.
     public static func moveBookFolder(_ from: URL, to destination: URL) throws -> URL {
         let manager = FileManager.default
-        let oldAuthor = from.deletingLastPathComponent(), newAuthor = destination.deletingLastPathComponent()
-        if oldAuthor.standardizedFileURL.path == newAuthor.standardizedFileURL.path {
-            try move(from, to: destination)
-            return destination
-        }
-        if sameItem(oldAuthor, newAuthor) {
-            let others = ((try? manager.contentsOfDirectory(atPath: oldAuthor.path)) ?? [])
-                .filter { $0 != from.lastPathComponent && $0 != ".DS_Store" }
-            guard others.isEmpty else {
-                let inPlace = oldAuthor.appendingPathComponent(destination.lastPathComponent)
-                try move(from, to: inPlace)
-                return inPlace
-            }
-            try move(oldAuthor, to: newAuthor)
+        let oldAuthor = from.deletingLastPathComponent()
+        let parent = destination.deletingLastPathComponent().deletingLastPathComponent()
+        let wanted = destination.deletingLastPathComponent().lastPathComponent
+        let bookName = destination.lastPathComponent
+        // La carpeta de autor del libro, con el nombre que tiene en el disco.
+        let ownName = oldAuthor.deletingLastPathComponent().standardizedFileURL.path == parent.standardizedFileURL.path
+            ? existingName(of: oldAuthor) : nil
+
+        guard let twin = existingSpelling(of: wanted, in: parent, preferring: ownName) else {
+            // Ninguna carpeta de autor se llama así: se crea con el nombre pedido.
+            let target = parent.appendingPathComponent(wanted).appendingPathComponent(bookName)
+            guard !CloudFile.isTaken(target) else { throw MoveError.occupied }
+            let author = target.deletingLastPathComponent()
+            try manager.createDirectory(at: author, withIntermediateDirectories: true)
             do {
-                try move(newAuthor.appendingPathComponent(from.lastPathComponent), to: destination)
+                try manager.moveItem(at: from, to: target)
             } catch {
-                try? move(newAuthor, to: oldAuthor)
+                removeIfEmpty(author)
                 throw error
             }
-            return destination
+            removeIfEmpty(oldAuthor)
+            return target
         }
-        guard !manager.fileExists(atPath: destination.path) else { throw MoveError.occupied }
-        let created = !manager.fileExists(atPath: newAuthor.path)
-        try manager.createDirectory(at: newAuthor, withIntermediateDirectories: true)
+        let author = parent.appendingPathComponent(twin)
+        guard twin == ownName else {
+            // Otra carpeta del mismo autor: el libro entra a ella, con su nombre del disco.
+            let target = author.appendingPathComponent(bookName)
+            guard !CloudFile.isTaken(target) else { throw MoveError.occupied }
+            try manager.moveItem(at: from, to: target)
+            removeIfEmpty(oldAuthor)
+            return target
+        }
+        let inPlace = author.appendingPathComponent(bookName)
+        let others = ((try? manager.contentsOfDirectory(atPath: author.path)) ?? [])
+            .filter { $0 != from.lastPathComponent && $0 != ".DS_Store" }
+        guard twin != wanted, others.isEmpty else {
+            // Su propia carpeta: se queda en ella (los demás libros del autor no se mueven).
+            try move(from, to: inPlace)
+            return inPlace
+        }
+        // Es lo único que tiene: la carpeta del autor toma las mayúsculas nuevas.
+        let renamed = parent.appendingPathComponent(wanted)
+        try move(author, to: renamed)
         do {
-            try manager.moveItem(at: from, to: destination)
+            try move(renamed.appendingPathComponent(from.lastPathComponent), to: renamed.appendingPathComponent(bookName))
         } catch {
-            if created { try? manager.removeItem(at: newAuthor) }
+            try? move(renamed, to: author)
             throw error
         }
-        removeIfEmpty(oldAuthor)
-        return destination
+        return renamed.appendingPathComponent(bookName)
+    }
+
+    /// El nombre de una carpeta hija de `parent` que se llama `name` sin contar mayúsculas, tal
+    /// como está en el disco (nil si no hay). Si hay varias (un disco que distingue mayúsculas
+    /// con gemelas viejas), gana la que se llama exactamente así, luego `preferring`.
+    public static func existingSpelling(of name: String, in parent: URL, preferring: String? = nil,
+                                        foldersOnly: Bool = true) -> String? {
+        let manager = FileManager.default
+        let matches = ((try? manager.contentsOfDirectory(atPath: parent.path)) ?? []).filter { entry in
+            var isFolder: ObjCBool = false
+            return entry.compare(name, options: [.caseInsensitive]) == .orderedSame
+                && manager.fileExists(atPath: parent.appendingPathComponent(entry).path, isDirectory: &isFolder)
+                && (isFolder.boolValue || !foldersOnly)
+        }.sorted()
+        if matches.contains(name) { return name }
+        if let preferring, matches.contains(preferring) { return preferring }
+        return matches.first
+    }
+
+    /// La ruta `Autor/Título (id)[/archivo]` dentro de `root` con el nombre que cada parte ya tiene en
+    /// el disco (sin contar mayúsculas). Así el catálogo guarda la ruta real, también en la Mac,
+    /// donde `createDirectory` usaría sin avisar la carpeta que ya existe (auditoría 2).
+    public static func diskSpelling(of relative: String, in root: URL) -> String {
+        var folder = root
+        var parts: [String] = []
+        for part in relative.split(separator: "/").map(String.init) {
+            let real = existingSpelling(of: part, in: folder, foldersOnly: false) ?? part
+            parts.append(real)
+            folder.appendPathComponent(real)
+        }
+        return parts.joined(separator: "/")
+    }
+
+    /// Crea `relative` dentro de `root` sin hacer una gemela que solo cambie en mayúsculas.
+    /// Devuelve la ruta que quedó en el disco: esa es la que se guarda en el catálogo.
+    @discardableResult
+    public static func createFolder(_ relative: String, in root: URL) throws -> String {
+        let real = diskSpelling(of: relative, in: root)
+        try FileManager.default.createDirectory(at: root.appendingPathComponent(real, isDirectory: true),
+                                                withIntermediateDirectories: true)
+        return real
+    }
+
+    /// El nombre con que está en el disco (en la Mac, la ruta puede venir con otras mayúsculas).
+    private static func existingName(of folder: URL) -> String? {
+        existingSpelling(of: folder.lastPathComponent, in: folder.deletingLastPathComponent(), preferring: folder.lastPathComponent)
     }
 
     public enum MoveError: Error, Equatable {

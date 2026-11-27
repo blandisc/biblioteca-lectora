@@ -75,9 +75,11 @@ final class LibraryStore: ObservableObject {
     /// Registros de internet que deshiciste en un libro («openlibrary:OL1W»): ya no se le
     /// aplican solos; si vuelven a salir, van a «Por revisar» (auditoría 1).
     private var declined: [UUID: Set<String>] = [:]
-    /// Cambios de `.lectora/` que esperan a que iCloud baje su archivo (auditoría 1).
-    private var waitingKeys: [URL: [AnyHashable]] = [:]
-    private var waitingRetries: [URL: () -> Void] = [:]
+    /// Lo que espera a que iCloud baje su archivo (auditoría 1), guardado en el dispositivo y
+    /// por Gabinete: no se pierde aunque cierres la app (auditoría 2).
+    private var pendingWrites: PendingWrites
+    /// Reintenta lo pendiente cada poco mientras iCloud baja.
+    private var retryTask: Task<Void, Never>?
     /// Libro que se quedó → los que se juntaron en él (RB-3: sus subrayados lo siguen).
     private var mergedInto: [UUID: [UUID]] = [:]
     /// Avance de una importación en curso.
@@ -106,6 +108,7 @@ final class LibraryStore: ObservableObject {
 
     init(root: URL = LibraryStore.defaultRoot) {
         self.root = root
+        pendingWrites = PendingWrites.forCabinet(root.deletingLastPathComponent())
         try? FileManager.default.createDirectory(at: root.deletingLastPathComponent()
             .appendingPathComponent(CabinetLocation.notesFolder), withIntermediateDirectories: true)
         let device = AnnotationStore.deviceID
@@ -211,8 +214,10 @@ final class LibraryStore: ObservableObject {
         rules = MetadataRules()
         shelves = []
         notDuplicates = []
-        waitingKeys = [:]
-        waitingRetries = [:]
+        // Lo pendiente de este Gabinete (no el de la anterior) vuelve y se reintenta.
+        pendingWrites = PendingWrites.forCabinet(cabinet)
+        retryTask?.cancel()
+        retryTask = nil
         reload()
         refreshFromCloud()
     }
@@ -220,6 +225,7 @@ final class LibraryStore: ObservableObject {
     /// Trae lo que cambió en otros dispositivos: pide a iCloud los registros,
     /// portadas y metadatos que falten y vuelve a leer el catálogo.
     func refreshFromCloud() {
+        retryWaitingFiles()
         let folder = root, log = log
         Task.detached(priority: .utility) { [weak self] in
             CloudFiles.requestSmallFiles(in: folder)
@@ -281,6 +287,8 @@ final class LibraryStore: ObservableObject {
     private func apply(_ changes: [Change]?) {
         var fresh = LibraryState()
         if let changes { fresh.apply(changes) }
+        // Lo que espera a que tu registro baje también cuenta (auditoría 2).
+        fresh.apply(pendingChanges)
         // Si el registro no se pudo leer (iCloud sin bajar, sin red), la biblioteca no se
         // vacía: se queda lo que había (RB-3).
         if fresh.allIDs(of: .book).isEmpty, !books.isEmpty { return }
@@ -393,19 +401,23 @@ final class LibraryStore: ObservableObject {
 
         // Número de Calibre libre, también en disco (otro dispositivo pudo usarlo).
         var calibreID = (books.compactMap(\.calibreID).max() ?? 0) + 1
-        while FileManager.default.fileExists(atPath: root.appendingPathComponent(
-            CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)).path) {
+        // Con el nombre del disco: en el iPhone «julio cortázar/» y «Julio Cortázar/» son dos.
+        while FileManager.default.fileExists(atPath: root.appendingPathComponent(FolderMove.diskSpelling(
+            of: CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID), in: root)).path) {
             calibreID += 1
         }
         book.calibreID = calibreID
         book.fileHash = hash
         book.addedAt = Date()
 
-        let folder = CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)
         let fileName = CalibreLayout.fileName(title: book.title, authors: book.authors, fileExtension: format)
+        // Si ya hay una carpeta del autor con otras mayúsculas, entra a ella y el catálogo guarda
+        // el nombre que tiene en el disco (auditoría 2).
+        let folder = FolderMove.diskSpelling(of: CalibreLayout.folder(title: book.title, authors: book.authors,
+                                                                      calibreID: calibreID), in: root)
         let folderURL = root.appendingPathComponent(folder, isDirectory: true)
         do {
-            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
+            try FolderMove.createFolder(folder, in: root)
             try FileManager.default.copyItem(at: staging, to: folderURL.appendingPathComponent(fileName))
             book.filePath = "\(folder)/\(fileName)"
 
@@ -457,7 +469,9 @@ final class LibraryStore: ObservableObject {
         book.extraFiles = book.extraFiles.map { onDisk[($0 as NSString).pathExtension.lowercased()] ?? $0 }
 
         // Si el título o el autor cambiaron, o la carpeta no tiene la forma de Calibre, se recoloca.
-        if let oldPath = original.filePath, let calibreID = book.calibreID,
+        // La ruta vieja, con el nombre que tiene en el disco: si el catálogo la guardó con otras
+        // mayúsculas (en la Mac se abría igual), aquí se corrige; «Ordenar» la arregla (auditoría 2).
+        if let oldPath = original.filePath.map({ FolderMove.diskSpelling(of: $0, in: root) }), let calibreID = book.calibreID,
            oldPath != expectedPath(for: book, calibreID: calibreID, fileExtension: (oldPath as NSString).pathExtension) {
             let oldFolder = root.appendingPathComponent((oldPath as NSString).deletingLastPathComponent, isDirectory: true)
             var newFolderPath = CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)
@@ -465,16 +479,16 @@ final class LibraryStore: ObservableObject {
             var newName = CalibreLayout.fileName(title: book.title, authors: book.authors,
                                                  fileExtension: (oldPath as NSString).pathExtension)
             let movesFolder = newFolder.standardizedFileURL != oldFolder.standardizedFileURL
-            // Solo cambian mayúsculas: en la Mac es la misma carpeta y en el iPhone son dos. Se
-            // mueve solo la carpeta de este libro; los demás del autor no se tocan (auditoría 1).
-            let caseOnly = movesFolder && FolderMove.sameIgnoringCase(newFolder, oldFolder)
-            if caseOnly {
-                newFolder = try FolderMove.moveBookFolder(oldFolder, to: newFolder)
+            // Se mueve solo la carpeta de este libro; los demás del autor no se tocan (auditoría 1).
+            // Si ya hay una carpeta del autor con otras mayúsculas, el libro entra a ella y el
+            // catálogo guarda el nombre que tiene en el disco (auditoría 2).
+            if movesFolder {
+                do {
+                    newFolder = try FolderMove.moveBookFolder(oldFolder, to: newFolder)
+                } catch FolderMove.MoveError.occupied {
+                    throw LibraryError.folderTaken
+                }
                 newFolderPath = newFolder.deletingLastPathComponent().lastPathComponent + "/" + newFolder.lastPathComponent
-            } else if movesFolder {
-                guard !FileManager.default.fileExists(atPath: newFolder.path) else { throw LibraryError.folderTaken }
-                try FileManager.default.createDirectory(at: newFolder.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try FileManager.default.moveItem(at: oldFolder, to: newFolder)
             }
             let oldFile = newFolder.appendingPathComponent((oldPath as NSString).lastPathComponent)
             // Un libro que sigue en iCloud sin bajar no se renombra: se queda con su nombre y «Ordenar» lo arregla luego.
@@ -494,7 +508,6 @@ final class LibraryStore: ObservableObject {
                 throw error
             }
             if movesFolder {
-                if !caseOnly { removeIfEmpty(oldFolder.deletingLastPathComponent()) }
                 CoverImaging.forget(oldFolder.appendingPathComponent(CalibreLayout.coverFileName))
             }
             book.filePath = "\(newFolderPath)/\(newName)"
@@ -707,8 +720,7 @@ final class LibraryStore: ObservableObject {
     private func persistRules(_ changed: some Sequence<String>) {
         rules = Self.rules(from: persist(Self.ruleTable(rules), keys: changed, to: rulesURL,
                                          read: { (try? JSONDecoder().decode(MetadataRules.self, from: $0)).map(Self.ruleTable) },
-                                         write: { try? JSONEncoder().encode(Self.rules(from: $0)) },
-                                         retry: { [weak self] in self?.persistRules([]) }))
+                                         write: { try? JSONEncoder().encode(Self.rules(from: $0)) }))
     }
 
     /// Cada regla con su clave, para guardar solo las que cambiaron.
@@ -757,8 +769,7 @@ final class LibraryStore: ObservableObject {
     private func persistShelves(_ changed: [UUID]) {
         shelves = Self.ordered(persist(Self.shelfTable(shelves), keys: changed, to: shelvesURL,
                                        read: { (try? JSONDecoder().decode([SavedShelf].self, from: $0)).map(Self.shelfTable) },
-                                       write: { try? JSONEncoder().encode(Self.ordered($0)) },
-                                       retry: { [weak self] in self?.persistShelves([]) }))
+                                       write: { try? JSONEncoder().encode(Self.ordered($0)) }))
     }
 
     private static func shelfTable(_ list: [SavedShelf]) -> [UUID: SavedShelf] {
@@ -981,8 +992,7 @@ final class LibraryStore: ObservableObject {
         let table = Dictionary(uniqueKeysWithValues: notDuplicates.map { ($0, true) })
         notDuplicates = Set(persist(table, keys: added, to: notDuplicatesURL,
                                     read: { (try? JSONDecoder().decode([DuplicateFinder.Pair].self, from: $0)).map { Dictionary($0.map { ($0, true) }, uniquingKeysWith: { a, _ in a }) } },
-                                    write: { try? JSONEncoder().encode(Array($0.keys)) },
-                                    retry: { [weak self] in self?.persistNotDuplicates([]) }).keys)
+                                    write: { try? JSONEncoder().encode(Array($0.keys)) }).keys)
     }
 
     struct MergeReport {
@@ -1072,9 +1082,16 @@ final class LibraryStore: ObservableObject {
                 addBookmark(bookmark)
             }
             // La lápida dice en quién se juntó: tus otros dispositivos le pasan sus subrayados.
-            record([Book.deletion(id: other.id, clock: clock),
-                    Change(hlc: clock.tick(), entity: .book, entityID: other.id, field: Self.mergedIntoField,
-                           value: .string(keepID.uuidString))])
+            // Se escribe antes de tirar nada: si tu registro no se puede escribir (sigue en
+            // iCloud sin bajar), nada va a la Papelera y el libro sigue en el catálogo (auditoría 2).
+            do {
+                try recordNow([Book.deletion(id: other.id, clock: clock),
+                               Change(hlc: clock.tick(), entity: .book, entityID: other.id, field: Self.mergedIntoField,
+                                      value: .string(keepID.uuidString))])
+            } catch {
+                books = state.books()
+                throw error
+            }
             setReview(other.id, candidates: nil)
         }
         for file in leftovers where (try? Self.discard(file)) != nil { report.trashed += 1 }
@@ -1209,22 +1226,19 @@ final class LibraryStore: ObservableObject {
     private func persistReviews(_ keys: [UUID]) {
         reviews = persist(reviews, keys: keys, to: reviewsURL,
                           read: { try? JSONDecoder().decode([UUID: [MetadataCandidate]].self, from: $0) },
-                          write: { try? JSONEncoder().encode($0) },
-                          retry: { [weak self] in self?.persistReviews([]) })
+                          write: { try? JSONEncoder().encode($0) })
     }
 
     private func persistFilled(_ keys: [UUID]) {
         filled = persist(filled, keys: keys, to: filledURL,
                          read: { try? JSONDecoder().decode([UUID: FilledRecord].self, from: $0) },
-                         write: { try? JSONEncoder().encode($0) },
-                         retry: { [weak self] in self?.persistFilled([]) })
+                         write: { try? JSONEncoder().encode($0) })
     }
 
     private func persistDeclined(_ keys: [UUID]) {
         declined = persist(declined, keys: keys, to: declinedURL,
                            read: { try? JSONDecoder().decode([UUID: Set<String>].self, from: $0) },
-                           write: { try? JSONEncoder().encode($0) },
-                           retry: { [weak self] in self?.persistDeclined([]) })
+                           write: { try? JSONEncoder().encode($0) })
     }
 
     private func setPending(_ bookID: UUID, _ pending: Bool) {
@@ -1237,38 +1251,62 @@ final class LibraryStore: ObservableObject {
         let table = Dictionary(uniqueKeysWithValues: pendingLookup.map { ($0, true) })
         pendingLookup = Set(persist(table, keys: keys, to: pendingURL,
                                     read: { (try? JSONDecoder().decode(Set<UUID>.self, from: $0)).map { Dictionary(uniqueKeysWithValues: $0.map { ($0, true) }) } },
-                                    write: { try? JSONEncoder().encode(Set($0.keys)) },
-                                    retry: { [weak self] in self?.persistPending([]) }).keys)
+                                    write: { try? JSONEncoder().encode(Set($0.keys)) }).keys)
     }
 
     /// RB-3: escribe solo las claves que cambiaron aquí, encima de lo que ya hay en el
     /// disco. Lo que otro dispositivo guardó mientras tanto (por iCloud) no se pisa. Si el
     /// archivo sigue en iCloud sin bajar o no se pudo leer, no se escribe (auditoría 1): el
-    /// cambio se queda aquí y se vuelve a intentar al guardar otra cosa o al volver a la app.
-    private func persist<K: Hashable, V>(_ mine: [K: V], keys: some Sequence<K>, to url: URL,
-                                         read: (Data) -> [K: V]?, write: ([K: V]) -> Data?,
-                                         retry: @escaping () -> Void) -> [K: V] {
-        let all = Set(keys).union((waitingKeys[url] ?? []).compactMap { $0.base as? K })
-        switch SideFile.persist(mine, keys: all, at: url, decode: read, encode: write) {
-        case .written(let merged):
-            waitingKeys[url] = nil
-            waitingRetries[url] = nil
-            return merged
-        case .postponed:
-            waitingKeys[url] = all.map(AnyHashable.init)
-            waitingRetries[url] = retry
-            return mine
-        }
+    /// cambio se guarda en el dispositivo y se reintenta solo en cuanto baja, al volver a la
+    /// app o al abrirla otra vez (auditoría 2).
+    private func persist<K: Codable & Hashable, V: Codable>(_ mine: [K: V], keys: some Sequence<K>, to url: URL,
+                                                           read: (Data) -> [K: V]?, write: ([K: V]) -> Data?) -> [K: V] {
+        let result = SideFile.persist(mine, keys: keys, at: url, pending: pendingWrites, decode: read, encode: write)
+        if !result.written { keepRetrying() }
+        return result.table
     }
 
-    /// Vuelve a intentar lo que esperaba a iCloud.
+    /// Cómo reintentar cada archivo de `.lectora/` (por su nombre).
+    private var sideFileRetries: [String: () -> Void] {
+        [reviewsURL.lastPathComponent: { [weak self] in self?.persistReviews([]) },
+         filledURL.lastPathComponent: { [weak self] in self?.persistFilled([]) },
+         declinedURL.lastPathComponent: { [weak self] in self?.persistDeclined([]) },
+         pendingURL.lastPathComponent: { [weak self] in self?.persistPending([]) },
+         rulesURL.lastPathComponent: { [weak self] in self?.persistRules([]) },
+         shelvesURL.lastPathComponent: { [weak self] in self?.persistShelves([]) },
+         notDuplicatesURL.lastPathComponent: { [weak self] in self?.persistNotDuplicates([]) },
+         Self.pendingChangesName: { [weak self] in self?.writePendingChanges() }]
+    }
+
+    /// Vuelve a intentar lo que esperaba a iCloud (también lo de antes de cerrar la app).
     private func retryWaitingFiles() {
-        for retry in Array(waitingRetries.values) { retry() }
+        let retries = sideFileRetries
+        for name in pendingWrites.names { retries[name]?() }
+    }
+
+    /// Queda algo de la biblioteca esperando a iCloud (las sesiones esperan aparte).
+    private var hasWaitingFiles: Bool {
+        let retries = sideFileRetries
+        return pendingWrites.names.contains { retries[$0] != nil }
+    }
+
+    /// Mientras quede algo pendiente, reintenta cada poco (iCloud suele bajarlo en segundos).
+    private func keepRetrying() {
+        guard retryTask == nil else { return }
+        let folder = root
+        retryTask = Task { [weak self] in
+            for _ in 0..<CloudFiles.waitAttempts {
+                try? await Task.sleep(for: CloudFiles.settle)
+                guard !Task.isCancelled, let self, self.root == folder, self.hasWaitingFiles else { break }
+                self.retryWaitingFiles()
+            }
+            if !Task.isCancelled { self?.retryTask = nil }
+        }
     }
 
     /// Lo del disco, salvo que aquí haya cambios que todavía no se pudieron escribir: esos mandan.
     private func settled(_ url: URL) -> Data? {
-        waitingKeys[url] == nil ? try? Data(contentsOf: url) : nil
+        pendingWrites.has(url.lastPathComponent) ? nil : try? Data(contentsOf: url)
     }
 
     private func loadReviews() {
@@ -1330,12 +1368,45 @@ final class LibraryStore: ObservableObject {
             ("updated_at", .number(Date().timeIntervalSince1970)),
         ]
         let changes = values.map { Change(hlc: clock.tick(), entity: .progress, entityID: bookID, field: $0.0, value: $0.1) }
-        try? log.append(changes)
+        // Si tu registro sigue en iCloud sin bajar, la posición espera en el dispositivo (auditoría 2).
+        appendOrKeep(changes)
         state.apply(changes)
         objectWillChange.send()
     }
 
     // MARK: Interno
+
+    /// En `pendientes/`: cambios del catálogo que esperan a que tu registro baje de iCloud.
+    static let pendingChangesName = "registro.json"
+
+    private var pendingChanges: [Change] {
+        pendingWrites.value(Self.pendingChangesName, as: [Change].self) ?? []
+    }
+
+    /// Agrega al registro. Si no se puede (tu registro sigue en iCloud sin bajar), los cambios
+    /// esperan guardados en el dispositivo y se escriben en cuanto baja: nunca se pierden en
+    /// silencio, aunque cierres la app (auditoría 2).
+    private func appendOrKeep(_ changes: [Change]) {
+        writePendingChanges()
+        let waiting = pendingChanges
+        guard !waiting.isEmpty || (try? log.append(changes)) == nil else { return }
+        pendingWrites.set(waiting + changes, Self.pendingChangesName)
+        keepRetrying()
+    }
+
+    /// Escribe en el registro lo que esperaba.
+    private func writePendingChanges() {
+        let waiting = pendingChanges
+        guard !waiting.isEmpty, (try? log.append(waiting)) != nil else { return }
+        pendingWrites.set([Change]?.none, Self.pendingChangesName)
+    }
+
+    /// Agrega al registro ya, o falla: para lo que viene antes de tirar algo (la lápida al juntar).
+    private func recordNow(_ changes: [Change]) throws {
+        try log.append(changes)
+        state.apply(changes)
+        if changes.contains(where: { $0.field == Self.mergedIntoField }) { rebuildMergedInto() }
+    }
 
     private func writeOPF(_ book: Book, hasCover: Bool) throws {
         guard let folder = book.folderPath else { return }
@@ -1407,7 +1478,7 @@ extension LibraryStore {
 
     private func record(_ changes: [Change]) {
         guard !changes.isEmpty else { return }
-        try? log.append(changes)
+        appendOrKeep(changes)
         state.apply(changes)
         if changes.contains(where: { $0.field == Self.mergedIntoField }) { rebuildMergedInto() }
     }
@@ -1445,13 +1516,16 @@ extension LibraryStore {
         for (index, entry) in plan.toImport.enumerated() {
             var book = rules.apply(to: entry.book)
             var calibreID = entry.book.calibreID ?? lastID + 1
-            var folder = entry.folder
+            // Con el nombre del disco: si ya hay una carpeta del autor con otras mayúsculas, el
+            // libro entra a ella y el catálogo guarda la ruta real (auditoría 2).
+            var folder = FolderMove.diskSpelling(of: entry.folder, in: root)
             // Número libre en el catálogo y en el disco: otro dispositivo pudo usar esa carpeta.
             while books.contains(where: { $0.calibreID == calibreID })
                 || FileManager.default.fileExists(atPath: root.appendingPathComponent(folder).path) {
                 lastID = max(lastID, books.compactMap(\.calibreID).max() ?? 0) + 1
                 calibreID = lastID
-                folder = CalibreLayout.folder(title: book.title, authors: book.authors, calibreID: calibreID)
+                folder = FolderMove.diskSpelling(of: CalibreLayout.folder(title: book.title, authors: book.authors,
+                                                                          calibreID: calibreID), in: root)
             }
             lastID = max(lastID, calibreID)
             book.calibreID = calibreID
@@ -1460,9 +1534,10 @@ extension LibraryStore {
             let to = root.appendingPathComponent(folder, isDirectory: true)
             guard let preferred = entry.preferredFile else { continue }
             let fileName = (preferred as NSString).lastPathComponent
+            let library = root, author = (folder as NSString).deletingLastPathComponent
             do {
                 book.fileHash = try await Task.detached(priority: .userInitiated) {
-                    try FileManager.default.createDirectory(at: to.deletingLastPathComponent(), withIntermediateDirectories: true)
+                    try FolderMove.createFolder(author, in: library)
                     try FileManager.default.copyItem(at: from, to: to)
                     return try LibraryStore.sha256(of: to.appendingPathComponent(fileName))
                 }.value
