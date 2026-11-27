@@ -71,7 +71,7 @@ extension ShelfBook {
     init(book: Book, library: LibraryStore, seriesCount: Int? = nil) {
         let position = library.position(for: book.id)
         let progress = book.readingStatus == .finished ? 1 : (position?.fraction ?? 0)
-        let days = book.addedAt.map { Int(Date().timeIntervalSince($0) / 86_400) } ?? 999
+        let days = book.addedAt.flatMap { (Date().timeIntervalSince($0) / 86_400).safeInt } ?? 999
         self.init(
             id: book.id.uuidString,
             title: book.title,
@@ -83,7 +83,7 @@ extension ShelfBook {
             cover: .generated(for: book.title),
             file: library.fileURL(for: book),
             note: book.series.map { series in
-                book.seriesIndex.map { "\(series) · \(Self.number($0))" } ?? series
+                book.seriesIndex.flatMap(ShelfBook.number).map { "\(series) · \($0)" } ?? series
             // «Listo para leer» solo si no lo has empezado: junto a «2 % leído» se contradice.
             } ?? (progress > 0 ? nil : "Listo para leer"),
             seriesCount: seriesCount,
@@ -99,7 +99,43 @@ extension ShelfBook {
         )
     }
 
-    static func number(_ value: Double) -> String {
-        value.rounded() == value ? String(Int(value)) : String(value)
+    /// «3» o «2.5». Un número no finito o gigante no se muestra (C5: `Int(inf)` cerraba la app).
+    static func number(_ value: Double) -> String? {
+        guard value.isFinite, abs(value) < 1e9 else { return nil }
+        return value.rounded() == value ? String(Int(value)) : String(value)
+    }
+}
+
+/// El número del tomo que escribiste en la ficha: vacío, de 0 a 9999 (con punto o coma), o
+/// inválido. «inf» o «1e20» pasaban por `Double(_:)` y cerraban la app en cada arranque (C5).
+enum SeriesIndexInput: Equatable {
+    case empty
+    case number(Double)
+    case invalid
+
+    static let range: ClosedRange<Double> = 0...9999
+    /// Lo que dice la ficha debajo del campo cuando el número no sirve.
+    static let hint = "Escribe un número del 0 al 9999."
+
+    init(_ text: String) {
+        let clean = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        if clean.isEmpty {
+            self = .empty
+        } else if let value = Double(clean), value.isFinite, Self.range.contains(value) {
+            self = .number(value)
+        } else {
+            self = .invalid
+        }
+    }
+
+    var isInvalid: Bool { self == .invalid }
+
+    /// El número que se guarda; si no sirve, se queda el que ya tenía el libro.
+    func value(keeping current: Double?) -> Double? {
+        switch self {
+        case .empty: nil
+        case .number(let value): value
+        case .invalid: current
+        }
     }
 }

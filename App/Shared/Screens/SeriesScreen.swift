@@ -21,7 +21,7 @@ struct SeriesScreen: View {
                 LazyVStack(spacing: 0) {
                     ForEach(books) { book in
                         NavigationLink(value: book) {
-                            BookRow(book: book, detail: book.seriesIndex.map { "Libro \(ShelfBook.number($0)) · \(book.author)" })
+                            BookRow(book: book, detail: book.seriesIndex.flatMap(ShelfBook.number).map { "Libro \($0) · \(book.author)" })
                         }
                         .buttonStyle(.plain)
                     }

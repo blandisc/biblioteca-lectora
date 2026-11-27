@@ -26,7 +26,7 @@ struct MetadataEditorView: View {
         _draft = State(initialValue: book)
         _authors = State(initialValue: book.authors.joined(separator: " & "))
         _tags = State(initialValue: book.tags.joined(separator: ", "))
-        _seriesIndex = State(initialValue: book.seriesIndex.map(ShelfBook.number) ?? "")
+        _seriesIndex = State(initialValue: book.seriesIndex.flatMap(ShelfBook.number) ?? "")
         _isbn = State(initialValue: book.identifiers["isbn"] ?? "")
     }
 
@@ -66,6 +66,11 @@ struct MetadataEditorView: View {
                             #if os(iOS)
                             .keyboardType(.decimalPad)
                             #endif
+                        if seriesInput.isInvalid {
+                            Text(SeriesIndexInput.hint)
+                                .font(.footnote)
+                                .foregroundStyle(Theme.secondaryInk)
+                        }
                     }
                 }
 
@@ -114,7 +119,8 @@ struct MetadataEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar", action: save)
-                        .disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty
+                                  || (draft.series != nil && seriesInput.isInvalid))
                 }
             }
             .onChange(of: photo) { _, item in
@@ -159,11 +165,13 @@ struct MetadataEditorView: View {
         )
     }
 
+    private var seriesInput: SeriesIndexInput { SeriesIndexInput(seriesIndex) }
+
     private func save() {
         var edited = draft
         edited.authors = authors.components(separatedBy: "&").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         edited.tags = tags.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        edited.seriesIndex = edited.series == nil ? nil : Double(seriesIndex.replacingOccurrences(of: ",", with: "."))
+        edited.seriesIndex = edited.series == nil ? nil : seriesInput.value(keeping: book.seriesIndex)
         let cleanISBN = isbn.trimmingCharacters(in: .whitespaces)
         edited.identifiers["isbn"] = cleanISBN.isEmpty ? nil : cleanISBN
         do {

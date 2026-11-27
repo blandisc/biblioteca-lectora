@@ -148,6 +148,8 @@ private struct MacSidebar: View {
     /// Renombrar o fusionar (CB-2), desde el clic derecho en un autor, serie o etiqueta.
     @State private var renaming: MacCatalogSheet.Target?
     @State private var renamingShelf: SavedShelf?
+    /// Borrar un estante se confirma, como en el iPhone.
+    @State private var deletingShelf: SavedShelf?
     @State private var shelfName = ""
 
     var body: some View {
@@ -181,10 +183,7 @@ private struct MacSidebar: View {
                                     shelfName = shelf.name
                                     renamingShelf = shelf
                                 }
-                                Button("Borrar estante", role: .destructive) {
-                                    if case .shelf(shelf) = selection { selection = .all }
-                                    library.removeShelf(id: shelf.id)
-                                }
+                                Button("Borrar estante…", role: .destructive) { deletingShelf = shelf }
                             }
                     }
                 }
@@ -245,6 +244,18 @@ private struct MacSidebar: View {
                 if wasSelected { selection = .shelf(shelf) }
             }
             Button("Dejar como está", role: .cancel) {}
+        }
+        .confirmationDialog("¿Borrar el estante «\(deletingShelf?.name ?? "")»?", isPresented: Binding(
+            get: { deletingShelf != nil }, set: { if !$0 { deletingShelf = nil } }
+        ), titleVisibility: .visible) {
+            Button("Borrar el estante", role: .destructive) {
+                guard let shelf = deletingShelf else { return }
+                if case .shelf(shelf) = selection { selection = .all }
+                library.removeShelf(id: shelf.id)
+            }
+            Button("Conservar el estante", role: .cancel) {}
+        } message: {
+            Text("Tus libros se quedan donde están; solo se va el estante.")
         }
         .sheet(item: $renaming) { target in
             MacCatalogSheet(target: target, values: values(for: target.field, rows), library: library) { final in

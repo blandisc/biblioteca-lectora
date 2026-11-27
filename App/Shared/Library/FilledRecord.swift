@@ -40,7 +40,7 @@ enum FilledField: String, Codable, CaseIterable, Hashable {
         case .published: text = book.published
         case .publisher: text = book.publisher
         case .language: text = book.language
-        case .series: text = book.series.map { name in book.seriesIndex.map { "\(name) #\(ShelfBook.number($0))" } ?? name }
+        case .series: text = book.series.map { name in book.seriesIndex.flatMap(ShelfBook.number).map { "\(name) #\($0)" } ?? name }
         case .tags: text = ListText.join(book.tags, separator: ", ")
         case .isbn: text = book.identifiers["isbn"]
         case .summary: text = book.summary

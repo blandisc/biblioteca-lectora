@@ -284,7 +284,7 @@ struct CandidatePreview: View {
                                    old: book?.language.map(MetadataCandidate.languageName))
                         CompareRow(label: "ISBN", new: preview.identifiers["isbn"], old: book?.identifiers["isbn"])
                         CompareRow(label: "Serie", new: preview.series.map { name in
-                            preview.seriesIndex.map { "\(name) · \(ShelfBook.number($0))" } ?? name
+                            preview.seriesIndex.flatMap(ShelfBook.number).map { "\(name) · \($0)" } ?? name
                         }, old: book?.series)
                         CompareRow(label: "Géneros", new: preview.tags.joined(separator: ", "), old: book?.tags.joined(separator: ", "))
                     }

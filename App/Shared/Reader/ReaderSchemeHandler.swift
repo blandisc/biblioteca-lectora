@@ -24,6 +24,9 @@ final class ReaderSchemeHandler: NSObject, WKURLSchemeHandler {
         readerDirectory = bundle.url(forResource: "Reader", withExtension: nil)
     }
 
+    /// Pedidos en curso: uno que WebKit detuvo ya no recibe nada (si no, WebKit lanza una excepción).
+    private var running = Set<ObjectIdentifier>()
+
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         guard let url = urlSchemeTask.request.url else {
             urlSchemeTask.didFailWithError(URLError(.badURL))
@@ -36,30 +39,54 @@ final class ReaderSchemeHandler: NSObject, WKURLSchemeHandler {
             let relative = String(url.path.drop(while: { $0 == "/" }))
             fileURL = readerDirectory.flatMap { directory in
                 let candidate = directory.appendingPathComponent(relative).standardizedFileURL
-                // No permitir salir de la carpeta del lector con "../".
-                return candidate.path.hasPrefix(directory.standardizedFileURL.path) ? candidate : nil
+                // No permitir salir de la carpeta del lector con "../". Se comparan carpetas
+                // enteras: con texto, «…/Reader» también aceptaba «…/ReaderX» (B9).
+                return Self.isInside(candidate, directory) ? candidate : nil
             }
         }
-        guard let fileURL, let data = try? Data(contentsOf: fileURL) else {
+        guard let fileURL else {
             urlSchemeTask.didFailWithError(URLError(.fileDoesNotExist))
             return
         }
-        let response = HTTPURLResponse(
-            url: url,
-            statusCode: 200,
-            httpVersion: "HTTP/1.1",
-            headerFields: [
-                "Content-Type": Self.mimeType(for: fileURL),
-                "Content-Length": String(data.count),
-                "Cache-Control": "no-store",
-            ]
-        )!
-        urlSchemeTask.didReceive(response)
-        urlSchemeTask.didReceive(data)
-        urlSchemeTask.didFinish()
+        // M10: el libro entero (un PDF puede pesar cientos de MB) se lee fuera del hilo de la
+        // pantalla y mapeado del disco, no copiado a memoria; antes la app se congelaba al abrirlo.
+        let id = ObjectIdentifier(urlSchemeTask)
+        running.insert(id)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let data = try? Data(contentsOf: fileURL, options: .mappedIfSafe)
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.running.remove(id) != nil else { return }
+                guard let data else {
+                    urlSchemeTask.didFailWithError(URLError(.fileDoesNotExist))
+                    return
+                }
+                let response = HTTPURLResponse(
+                    url: url,
+                    statusCode: 200,
+                    httpVersion: "HTTP/1.1",
+                    headerFields: [
+                        "Content-Type": Self.mimeType(for: fileURL),
+                        "Content-Length": String(data.count),
+                        "Cache-Control": "no-store",
+                    ]
+                )!
+                urlSchemeTask.didReceive(response)
+                urlSchemeTask.didReceive(data)
+                urlSchemeTask.didFinish()
+            }
+        }
     }
 
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+        running.remove(ObjectIdentifier(urlSchemeTask))
+    }
+
+    /// ¿`file` está dentro de `folder`? Compara carpeta por carpeta, no el texto de la ruta.
+    static func isInside(_ file: URL, _ folder: URL) -> Bool {
+        let parts = file.standardizedFileURL.pathComponents
+        let base = folder.standardizedFileURL.pathComponents
+        return parts.count > base.count && Array(parts.prefix(base.count)) == base
+    }
 
     static func mimeType(for url: URL) -> String {
         switch url.pathExtension.lowercased() {

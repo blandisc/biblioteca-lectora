@@ -9,6 +9,7 @@ struct SessionCard: View {
     let bookTitle: String
     let close: () -> Void
     @State private var notice: String?
+    @State private var writing: NoteRef?
 
     /// Las palabras, o «Acabas de empezar» mientras no haya ninguna.
     private func words(_ session: ReadingSession) -> String {
@@ -74,7 +75,7 @@ struct SessionCard: View {
                     VStack(spacing: 0) {
                         Divider()
                         Button {
-                            notice = SessionNote.write(session, bookTitle: bookTitle)
+                            write(session)
                         } label: {
                             HStack(spacing: Theme.Space.s) {
                                 Label("Escribir sobre ella", systemImage: "square.and.pencil")
@@ -102,11 +103,12 @@ struct SessionCard: View {
         .glassPanel(cornerRadius: Theme.Radius.panel)
         .padding(.horizontal, Theme.Reader.chromeInset)
         .padding(.bottom, Theme.Reader.chromeInset)
-        .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button("Volver a la sesión", role: .cancel) {}
-        } message: {
-            Text(notice ?? "")
-        }
+        .noteSheet(item: $writing)
+        .sessionNoteError($notice)
+    }
+
+    private func write(_ session: ReadingSession) {
+        do { writing = try SessionNote.open(session, bookTitle: bookTitle) } catch { notice = error.localizedDescription }
     }
 }
 
@@ -116,6 +118,7 @@ struct SessionSummarySheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var notice: String?
+    @State private var writing: NoteRef?
 
     private var book: ShelfBook? { model.shelfBook(id: session.bookID.uuidString) }
 
@@ -151,7 +154,9 @@ struct SessionSummarySheet: View {
             ])
             HStack(spacing: Theme.Space.s) {
                 SecondaryButton(title: "Escribir sobre ella") {
-                    notice = SessionNote.write(session, bookTitle: book?.title ?? "Sin título")
+                    do { writing = try SessionNote.open(session, bookTitle: book?.title ?? "Sin título") } catch {
+                        notice = error.localizedDescription
+                    }
                 }
                 PrimaryButton(title: "Listo", fillsWidth: true) { dismiss() }
             }
@@ -163,11 +168,8 @@ struct SessionSummarySheet: View {
         .pushedScreen()
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
-        .alert("Nota", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button("Volver a la sesión", role: .cancel) { dismiss() }
-        } message: {
-            Text(notice ?? "")
-        }
+        .noteSheet(item: $writing)
+        .sessionNoteError($notice)
     }
 
     private var progressLine: String {
@@ -227,16 +229,26 @@ struct SessionDetail: View {
     }
 
     private var streakLine: String {
-        let streak = Int(session.longestStreak)
+        let streak = max(0, session.longestStreak.safeInt ?? 0)
         let text = streak >= 60 ? "\(streak / 60) min \(streak % 60) s" : "\(streak) s"
         return "Tu tramo más largo sin interrupciones fue de \(text). La etapa mide cuánto sostienes la atención, no qué tan rápido lees."
     }
 }
 
-/// «Escribir sobre ella»: una nota nueva en el Cuaderno con el resumen de la sesión.
+/// «Escribir sobre ella»: abre en el editor la nota de esa sesión. La primera vez la crea con
+/// el resumen; las siguientes abre la misma (RB-7a, 26 nov 2026: creaba una nota en silencio,
+/// no dejaba escribir, y dos toques daban dos notas iguales).
 enum SessionNote {
+    /// Qué nota se creó para cada sesión, en este dispositivo.
+    private static let key = "sesiones.notas"
+
     @MainActor
-    static func write(_ session: ReadingSession, bookTitle: String) -> String {
+    static func open(_ session: ReadingSession, bookTitle: String) throws -> NoteRef {
+        let notes = NotesStore.shared
+        var made = UserDefaults.standard.dictionary(forKey: key) as? [String: String] ?? [:]
+        if let fileName = made[session.id.uuidString], notes.note(fileName: fileName) != nil {
+            return NoteRef(fileName: fileName, writes: true)
+        }
         let day = session.start.es(.dateTime.day().month(.wide))
         let text = """
         # \(bookTitle), \(day)
@@ -245,11 +257,35 @@ enum SessionNote {
 
 
         """
-        do {
-            let note = try NotesStore.shared.save(text: text, fileName: nil)
-            return "Se creó la nota «\(note?.title ?? bookTitle)» en el Cuaderno."
-        } catch {
-            return "No se pudo crear la nota: \(error.localizedDescription)"
+        guard let note = try notes.save(text: text, fileName: nil) else { return .new(draft: text) }
+        made[session.id.uuidString] = note.fileName
+        UserDefaults.standard.set(made, forKey: key)
+        return NoteRef(fileName: note.fileName, writes: true)
+    }
+}
+
+extension View {
+    /// La nota de una sesión, en su propia hoja con el editor abierto.
+    func noteSheet(item: Binding<NoteRef?>) -> some View {
+        sheet(item: item) { ref in
+            NavigationStack {
+                NoteScreen(ref: ref)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cerrar la nota") { item.wrappedValue = nil }
+                        }
+                    }
+            }
+        }
+    }
+
+    /// Si la nota no se pudo crear, por qué.
+    func sessionNoteError(_ message: Binding<String?>) -> some View {
+        alert("No se pudo crear la nota", isPresented: Binding(get: { message.wrappedValue != nil },
+                                                             set: { if !$0 { message.wrappedValue = nil } })) {
+            Button("Volver a la sesión", role: .cancel) {}
+        } message: {
+            Text(message.wrappedValue ?? "")
         }
     }
 }

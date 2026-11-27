@@ -398,7 +398,12 @@ extension ReaderView {
             VStack(spacing: 0) {
                 if showsChrome {
                     TopControls(bookmarked: currentBookmark != nil, onBookmark: toggleBookmark, onClose: { dismiss() })
+                        #if os(iOS)
                         .padding(.top, -Theme.Reader.chromeLift)
+                        #else
+                        // En la Mac, debajo de la barra de la ventana, no junto a sus botones.
+                        .padding(.top, Theme.Space.s)
+                        #endif
                         // En continuo el texto corre bajo los botones: detrás va la misma
                         // franja de papel que usa el capítulo al leer, y se desvanece.
                         .background(alignment: .top) {
@@ -638,6 +643,9 @@ private struct TopControls: View {
     var body: some View {
         // Arriba solo cerrar y el marcador; buscar y letra van en la tarjeta de abajo (BB-C, 25 nov 2026).
         HStack {
+            // En la Mac el libro se cierra con el botón rojo de su ventana (o ⌘W): la flecha
+            // de iOS chocaba con los botones de la ventana.
+            #if os(iOS)
             Button(action: onClose) {
                 Image(systemName: "chevron.down")
                     .font(.body.weight(.semibold))
@@ -645,6 +653,7 @@ private struct TopControls: View {
                     .glassCircle()
             }
             .accessibilityLabel("Cerrar libro")
+            #endif
             Spacer()
             Button {
                 withAnimation(Theme.Motion.standard) { onBookmark() }
