@@ -98,6 +98,8 @@ struct MacLibraryWindow: View {
                 MacBatchBar(progress: batch, stop: model.library.stopBatch, close: model.library.clearBatch)
             }
         }
+        // De papel (MX-B): la barra de la ventana sobre el mismo papel que el contenido.
+        .macWindowPaper()
         // El tamaño ideal es con el que abre la primera vez (si no, abría en el mínimo).
         .frame(minWidth: Theme.Mac.window.width, idealWidth: Theme.Mac.defaultWindow.width,
                minHeight: Theme.Mac.window.height, idealHeight: Theme.Mac.defaultWindow.height)
@@ -133,8 +135,8 @@ private struct MacBatchBar: View {
         .font(.subheadline)
         .padding(.horizontal, Theme.Space.l)
         .padding(.vertical, Theme.Space.s)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+        .background(Theme.paper)
+        .overlay(alignment: .top) { Hairline() }
     }
 }
 
@@ -196,6 +198,7 @@ private struct MacSidebar: View {
             }
         }
         .listStyle(.sidebar)
+        .macSidebarPaper()
         #if DEBUG
         // Capturas: `-screenshot.demo macDuplicates` importa copias y abre los duplicados; `macBatch` busca datos de los incompletos; `macRename` abre «Renombrar o juntar» con el primer autor;
         // `-screenshot.query Nombre` además lo renombra así (prueba de punta a punta).

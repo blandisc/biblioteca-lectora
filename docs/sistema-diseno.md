@@ -22,8 +22,8 @@ Cada regla dice lo que nota quien usa la app; la medida exacta vive en `Theme` c
 | 5 | **Aire en una sola escala** | Todo espacio sale de 4 · 8 · 16 · 24 · 32 · 48, la escala común de la casa | `testSpacingKeepsTheHouseScale`, `tools/sistema-base` (SB-2) |
 | 6 | **Botón principal oscuro en los dos modos** | «Seguir leyendo» y «Nota nueva» en verde fichero con letra clara, también en oscuro, con un filo finísimo | `testMainActionIsDarkInBothModes`, `testOneMainActionPerScreen` |
 | 7 | **Te hablo de tú y digo qué pasó** | Los avisos dicen qué pasó en primera persona («No pude abrir el libro», nunca «No se pudo» ni «Aviso»), y su botón a dónde vuelves («Volver a la ficha»). Los botones dicen qué hacen: nunca «Cancelar», «OK» ni «Listo» a secas; salir sin cambiar es «Dejar como está». Mientras algo tarda, digo qué estoy haciendo | `testNoticesSayWhatHappened`, `testButtonsSayWhatTheyDo`, `testWaitingSaysWhat` |
-| 8 | **Lo mismo se llama igual en el iPhone y la Mac** | Un libro está «Leyendo», «Por leer» o «Leído» por la misma regla en las dos; añadir libros, buscar datos, lo que haces con el texto elegido y los datos de un libro tienen un solo nombre y un solo ícono; los autores se separan con « & » | `testSameWordsOnBothPlatforms`, `ReadingStateTests` |
-| 9 | **Cabe con la letra más grande y se toca con el dedo** | Con la letra más grande de iOS (AX5) nada se sale de la pantalla ni se parte a media palabra: los títulos crecen, lo que va lado a lado se pone uno bajo otro y los nombres usan dos renglones en vez de cortarse. Todo lo que se toca responde en 44 × 44 aunque se dibuje chico (SB-4) | `testFitsLargeTextAndFingers` |
+| 8 | **Lo mismo se llama igual en el iPhone y la Mac** | Un libro está «Leyendo», «Por leer» o «Leído» por la misma regla en las dos; añadir libros, buscar datos, lo que haces con el texto elegido y los datos de un libro tienen un solo nombre y un solo ícono; los autores se separan con « & ». Y cada cosa se dice una vez: en la Mac el nombre de la pantalla va en la barra de la ventana, no repetido en el contenido, y Ajustes se abre con ⌘, en pestañas, sin engrane dentro de una pantalla (MX-B) | `testSameWordsOnBothPlatforms`, `ReadingStateTests`, `testMacSaysTheNameOnce` |
+| 9 | **Cabe con la letra más grande y se toca con el dedo** | Con la letra más grande de iOS (AX5) nada se sale de la pantalla ni se parte a media palabra: los títulos crecen, lo que va lado a lado se pone uno bajo otro y los nombres usan dos renglones en vez de cortarse. Todo lo que se toca responde en 44 × 44 aunque se dibuje chico (SB-4). En la Mac, lo largo de la tabla y de la ficha se corta con «…» en vez de partirse o salirse (MX-B) | `testFitsLargeTextAndFingers` |
 
 ### Las reglas de la casa (interoperabilidad)
 
@@ -77,6 +77,7 @@ Gabinete cumple el sistema base común a todas las apps de Fernando
 | `accent` | `#0F4A35` | `#4FB386` | Verde botella (AC-3, 26 nov 2026), el único acento: dónde estás, lo que avanzas y lo tuyo (regla 1). Solo lo pintan las piezas. Sale de `Theme.Green`, la única fuente del verde (26 nov 2026). También es el color del sistema (enlaces, «Listo», alertas), la tarjeta para compartir y la acción principal: **para cambiar el acento se cambian las dos líneas de `Theme.Green` y nada más** |
 | `onAccent` | `#FFFFFF` | `#141413` | Letra sobre el verde: la tarjeta para compartir, la portada del dibujo de Ajustes |
 | `highlight` | = `accent` | = `accent` | Lo tuyo: subrayados, marcadores, citas y enlaces de notas, en la app y dentro del libro (`reader.js` lo recibe de `Theme.Green.css`, nunca escribe un color). Todo apunta aquí |
+| `onSelection` | del sistema | del sistema | Solo en la Mac: la letra de una fila elegida en la tabla, sobre el color de selección (`MacCell`, MX-B) |
 
 **Etapas de lectura** (`Theme.stage(_:)`): del gris al verde del acento, el mismo verde
 a distinta intensidad (`Emphasis.stageSkim` 0,22 · `stageLight` 0,45 · `stageActive` 0,72 ·
@@ -123,7 +124,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 `tapTarget 44 (`.sizeTarget()` lo da a lo que se ve chico) · labelLines 2 (renglones de una etiqueta con la letra más grande) · tapBleed 12 (lo que el toque de un ícono sobresale de su dibujo) · row 52 (fila de libreta) · tabMark 16 × 2 (el trazo del filtro elegido) · pageSwatch 78, swatchLine 3, swatchLines (las hojitas de Apariencia) · statusDot 6, statusDotLine 1 · equalizerHeight 12 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · gridColumns 3 (con la letra más grande, `gridColumnsLarge` 2 y el título en `coverCaptionLinesLarge` 3 renglones) · fontColumns 2 (las letras de «Aa») · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageBarThin 4 · footerPreview 64 · footerPicker 320 (el globo del pie) · deskMark 16 × 4 (el trazo verde del encabezado de la Mesa) · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
-textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · turnPreview 18×24 · macReader 720×820 · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
+textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · turnPreview 18×24 · macReader 720×820 · readingMeasure 640 (lo más ancho que corre un renglón del libro en la Mac, unas 66 letras, centrado; MX-B) · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
 coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,8) texto callado sobre el vidrio del lector (subió de 0,72: en Noche cálida quedaba justo en el mínimo de contraste); `scrubberTrack` (0,25) riel de la barra de avance;
@@ -132,7 +133,7 @@ coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 `Theme.shade` (negro) es la única sombra: oscurece portadas, la vuelta de la hoja y el lomo; nunca `.black` suelto.
 
 `Theme.Lists`: cuántos se enseñan antes de «Ver todos»: `desk` 6, `preview` 5, `detailSessions` 5, `longestSessions` 2,
-`linkShelf` 20, `linkSuggestions` 4, `coverSources` 3, `coverOptions` 12 y `summaryLetters` 140 (letras de una sinopsis corta).
+`linkShelf` 20, `linkSuggestions` 4, `coverSources` 3, `coverOptions` 12 y `summaryLetters` 140 (letras de una sinopsis corta) e `inspectorItems` 3 (subrayados y notas de un libro en la ficha de la Mac).
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -233,6 +234,8 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `FactRow` | Etiqueta / valor con línea fina y cifras exactas | Ficha del libro |
 | `EmptyState` | `SectionHeader` con lo que falta, explicación y acción opcional con su ícono; los textos que se repiten salen de `EmptyCopy` | Toda lista vacía |
 | `MacEmptyState`, `.macMainAction()` | En la Mac: el vacío con las mismas palabras (`EmptyCopy`) y el botón principal en `action` | Tabla, ficha y duplicados de la Mac |
+| `MacCell` | Una celda de la tabla de la Mac (MX-B): un renglón que se corta con «…», el título del libro en New York y lo demás en la letra de la interfaz, en tinta o secundario; en la letra de la selección (`Theme.onSelection`) cuando la fila está elegida | Tabla de la Mac |
+| `.macPaper()`, `.macSidebarPaper()`, `.macWindowPaper()` | La Mac de papel (MX-B): la tabla y las listas sobre `paper` sin franjas, la barra lateral sobre `sunken` y la barra de la ventana en `paper`; los controles siguen siendo los de macOS | Ventana de la biblioteca, duplicados, Ajustes |
 | `LoadingLine` | Mientras algo tarda: la ruedita chica y qué estoy haciendo, en tinta secundaria («Buscando en internet…») | Ficha, Por revisar, Ajustes, Bienvenida, Conexiones, Calibre, Lector |
 | `CloseButton` | El ✕ que cierra, en 44 y con su nombre para VoiceOver («Cerrar la tarjeta»); `.plain` o `.glass` | Consultar, tarjeta del subrayado, lectura guiada, Sesión, Hendidura |
 | `TitleDetailRow` | Título en tinta y su detalle en gris debajo, en una fila de libreta | Calibre, Readwise, Por revisar, Apariencia |
@@ -346,17 +349,41 @@ propias de Gabinete, mejor la hoja de libreta.
 6. ¿Una sola acción principal, oscura?
 7. `swift test --filter DesignRulesTests`, `scripts/lint-design.sh` y `tools/sistema-base/revisar.py` en verde.
 
-## La Mac (MG-1, 26 nov 2026)
+## La Mac (MG-1 y MX-B, 26 nov 2026)
 
 En la Mac, Gabinete es una app de Mac: la mesa de trabajo de tu biblioteca. Vive en
-`App/Shared/Mac/` y usa los controles de macOS tal cual, porque es lo que se espera ahí:
+`App/Shared/Mac/` y usa los controles de macOS (tabla, ficha a la derecha, búsqueda en la barra,
+menús), porque es lo que se espera ahí. Desde MX-B (26 nov 2026) es **toda de papel, como el
+iPhone**: los mismos controles, vestidos con el papel, la tinta y las letras de Gabinete, en claro y
+en oscuro:
+
+- **Papel:** la tabla, las listas y la ficha sobre `paper`, sin las franjas ni el blanco del sistema
+  (`.macPaper()`); la barra lateral sobre el papel hondo (`sunken`, `.macSidebarPaper()`); la barra
+  de la ventana y la de Ajustes en `paper` (`.macWindowPaper()`). El aviso de «Buscando datos» abajo,
+  también en papel con su `Hairline`.
+- **Letras:** el título del libro en New York (`rowTitle`) en la tabla, la ficha y los duplicados; lo
+  demás en la letra de la interfaz, en tinta o `secondaryInk` (`MacCell`). Lo largo se corta con «…»
+  en un renglón (la ficha: el título en dos, regla 9); al pasar el puntero se lee completo.
+- **El nombre una vez (regla 8):** el nombre de la sección va solo en la barra de la ventana. La
+  Mesa, el Cuaderno y Buscar son las pantallas del iPhone sin su encabezado grande (`ScreenHeading` y
+  `DeskHeader` no lo dibujan en la Mac; sus acciones, como «Nota nueva», suben a la barra). Sin
+  engrane: Ajustes es Gabinete › Ajustes… (⌘,).
+- **Ajustes en pestañas:** Apariencia, Lectura, Gabinete, Datos y Conexiones, cada una con su
+  tarjeta de siempre (`SettingsCard`, sin su rótulo: la pestaña ya lo dice) sobre el papel hondo. La
+  ventana mide `Theme.Mac.settings` de ancho y toma el alto de cada pestaña; Reglas y las conexiones
+  abren con `Theme.Mac.settingsPage` de alto. Sin «Listo»: se cierra con ⌘W.
+- **Leer cómodo:** en una ventana ancha el libro va en una columna centrada de
+  `Size.readingMeasure` (640 pt, unas 66 letras); el renglón ya no se estira de orilla a orilla
+  (`Mac.readingColumns`, una).
+
+| Parte | Qué es | Archivo |
 
 | Parte | Qué es | Archivo |
 |---|---|---|
 | Barra lateral | Leer (Mesa, Cuaderno), la biblioteca por estado (todos, leyendo, por leer, leídos, por revisar, sin portada) con su cuenta, y Explorar por autor, serie, etiqueta o idioma | `MacLibraryWindow` |
 | Tabla | `Table` nativa: ordenar por columna, elegir columnas (clic derecho en el encabezado; idioma, valoración, editorial, publicado e ISBN empiezan escondidas), selección múltiple, doble clic abre el libro, arrastrar archivos importa | `MacBookTable`, `MacBookRow` |
 | Búsqueda | En la barra de la ventana, con filtros como Calibre: `autor:` `serie:` `etiqueta:` `idioma:` `editorial:` `estado:` `isbn:` `título:` (`LibraryQuery`, con sus pruebas) | `MacBookTable` |
-| Ficha | `inspector` a la derecha: con un libro, todos sus datos; con varios, lo que escribas se aplica a todos y lo que dejes en blanco no cambia (`BulkEdit`, con sus pruebas) | `MacBookInspector` |
+| Ficha | `inspector` a la derecha: con un libro, su portada con «Seguir leyendo» (o «Empezar a leer», el mismo botón que el doble clic) y «Portada» (una imagen de tu Mac o una de internet, como en el iPhone), sus primeros subrayados y notas (`Lists.inspectorItems`; un clic abre el subrayado en su página o la nota en su hoja) y todos sus datos; con varios, lo que escribas se aplica a todos y lo que dejes en blanco no cambia (`BulkEdit`, con sus pruebas) | `MacBookInspector` |
 | Libro abierto | Cada libro en su propia ventana, con su nombre en la barra: lees con la biblioteca al lado y puedes tener varios abiertos. ⌘W lo cierra | `MacReaderWindow` |
 | Menús | Archivo › Añadir libros… (⌘O) y Gabinete › Ajustes… (⌘,), como en toda app de Mac | `LectoraApp` |
 | Ordenar autores, series y etiquetas | Clic derecho en la barra lateral › «Renombrar o juntar…»: escribir un nombre que ya existe es juntar, y los parecidos («Cortázar, Julio», «J. Cortázar») vienen marcados. En series, «Renumerar tomos 1, 2, 3…». ⌘Z deshace. Con autores y etiquetas queda la regla para lo que importes después (CB-2) | `MacCatalogSheet`, `CatalogRename` |
@@ -367,8 +394,10 @@ En la Mac, Gabinete es una app de Mac: la mesa de trabajo de tu biblioteca. Vive
 
 Aquí no aplican las recetas del iPhone (`FilterBar`, `SearchField`, `PrimaryButton`): en la Mac
 mandan la búsqueda de la barra, el botón del sistema (con el acento) y los formularios agrupados.
-Sí aplican los tokens: las medidas de la ventana están en `Theme.Mac` y `scripts/lint-design.sh`
-revisa también estos archivos. Mesa y Cuaderno son las mismas pantallas del iPhone.
+Sí aplican los tokens, los colores y las letras: las medidas de la ventana están en `Theme.Mac` y
+`scripts/lint-design.sh` revisa también estos archivos. Mesa, Cuaderno y Buscar son las mismas
+pantallas del iPhone, sin su encabezado. Lo elegido en la tabla y la barra lateral usa el color de
+selección del sistema (el que eliges en Ajustes del Sistema), con su letra (`Theme.onSelection`).
 
 ## Simetría
 
@@ -449,7 +478,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testOnlyPiecesPaintTheAccent` | Regla 1 (26 nov 2026): ninguna pantalla usa el verde directo; las acciones van en tinta (`TextAction`) |
 | `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `SectionHeader` o `CountLine`, nunca a mano |
 | `testSectionsUseTheirHeader` | Regla 3 (SD-2, 26 nov 2026): toda sección se anuncia con `SectionHeader` y su acción va dentro, no en un `HStack` a mano; `SectionLabel` solo para el «Nº» y el capítulo |
-| `testFitsLargeTextAndFingers` | Regla 9 y SB-4 (SD-4, 26 nov 2026): nada usa `.fixedSize()` (solo los dibujos `…Art`, con tope de letra); los títulos y las letras propias crecen (`@ScaledMetric`, `relativeTo:`); encabezados, conteos, campos, opciones en fila y la tarjeta y barras del lector usan `AdaptiveStack`; las acciones de un encabezado son `IconButton` o `AccentIconButton`, toda pieza con un botón mide 44, y el índice A–Z se toca en 44 y va en tinta |
+| `testFitsLargeTextAndFingers` | Regla 9 y SB-4 (SD-4, 26 nov 2026): nada usa `.fixedSize()` (solo los dibujos `…Art`, con tope de letra); los títulos y las letras propias crecen (`@ScaledMetric`, `relativeTo:`); encabezados, conteos, campos, opciones en fila y la tarjeta y barras del lector usan `AdaptiveStack`; las acciones de un encabezado son `IconButton` o `AccentIconButton`, toda pieza con un botón mide 44, y el índice A–Z se toca en 44 y va en tinta; en la Mac toda celda de la tabla es `MacCell`, que corta con «…» en un renglón (MX-B) |
 | `testFiguresAreExact` | Regla 4: toda pieza que enseña cifras las pone del mismo ancho |
 | `testOneGreenForEverything` | Un solo verde: ningún color con tono verde se escribe fuera de `Theme.Green` (ni en `Theme.swift`, ni en pantallas, piezas o el libro), `action` y el color del sistema salen de él, y `reader.js` no escribe ningún color |
 | `testSpacingKeepsTheHouseScale` | Regla 5 y SB-2 de la casa: sin 12 ni 6, y nada heredado en `sistema-base.json` |
@@ -460,6 +489,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testButtonsSayWhatTheyDo` | Regla 7 y SB-1: ningún botón dice solo «Cancelar», «OK», «Listo», «Cerrar», «Seguir»…; toda ✕ es `CloseButton` con su nombre |
 | `testWaitingSaysWhat` | Regla 7: ninguna pantalla enseña una ruedita sola; `LoadingLine` dice qué estoy haciendo |
 | `testSameWordsOnBothPlatforms` | Regla 8 (SD-3, 26 nov 2026): estados, acciones de la biblioteca, lo que haces con el texto, «Sin título» y la fecha corta salen de un solo lugar, y el iPhone y la Mac los usan |
+| `testMacSaysTheNameOnce` | Regla 8 (MX-B, 26 nov 2026): en la Mac `ScreenHeading` y `DeskHeader` no repiten el título en el contenido (va en la barra de la ventana), el engrane de Ajustes solo existe en el iPhone y Ajustes de la Mac va en pestañas |
 | `ReadingStateTests` | Regla 8: lo que marcas manda y luego el avance; un nombre y un símbolo por estado; autores con « & » |
 
 Cuando se decide algo de diseño que no debe volver a romperse, se vuelve una prueba con

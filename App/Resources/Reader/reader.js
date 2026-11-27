@@ -151,6 +151,10 @@ const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')
 const applyStyle = () => {
     const renderer = view?.renderer
     if (!renderer) return
+    // Cuántas columnas caben a lo más (la Mac pide una, centrada): antes del ancho, que es el que vuelve a acomodar.
+    if (style.columns && renderer.getAttribute('max-column-count') !== String(style.columns)) {
+        renderer.setAttribute('max-column-count', String(style.columns))
+    }
     renderer.setAttribute('max-inline-size', `${style.maxInlineSize}px`)
     // Margen del texto fijo en puntos (no un porcentaje del ancho), igual en páginas y
     // en continuo y en cualquier iPhone. foliate lo pide como fracción: en páginas el

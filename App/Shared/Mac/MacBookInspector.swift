@@ -1,6 +1,7 @@
 #if os(macOS)
 import LectoraCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// La ficha a la derecha de la tabla (MG-1). Con un libro, todos sus datos; con varios,
 /// lo que cambies se aplica a todos (lo que dejes en blanco no se toca).
@@ -14,6 +15,11 @@ struct MacBookInspector: View {
     @State private var errorMessage: String?
     /// Mientras se buscan los datos en internet: la ficha lo dice, no corre en silencio (C8).
     @State private var finding = false
+    /// Cambiar la portada (MX-B): una imagen de tu Mac o una de internet, como en el iPhone.
+    @State private var choosingCoverFile = false
+    @State private var choosingInternetCover = false
+    /// Una nota del libro abierta desde la ficha.
+    @State private var openNote: NoteRef?
 
     private var books: [Book] { books(ids) }
 
@@ -45,22 +51,41 @@ struct MacBookInspector: View {
     // MARK: Un libro
 
     private func single(_ book: Book) -> some View {
-        Form {
+        let shelf = model.shelfBook(id: book.id.uuidString)
+        return Form {
             Section {
                 HStack(alignment: .top, spacing: Theme.Space.l) {
-                    let shelf = model.shelfBook(id: book.id.uuidString)
                     CoverView(title: book.title, author: shelf?.author ?? "",
                               style: shelf?.cover ?? .generated(for: book.title), image: shelf?.coverImage)
                         .frame(width: Theme.Mac.inspectorCover.width, height: Theme.Mac.inspectorCover.height)
                     VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                        Text(book.title).font(.rowTitle)
+                        // Un título largo se corta con «…» en vez de empujar la ficha (regla 9).
+                        Text(book.title).font(.rowTitle).foregroundStyle(Theme.ink)
+                            .lineLimit(Theme.Size.labelLines).truncationMode(.tail)
                         Text(shelf?.author ?? "").foregroundStyle(Theme.secondaryInk)
+                            .lineLimit(1).truncationMode(.tail)
                         if let shelf, shelf.progress > 0 {
                             Text("\(shelf.progress.percentText) leído").foregroundStyle(Theme.secondaryInk).monospacedDigit()
                         }
                     }
                 }
+                // Leer, como el doble clic en la tabla, y cambiar la portada.
+                HStack(spacing: Theme.Space.s) {
+                    if let shelf {
+                        Button { model.open(shelf) } label: { Label(shelf.state.openAction, systemImage: shelf.state.symbol) }
+                            .disabled(shelf.file == nil)
+                            .help("Abrir el libro en su ventana")
+                    }
+                    Menu("Portada") {
+                        Button("Elegir una imagen…") { choosingCoverFile = true }
+                        Button("Buscar portada en internet…") { choosingInternetCover = true }
+                    }
+                    .help("Cambiar la portada")
+                }
+                // Acciones en tinta, no en verde (regla 1), en claro y en oscuro.
+                .tint(Theme.ink)
             }
+            annotations(of: book)
             Section(BookSection.book.rawValue) {
                 TextField("Título", text: $draft.title)
                 TextField("Autores", text: $draft.authors, prompt: Text("Sepáralos con &"))
@@ -92,6 +117,90 @@ struct MacBookInspector: View {
         }
         .formStyle(.grouped)
         .formScreen()
+        .fileImporter(isPresented: $choosingCoverFile, allowedContentTypes: [.image]) { result in
+            setCover(result, for: book)
+        }
+        .sheet(isPresented: $choosingInternetCover) {
+            CoverPickerSheet(bookID: book.id)
+                .environmentObject(model)
+                .frame(width: Theme.Mac.sheet.width, height: Theme.Mac.sheet.height)
+        }
+        .sheet(item: $openNote) { ref in
+            NavigationStack {
+                NoteScreen(ref: ref)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Volver a la ficha") { openNote = nil }
+                        }
+                    }
+            }
+            .environmentObject(model)
+            .frame(width: Theme.Mac.sheet.width, height: Theme.Mac.sheet.height)
+        }
+    }
+
+    /// Los subrayados y las notas del libro, los primeros (`Lists.inspectorItems`): cada uno
+    /// se abre con un clic, el subrayado en su página y la nota en su hoja.
+    @ViewBuilder
+    private func annotations(of book: Book) -> some View {
+        let highlights = model.annotations.annotations(forBook: book.id)
+        let notes = model.notes.notes(linking: book.title)
+        if !highlights.isEmpty {
+            Section(highlights.count.counted("subrayado", "subrayados")) {
+                ForEach(highlights.prefix(Theme.Lists.inspectorItems)) { highlight in
+                    Button { model.openPassage(annotationID: highlight.id) } label: {
+                        Text(highlight.quote)
+                            .font(.quote)
+                            .foregroundStyle(Theme.ink)
+                            .lineLimit(Theme.Size.labelLines)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Abrir el libro en este subrayado")
+                }
+                if highlights.count > Theme.Lists.inspectorItems {
+                    Text("y \(highlights.count - Theme.Lists.inspectorItems) más en el libro")
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+            }
+        }
+        if !notes.isEmpty {
+            Section(notes.count.counted("nota", "notas")) {
+                ForEach(notes.prefix(Theme.Lists.inspectorItems)) { note in
+                    Button { openNote = NoteRef(fileName: note.fileName) } label: {
+                        Label(note.title, systemImage: "note.text")
+                            .foregroundStyle(Theme.ink)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Abrir la nota")
+                }
+                if notes.count > Theme.Lists.inspectorItems {
+                    Text("y \(notes.count - Theme.Lists.inspectorItems) más en el Cuaderno")
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+            }
+        }
+    }
+
+    /// La portada elegida de un archivo: se guarda en el libro como en el iPhone (`update(_:cover:)`).
+    /// Lo que dejaste escrito en la ficha se queda como estaba.
+    private func setCover(_ result: Result<URL, Error>, for book: Book) {
+        do {
+            let url = try result.get()
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+            let data = try Data(contentsOf: url)
+            guard let current = library.book(id: book.id) else { return }
+            _ = try library.update(current, cover: data)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     // MARK: Varios libros

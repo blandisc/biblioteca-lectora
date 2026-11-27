@@ -95,58 +95,60 @@ struct MacBookTable: View {
                 }
                 .width(Theme.Mac.coverColumn)
                 .customizationID("portada")
-                TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in Text(row.title) }
+                TableColumn("Título", value: \MacBookRow.titleKey) { (row: MacBookRow) in MacCell(text: row.title, role: .title) }
                     .width(min: Theme.Mac.titleColumn)
                     .customizationID("titulo")
-                TableColumn("Autor", value: \MacBookRow.authorKey) { (row: MacBookRow) in Text(row.author) }
+                TableColumn("Autor", value: \MacBookRow.authorKey) { (row: MacBookRow) in MacCell(text: row.author) }
                     .width(min: Theme.Mac.column)
                     .customizationID("autor")
-                TableColumn("Serie", value: \MacBookRow.seriesKey) { (row: MacBookRow) in Text(row.seriesLabel) }
+                TableColumn("Serie", value: \MacBookRow.seriesKey) { (row: MacBookRow) in MacCell(text: row.seriesLabel, role: .secondary) }
                     .width(min: Theme.Mac.column)
                     .customizationID("serie")
-                TableColumn("Etiquetas", value: \MacBookRow.tagsKey) { (row: MacBookRow) in Text(row.tagsLabel) }
+                TableColumn("Etiquetas", value: \MacBookRow.tagsKey) { (row: MacBookRow) in MacCell(text: row.tagsLabel, role: .secondary) }
                     .width(min: Theme.Mac.column)
                     .customizationID("etiquetas")
             }
             Group {
-                TableColumn("Avance", value: \MacBookRow.progress) { (row: MacBookRow) in Text(row.progressLabel).monospacedDigit() }
+                TableColumn("Avance", value: \MacBookRow.progress) { (row: MacBookRow) in MacCell(text: row.progressLabel, role: .secondary) }
                     .width(min: Theme.Mac.shortColumn)
                     .customizationID("avance")
-                TableColumn("Estado", value: \MacBookRow.stateLabel) { (row: MacBookRow) in Text(row.stateLabel) }
+                TableColumn("Estado", value: \MacBookRow.stateLabel) { (row: MacBookRow) in MacCell(text: row.stateLabel, role: .secondary) }
                     .width(min: Theme.Mac.shortColumn)
                     .customizationID("estado")
-                TableColumn("Formato", value: \MacBookRow.format) { (row: MacBookRow) in Text(row.format) }
+                TableColumn("Formato", value: \MacBookRow.format) { (row: MacBookRow) in MacCell(text: row.format, role: .secondary) }
                     .width(min: Theme.Mac.shortColumn)
                     .customizationID("formato")
-                TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in Text(row.addedLabel) }
+                TableColumn("Agregado", value: \MacBookRow.added) { (row: MacBookRow) in MacCell(text: row.addedLabel, role: .secondary) }
                     .width(min: Theme.Mac.column)
                     .customizationID("agregado")
             }
             Group {
-                TableColumn("Idioma", value: \MacBookRow.language) { (row: MacBookRow) in Text(row.language) }
+                TableColumn("Idioma", value: \MacBookRow.language) { (row: MacBookRow) in MacCell(text: row.language, role: .secondary) }
                     .width(min: Theme.Mac.shortColumn)
                     .customizationID("idioma")
                     .defaultVisibility(.hidden)
                 TableColumn("Valoración", value: \MacBookRow.rating) { (row: MacBookRow) in
-                    Text(row.stars).accessibilityLabel(row.starCount.counted("estrella", "estrellas"))
+                    MacCell(text: row.stars, role: .secondary).accessibilityLabel(row.starCount.counted("estrella", "estrellas"))
                 }
                     .width(min: Theme.Mac.column)
                     .customizationID("valoracion")
                     .defaultVisibility(.hidden)
-                TableColumn("Editorial", value: \MacBookRow.publisherKey) { (row: MacBookRow) in Text(row.publisher) }
+                TableColumn("Editorial", value: \MacBookRow.publisherKey) { (row: MacBookRow) in MacCell(text: row.publisher, role: .secondary) }
                     .width(min: Theme.Mac.column)
                     .customizationID("editorial")
                     .defaultVisibility(.hidden)
-                TableColumn("Publicado", value: \MacBookRow.published) { (row: MacBookRow) in Text(row.published) }
+                TableColumn("Publicado", value: \MacBookRow.published) { (row: MacBookRow) in MacCell(text: row.published, role: .secondary) }
                     .width(min: Theme.Mac.column)
                     .customizationID("publicado")
                     .defaultVisibility(.hidden)
-                TableColumn("ISBN", value: \MacBookRow.isbn) { (row: MacBookRow) in Text(row.isbn).monospacedDigit() }
+                TableColumn("ISBN", value: \MacBookRow.isbn) { (row: MacBookRow) in MacCell(text: row.isbn, role: .secondary) }
                     .width(min: Theme.Mac.column)
                     .customizationID("isbn")
                     .defaultVisibility(.hidden)
             }
         }
+        // De papel (MX-B): la tabla sobre el papel de Gabinete, sin franjas.
+        .macPaper()
         .contextMenu(forSelectionType: UUID.self) { ids in
             Button("Abrir el libro") { open(ids) }
                 .disabled(ids.count != 1)

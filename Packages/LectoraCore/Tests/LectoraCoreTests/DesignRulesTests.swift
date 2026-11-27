@@ -588,6 +588,13 @@ final class DesignRulesTests: XCTestCase {
         if !index.contains("tapTarget") { touch.append("LetterIndex: cada letra se toca en menos de 44") }
         if index.contains("Theme.accent") { touch.append("LetterIndex en verde: es una acción, va en tinta (regla 1)") }
         check(touch, "Algo se toca en menos de 44 × 44 (SB-4)")
+
+        // 5. En la Mac (MX-B, 26 nov 2026) lo largo de la tabla se corta con «…» en un renglón: toda
+        //    celda es `MacCell`, que lo hace; antes eran `Text` sueltos que podían partirse.
+        var mac = hits(#"TableColumn\(.*\{ \(row: MacBookRow\) in Text\("#, in: Self.ui.filter { $0.path.hasPrefix("App/Shared/Mac/") })
+        let cell = pieces.first { $0.name == "MacCell" }?.body ?? ""
+        if !cell.contains(".lineLimit(1)") || !cell.contains(".truncationMode(.tail)") { mac.append("MacCell: no corta con «…» en un renglón") }
+        check(mac, "Celda de la tabla de la Mac sin cortar con «…»: usa MacCell")
     }
 
     /// Regla 4, números exactos: cantidades, fechas y porcentajes con cifras del mismo ancho
@@ -793,6 +800,34 @@ final class DesignRulesTests: XCTestCase {
     /// ruedita sola. Las pantallas usan LoadingLine.
     func testWaitingSaysWhat() {
         check(hits(#"ProgressView\(\)"#, in: Self.screens), "Ruedita sola: usa LoadingLine(text: \"Buscando…\")")
+    }
+
+    /// Regla 8 (MX-B, 26 nov 2026): en la Mac cada cosa se nombra una vez. El nombre de la pantalla
+    /// va en la barra de la ventana y no se repite en el contenido (la Mesa, el Cuaderno y Buscar
+    /// lo decían dos veces); Ajustes se abre con ⌘, y va en pestañas, sin engrane dentro de una pantalla.
+    func testMacSaysTheNameOnce() {
+        var problems: [String] = []
+        for name in ["ScreenHeading", "DeskHeader"] {
+            let body = Self.piece(name)
+            guard let mac = body.range(of: "#if os(macOS)") else { problems.append("\(name) repite el título en la Mac"); continue }
+            let branch = body[mac.upperBound...]
+            if name == "ScreenHeading", !(branch.components(separatedBy: "#else").first ?? "").contains(".navigationTitle(title)") {
+                problems.append("ScreenHeading no pasa su título a la barra en la Mac")
+            }
+        }
+        // El engrane de Ajustes solo en el iPhone: en la Mac es Gabinete › Ajustes… (⌘,).
+        for file in Self.screens {
+            var phoneOnly = 0
+            for (index, line) in file.lines.enumerated() {
+                let code = line.trimmingCharacters(in: .whitespaces)
+                if code.hasPrefix("#if") { if phoneOnly > 0 || code == "#if os(iOS)" { phoneOnly += 1 }; continue }
+                if code.hasPrefix("#endif"), phoneOnly > 0 { phoneOnly -= 1; continue }
+                if phoneOnly == 0, line.contains("\"gearshape\"") { problems.append("\(file.path):\(index + 1): engrane también en la Mac") }
+            }
+        }
+        let settings = Self.screens.first { $0.path.hasSuffix("SettingsScreen.swift") }?.text ?? ""
+        if !settings.contains("TabView(") { problems.append("SettingsScreen: en la Mac, Ajustes va en pestañas") }
+        check(problems, "En la Mac el nombre va una vez, en la barra de la ventana (regla 8)")
     }
 
     /// Regla 8: lo mismo se llama igual en el iPhone y la Mac. Los nombres viven en

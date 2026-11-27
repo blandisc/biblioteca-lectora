@@ -54,12 +54,16 @@ extension View {
     }
 
     /// Título pequeño, centrado en la barra (pantallas empujadas, hojas y formularios).
+    /// En la Mac, sin título no se pone uno vacío: el de `ScreenHeading` ya va en la barra (MX-B).
+    @ViewBuilder
     func inlineTitle(_ title: String) -> some View {
+        #if os(iOS)
         self
             .navigationTitle(title)
-            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
+        #else
+        if title.isEmpty { self } else { self.navigationTitle(title) }
+        #endif
     }
 
     /// El título de pantalla en serif, que crece con el tamaño de texto de iOS (antes fijo en 30).
@@ -93,6 +97,15 @@ struct ScreenHeading<Trailing: View>: View {
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
+        #if os(macOS)
+        // En la Mac el nombre de la pantalla va una sola vez, en la barra de la ventana, y sus
+        // acciones suben a ella, como en toda app de Mac (MX-B, 26 nov 2026).
+        Color.clear
+            .frame(maxWidth: .infinity, maxHeight: 0)
+            .accessibilityHidden(true)
+            .navigationTitle(title)
+            .toolbar { ToolbarItemGroup(placement: .primaryAction) { trailing } }
+        #else
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             // Con la letra más grande el título se queda con todo el ancho y las acciones bajan
             // a su renglón: antes se partía a media palabra («Bibliotec / a»).
@@ -109,6 +122,7 @@ struct ScreenHeading<Trailing: View>: View {
             }
             Hairline()
         }
+        #endif
     }
 }
 
@@ -198,6 +212,10 @@ struct DeskHeader: View {
     }
 
     var body: some View {
+        #if os(macOS)
+        // En la Mac la Mesa ya se llama así en la barra de la ventana: sin encabezado repetido (MX-B).
+        EmptyView()
+        #else
         VStack(spacing: Theme.Space.s) {
             // Con la letra más grande, la fecha baja bajo el nombre (antes «GABI / NETE»).
             AdaptiveStack(rowAlignment: .firstTextBaseline, spacing: Theme.Space.s) {
@@ -214,6 +232,7 @@ struct DeskHeader: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
+        #endif
     }
 }
 
@@ -1282,9 +1301,12 @@ struct SettingsCard<Art: View, Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
+            #if os(iOS)
+            // En la Mac cada tarjeta es su pestaña y la pestaña ya la nombra (MX-B).
             CapsText(text: title)
                 .padding(.horizontal, Theme.Space.l)
                 .accessibilityAddTraits(.isHeader)
+            #endif
             VStack(spacing: 0) {
                 art
                 VStack(spacing: 0) { content }
@@ -2125,6 +2147,26 @@ enum EmptyCopy {
 }
 
 #if os(macOS)
+/// Una celda de la tabla de la Mac (MX-B): un renglón que se corta con «…» en vez de partirse
+/// o salirse (regla 9). El título del libro en New York, lo demás en la letra de la interfaz;
+/// en tinta o en secundario sobre el papel, y en la letra de la selección cuando la fila está elegida.
+/// Sus cifras miden lo mismo (regla 4).
+struct MacCell: View {
+    enum Role { case title, plain, secondary }
+    let text: String
+    var role: Role = .plain
+    @Environment(\.backgroundProminence) private var prominence
+
+    var body: some View {
+        Text(text)
+            .font(role == .title ? .rowTitle : .body)
+            .monospacedDigit()
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .foregroundStyle(prominence == .increased ? Theme.onSelection : role == .secondary ? Theme.secondaryInk : Theme.ink)
+            .help(text)
+    }
+}
 /// Un vacío en la Mac: la vista del sistema, con las mismas palabras que el iPhone (`EmptyCopy`).
 struct MacEmptyState: View {
     let title: String
@@ -2142,7 +2184,30 @@ extension View {
     func macMainAction() -> some View {
         buttonStyle(.borderedProminent).tint(Theme.action)
     }
+
+    /// Una tabla o una lista de la Mac sobre el papel de Gabinete (MX-B): sin el blanco ni las
+    /// franjas del sistema; los controles siguen siendo los de macOS.
+    func macPaper() -> some View {
+        scrollContentBackground(.hidden)
+            .alternatingRowBackgrounds(.disabled)
+            .background(Theme.paper)
+    }
+
+    /// La barra lateral de la Mac: el papel hondo (`sunken`), un poco más oscuro que el de la
+    /// tabla, como el de Ajustes; así se separa sin una caja.
+    func macSidebarPaper() -> some View {
+        scrollContentBackground(.hidden)
+            .background(Theme.sunken)
+    }
+
+    /// La barra de una ventana de la Mac en papel: el título y la búsqueda sobre el mismo
+    /// papel que el contenido, en claro y en oscuro.
+    func macWindowPaper() -> some View {
+        toolbarBackground(Theme.paper, for: .windowToolbar)
+            .toolbarBackground(.visible, for: .windowToolbar)
+    }
 }
+
 #endif
 
 // MARK: - Avisos (B3, 26 nov 2026: la misma alerta estaba copiada 13 veces)

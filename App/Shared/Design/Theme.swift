@@ -71,8 +71,15 @@ enum Theme {
         }
     }
 
-    /// La Mac como mesa de trabajo (MG-1): medidas de la ventana nativa, su barra lateral,
-    /// la tabla y la ficha. Lo demás (letra, controles) es el de macOS.
+    #if os(macOS)
+    /// La letra de lo elegido en una tabla o una lista de la Mac: sobre el color de la
+    /// selección, el blanco (o lo que pida el sistema), no la tinta del papel (MX-B).
+    static let onSelection = Color(nsColor: .alternateSelectedControlTextColor)
+    #endif
+
+    /// La Mac como mesa de trabajo (MG-1) y de papel (MX-B, 26 nov 2026): medidas de la
+    /// ventana nativa, su barra lateral, la tabla y la ficha. Los controles son los de macOS,
+    /// con el papel, la tinta y las letras de Gabinete.
     enum Mac {
         static let window = CGSize(width: 1100, height: 620)
         /// Al abrirla por primera vez: cabe la tabla con sus columnas y la ficha.
@@ -87,8 +94,14 @@ enum Theme {
         static let titleColumn: CGFloat = 180
         static let shortColumn: CGFloat = 72
         static let column: CGFloat = 110
-        /// Gabinete › Ajustes… (⌘,).
-        static let settings = CGSize(width: 560, height: 720)
+        /// Gabinete › Ajustes… (⌘,), en pestañas: el ancho; el alto es el de cada pestaña.
+        static let settings: CGFloat = 560
+        /// El alto de Reglas o de una conexión, abiertas desde una pestaña de Ajustes.
+        static let settingsPage: CGFloat = 520
+        /// Una nota o las portadas de internet abiertas desde la ficha.
+        static let sheet = CGSize(width: 560, height: 640)
+        /// El libro en la Mac va en una sola columna centrada, aunque la ventana sea ancha.
+        static let readingColumns = 1
         /// La barra de avance de «Buscar datos» en lote (CB-4).
         static let batchProgress: CGFloat = 220
         /// Renombrar o fusionar un autor, una serie o una etiqueta (CB-2).
@@ -276,6 +289,9 @@ enum Theme {
         static let shareCard = CGSize(width: 300, height: 375)
         /// Ventana mínima del lector en el Mac.
         static let macReader = CGSize(width: 720, height: 820)
+        /// Lo más ancho que corre un renglón del libro (unas 66 letras): en una ventana ancha
+        /// el texto se queda en esta medida, centrado, y no se estira de orilla a orilla (MX-B).
+        static let readingMeasure: CGFloat = 640
         /// Proporción de toda portada: ancho entre alto (2 : 3).
         static let coverAspect: CGFloat = 2.0 / 3.0
         /// Niveles de sangría del índice del libro; más hondo ya no se mete.
@@ -507,6 +523,8 @@ enum Theme {
         static let coverOptions = 12
         /// La sinopsis recortada en lo que se completó solo.
         static let summaryLetters = 140
+        /// Subrayados y notas de un libro en la ficha de la Mac, antes de «Leer» para ver el resto.
+        static let inspectorItems = 3
     }
 
     // MARK: Énfasis

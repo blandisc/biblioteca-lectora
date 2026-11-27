@@ -283,8 +283,12 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         updateCurl()
         #if os(iOS)
         let curl = "true" // en el iPhone la página se dobla; en la Mac se desliza
+        let measure = ""
         #else
         let curl = "false"
+        // En la Mac el renglón no se estira con la ventana: una columna centrada de unas 66
+        // letras (`Size.readingMeasure`), aunque la ventana sea ancha (MX-B).
+        let measure = ", maxInlineSize: \(Int(Theme.Size.readingMeasure)), columns: \(Theme.Mac.readingColumns)"
         #endif
         // En continuo el texto llega hasta la orilla de la pantalla (sin margen arriba);
         // el principio del capítulo sí empieza debajo de la isla.
@@ -292,7 +296,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         let scrollTop = Int(Self.safeTop + Theme.Reader.pageMarginTop)
         let script = "window.lectora.setStyle({ flow: '\(scrolled ? "scrolled" : "paginated")', curl: \(curl), "
             + "margin: \(top), marginBottom: \(Int(Theme.Reader.pageMarginBottom)), "
-            + "scrollTop: \(scrollTop), textMargin: \(Int(Theme.Reader.textMargin)) })"
+            + "scrollTop: \(scrollTop), textMargin: \(Int(Theme.Reader.textMargin))\(measure) })"
         flowScript = script
         guard isReady else { return }
         #if os(iOS)

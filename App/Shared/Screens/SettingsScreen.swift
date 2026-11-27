@@ -56,91 +56,16 @@ struct SettingsScreen: View {
     @State private var chosenFolder: URL?
     @State private var tidyReport: LibraryStore.TidyReport?
     @State private var errorMessage: String?
+    #if os(macOS)
+    /// La pestaña de Ajustes en la Mac. Capturas: `-screenshot.demo settingsReading`, `settingsCabinet`,
+    /// `settingsMiddle` (Datos) o `settingsEnd` (Conexiones) abren en esa pestaña.
+    @State private var macTab = ["settingsReading", "settingsCabinet", "settingsMiddle", "settingsEnd"]
+        .firstIndex(of: LaunchOptions.demo ?? "").map { $0 + 1 } ?? 0
+    #endif
 
     var body: some View {
-        NavigationStack {
-            ScrollViewReader { scroller in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ScreenHeading(title: "Ajustes")
-                    // AJ-D: cada grupo en su tarjeta, con el dibujo de lo que controla.
-                    SettingsCard(title: "Apariencia") {
-                        PageSwatchPicker(options: AppearanceMode.allCases, selection: $mode, title: \.title, tone: \.tone)
-                            .padding(.vertical, Theme.Space.l)
-                    }
-                    SettingsCard(title: "Lectura",
-                                 help: "Cada sesión se anota en tu carpeta. Nada sale de tus dispositivos.",
-                                 more: "Gabinete anota el tiempo, las palabras y cuánto sostuviste la atención en cada sesión.") {
-                        ReadingArt(counter: showsCounter, summary: showsSummary)
-                    } content: {
-                        ToggleRow(title: "Contador de palabras", isOn: $showsCounter)
-                        ToggleRow(title: "Resumen al cerrar el libro", isOn: $showsSummary)
-                    }
-                    cabinetSection
-                    SettingsCard(title: "Datos de los libros",
-                                 help: "Portadas, sinopsis y datos salen de Open Library.",
-                                 more: "Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.") {
-                        BookDataArt(source: googleKey.isEmpty ? "Open Library" : "Open Library y Google")
-                            .id(Self.bookData)
-                    } content: {
-                        LinkRow(title: "Fuente", value: googleKey.isEmpty ? "Open Library" : "Open Library y Google Books", chevron: false)
-                        FieldRow(title: "Clave de Google Books", prompt: "Agregar", text: $googleKey)
-                        NavigationLink {
-                            RulesScreen()
-                        } label: {
-                            LinkRow(title: "Reglas de autores y etiquetas",
-                                    value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    SettingsCard(title: "Conexiones",
-                                 help: "Cada servicio con tu propia llave, en tu Llavero de iCloud. Gabinete no tiene servidor.") {
-                        ConnectionsArt(services: Connector.allCases.map {
-                            .init(letter: String($0.title.prefix(1)), name: $0.title, connected: connectors.isConnected($0))
-                        })
-                    } content: {
-                        ForEach(Connector.allCases) { connector in
-                            let connected = connectors.isConnected(connector)
-                            NavigationLink {
-                                ConnectorScreen(connector: connector)
-                            } label: {
-                                LinkRow(title: connector.title, value: connected ? "Conectado" : "Sin conectar", status: connected)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    Colophon(version: Self.version)
-                        .padding(.top, Theme.Space.xl)
-                        .id(Self.colophon)
-                }
-                .screenContent()
-            }
-            #if DEBUG
-            // Capturas: `-screenshot.demo settingsEnd` abre Ajustes ya al final; `settingsMiddle`, a media hoja;
-            // `settingsCabinet`, en Tu Gabinete.
-            .task {
-                guard let demo = LaunchOptions.demo, demo.hasPrefix("settings") else { return }
-                try? await Task.sleep(for: .seconds(1))
-                if demo == "settingsEnd" { scroller.scrollTo(Self.colophon, anchor: .bottom) }
-                if demo == "settingsMiddle" { scroller.scrollTo(Self.bookData, anchor: .center) }
-                if demo == "settingsCabinet" { scroller.scrollTo(Self.cabinet, anchor: .center) }
-            }
-            #endif
-            }
-            // Las tarjetas sobre un papel un poco más hondo que el de la app (AJ-8).
-            .background(Theme.sunken.ignoresSafeArea())
-            .pushedScreen()
-            .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
-            #if os(iOS)
-            // En la Mac, Ajustes es su propia ventana: se cierra con el botón rojo o ⌘W, y
-            // «Listo» no hacía nada.
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Cerrar Ajustes") { dismiss() }
-                }
-            }
-            #endif
-        }
+        pages
+        .sheet(isPresented: $migratingCalibre) { CalibreMigrationScreen().environmentObject(model) }
         .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
             switch result {
             case .success(let url): chosenFolder = url
@@ -171,6 +96,136 @@ struct SettingsScreen: View {
 }
 
 extension SettingsScreen {
+    /// En el iPhone, una hoja con todas las tarjetas; en la Mac, una pestaña por tarjeta (MX-B),
+    /// como los Ajustes de toda app de Mac. Las tarjetas son las mismas.
+    @ViewBuilder
+    private var pages: some View {
+        #if os(macOS)
+        TabView(selection: $macTab) {
+            tab("Apariencia", "circle.lefthalf.filled") { appearanceCard }.tag(0)
+            tab("Lectura", "book") { readingCard }.tag(1)
+            tab("Gabinete", "archivebox") { cabinetSection }.tag(2)
+            tab("Datos", "text.book.closed") { bookDataCard }.tag(3)
+            tab("Conexiones", "point.3.connected.trianglepath.dotted") {
+                connectionsCard
+                Colophon(version: Self.version)
+                    .padding(.top, Theme.Space.xl)
+            }
+            .tag(4)
+        }
+        #else
+        NavigationStack {
+            ScrollViewReader { scroller in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ScreenHeading(title: "Ajustes")
+                    // AJ-D: cada grupo en su tarjeta, con el dibujo de lo que controla.
+                    appearanceCard
+                    readingCard
+                    cabinetSection
+                    bookDataCard
+                    connectionsCard
+                    Colophon(version: Self.version)
+                        .padding(.top, Theme.Space.xl)
+                        .id(Self.colophon)
+                }
+                .screenContent()
+            }
+            #if DEBUG
+            // Capturas: `-screenshot.demo settingsEnd` abre Ajustes ya al final; `settingsMiddle`, a media hoja;
+            // `settingsCabinet`, en Tu Gabinete.
+            .task {
+                guard let demo = LaunchOptions.demo, demo.hasPrefix("settings") else { return }
+                try? await Task.sleep(for: .seconds(1))
+                if demo == "settingsEnd" { scroller.scrollTo(Self.colophon, anchor: .bottom) }
+                if demo == "settingsMiddle" { scroller.scrollTo(Self.bookData, anchor: .center) }
+                if demo == "settingsCabinet" { scroller.scrollTo(Self.cabinet, anchor: .center) }
+            }
+            #endif
+            }
+            // Las tarjetas sobre un papel un poco más hondo que el de la app (AJ-8).
+            .background(Theme.sunken.ignoresSafeArea())
+            .pushedScreen()
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Cerrar Ajustes") { dismiss() }
+                }
+            }
+        }
+        #endif
+    }
+
+    #if os(macOS)
+    /// Una pestaña de Ajustes en la Mac: su tarjeta sobre el papel hondo, con lugar para
+    /// entrar a Reglas o a una conexión. Sin «Listo»: la ventana se cierra con ⌘W.
+    private func tab(_ title: String, _ symbol: String, @ViewBuilder _ card: () -> some View) -> some View {
+        // Sin desplazarse: la ventana toma el alto de cada pestaña, como en toda app de Mac.
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 0) { card() }
+                .screenContent()
+                .background(Theme.sunken.ignoresSafeArea())
+                .pushedScreen()
+        }
+        .tabItem { Label(title, systemImage: symbol) }
+    }
+    #endif
+
+    private var appearanceCard: some View {
+        SettingsCard(title: "Apariencia") {
+            PageSwatchPicker(options: AppearanceMode.allCases, selection: $mode, title: \.title, tone: \.tone)
+                .padding(.vertical, Theme.Space.l)
+        }
+    }
+
+    private var readingCard: some View {
+        SettingsCard(title: "Lectura",
+                     help: "Cada sesión se anota en tu carpeta. Nada sale de tus dispositivos.",
+                     more: "Gabinete anota el tiempo, las palabras y cuánto sostuviste la atención en cada sesión.") {
+            ReadingArt(counter: showsCounter, summary: showsSummary)
+        } content: {
+            ToggleRow(title: "Contador de palabras", isOn: $showsCounter)
+            ToggleRow(title: "Resumen al cerrar el libro", isOn: $showsSummary)
+        }
+    }
+
+    private var bookDataCard: some View {
+        SettingsCard(title: "Datos de los libros",
+                     help: "Portadas, sinopsis y datos salen de Open Library.",
+                     more: "Google Books sin clave casi siempre está saturado; con una clave gratuita de Google Cloud también se busca ahí.") {
+            BookDataArt(source: googleKey.isEmpty ? "Open Library" : "Open Library y Google")
+                .id(Self.bookData)
+        } content: {
+            LinkRow(title: "Fuente", value: googleKey.isEmpty ? "Open Library" : "Open Library y Google Books", chevron: false)
+            FieldRow(title: "Clave de Google Books", prompt: "Agregar", text: $googleKey)
+            NavigationLink {
+                RulesScreen().settingsPage()
+            } label: {
+                LinkRow(title: "Reglas de autores y etiquetas",
+                        value: model.library.rules.isEmpty ? "Ninguna" : "\(model.library.rules.authors.count + model.library.rules.tags.count)")
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var connectionsCard: some View {
+        SettingsCard(title: "Conexiones",
+                     help: "Cada servicio con tu propia llave, en tu Llavero de iCloud. Gabinete no tiene servidor.") {
+            ConnectionsArt(services: Connector.allCases.map {
+                .init(letter: String($0.title.prefix(1)), name: $0.title, connected: connectors.isConnected($0))
+            })
+        } content: {
+            ForEach(Connector.allCases) { connector in
+                let connected = connectors.isConnected(connector)
+                NavigationLink {
+                    ConnectorScreen(connector: connector).settingsPage()
+                } label: {
+                    LinkRow(title: connector.title, value: connected ? "Conectado" : "Sin conectar", status: connected)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     /// «Tu Gabinete» (TG-1): el dibujo de la carpeta con dónde vive y sus cifras, y lo
     /// que se hace con ella.
     private var cabinetSection: some View {
@@ -266,5 +321,18 @@ extension SettingsScreen {
             lines.append("Carpetas que no están en el catálogo: \(report.strays.count). No borré nada.")
         }
         return lines.joined(separator: "\n")
+    }
+}
+
+private extension View {
+    /// En la Mac la ventana de Ajustes toma el alto de lo que muestra: Reglas o una conexión
+    /// (formularios que se desplazan) piden el suyo para no quedar en una tira.
+    @ViewBuilder
+    func settingsPage() -> some View {
+        #if os(macOS)
+        frame(minHeight: Theme.Mac.settingsPage)
+        #else
+        self
+        #endif
     }
 }

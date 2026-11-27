@@ -37,7 +37,10 @@ struct NotebookScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: "Cuaderno") {
+                        #if os(iOS)
+                        // En la Mac, Ajustes vive en Gabinete › Ajustes… (⌘,): sin engrane en el contenido.
                         IconButton(systemImage: "gearshape", label: "Ajustes: conexiones, carpeta y apariencia") { showsAccount = true }
+                        #endif
                         // El acento verde de la pantalla, siempre al final: escribir una nota.
                         AccentIconButton(systemImage: "plus", label: "Nota nueva") { path.append(NoteRef.new()) }
                     }
@@ -61,7 +64,9 @@ struct NotebookScreen: View {
                 .screenContent()
             }
             .screen()
+            #if os(iOS)
             .sheet(isPresented: $showsAccount) { SettingsScreen() }
+            #endif
             .sheet(item: $toNote) { highlight in
                 NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled)
             }

@@ -46,7 +46,9 @@ struct LectoraApp: App {
         Settings {
             SettingsScreen()
                 .environmentObject(model)
-                .frame(width: Theme.Mac.settings.width, height: Theme.Mac.settings.height)
+                // El ancho es fijo; el alto, el de cada pestaña (MX-B).
+                .frame(width: Theme.Mac.settings)
+                .macWindowPaper()
                 .tint(Theme.accent)
         }
         #endif

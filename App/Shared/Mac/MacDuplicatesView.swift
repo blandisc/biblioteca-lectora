@@ -22,7 +22,7 @@ struct MacDuplicatesView: View {
                 Section {
                     ForEach(group) { book in row(book, in: group) }
                 } header: {
-                    Text(group[0].title)
+                    Text(group[0].title).font(.rowTitle).foregroundStyle(Theme.ink).lineLimit(1).truncationMode(.tail)
                 } footer: {
                     HStack {
                         Spacer()
@@ -33,6 +33,7 @@ struct MacDuplicatesView: View {
                 }
             }
         }
+        .macPaper()
         .overlay {
             if groups.isEmpty {
                 MacEmptyState(title: EmptyCopy.noDuplicates.title, message: EmptyCopy.noDuplicates.message, systemImage: "checkmark.circle")
