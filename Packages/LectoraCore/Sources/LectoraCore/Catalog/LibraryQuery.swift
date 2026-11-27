@@ -46,9 +46,23 @@ public struct LibraryQuery: Equatable, Sendable {
     public func matches(_ book: Book) -> Bool {
         let haystack = Self.fold(([book.title, book.series ?? ""] + book.authors + book.tags).joined(separator: " "))
         guard words.allSatisfy({ haystack.contains($0) }) else { return false }
-        return filters.allSatisfy { filter in
+        return matchesFilters(book)
+    }
+
+    /// Solo los filtros con nombre (`autor:`, `serie:`…): en Buscar, los subrayados se quedan
+    /// con los de los libros que cumplen los filtros.
+    public func matchesFilters(_ book: Book) -> Bool {
+        filters.allSatisfy { filter in
             Self.values(of: filter.field, in: book).contains { Self.fold($0).contains(filter.value) }
         }
+    }
+
+    /// Buscar en todo (SG-3): cada palabra aparece en alguno de los textos, en cualquier orden.
+    /// «imperio otomano» encuentra «el Imperio de los sultanes otomanos». Sin palabras, nada.
+    public func matches(text fields: [String?]) -> Bool {
+        guard !words.isEmpty else { return false }
+        let haystack = Self.fold(fields.compactMap { $0 }.joined(separator: " "))
+        return words.allSatisfy { haystack.contains($0) }
     }
 
     static func values(of field: Field, in book: Book) -> [String] {

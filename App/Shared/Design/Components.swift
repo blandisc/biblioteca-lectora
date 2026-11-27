@@ -1731,7 +1731,7 @@ struct NoteRow: View {
     var match: String? = nil
 
     private var preview: String {
-        guard let match, !note.title.localizedStandardContains(match) else { return note.preview }
+        guard let match, !Found.terms(match).contains(where: { note.title.localizedStandardContains($0) }) else { return note.preview }
         return Found.excerpt(note.text, around: match) ?? note.preview
     }
 
@@ -2857,26 +2857,34 @@ struct SearchStepper: View {
 enum Found {
     private static let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive]
 
-    /// El texto con cada vez que aparece `match` en verde y negritas (no solo color).
+    /// Lo que se marca de una búsqueda: cada palabra por separado (o la frase entre comillas),
+    /// sin los filtros como `autor:`.
+    static func terms(_ match: String?) -> [String] {
+        guard let match = match?.trimmingCharacters(in: .whitespaces), !match.isEmpty else { return [] }
+        return LibraryQuery(match).words
+    }
+
+    /// El texto con cada vez que aparece cada palabra de `match` en verde y negritas (no solo color).
     static func marked(_ text: String, _ match: String?) -> AttributedString {
         var result = AttributedString(text)
-        guard let match = match?.trimmingCharacters(in: .whitespaces), !match.isEmpty else { return result }
-        var from = text.startIndex
-        while let range = text.range(of: match, options: options, range: from..<text.endIndex) {
-            if let lower = AttributedString.Index(range.lowerBound, within: result),
-               let upper = AttributedString.Index(range.upperBound, within: result) {
-                result[lower..<upper].foregroundColor = Theme.accent
-                result[lower..<upper].inlinePresentationIntent = .stronglyEmphasized
+        for term in terms(match) {
+            var from = text.startIndex
+            while let range = text.range(of: term, options: options, range: from..<text.endIndex) {
+                if let lower = AttributedString.Index(range.lowerBound, within: result),
+                   let upper = AttributedString.Index(range.upperBound, within: result) {
+                    result[lower..<upper].foregroundColor = Theme.accent
+                    result[lower..<upper].inlinePresentationIntent = .stronglyEmphasized
+                }
+                from = range.upperBound
             }
-            from = range.upperBound
         }
         return result
     }
 
-    /// Unas palabras antes y después de la primera vez que aparece `match`, en un renglón.
+    /// Unas palabras antes y después de la primera vez que aparece alguna palabra de `match`, en un renglón.
     static func excerpt(_ text: String, around match: String) -> String? {
         let flat = text.split(whereSeparator: \.isNewline).joined(separator: " ")
-        guard let range = flat.range(of: match, options: options) else { return nil }
+        guard let range = terms(match).lazy.compactMap({ flat.range(of: $0, options: options) }).first else { return nil }
         let start = flat.index(range.lowerBound, offsetBy: -Theme.Size.excerptReach, limitedBy: flat.startIndex) ?? flat.startIndex
         let end = flat.index(range.upperBound, offsetBy: Theme.Size.excerptReach, limitedBy: flat.endIndex) ?? flat.endIndex
         return (start > flat.startIndex ? "…" : "") + flat[start..<end].trimmingCharacters(in: .whitespaces)

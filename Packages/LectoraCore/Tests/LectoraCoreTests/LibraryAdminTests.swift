@@ -62,4 +62,26 @@ final class LibraryAdminTests: XCTestCase {
         XCTAssertEqual(BulkEdit.sharedTags([rayuela, bestiario]), [])
         XCTAssertEqual(BulkEdit.list(" Borges,  Bioy Casares ,"), ["Borges", "Bioy Casares"])
     }
+
+    // MARK: Buscar en todo (SG-3)
+
+    func testTextMatchesEveryWordInAnyOrder() {
+        let query = LibraryQuery("imperio otomano")
+        XCTAssertTrue(query.matches(text: ["…el Imperio de los sultanes otomanos…", nil]))
+        XCTAssertTrue(query.matches(text: ["Los otomanos", "nota: un imperio"]), "Las palabras pueden venir de la cita y de la nota")
+        XCTAssertFalse(query.matches(text: ["el Imperio español"]))
+        XCTAssertTrue(LibraryQuery("castaneda").matches(text: ["La Castañeda"]), "Sin acentos")
+        XCTAssertTrue(LibraryQuery("\"el señor\"").matches(text: ["El señor presidente"]), "Entre comillas, la frase junta")
+        XCTAssertFalse(LibraryQuery("\"el señor\"").matches(text: ["el otro señor"]))
+    }
+
+    func testTextNeedsWordsAndFiltersOnlyApplyToBooks() {
+        let query = LibraryQuery("autor:braudel")
+        XCTAssertFalse(query.matches(text: ["cualquier cosa"]), "Solo con filtros no hay palabras que buscar")
+        var book = Book(title: "El Mediterráneo", authors: ["Fernand Braudel"])
+        XCTAssertTrue(query.matchesFilters(book))
+        book.authors = ["Noel Malcolm"]
+        XCTAssertFalse(query.matchesFilters(book))
+        XCTAssertTrue(LibraryQuery("mediterraneo").matchesFilters(book), "Sin filtros, todo libro pasa")
+    }
 }

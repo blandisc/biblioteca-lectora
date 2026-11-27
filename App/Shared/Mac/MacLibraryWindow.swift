@@ -5,7 +5,7 @@ import SwiftUI
 
 /// Lo que se ve a la derecha de la barra lateral.
 enum MacSection: Hashable {
-    case desk, notebook
+    case desk, notebook, search
     case all, reading, toRead, finished, review, noCover
     case author(String), series(String), tag(String), language(String)
 
@@ -13,6 +13,7 @@ enum MacSection: Hashable {
         switch self {
         case .desk: "Mesa"
         case .notebook: "Cuaderno"
+        case .search: "Buscar"
         case .all: "Biblioteca"
         case .reading: "Leyendo"
         case .toRead: "Por leer"
@@ -25,7 +26,7 @@ enum MacSection: Hashable {
 
     func contains(_ row: MacBookRow) -> Bool {
         switch self {
-        case .desk, .notebook, .all: true
+        case .desk, .notebook, .search, .all: true
         case .reading: row.state == .reading
         case .toRead: row.state == .toRead
         case .finished: row.state == .finished
@@ -48,6 +49,7 @@ struct MacLibraryWindow: View {
         switch LaunchOptions.tab {
         case "desk": .desk
         case "notebook": .notebook
+        case "search": .search
         default: .all
         }
     }()
@@ -60,6 +62,8 @@ struct MacLibraryWindow: View {
             switch section ?? .all {
             case .desk: MesaScreen().navigationTitle("Mesa")
             case .notebook: NotebookScreen().navigationTitle("Cuaderno")
+            // Buscar en todo (SG-3): libros, subrayados y notas. La búsqueda de la tabla es solo de libros.
+            case .search: SearchScreen().navigationTitle("Buscar")
             default: MacBookTable(library: model.library, section: section ?? .all)
             }
         }
@@ -81,6 +85,7 @@ private struct MacSidebar: View {
             Section("Leer") {
                 Label("Mesa", systemImage: "book").tag(MacSection.desk)
                 Label("Cuaderno", systemImage: "note.text").tag(MacSection.notebook)
+                Label("Buscar en todo", systemImage: "magnifyingglass").tag(MacSection.search)
             }
             Section("Biblioteca") {
                 item(.all, "books.vertical", rows.count)

@@ -1,8 +1,10 @@
 import LectoraCore
 import SwiftUI
 
-/// Buscar, en su propio espacio del dock. Mismo título y margen que las demás pantallas.
-/// Busca en tus libros (título, autor, serie), tus subrayados y tus notas.
+/// Buscar, en su propio espacio del dock (y en la barra lateral de la Mac). Mismo título y
+/// margen que las demás pantallas. Busca en tus libros, tus subrayados y tus notas (SG-3):
+/// cada palabra, en cualquier orden y sin acentos; «autor:» o «serie:» acotan los libros y
+/// sus subrayados, como en la tabla de la Mac.
 struct SearchScreen: View {
     @EnvironmentObject private var model: AppModel
     @State private var query = ""
@@ -12,25 +14,31 @@ struct SearchScreen: View {
     @State private var showsAllHighlights = false
 
     private var term: String { query.trimmingCharacters(in: .whitespaces) }
+    private var parsed: LibraryQuery { LibraryQuery(term) }
 
     private var books: [ShelfBook] {
-        guard !term.isEmpty else { return [] }
-        return model.shelf.filter {
-            $0.title.localizedStandardContains(term) || $0.author.localizedStandardContains(term)
-                || ($0.series?.localizedStandardContains(term) ?? false)
-        }
+        let parsed = parsed
+        guard !parsed.isEmpty else { return [] }
+        let found = Set(model.library.books.filter(parsed.matches).map(\.id.uuidString))
+        return model.shelf.filter { found.contains($0.id) }
     }
 
     private var highlights: [Annotation] {
-        guard term.count >= 2 else { return [] }
-        return model.annotations.allAnnotations().filter {
-            $0.quote.localizedStandardContains(term) || ($0.note?.localizedStandardContains(term) ?? false)
+        let parsed = parsed
+        guard term.count >= 2, !parsed.isEmpty else { return [] }
+        // Con filtros, primero los libros que los cumplen (una vez, no por cada subrayado).
+        let allowed = parsed.filters.isEmpty ? nil : Set(model.library.books.filter(parsed.matchesFilters).map(\.id))
+        return model.annotations.allAnnotations().filter { highlight in
+            if let allowed, !allowed.contains(highlight.bookID) { return false }
+            return parsed.words.isEmpty || parsed.matches(text: [highlight.quote, highlight.note])
         }
     }
 
+    /// Las notas no son de un libro: con `autor:` y compañía no salen.
     private var notes: [Note] {
-        guard term.count >= 2 else { return [] }
-        return model.notes.notes.filter { $0.text.localizedStandardContains(term) || $0.fileName.localizedStandardContains(term) }
+        let parsed = parsed
+        guard term.count >= 2, parsed.filters.isEmpty else { return [] }
+        return model.notes.notes.filter { parsed.matches(text: [$0.text, $0.fileName]) }
     }
 
     /// Los últimos libros que abriste, con su avance.
@@ -56,7 +64,7 @@ struct SearchScreen: View {
                         let found = (books: books, highlights: highlights, notes: notes)
                         if found.books.isEmpty && found.highlights.isEmpty && found.notes.isEmpty {
                             EmptyState(title: "Sin resultados para «\(term)»",
-                                       message: "Busqué en títulos, autores y series, en tus subrayados y en tus notas. Para buscar dentro de un libro, ábrelo y toca la lupa.")
+                                       message: "Busqué cada palabra en títulos, autores, series y etiquetas, en tus subrayados y en tus notas. Para buscar dentro de un libro, ábrelo y toca la lupa.")
                         } else {
                             results(found)
                         }
@@ -95,7 +103,7 @@ struct SearchScreen: View {
     private var start: some View {
         if recents.isEmpty && recentlyOpened.isEmpty {
             EmptyState(title: "Busca en tu Gabinete",
-                       message: "Encuentra un libro por su título, su autor o su serie, o una frase entre tus subrayados y tus notas.")
+                       message: "Encuentra un libro por su título, su autor o su serie, o una idea entre tus subrayados y tus notas. Con «autor:» o «serie:» ves solo los de ese autor o esa serie.")
         }
         if !recents.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
