@@ -29,8 +29,8 @@ struct MacBookTable: View {
             .overlay {
                 if rows.isEmpty {
                     if query.isEmpty {
-                        ContentUnavailableView("Nada aquí", systemImage: "books.vertical",
-                                               description: Text("Arrastra libros a esta ventana para traerlos a tu Gabinete."))
+                        let copy = library.books.isEmpty ? EmptyCopy.noBooks : EmptyCopy.noMatch(section.title)
+                        MacEmptyState(title: copy.title, message: copy.message)
                     } else {
                         ContentUnavailableView.search(text: query)
                     }

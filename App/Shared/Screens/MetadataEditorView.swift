@@ -24,8 +24,8 @@ struct MetadataEditorView: View {
     init(book: Book) {
         self.book = book
         _draft = State(initialValue: book)
-        _authors = State(initialValue: book.authors.joined(separator: " & "))
-        _tags = State(initialValue: book.tags.joined(separator: ", "))
+        _authors = State(initialValue: BookFields.authorsText(book.authors))
+        _tags = State(initialValue: BookFields.tagsText(book.tags))
         _seriesIndex = State(initialValue: book.seriesIndex.flatMap(ShelfBook.number) ?? "")
         _isbn = State(initialValue: book.identifiers["isbn"] ?? "")
     }
@@ -54,7 +54,7 @@ struct MetadataEditorView: View {
                     Text("Portada")
                 }
 
-                Section("Libro") {
+                Section(BookSection.book.rawValue) {
                     TextField("Título", text: $draft.title)
                     TextField("Autores (sepáralos con &)", text: $authors)
                     TextField("Serie", text: Binding(
@@ -74,39 +74,27 @@ struct MetadataEditorView: View {
                     }
                 }
 
-                Section("Publicación") {
+                Section(BookSection.edition.rawValue) {
                     TextField("Editorial", text: optional(\.publisher))
-                    TextField("Año o fecha (AAAA-MM-DD)", text: optional(\.published))
+                    TextField("Publicado (\(BookFields.publishedPrompt))", text: optional(\.published))
                     TextField("ISBN", text: $isbn)
-                    Picker("Idioma", selection: Binding(
+                    LanguagePicker(code: Binding(
                         get: { draft.language ?? "" },
                         set: { draft.language = $0.isEmpty ? nil : $0 }
-                    )) {
-                        Text("Sin indicar").tag("")
-                        Text("Español").tag("es")
-                        Text("Inglés").tag("en")
-                        if let other = draft.language, !["es", "en"].contains(other) {
-                            Text(Locale(identifier: "es").localizedString(forLanguageCode: other)?.capitalized ?? other).tag(other)
-                        }
-                    }
+                    ))
                 }
 
-                Section("Tu biblioteca") {
-                    TextField("Etiquetas (sepáralas con comas)", text: $tags)
-                    Picker("Estado", selection: $draft.readingStatus) {
-                        Text("Por leer").tag(ReadingStatus.toRead)
-                        Text("Leyendo").tag(ReadingStatus.reading)
-                        Text("Leído").tag(ReadingStatus.finished)
-                        Text("Abandonado").tag(ReadingStatus.abandoned)
-                    }
+                Section(BookSection.reading.rawValue) {
+                    StatusPicker(status: Binding(get: { draft.readingStatus }, set: { draft.readingStatus = $0 ?? .toRead }))
                     HStack {
                         Text("Valoración")
                         Spacer()
                         RatingPicker(rating: $draft.rating)
                     }
+                    TextField("Etiquetas (sepáralas con comas)", text: $tags)
                 }
 
-                Section("Sinopsis") {
+                Section(BookSection.summary.rawValue) {
                     TextEditor(text: optional(\.summary))
                         .frame(minHeight: Theme.Size.textEditor)
                 }
@@ -115,10 +103,10 @@ struct MetadataEditorView: View {
             .inlineTitle("Editar datos")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Descartar cambios") { dismiss() }
+                    Button("Dejar como está") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar", action: save)
+                    Button("Guardar cambios", action: save)
                         .disabled(draft.title.trimmingCharacters(in: .whitespaces).isEmpty
                                   || (draft.series != nil && seriesInput.isInvalid))
                 }
@@ -132,14 +120,7 @@ struct MetadataEditorView: View {
                 defer { if accessing { url.stopAccessingSecurityScopedResource() } }
                 newCover = try? Data(contentsOf: url)
             }
-            .alert("No se pudo guardar", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
-            )) {
-                Button("Seguir editando", role: .cancel) {}
-            } message: {
-                Text(saveError ?? "")
-            }
+            .errorAlert("No pude guardar los datos", message: $saveError, back: "Volver a los datos")
         }
     }
 
@@ -169,11 +150,10 @@ struct MetadataEditorView: View {
 
     private func save() {
         var edited = draft
-        edited.authors = authors.components(separatedBy: "&").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        edited.tags = tags.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        edited.authors = BookFields.authors(authors)
+        edited.tags = BookFields.tags(tags)
         edited.seriesIndex = edited.series == nil ? nil : seriesInput.value(keeping: book.seriesIndex)
-        let cleanISBN = isbn.trimmingCharacters(in: .whitespaces)
-        edited.identifiers["isbn"] = cleanISBN.isEmpty ? nil : cleanISBN
+        edited.identifiers["isbn"] = BookFields.isbn(isbn)
         do {
             try model.library.update(edited, cover: newCover)
             dismiss()

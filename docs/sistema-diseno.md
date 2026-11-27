@@ -9,18 +9,20 @@ Todo valor visual es un **token**; toda pieza repetida es un **componente**; tod
 sigue una **receta**; toda regla tiene una **prueba** que falla si alguien la rompe. Lo nuevo
 se arma con lo que ya hay: si falta algo, se agrega aquí primero.
 
-## Las seis reglas de la libreta
+## Las ocho reglas de la libreta
 
 Cada regla dice lo que nota quien usa la app; la medida exacta vive en `Theme` con su nombre.
 
 | # | Regla | Lo que notas | La cuida |
 |---|---|---|---|
 | 1 | **Un solo verde, y poco** | El verde botella marca solo dónde estás (pestaña, filtro elegido), lo que avanzas (palabras, la marca de la Mesa) y lo tuyo (subrayados, cinta, pendientes). Las acciones van en tinta | `testOnlyPiecesPaintTheAccent` |
-| 2 | **Líneas finas en vez de cajas** | Las secciones se separan con una línea finísima y aire, no con tarjetas grises. La excepción es Ajustes: tarjetas blancas con su dibujo sobre un papel más hondo (AJ-D, 26 nov 2026) | `testScreensUseCatalogPieces` (sin formas a mano), `RuledLabel`, `SettingsCard`, `ScreenHeading` |
-| 3 | **Rótulos en versalitas** | Toda sección se anuncia igual: mayúsculas chicas, espaciadas, con su línea a la derecha | `testCapsComeFromThePieces` |
+| 2 | **Líneas finas en vez de cajas** | Las secciones se separan con una línea finísima y aire, no con tarjetas grises. La excepción es Ajustes: tarjetas blancas con su dibujo sobre un papel más hondo (AJ-D, 26 nov 2026) | `testScreensUseCatalogPieces` (sin formas a mano), `SectionHeader`, `SettingsCard`, `ScreenHeading` |
+| 3 | **Rótulos en versalitas** | Toda sección se anuncia igual en el iPhone: mayúsculas chicas, espaciadas, con su línea a la derecha y, si hay, su acción al final. Las romanas (Cinzel) quedan para la marca, el «Nº» y el capítulo | `testCapsComeFromThePieces`, `testSectionsUseTheirHeader` |
 | 4 | **Cifras exactas** | Cantidades, fechas y porcentajes no bailan: todas las cifras miden lo mismo | `testFiguresAreExact`, `testDatesAndNumbersInSpanish` |
 | 5 | **Aire en una sola escala** | Todo espacio sale de 4 · 8 · 16 · 24 · 32 · 48, la escala común de la casa | `testSpacingKeepsTheHouseScale`, `tools/sistema-base` (SB-2) |
 | 6 | **Botón principal oscuro en los dos modos** | «Seguir leyendo» y «Nota nueva» en verde fichero con letra clara, también en oscuro, con un filo finísimo | `testMainActionIsDarkInBothModes`, `testOneMainActionPerScreen` |
+| 7 | **Te hablo de tú y digo qué pasó** | Los avisos dicen qué pasó en primera persona («No pude abrir el libro», nunca «No se pudo» ni «Aviso»), y su botón a dónde vuelves («Volver a la ficha»). Los botones dicen qué hacen: nunca «Cancelar», «OK» ni «Listo» a secas; salir sin cambiar es «Dejar como está». Mientras algo tarda, digo qué estoy haciendo | `testNoticesSayWhatHappened`, `testButtonsSayWhatTheyDo`, `testWaitingSaysWhat` |
+| 8 | **Lo mismo se llama igual en el iPhone y la Mac** | Un libro está «Leyendo», «Por leer» o «Leído» por la misma regla en las dos; añadir libros, buscar datos, lo que haces con el texto elegido y los datos de un libro tienen un solo nombre y un solo ícono; los autores se separan con « & » | `testSameWordsOnBothPlatforms`, `ReadingStateTests` |
 
 ### Las reglas de la casa (interoperabilidad)
 
@@ -37,9 +39,13 @@ Gabinete cumple el sistema base común a todas las apps de Fernando
 
 ## Regla
 
-1. Las pantallas (`App/Shared/Screens/`, `Reader/ReaderView.swift`) **no usan números,
-   colores ni fuentes sueltos**. Usan `Theme.*`, las fuentes de `Font` de abajo y los
-   componentes de `Design/Components.swift`.
+1. **Nada de la app usa números, colores, fuentes, esperas ni animaciones sueltos**: ni las
+   pantallas, ni las piezas, ni el lector, ni la Mac. Usan `Theme.*`, las fuentes de `Font` de
+   abajo y los componentes de `Design/Components.swift`. Desde SD-1 (26 nov 2026) la prueba y
+   `scripts/lint-design.sh` leen la misma lista: todo `App/Shared` menos lo que diga
+   `scripts/design-sources.txt` con su porqué (solo `Theme.swift`, donde nacen los tokens), y los
+   mismos patrones de `scripts/design-patterns.txt`. `reader.js` también: sus letras y sus
+   márgenes siguen la escala.
 2. Si falta un token o un componente, **se agrega al sistema** (Theme / Components) con
    su nombre y su uso, y se documenta aquí. No se resuelve en la pantalla.
 3. **Se comprueba solo**, en cada push: `DesignRulesTests` (en `swift test` de LectoraCore)
@@ -88,17 +94,20 @@ Los fondos del lector (Papel, Blanco, Noche cálida, Negro) viven en `ReaderPale
 ### Espacio (`Theme.Space`, la escala común de la casa)
 
 `xs 4 · s 8 · l 16 · xl 24 · xxl 32 · xxxl 48`, más `xxs 2`: medio paso solo dentro de piezas
-chicas. Sin 12 ni 6 desde el 26 nov 2026 (SD-2): cada uso pasó a 16 o a 8.
+chicas. Sin 12 ni 6 desde el 26 nov 2026 (SD-2): cada uso pasó a 16 o a 8. Desde SD-1 (26 nov 2026)
+también los espacios con nombre (`gutter`, `rowY`… y los márgenes del lector) están en la escala, y
+`sistema-base.json` los revisa por su nombre.
 
 | Token | Valor | Uso |
 |---|---|---|
-| `gutter` | 28 | Margen lateral de toda pantalla, igual a ambos lados |
+| `gutter` | 24 | Margen lateral de toda pantalla, igual a ambos lados (era 28, fuera de la escala) |
 | `screenTop` | 24 | Del área segura al título de pantalla |
 | `screenBottom` | 32 | Aire antes del dock |
 | `hair` | 1 | Entre las letras del índice A–Z |
-| `rowY` | 10 | Aire arriba y abajo de una fila de lista |
-| `rowGap` | 14 | Entre la portada (o la raya de una cita) y su texto |
-| `buttonX` | 20 | Interior horizontal del botón principal |
+| `rowY` | 8 | Aire arriba y abajo de una fila de lista |
+| `rowGap` | 16 | Entre la portada (o la raya de una cita) y su texto |
+| `buttonX` | 24 | Interior horizontal del botón principal |
+| `indent(n)` | 16 × n | Sangría de un nivel del índice del libro |
 
 **Nunca se suman tokens** («`s + xxs`», «`xl + xs`»): cada suma era un valor nuevo sin
 nombre, y la misma separación salía distinta en cada pieza. Si hace falta otra medida,
@@ -118,6 +127,11 @@ coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 
 `Theme.Emphasis`: `secondary` (0,75) texto secundario sobre la marca (tarjeta para compartir); `glassText` (0,8) texto callado sobre el vidrio del lector (subió de 0,72: en Noche cálida quedaba justo en el mínimo de contraste); `scrubberTrack` (0,25) riel de la barra de avance;
 `pressed` (0,85) y `pressedScale` (0,97) al tocar, `rest` (1) en reposo; `labelMinScale` (0,8) lo más que se achica una etiqueta corta; `ghost` (0,12) renglones y filo de la muestra del pie; `inGlass` (0,1) el círculo de un botón dentro del vidrio (`roundInGlass`: buscar y «Aa» en la tarjeta del lector); `actionEdge` (0,16) el filo de la acción principal; `folioMuted` (0,55) su pie sin dato; `knobGrow` (1,4) la perilla de la barra al arrastrar. Con controles, en páginas no hay franja detrás de los botones de arriba (arriba hay papel liso y el vidrio basta); en continuo, donde el texto corre por debajo, va la misma franja de papel que se desvanece del capítulo (decisión D3-B, 24 nov 2026).
+
+`Theme.shade` (negro) es la única sombra: oscurece portadas, la vuelta de la hoja y el lomo; nunca `.black` suelto.
+
+`Theme.Lists`: cuántos se enseñan antes de «Ver todos»: `desk` 6, `preview` 5, `detailSessions` 5, `longestSessions` 2,
+`linkShelf` 20, `linkSuggestions` 4, `coverSources` 3, `coverOptions` 12 y `summaryLetters` 140 (letras de una sinopsis corta).
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -141,7 +155,7 @@ El modo oscuro se queda neutro; solo cambia el verde.
 
 | Token | Fuente | Uso |
 |---|---|---|
-| `.screenTitle` | New York 30 medium | Título de pantalla |
+| `.screenTitle` | New York `Letter.screenTitle` (30) medium, crece con el tamaño de texto (`.screenTitleFont()`, y `UIFont.screenTitle` en los títulos grandes del sistema) | Título de pantalla |
 | `.bookTitle` | New York 28 medium | Libro protagonista (Mesa, ficha), títulos de estado vacío |
 | `.rowTitle` | New York 17 | Títulos en filas, citas |
 | `.quote` | New York 17 itálica | «Donde lo dejaste» |
@@ -150,6 +164,7 @@ El modo oscuro se queda neutro; solo cambia el verde.
 | `Tracking.caps` | 1,6 de espaciado en versalitas de texto | La fecha de la Mesa, «DONDE LO DEJASTE» |
 | `.sectionLabel` | Cinzel 12 medium, mayúsculas, `Tracking.sectionLabel` | Rótulos de sección |
 | Sistema | SF (`.body`, `.subheadline`, `.footnote`, `.caption`) | Toda la interfaz |
+| `.icon`, `.largeGlyph`, `.badge`, `.hubLetter` | SF para íconos: de botón, grande, insignia chica (11, solo en íconos) y la letra del centro de Apariencia | Íconos |
 
 Regla de oro: **New York para lo que es del libro, SF para la interfaz, Cinzel
 solo para la marca y los rótulos** (nunca para títulos de pantalla ni texto
@@ -175,7 +190,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `PrimaryButton` | Acción principal en `action`, oscura en los dos modos, con filo finísimo (una por pantalla) | «Seguir leyendo», «Leer», estado vacío |
 | `TextAction` | Acción de texto en tinta, que se toca en 44 (las acciones no van en verde) | «Todo bien», «Ver los N subrayados», «Borrar recientes», «Crear nota» |
 | `CapsText` | Versalitas de interfaz: mayúsculas chicas, espaciadas (`Tracking.caps`) y con cifras exactas. Toda versalita sale de aquí | Fecha de la Mesa, conteos, rótulos |
-| `RuledLabel` | Rótulo de sección: `CapsText` y una línea finísima hasta la orilla | «Donde lo dejaste», secciones de Ajustes, vacíos |
+| `SectionHeader` | Rótulo de sección: `CapsText` y una línea finísima hasta la orilla; a la derecha, opcional, una acción de texto o un ✕ (`CloseButton`). El único rótulo de sección de la app (regla 3) | «Donde lo dejaste», secciones de la ficha y de Por revisar, vacíos, Sesión |
 | `CountLine` | El conteo de una lista en versalitas y, a la derecha, cómo se ordena | Biblioteca, Cuaderno |
 | `SortMenu` | Menú para elegir el orden, en versalitas de tinta con su flecha | Biblioteca, Cuaderno › Subrayados |
 | `ToggleRow` | Interruptor en una fila de libreta (`Size.row`), en verde | Ajustes › Lectura |
@@ -211,7 +226,15 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `FooterPreview` | Muestra del pie: recorte chico de la parte de abajo de la página (papel, dos renglones fantasma y el pie tal cual, con su letra), sin nombre debajo (lo lee VoiceOver); filo de tinta y palomita si está elegido | Tarjeta del lector |
 | `IconTile` | Mosaico chico: ícono arriba, nombre abajo; borde si está elegido; en tinta si es la acción principal | Estilo de la hoja, tarjeta de un subrayado, barra de selección |
 | `FactRow` | Etiqueta / valor con línea fina y cifras exactas | Ficha del libro |
-| `EmptyState` | `RuledLabel` con lo que falta, explicación y acción opcional | Toda lista vacía |
+| `EmptyState` | `SectionHeader` con lo que falta, explicación y acción opcional con su ícono; los textos que se repiten salen de `EmptyCopy` | Toda lista vacía |
+| `MacEmptyState`, `.macMainAction()` | En la Mac: el vacío con las mismas palabras (`EmptyCopy`) y el botón principal en `action` | Tabla, ficha y duplicados de la Mac |
+| `LoadingLine` | Mientras algo tarda: la ruedita chica y qué estoy haciendo, en tinta secundaria («Buscando en internet…») | Ficha, Por revisar, Ajustes, Bienvenida, Conexiones, Calibre, Lector |
+| `CloseButton` | El ✕ que cierra, en 44 y con su nombre para VoiceOver («Cerrar la tarjeta»); `.plain` o `.glass` | Consultar, tarjeta del subrayado, lectura guiada, Sesión, Hendidura |
+| `TitleDetailRow` | Título en tinta y su detalle en gris debajo, en una fila de libreta | Calibre, Readwise, Por revisar, Apariencia |
+| `ChoiceMark` | La palomita verde de lo elegido (o el círculo vacío) | Duplicados de la Mac, opciones |
+| `LanguagePicker`, `StatusPicker` | Elegir idioma (con su nombre: «Español») y estado de lectura (`ReadingState`) iguales en el iPhone y la Mac | Editar datos, ficha de la Mac |
+| `SaveShelfAlert`, `RenameShelfAlert`, `DeleteShelfConfirmation` | Guardar, renombrar y borrar una estantería: las mismas palabras en el iPhone y la Mac | Biblioteca, estantería, barra lateral de la Mac |
+| `.errorAlert`, `.noticeAlert` | Aviso de un solo botón: el título dice qué pasó en primera persona («No pude abrir el libro»), el botón a dónde vuelves («Volver a la ficha») | Todo aviso de error o de algo que terminó |
 | `LinkRow` | Fila de libreta (`Size.row`): título, valor, flecha y línea finísima debajo; con `marked` o `status`, su punto | «Por revisar», Ajustes |
 | `StatTrio` | Tres cifras grandes con su rótulo en versalitas, centradas | Diario |
 | `ThinProgress`, `Hairline`, `LetterIndex` | Progreso, separador, índice A–Z | — |
@@ -312,7 +335,7 @@ propias de Gabinete, mejor la hoja de libreta.
 **Antes de dar por terminada una pantalla nueva**
 1. ¿Sale de una receta y solo de piezas del catálogo?
 2. ¿El verde marca solo dónde estás, lo que avanzas o lo tuyo? Las acciones, en tinta.
-3. ¿Cada sección tiene su `RuledLabel` y se separa con línea y aire, no con cajas?
+3. ¿Cada sección tiene su `SectionHeader` y se separa con línea y aire, no con cajas?
 4. ¿Las cifras salen de una pieza con cifras exactas?
 5. ¿Todo espacio es un token de la escala; todo lo que se toca, 44?
 6. ¿Una sola acción principal, oscura?
@@ -346,7 +369,7 @@ revisa también estos archivos. Mesa y Cuaderno son las mismas pantallas del iPh
 
 Medida en las capturas del simulador (píxeles → puntos) y en el código:
 
-- Margen lateral: 28 pt a ambos lados en todas las pantallas (`gutter`). Las filas que
+- Margen lateral: 24 pt a ambos lados en todas las pantallas (`gutter`). Las filas que
   se desplazan (`FilterBar`) llegan al borde y alinean su primer texto con el margen.
 - Título de pantalla: misma altura en Biblioteca, Cuaderno y Buscar (antes Buscar usaba
   el título del sistema, 35 pt más abajo y con 16–20 pt de margen).
@@ -356,10 +379,10 @@ Medida en las capturas del simulador (píxeles → puntos) y en el código:
   una sombra de `Reader.spineWidth` (26 pt) en la orilla izquierda, `Reader.spineShadeLight`
   (7 %) en papel claro y `Reader.spineShadeDark` (30 %) en oscuro; al pasar a la página
   siguiente, una vibración de `Reader.turnHaptic` (0,45), que se apaga en «Aa».
-  La letra del libro sigue el tamaño de texto de iOS (`Reader.textBase`) además de lo que elijas en «Aa»; los títulos de libro, filas, citas y textos del libro también lo siguen, y las muestras del pie crecen con él. El texto va a `Reader.textMargin` (28 pt) de las orillas en páginas y en continuo y en todo iPhone, con 1,45 de aire entre renglones que el estilo del libro no cambia (D1-B y D2-B, 24 nov 2026): todos los renglones a la misma distancia, aunque el libro traiga su propio aire en sus clases, letras de otra fuente o llamadas de nota (25 nov 2026, `testLinesAreEvenlySpaced`); el contenido de la tarjeta de abajo empieza en esa misma línea. En páginas, el texto deja `Reader.pageMarginTop` (12 pt) arriba, justo debajo de la isla, y `Reader.pageMarginBottom` (68 pt) abajo, (abajo hasta la orilla de la pantalla);
+  La letra del libro sigue el tamaño de texto de iOS (`Reader.textBase`) además de lo que elijas en «Aa»; los títulos de libro, filas, citas y textos del libro también lo siguen, y las muestras del pie crecen con él. El texto va a `Reader.textMargin` (24 pt) de las orillas en páginas y en continuo y en todo iPhone, con 1,45 de aire entre renglones que el estilo del libro no cambia (D1-B y D2-B, 24 nov 2026): todos los renglones a la misma distancia, aunque el libro traiga su propio aire en sus clases, letras de otra fuente o llamadas de nota (25 nov 2026, `testLinesAreEvenlySpaced`); el contenido de la tarjeta de abajo empieza en esa misma línea. En páginas, el texto deja `Reader.pageMarginTop` (16 pt) arriba, justo debajo de la isla, y `Reader.pageMarginBottom` (64 pt) abajo, (abajo hasta la orilla de la pantalla);
   el capítulo y el pie van centrados en ese margen, y el contador de palabras en el mismo
   renglón que el pie; en continuo, una franja de papel sólido
-  es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`); abajo empieza `Reader.folioFadeDrop` (20 pt) más abajo, con el sólido justo arriba del pie (25 nov 2026): la letra se sigue leyendo mientras se va. Arriba ya no va el capítulo (25 nov 2026): solo el papel que se desvanece desde la orilla de la pantalla; en continuo el texto corre hasta arriba y se va en ese desvanecido (hasta `Reader.topFade` bajo la isla; el marcador cae `Reader.bookmarkLinesBelowFade` (2) renglones más abajo para que el desvanecido no lo borre, 26 nov 2026); sin la barra de desplazamiento del sistema y sin punto: bajo el pie, una rayita fina se llena con lo leído del capítulo (SC-C, 26 nov 2026), y el principio de cada capítulo empieza debajo de la isla. El folio
+  es sólido hasta la orilla del folio (el texto nunca se asoma detrás) y se desvanece en `Reader.folioFade` (56 pt) ya fuera de él con una curva (`Reader.folioFadeSteps`); abajo empieza `Reader.folioFadeDrop` (24 pt) más abajo, con el sólido justo arriba del pie (25 nov 2026): la letra se sigue leyendo mientras se va. Arriba ya no va el capítulo (25 nov 2026): solo el papel que se desvanece desde la orilla de la pantalla; en continuo el texto corre hasta arriba y se va en ese desvanecido (hasta `Reader.topFade` bajo la isla; el marcador cae `Reader.bookmarkLinesBelowFade` (2) renglones más abajo para que el desvanecido no lo borre, 26 nov 2026); sin la barra de desplazamiento del sistema y sin punto: bajo el pie, una rayita fina se llena con lo leído del capítulo (SC-C, 26 nov 2026), y el principio de cada capítulo empieza debajo de la isla. El folio
   usa la tinta del libro a `Emphasis.folio` (74 %). El marcador: en páginas marca la hoja con la cinta de la esquina; en continuo marca el renglón que lees arriba y se ve como un hilo en el aire entre renglones, casi invisible a la izquierda y verde al llegar al margen, donde se dobla en una cinta chica que viaja con el texto (MC-E1, 25 nov 2026; al marcar, la cinta cae y el hilo se dibuja; al quitarlo, el hilo se recoge hacia la cinta y la cinta sube). Tocando el centro, arriba quedan solo cerrar y el marcador, cada uno en su círculo de vidrio, y abajo sale la tarjeta, que ya no se sube (26 nov 2026) (el capítulo, con buscar, «Aa» y «Guiada» a su derecha; completo con su número encima en `SectionLabel`, que abre el índice, y a su derecha buscar y «Aa» (BB-C, 25 nov 2026); la barra, que se toca en 44 pt de alto aunque se vea fina (`Size.scrubberReach`); la página y las palabras en gris, sin íconos; tras saltar con la barra, en lugar de las palabras, «Volver a la pág. N» para regresar a donde ibas);
   Qué dice el pie se elige solo tocando el pie mientras lees: sale un globo «Abajo de la página» con cuatro `FooterPreview` chicos (como se leerá). Tocando el
   contador, la tarjeta de abajo se desvanece en su lugar (`Motion.exit`) y, ya ida, «Esta sesión» crece apenas desde abajo (nunca dos tarjetas encimadas); sale la tarjeta «Esta sesión» (números, etapas y «Escribir sobre ella»), no una hoja.
@@ -419,7 +442,7 @@ app como texto, línea por línea (como en Orbital), y corre en CI con `swift te
 | `testNoTextUnderTwelve` | Sistema base de la casa (SB-3), 24 nov 2026: ninguna letra de menos de 12 pt; `.caption2` (11) solo en íconos |
 | `testRomanCapsOnlyForMarkAndLabels` | Decisión del 30 oct 2026: Cinzel solo por `BrandMark` y `SectionLabel` |
 | `testOnlyPiecesPaintTheAccent` | Regla 1 (26 nov 2026): ninguna pantalla usa el verde directo; las acciones van en tinta (`TextAction`) |
-| `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `RuledLabel` o `CountLine`, nunca a mano |
+| `testCapsComeFromThePieces` | Regla 3: las versalitas salen de `CapsText`, `SectionHeader` o `CountLine`, nunca a mano |
 | `testFiguresAreExact` | Regla 4: toda pieza que enseña cifras las pone del mismo ancho |
 | `testOneGreenForEverything` | Un solo verde: ningún color con tono verde se escribe fuera de `Theme.Green` (ni en `Theme.swift`, ni en pantallas, piezas o el libro), `action` y el color del sistema salen de él, y `reader.js` no escribe ningún color |
 | `testSpacingKeepsTheHouseScale` | Regla 5 y SB-2 de la casa: sin 12 ni 6, y nada heredado en `sistema-base.json` |
@@ -435,7 +458,6 @@ su fecha. Lo que se entrega se reporta como dice [entrega.md](entrega.md).
 | Motivo | Dónde | Por qué |
 |---|---|---|
 | control nativo de Form | Reglas | Dentro de un `Form` del sistema, el segmentado nativo es lo esperado; `FilterBar` es para el contenido de una pantalla |
-| lo buscado | `SearchResultRow` | Lo que buscaste va en verde y negritas dentro del resultado (decisión de Buscar, 24 nov 2026): es una cifra de lo tuyo, no un título |
 | portada dibujada | `CoverView` | La letra de la portada tipográfica es una fracción de su ancho (`Theme.CoverArt`), no un tamaño de la interfaz |
 | fuente del lector | Lector › «Aa» | La muestra de cada fuente es la fuente que vas a leer, al tamaño que elegiste |
 | índice A–Z | `LetterIndex` | Las 27 letras van en columna a la orilla, como el índice de Contactos: a 12 pt no caben en un iPhone chico |

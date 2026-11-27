@@ -275,7 +275,7 @@ extension SettingsScreen {
     private func describe(_ report: LibraryStore.TidyReport) -> String {
         var lines = ["Revisé \(report.checked.counted("libro", "libros")); \(report.relocated) cambiaron de carpeta para quedar como en Calibre."]
         if !report.missing.isEmpty {
-            lines.append("Sin archivo: \(report.missing.prefix(5).joined(separator: ", "))\(report.missing.count > 5 ? "…" : "").")
+            lines.append("Sin archivo: \(report.missing.prefix(Theme.Lists.preview).joined(separator: ", "))\(report.missing.count > Theme.Lists.preview ? "…" : "").")
         }
         if !report.strays.isEmpty {
             lines.append("Carpetas que no están en el catálogo: \(report.strays.count). No borré nada.")

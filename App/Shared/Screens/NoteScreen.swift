@@ -40,10 +40,10 @@ struct NoteScreen: View {
     private var suggestions: [ShelfBook] {
         guard editing, let query = NoteMarkdown.openLinkQuery(in: text) else { return [] }
         let term = query.trimmingCharacters(in: .whitespaces)
-        let books = term.isEmpty ? Array(model.shelf.prefix(20)) : model.shelf.filter {
+        let books = term.isEmpty ? Array(model.shelf.prefix(Theme.Lists.linkShelf)) : model.shelf.filter {
             $0.title.localizedStandardContains(term) || $0.author.localizedStandardContains(term)
         }
-        return Array(books.prefix(4))
+        return Array(books.prefix(Theme.Lists.linkSuggestions))
     }
 
     var body: some View {

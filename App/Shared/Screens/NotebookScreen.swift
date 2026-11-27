@@ -75,9 +75,9 @@ struct NotebookScreen: View {
     private var summary: some View {
         switch part {
         case .notes:
-            CountLine(text: (notes.count == 1 ? "1 nota" : "\(notes.count) notas") + " · en \(CabinetLocation.notesFolder)")
+            CountLine(text: notes.count.counted("nota", "notas") + " · en \(CabinetLocation.notesFolder)")
         case .highlights:
-            CountLine(text: highlights.count == 1 ? "1 subrayado" : "\(highlights.count) subrayados") {
+            CountLine(text: highlights.count.counted("subrayado", "subrayados")) {
                 SortMenu(options: HighlightOrder.allCases, selection: $order) { $0.rawValue }
             }
         }
@@ -88,7 +88,7 @@ struct NotebookScreen: View {
         if notes.isEmpty {
             EmptyState(title: "Sin notas todavía",
                        message: "Escribe ideas, resúmenes o lo que te dejó un libro. Enlaza libros con [[ y lleva tus subrayados a una nota desde el lector. Cada nota es un archivo Markdown en Gabinete/Notas.",
-                       actionTitle: "Nota nueva") { path.append(NoteRef.new()) }
+                       actionTitle: "Nota nueva", systemImage: "plus") { path.append(NoteRef.new()) }
         } else {
             LazyVStack(spacing: 0) {
                 ForEach(notes) { note in

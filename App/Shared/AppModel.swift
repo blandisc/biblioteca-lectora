@@ -87,7 +87,7 @@ final class AppModel: ObservableObject {
     /// Lo siguiente en la pila: los más recientes, sin el actual.
     var desk: [ShelfBook] {
         let current = currentBook?.id
-        return Array(recent.filter { $0.id != current }.prefix(6))
+        return Array(recent.filter { $0.id != current }.prefix(Theme.Lists.desk))
     }
 
     func book(for shelfBook: ShelfBook) -> Book? {
@@ -151,7 +151,7 @@ final class AppModel: ObservableObject {
                 return nil
             }
             lines.append("\(failures.count.counted("archivo no entró", "archivos no entraron")) a tu biblioteca"
-                + (names.isEmpty ? "." : ": \(names.prefix(5).joined(separator: ", "))\(names.count > 5 ? "…" : "").")
+                + (names.isEmpty ? "." : ": \(names.prefix(Theme.Lists.preview).joined(separator: ", "))\(names.count > Theme.Lists.preview ? "…" : "").")
                 + " No se pueden abrir como libros.")
         }
         if !lines.isEmpty { importReport = lines.joined(separator: " ") }

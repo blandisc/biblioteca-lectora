@@ -42,13 +42,12 @@ public enum BatchLookup {
             }
         }
 
-        /// «22 completados · 6 a Por revisar · 3 sin encontrar».
+        /// «22 completados · 6 por revisar · 3 sin encontrar».
         public var summary: String {
-            func part(_ n: Int, _ one: String, _ many: String) -> String? { n == 0 ? nil : "\(n) \(n == 1 ? one : many)" }
-            let parts = [part(applied, "completado", "completados"),
-                         part(review, "a Por revisar", "a Por revisar"),
-                         part(notFound, "sin encontrar", "sin encontrar"),
-                         part(pending, "pendiente sin internet", "pendientes sin internet")].compactMap { $0 }
+            let parts = [applied.countedIfAny("completado", "completados"),
+                         review.countedIfAny("por revisar", "por revisar"),
+                         notFound.countedIfAny("sin encontrar", "sin encontrar"),
+                         pending.countedIfAny("pendiente sin internet", "pendientes sin internet")].compactMap { $0 }
             return parts.isEmpty ? "Nada que cambiar" : parts.joined(separator: " · ")
         }
     }

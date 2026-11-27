@@ -1,0 +1,4 @@
+# Lo que miran las guardias del sistema de diseño (scripts/lint-design.sh y DesignRulesTests):
+# todo App/Shared, menos lo de aquí abajo. Una ruta por renglón, un tabulador y su porqué.
+# Un archivo nuevo de App/Shared queda vigilado solo: no hay que anotarlo en ningún lado.
+App/Shared/Design/Theme.swift	aquí nacen los tokens: es el único lugar donde se escriben números, colores y fuentes

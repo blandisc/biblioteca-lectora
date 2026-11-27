@@ -98,6 +98,8 @@ enum ConnectorKeys {
 /// compartida para que solo un dispositivo haga cada uno (D7).
 @MainActor
 final class ConnectorsStore: ObservableObject {
+    /// Cada cuánto se sincronizan los servicios conectados mientras la app está abierta.
+    static let syncEvery: Duration = .seconds(60)
     static let shared = ConnectorsStore()
 
     enum Status: Equatable {
@@ -179,7 +181,7 @@ final class ConnectorsStore: ObservableObject {
         loop = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.sync()
-                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                try? await Task.sleep(for: Self.syncEvery)
             }
         }
     }

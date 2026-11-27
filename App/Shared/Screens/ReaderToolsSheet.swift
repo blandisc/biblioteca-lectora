@@ -223,14 +223,14 @@ struct ReaderToolsSheet: View {
     }
 
     private var foundText: String {
-        controller.searchResults.count == 1 ? "1 encontrado" : "\(controller.searchResults.count) encontrados"
+        controller.searchResults.count.counted("encontrado", "encontrados")
     }
 
     private var resultsLine: String {
         let count = controller.searchResults.count, chapters = groups.count
         if count >= 300 { return "Los primeros 300 resultados: prueba con más palabras." }
-        let results = count == 1 ? "1 resultado" : "\(count) resultados"
-        return chapters <= 1 ? results : "\(results) en \(chapters) capítulos"
+        let results = count.counted("resultado", "resultados")
+        return chapters <= 1 ? results : "\(results) en \(chapters.counted("capítulo", "capítulos"))"
     }
 
     // MARK: Marcas

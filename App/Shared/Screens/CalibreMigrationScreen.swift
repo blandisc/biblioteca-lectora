@@ -152,7 +152,7 @@ private struct SummaryStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             SectionLabel(text: "Listo")
-            Text(report.imported == 1 ? "Llegó 1 libro a tu Gabinete." : "Llegaron \(report.imported) libros a tu Gabinete.")
+            Text("\(report.imported == 1 ? "Llegó" : "Llegaron") \(report.imported.counted("libro", "libros")) a tu Gabinete.")
                 .font(.bookTitle)
             VStack(spacing: 0) {
                 FactRow(label: "Subrayados", value: "\(report.annotations)")
@@ -172,7 +172,7 @@ private struct SummaryStep: View {
                 }
             }
             if !report.withoutFiles.isEmpty {
-                Text("Sin archivo: " + report.withoutFiles.prefix(10).joined(separator: " · ") + (report.withoutFiles.count > 10 ? "…" : ""))
+                Text("Sin archivo: " + report.withoutFiles.prefix(Theme.Lists.preview).joined(separator: " · ") + (report.withoutFiles.count > Theme.Lists.preview ? "…" : ""))
                     .font(.footnote)
                     .foregroundStyle(Theme.secondaryInk)
             }

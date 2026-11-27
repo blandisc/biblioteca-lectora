@@ -1,4 +1,5 @@
 import Foundation
+import LectoraCore
 
 /// Orden de la Biblioteca.
 enum LibrarySort: String, CaseIterable, Identifiable {
@@ -25,20 +26,34 @@ enum LibraryLayout: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
-/// Filtros rápidos de la Biblioteca.
-enum LibraryFilter: String, CaseIterable, Identifiable {
-    case all = "Todos"
-    case reading = "En curso"
-    case unread = "Sin empezar"
-    case series = "Series"
-    case cloud = "Sin descargar"
+/// Filtros rápidos de la Biblioteca: los mismos estados, con los mismos nombres y la misma
+/// regla, que la barra lateral de la Mac (`ReadingState`, C1).
+enum LibraryFilter: Hashable, Identifiable {
+    case all
+    case state(ReadingState)
+    case series
+    case cloud
     var id: Self { self }
+
+    /// «Abandonados» sale solo si hay alguno, como «Posibles duplicados» en la Mac.
+    static func options(for books: [ShelfBook]) -> [LibraryFilter] {
+        [.all] + ReadingState.allCases.filter { $0 != .abandoned || books.contains { $0.state == .abandoned } }.map(LibraryFilter.state)
+            + [.series, .cloud]
+    }
+
+    var title: String {
+        switch self {
+        case .all: "Todos"
+        case .state(let state): state.group
+        case .series: "Series"
+        case .cloud: "Sin descargar"
+        }
+    }
 
     func includes(_ book: ShelfBook) -> Bool {
         switch self {
         case .all: true
-        case .reading: book.isReading
-        case .unread: book.progress == 0
+        case .state(let state): book.state == state
         case .series: book.series != nil
         case .cloud: book.inCloudOnly
         }

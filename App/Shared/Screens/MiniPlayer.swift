@@ -43,7 +43,7 @@ struct MiniPlayer: View {
             Spacer(minLength: 0)
             PlayRingButton(playing: playing, progress: chapterProgress) { playing.toggle() }
             Button {} label: {
-                Image(systemName: "goforward.30").font(.title3.weight(.medium))
+                Image(systemName: "goforward.30").font(.icon.weight(.medium))
                     .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
             }
             .accessibilityLabel("Adelantar 30 segundos")

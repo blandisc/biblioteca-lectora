@@ -159,7 +159,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
     /// Las hojas del lector (la página que se dobla con el dedo).
     weak var pages: ReaderPagesController? { didSet { updateCurl() } }
     /// Color del papel, para la hoja que da vuelta.
-    var pageBackground: UIColor = .systemBackground { didSet { pages?.paper = pageBackground } }
+    var pageBackground = UIColor(Theme.paper) { didSet { pages?.paper = pageBackground } }
     /// Cómo se pasa la hoja en páginas (se elige en «Aa»).
     var turnStyle: ReaderTurnStyle = .matte { didSet { updateCurl() } }
     #endif
@@ -301,7 +301,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
                 self.evaluate(script)
                 // La foto se va cuando el libro ya está acomodado, no a un tiempo fijo.
                 webView.callAsyncJavaScript("await window.lectora.settled(ms)",
-                                            arguments: ["ms": Int(Theme.Reader.flowSettle * 1000)],
+                                            arguments: ["ms": Theme.Reader.flowSettle.milliseconds],
                                             in: nil, in: .page) { _ in settled() }
             }
             return
@@ -550,7 +550,7 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
             settleTask?.cancel()
             if let location {
                 settleTask = Task { [weak self] in
-                    try? await Task.sleep(for: .seconds(1.5))
+                    try? await Task.sleep(for: Theme.Reader.positionSettle)
                     guard !Task.isCancelled else { return }
                     self?.onPositionSettled?(location)
                 }

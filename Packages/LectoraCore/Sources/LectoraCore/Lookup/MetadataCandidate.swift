@@ -26,6 +26,8 @@ public struct MetadataCandidate: Identifiable, Hashable, Codable, Sendable {
     public var publisher: String?
     /// Año de la primera publicación de la obra (o fecha de la edición si no se sabe).
     public var published: String?
+    /// El año de `published` («2016» de «2016-05-01»), para enseñarlo junto al autor.
+    public var year: String? { published.map { String($0.prefix(4)) } }
     public var summary: String?
     public var isbn: String?
     public var language: String?

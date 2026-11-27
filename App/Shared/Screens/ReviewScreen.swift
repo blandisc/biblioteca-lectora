@@ -102,7 +102,7 @@ struct ReviewScreen: View {
         return Button {
             Task { await model.library.retryPendingLookups() }
         } label: {
-            LinkRow(title: count == 1 ? "1 libro espera conexión" : "\(count) libros esperan conexión",
+            LinkRow(title: count.counted("libro espera conexión", "libros esperan conexión"),
                     value: model.library.identifying.isEmpty ? "Buscar ahora" : "Buscando…")
         }
         .buttonStyle(.plain)
@@ -113,7 +113,7 @@ struct ReviewScreen: View {
         guard let candidates = model.library.reviews[id], let best = candidates.first else {
             return "No lo encontré en internet"
         }
-        let count = candidates.count == 1 ? "1 opción" : "\(candidates.count) opciones"
+        let count = candidates.count.counted("opción", "opciones")
         return "\(count) · \(best.verdict)"
     }
 }

@@ -28,15 +28,14 @@ struct MacDuplicatesView: View {
                         Spacer()
                         Button("No son el mismo") { library.dismissDuplicates(group) }
                         Button("Juntar en uno…") { confirming = group }
-                            .buttonStyle(.borderedProminent)
+                            .macMainAction()
                     }
                 }
             }
         }
         .overlay {
             if groups.isEmpty {
-                ContentUnavailableView("Sin duplicados", systemImage: "checkmark.circle",
-                                       description: Text("No hay libros repetidos: mismo título con autor parecido, o el mismo ISBN."))
+                MacEmptyState(title: EmptyCopy.noDuplicates.title, message: EmptyCopy.noDuplicates.message, systemImage: "checkmark.circle")
             }
         }
         .navigationTitle("Posibles duplicados")
@@ -58,16 +57,15 @@ struct MacDuplicatesView: View {
         let chosen = keeper(of: group)?.id == book.id
         return Button { keep[group[0].id] = book.id } label: {
             HStack(spacing: Theme.Space.l) {
-                Image(systemName: chosen ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(chosen ? Theme.accent : Theme.secondaryInk)
+                ChoiceMark(selected: chosen)
                 VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                    Text(book.title)
+                    Text(book.title).font(.rowTitle)
                     Text(details(book, highlights: highlights))
-                        .font(.callout)
+                        .font(.subheadline)
                         .foregroundStyle(Theme.secondaryInk)
                 }
                 Spacer()
-                if chosen { Text("Se queda").font(.callout).foregroundStyle(Theme.accent) }
+                if chosen { Text("Se queda").font(.subheadline).foregroundStyle(Theme.ink) }
             }
             .contentShape(Rectangle())
         }

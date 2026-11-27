@@ -118,7 +118,7 @@ struct DiaryScreen: View {
                           canGoForward: offset > 0, back: { offset += 1 }, forward: { offset -= 1 })
             PeriodTotal(period: period, days: calendar.range(of: .day, in: .month, for: interval.start)?.count ?? 30, calendar: calendar)
             MonthCalendar(days: period.days(from: interval.start, to: interval.end, calendar: calendar))
-            let longest = period.sessions.sorted { $0.readingSeconds > $1.readingSeconds }.prefix(2)
+            let longest = period.sessions.sorted { $0.readingSeconds > $1.readingSeconds }.prefix(Theme.Lists.longestSessions)
             if !longest.isEmpty {
                 VStack(alignment: .leading, spacing: 0) {
                     SectionLabel(text: "Lo más largo")
@@ -191,7 +191,7 @@ struct DiaryScreen: View {
                 ForEach(books, id: \.bookID) { entry in
                     if let book = model.shelfBook(id: entry.bookID.uuidString) {
                         NavigationLink(value: book) {
-                            BookRow(book: book, detail: "\(entry.sessions == 1 ? "1 sesión" : "\(entry.sessions) sesiones") · de \(entry.from.percentText) a \(entry.to.percentText)") {
+                            BookRow(book: book, detail: "\(entry.sessions.counted("sesión", "sesiones")) · de \(entry.from.percentText) a \(entry.to.percentText)") {
                                 Text(ReadingFormat.duration(entry.seconds)).monospacedDigit()
                             }
                         }
@@ -276,8 +276,8 @@ private struct PeriodTotal: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.xxs) {
             Text(ReadingFormat.duration(period.readingSeconds))
-                .font(.screenTitle)
-            Text("\(ReadingFormat.words(period.words)) palabras · \(period.sessions.count == 1 ? "1 sesión" : "\(period.sessions.count) sesiones") · \(period.days(calendar: calendar)) de \(days) días")
+                .screenTitleFont()
+            Text("\(period.words.counted("palabra", "palabras", shown: ReadingFormat.words(period.words))) · \(period.sessions.count.counted("sesión", "sesiones")) · \(period.days(calendar: calendar)) de \(days.counted("día", "días"))")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
         }

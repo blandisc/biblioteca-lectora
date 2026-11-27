@@ -32,7 +32,7 @@ final class NotesStore: ObservableObject {
         let url = folder.url
         Task.detached(priority: .utility) { [weak self] in
             CloudFiles.requestSmallFiles(in: url)
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            try? await Task.sleep(for: CloudFiles.settle)
             await self?.reload(ifStillAt: url)
         }
     }

@@ -121,7 +121,7 @@ private struct HelloStep: View {
             BrandMark()
                 .padding(.vertical, Theme.Space.xxl)
             Text("Para leer y pensar")
-                .font(.screenTitle)
+                .screenTitleFont()
             Text("Tus libros, tus subrayados y tus notas, juntos en una carpeta tuya. Sin servidor: lo que guardas se queda en tus dispositivos y se abre también con Calibre y Obsidian.")
                 .font(.body)
                 .foregroundStyle(Theme.secondaryInk)
@@ -142,7 +142,7 @@ private struct PlaceStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            Text("¿Dónde vive tu Gabinete?").font(.screenTitle)
+            Text("¿Dónde vive tu Gabinete?").screenTitleFont()
             Text("Una carpeta con dos partes: Biblioteca (con la forma de Calibre) y Notas (Markdown).")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
@@ -181,7 +181,7 @@ private struct BooksStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            Text("Tus libros").font(.screenTitle)
+            Text("Tus libros").screenTitleFont()
             if let importing {
                 // Se ve que trabaja: puedes seguir y los libros terminan de llegar solos.
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
@@ -191,7 +191,7 @@ private struct BooksStep: View {
                     ThinProgress(value: importFraction ?? 0)
                 }
             } else {
-                Text(count == 0 ? "EPUB, PDF, MOBI y cómics propios, sin DRM." : count == 1 ? "Ya hay 1 libro en tu Gabinete." : "Ya hay \(count) libros en tu Gabinete.")
+                Text(count == 0 ? "EPUB, PDF, MOBI y cómics propios, sin DRM." : "Ya hay \(count.counted("libro", "libros")) en tu Gabinete.")
                     .font(.subheadline)
                     .foregroundStyle(Theme.secondaryInk)
             }
@@ -223,7 +223,7 @@ private struct ReadwiseStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            Text("¿Usas Readwise?").font(.screenTitle)
+            Text("¿Usas Readwise?").screenTitleFont()
             Text("Tus subrayados van y vienen: los de Gabinete van a Readwise, y llegan los de Kindle y tus otras fuentes. Hardcover y lo demás está en Ajustes › Conexiones.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)

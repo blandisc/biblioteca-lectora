@@ -1,0 +1,10 @@
+# Valores sueltos que ninguna pantalla, pieza ni ventana de la Mac escribe a mano (docs/sistema-diseno.md, «Regla»).
+# Los leen scripts/lint-design.sh y DesignRulesTests (testScreensUseOnlyTokens), así no se separan.
+# Formato: mensaje, un tabulador y el patrón (expresión regular). Lo de `#if DEBUG` (capturas) no cuenta.
+Número suelto: usa un token de Theme	(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\(|\.scaleEffect\(|\.shadow\(|\.tracking\(|\.aspectRatio\(|minimumScaleFactor\(|radius: |\.brightness\(|\.blur\(|\.rotationEffect\(|step: )([^)]*[^A-Za-z_.0-9])?(0?\.[0-9]+|[1-9][0-9]*(\.[0-9]+)?)
+Cuántos se enseñan: nómbralo en Theme (o en LectoraCore si es una regla de los datos)	\.prefix\(([2-9]|[1-9][0-9]+)\)
+Color a mano: usa un color de Theme	Color\(hex|Color\(red:|\bColor\.(white|black|gray|secondary|primary)\b|[(\s,\[]\.(black|white)(\.opacity|\)|,)|\b(UI|NS)Color\.(black|white|label|secondaryLabel)\b|\.systemBackground\b|\.foregroundStyle\(\.(secondary|primary|tertiary)\)|\.foregroundColor\(
+Fuente a mano: usa una de Font (screenTitle, rowTitle, icon, badge…)	\.system\(size|Font\.custom|\.custom\(|systemFont\(ofSize|\.font\(\.(title|title2|title3|headline|callout|largeTitle|caption2)\b
+Animación sin token: usa Theme.Motion	withAnimation\s*\{|withAnimation\((?!Theme\.Motion)|(?<!TimelineView\()\.animation\((?!Theme\.Motion|nil)
+Curva a mano: usa Theme.Motion	\.easeInOut\(duration|\.spring\(|\.snappy\(|\.(easeIn|easeOut|linear|smooth|bouncy)\(duration|\.interactiveSpring\(
+Espera a mano: nómbrala en Theme	Task\.sleep\((for: \.(seconds|milliseconds)\([0-9]|nanoseconds: [0-9])|asyncAfter\(deadline: \.now\(\) \+ [0-9]

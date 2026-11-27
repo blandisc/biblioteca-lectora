@@ -21,7 +21,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
     private let curl = MatteCurl()
 
     /// Color del papel: la hoja es opaca (el WebView es transparente).
-    var paper: UIColor = .systemBackground { didSet { page.paper = paper } }
+    var paper = UIColor(Theme.paper) { didSet { page.paper = paper } }
     /// El lomo del libro en la orilla izquierda (en páginas; en continuo no).
     var spine = true { didSet { page.showsSpine = spine } }
     /// Se pasa con el dedo (en páginas, sin texto seleccionado).
@@ -370,7 +370,7 @@ final class ReaderPagesController: UIViewController, UIGestureRecognizerDelegate
 
     /// La sombra suave de la hoja que se desliza, en su orilla derecha.
     private func shade(_ sheet: UIView) {
-        sheet.layer.shadowColor = UIColor.black.cgColor
+        sheet.layer.shadowColor = UIColor(Theme.shade).cgColor
         sheet.layer.shadowOpacity = Theme.Reader.slideShadow
         sheet.layer.shadowRadius = Theme.Reader.slideShadowRadius
         sheet.layer.shadowOffset = .zero
@@ -496,12 +496,14 @@ private final class MatteCurl {
     private let sheet = CIFilter.pageCurlTransition()
     private let shadow = CIFilter.pageCurlWithShadowTransition()
     private let blend = CIFilter.blendWithAlphaMask()
+    /// En una máscara, el blanco es lo que se ve (no es un color de la hoja).
+    private static let opaque = CIColor.white
     /// El texto a contraluz de la hoja que se dobla: se calcula una vez por vuelta,
     /// no en cada cuadro.
     private var showThrough: (source: CIImage, image: CIImage)?
 
     func warmUp(paper: UIColor) {
-        let tiny = CIImage(color: .white).cropped(to: CGRect(x: 0, y: 0, width: 32, height: 48))
+        let tiny = CIImage(color: Self.opaque).cropped(to: CGRect(x: 0, y: 0, width: 32, height: 48))
         _ = render(tiny, over: tiny, back: paper, time: 0.5, angle: .pi)
         showThrough = nil
     }
@@ -509,7 +511,7 @@ private final class MatteCurl {
     func render(_ input: CIImage, over target: CIImage, back paper: UIColor, time: CGFloat, angle: Double) -> UIImage? {
         let extent = input.extent
         let clear = CIImage(color: .clear).cropped(to: extent)
-        let solid = CIImage(color: .white).cropped(to: extent)
+        let solid = CIImage(color: Self.opaque).cropped(to: extent)
         // El revés: papel más oscuro con el texto de la hoja en espejo, como a
         // contraluz: se lee que hay letra detrás, apenas suave (la tinta atraviesa
         // el papel y se abre un poco), sin competir con la página de abajo. La foto
@@ -542,7 +544,7 @@ private final class MatteCurl {
         // La máscara crece un poco: en su orilla suavizada se colaba el revés brillante
         // de la otra versión y dibujaba una línea blanca en el filo de la hoja.
         guard let matte = curled(input, target, back),
-              let mask = curled(solid, clear, CIImage(color: .white))?
+              let mask = curled(solid, clear, CIImage(color: Self.opaque))?
                 .applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: Theme.Reader.curlMaskGrow])
                 .cropped(to: extent) else { return nil }
 
@@ -584,7 +586,7 @@ private final class MatteCurl {
 final class ReaderPage: UIViewController {
     let spineShade = SpineShade()
 
-    var paper: UIColor = .systemBackground {
+    var paper = UIColor(Theme.paper) {
         didSet {
             loadViewIfNeeded()
             view.backgroundColor = paper
@@ -623,7 +625,7 @@ final class ReaderPage: UIViewController {
 final class SpineShade: UIView {
     override class var layerClass: AnyClass { CAGradientLayer.self }
 
-    var paper: UIColor = .systemBackground { didSet { update() } }
+    var paper = UIColor(Theme.paper) { didSet { update() } }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -640,7 +642,7 @@ final class SpineShade: UIView {
         var brightness: CGFloat = 1
         paper.resolvedColor(with: traitCollection).getHue(nil, saturation: nil, brightness: &brightness, alpha: nil)
         let shade = brightness < 0.5 ? Theme.Reader.spineShadeDark : Theme.Reader.spineShadeLight
-        gradient.colors = [UIColor.black.withAlphaComponent(shade).cgColor, UIColor.black.withAlphaComponent(0).cgColor]
+        gradient.colors = [UIColor(Theme.shade.opacity(shade)).cgColor, UIColor(Theme.shade.opacity(0)).cgColor]
         gradient.startPoint = CGPoint(x: 0, y: 0.5)
         gradient.endPoint = CGPoint(x: 1, y: 0.5)
     }

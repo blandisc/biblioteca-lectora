@@ -78,7 +78,7 @@ enum FilledField: String, Codable, CaseIterable, Hashable {
         guard let value else { return nil }
         switch self {
         case .language: return MetadataCandidate.languageName(value)
-        case .summary: return value.count > 140 ? String(value.prefix(140)) + "…" : value
+        case .summary: return value.count > Theme.Lists.summaryLetters ? String(value.prefix(Theme.Lists.summaryLetters)) + "…" : value
         case .series: return value.replacingOccurrences(of: " #", with: " · ")
         default: return value
         }

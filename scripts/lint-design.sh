@@ -1,17 +1,43 @@
 #!/usr/bin/env bash
-# Regla del sistema de diseño (docs/sistema-diseno.md): las pantallas no usan
-# números, colores ni fuentes sueltos; todo sale de Theme y de Components.
-# Revisa App/Shared/Screens, el lector y la ventana de la Mac. Uso: scripts/lint-design.sh
+# Regla del sistema de diseño (docs/sistema-diseno.md): nada en la app usa números,
+# colores, fuentes, animaciones ni esperas sueltos; todo sale de Theme y de Components.
+# Revisa todo App/Shared menos lo que diga scripts/design-sources.txt (con su porqué),
+# con los patrones de scripts/design-patterns.txt: los mismos que DesignRulesTests.
+# Uso: scripts/lint-design.sh
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-files=$(ls App/Shared/Screens/*.swift App/Shared/RootView.swift App/Shared/Reader/ReaderView.swift App/Shared/Reader/ReaderAppearance.swift App/Shared/Reader/LookupCard.swift App/Shared/Design/*.swift App/Shared/Mac/*.swift | grep -v Theme.swift)
-pattern='(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\(|\.scaleEffect\(|\.shadow\(|\.tracking\(|\.aspectRatio\(|minimumScaleFactor\(|radius: )([^)]*[^A-Za-z_.0-9])?(0?\.[0-9]+|[1-9][0-9]*(\.[0-9]+)?)|Color\(hex|\.system\(size|Font\.custom'
+python3 - <<'PY'
+import glob, re, sys
 
-violations=$(grep -nE "$pattern" $files | grep -vE '^\S+:\s*[0-9]+:\s*//' | grep -v 'ds-exception:')
-if [ -n "$violations" ]; then
-  echo "Valores sueltos fuera del sistema de diseño (usa tokens de Theme o un componente):"
-  echo "$violations"
-  exit 1
-fi
-echo "Sistema de diseño: sin valores sueltos en $(echo "$files" | wc -w | tr -d ' ') archivos."
+def table(path):
+    return [line.rstrip("\n").split("\t", 1) for line in open(path, encoding="utf-8")
+            if line.strip() and not line.startswith("#")]
+
+excluded = [path for path, _ in table("scripts/design-sources.txt")]
+files = [f for f in sorted(glob.glob("App/Shared/**/*.swift", recursive=True))
+         if not any(f.startswith(path) for path in excluded)]
+found = 0
+for message, pattern in table("scripts/design-patterns.txt"):
+    regex, hits = re.compile(pattern), []
+    for name in files:
+        debug = 0  # lo de `#if DEBUG` (capturas y demos) no se ve en la app
+        for number, line in enumerate(open(name, encoding="utf-8").read().split("\n"), 1):
+            code = line.strip()
+            if code.startswith("#if"):
+                debug += 1 if debug or code == "#if DEBUG" else 0
+                continue
+            if code.startswith("#endif") and debug:
+                debug -= 1
+                continue
+            if debug or code.startswith("//") or "ds-exception:" in line:
+                continue
+            if regex.search(line):
+                hits.append(f"{name}:{number}: {code[:140]}")
+    if hits:
+        found += len(hits)
+        print(message, *hits, sep="\n")
+if found:
+    sys.exit(1)
+print(f"Sistema de diseño: sin valores sueltos en {len(files)} archivos.")
+PY

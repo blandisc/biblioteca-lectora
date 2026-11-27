@@ -1,11 +1,23 @@
 {
-  "_": "Lo propio de Gabinete para el revisor común del sistema base (tools/sistema-base/, copia de ~/code/interoperabilidad/sistema-base). Como Cénit y Lux (X3-B), los espacios 2, 6 y 12 se quedan con trinquete: la cuenta solo baja. La guardia propia (scripts/lint-design.sh y DesignRulesTests) vigila además que todo salga de Theme.",
+  "_": "Lo propio de Gabinete para el revisor común del sistema base (tools/sistema-base/, copia de ~/code/interoperabilidad/sistema-base). Sin nada heredado desde el 26 nov 2026: los espacios 12 y 6 se fueron, y las medidas con nombre (gutter, rowY, rowGap, buttonX y los márgenes del lector) también caen en la escala (SD-1). El libro (reader.js) y su página (reader.html) se revisan como web. La guardia propia (scripts/lint-design.sh y DesignRulesTests) vigila además que todo salga de Theme.",
   "fuentes": [
     {
       "tipo": "swift",
       "rutas": [
         "App",
         "Packages/LectoraCore/Sources"
+      ]
+    },
+    {
+      "tipo": "js",
+      "rutas": [
+        "App/Resources/Reader/reader.js"
+      ]
+    },
+    {
+      "tipo": "html",
+      "rutas": [
+        "App/Resources/Reader/reader.html"
       ]
     }
   ],
@@ -17,7 +29,7 @@
     {
       "regla": "SB-2",
       "archivo": "App/Shared/Design/Theme.swift",
-      "patron": "static let (?:xxs|xs|s|m|l|xl|xxl|xxxl|hair|inline): CGFloat = (-?\\d+(?:\\.\\d+)?)"
+      "patron": "static let (?:xxs|xs|s|l|xl|xxl|xxxl|hair|rowY|rowGap|buttonX|gutter|screenTop|screenBottom|chromeInset|chromeLift|textMargin|pageMarginTop|pageMarginBottom|folioFadeDrop|topFade|slitPadding): CGFloat = (-?\\d+(?:\\.\\d+)?)"
     }
   ],
   "excepciones": [],
@@ -26,5 +38,6 @@
     "SB-2": {},
     "SB-3": {},
     "SB-4": {}
-  }
+  },
+  "css_rem_px": 16
 }

@@ -33,6 +33,8 @@ struct ShelfBook: Identifiable, Hashable {
     var sortTitle: String = ""
     /// Última vez que lo abriste.
     var lastReadAt: Date? = nil
+    /// En qué va: lo marcado a mano o, si no, el avance (igual que en la Mac).
+    var state: ReadingState = .toRead
 
     var isReading: Bool { progress > 0 && progress < 1 }
     var isFinished: Bool { progress >= 1 }
@@ -61,7 +63,7 @@ extension CoverStyle {
         var hash: UInt32 = 2_166_136_261
         for scalar in title.unicodeScalars { hash = (hash ^ scalar.value) &* 16_777_619 }
         let index = Int(hash % UInt32(palette.count))
-        return CoverStyle(background: Color(hex: palette[index].0), foreground: Color(hex: palette[index].1))
+        return CoverStyle(background: Color(hex: palette[index].0), foreground: Color(hex: palette[index].1)) // ds-exception: portadas generadas
     }
 }
 
@@ -75,7 +77,7 @@ extension ShelfBook {
         self.init(
             id: book.id.uuidString,
             title: book.title,
-            author: book.authors.isEmpty ? "Autor desconocido" : book.authors.joined(separator: ", "),
+            author: book.authors.isEmpty ? "Autor desconocido" : BookFields.authorsText(book.authors),
             progress: progress,
             addedDaysAgo: days,
             // En iCloud Drive con «Optimizar almacenamiento», el libro puede no estar bajado.
@@ -95,7 +97,8 @@ extension ShelfBook {
             addedAt: book.addedAt,
             authorSort: book.authors.first.map(Book.authorSort) ?? "",
             sortTitle: book.sortTitle,
-            lastReadAt: position?.updatedAt
+            lastReadAt: position?.updatedAt,
+            state: ReadingState(book.readingStatus, progress: progress)
         )
     }
 

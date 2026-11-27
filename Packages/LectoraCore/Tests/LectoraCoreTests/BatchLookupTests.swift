@@ -19,7 +19,7 @@ final class BatchLookupTests: XCTestCase {
         progress.record(.unreachable)
         XCTAssertTrue(progress.finished)
         XCTAssertEqual(progress.done, 4)
-        XCTAssertEqual(progress.summary, "2 completados · 1 a Por revisar · 1 sin encontrar · 1 pendiente sin internet")
+        XCTAssertEqual(progress.summary, "2 completados · 1 por revisar · 1 sin encontrar · 1 pendiente sin internet")
         XCTAssertEqual(BatchLookup.Progress(total: 0).summary, "Nada que cambiar")
     }
 }

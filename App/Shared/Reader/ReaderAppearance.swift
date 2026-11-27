@@ -403,7 +403,7 @@ struct ReaderAppearanceSheet: View {
                     .accessibilityLabel("Letra más chica")
                 sizeSlider
                     .accessibilityLabel("Tamaño de letra")
-                Button { scale = min(Self.scales.upperBound, scale + Self.scaleStep) } label: { Text("A").font(.title2).sizeTarget() }
+                Button { scale = min(Self.scales.upperBound, scale + Self.scaleStep) } label: { Text("A").font(.largeGlyph).sizeTarget() }
                     .accessibilityLabel("Letra más grande")
             }
             .buttonStyle(.plain)

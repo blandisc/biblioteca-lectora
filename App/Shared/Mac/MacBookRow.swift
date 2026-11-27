@@ -5,13 +5,9 @@ import SwiftUI
 /// Un libro como renglón de la tabla de la Mac (MG-1): lo que se ve y la llave para ordenar
 /// cada columna (sin acentos ni mayúsculas, así «Ángel» va con la A).
 struct MacBookRow: Identifiable {
-    enum State: String, CaseIterable {
-        case toRead = "Por leer", reading = "Leyendo", finished = "Leído", abandoned = "Abandonado"
-    }
-
     let book: Book
     let shelf: ShelfBook
-    let state: State
+    let state: ReadingState
     let hasCover: Bool
     let inReview: Bool
 
@@ -30,13 +26,14 @@ struct MacBookRow: Identifiable {
     var progressLabel: String { progress > 0 ? progress.percentText : "" }
     var rating: Double { book.rating ?? 0 }
     /// De 0 a 5 estrellas: una valoración negativa o rara de un OPF no cierra la app (B3).
-    var stars: String { String(repeating: "★", count: min(5, max(0, rating.safeInt ?? 0))) }
+    var stars: String { String(repeating: "★", count: starCount) }
+    var starCount: Int { min(5, max(0, rating.safeInt ?? 0)) }
     var added: Date { book.addedAt ?? .distantPast }
-    var addedLabel: String { book.addedAt?.es(.dateTime.day().month(.abbreviated).year()) ?? "" }
+    var addedLabel: String { book.addedAt?.esShort ?? "" }
     var publisher: String { book.publisher ?? "" }
     var published: String { book.published ?? "" }
     var isbn: String { book.identifiers["isbn"] ?? "" }
-    var stateLabel: String { state.rawValue }
+    var stateLabel: String { state.name }
 
     var titleKey: String { Self.fold(book.sortTitle) }
     var authorKey: String { Self.fold(shelf.authorSort) }
@@ -55,10 +52,7 @@ struct MacBookRow: Identifiable {
         self.shelf = shelf
         self.hasCover = hasCover
         self.inReview = inReview
-        state = if book.readingStatus == .abandoned { .abandoned }
-            else if book.readingStatus == .finished || shelf.isFinished { .finished }
-            else if shelf.progress > 0 || book.readingStatus == .reading { .reading }
-            else { .toRead }
+        state = shelf.state
     }
 
     static func fold(_ text: String) -> String {

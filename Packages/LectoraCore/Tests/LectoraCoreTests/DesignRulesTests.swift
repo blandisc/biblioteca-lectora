@@ -34,18 +34,40 @@ final class DesignRulesTests: XCTestCase {
             }
     }
 
-    /// Pantallas: todo lo que arma interfaz fuera del sistema de diseño.
+    /// Una tabla de `scripts/`: renglones «valor⇥porqué», sin comentarios (#). La leen
+    /// también `scripts/lint-design.sh`, así la prueba y el lint miran lo mismo.
+    static func table(_ name: String) -> [(String, String)] {
+        let text = (try? String(contentsOf: root.appendingPathComponent("scripts/\(name)"), encoding: .utf8)) ?? ""
+        return text.components(separatedBy: "\n")
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty && !$0.hasPrefix("#") }
+            .map { line in
+                let parts = line.components(separatedBy: "\t")
+                return (parts[0], parts.dropFirst().joined(separator: "\t"))
+            }
+    }
+
+    /// Lo que no miran las guardias, cada cosa con su porqué (`scripts/design-sources.txt`).
+    static let excluded = table("design-sources.txt")
+
+    /// Todo lo que arma la app (26 nov 2026, SD-1): todo `App/Shared` menos lo excluido con
+    /// su porqué. Antes cada prueba tenía su propia lista corta y la Mac, la hendidura, la
+    /// consulta y el pase de hoja quedaban fuera; un archivo nuevo queda vigilado solo.
+    static var ui: [Source] {
+        sources("App/Shared").filter { file in !excluded.contains { file.path.hasPrefix($0.0) } }
+    }
+
+    /// Pantallas: lo que arma una vista entera con piezas del catálogo (iPhone y Mac).
     static var screens: [Source] {
-        sources("App/Shared/Screens") + sources("App/Shared").filter {
-            ["App/Shared/RootView.swift", "App/Shared/Reader/ReaderView.swift"].contains($0.path)
-        }
+        let whole = ["App/Shared/RootView.swift", "App/Shared/Reader/ReaderView.swift",
+                     "App/Shared/Reader/LookupCard.swift", "App/Shared/Reader/SlitScreen.swift"]
+        return ui.filter { $0.path.hasPrefix("App/Shared/Screens/") || $0.path.hasPrefix("App/Shared/Mac/") || whole.contains($0.path) }
     }
 
     /// Piezas del sistema y del lector: tampoco usan valores sueltos (22 nov 2026: la
     /// regla solo miraba las pantallas y dentro de las piezas quedaban 20 números sin nombre).
     static var pieces: [Source] {
-        sources("App/Shared/Design").filter { !$0.path.hasSuffix("Theme.swift") }
-            + sources("App/Shared/Reader").filter { $0.path.hasSuffix("ReaderAppearance.swift") }
+        let names = Set(screens.map(\.path))
+        return ui.filter { !names.contains($0.path) }
     }
 
     static let doc = (try? String(contentsOf: root.appendingPathComponent("docs/sistema-diseno.md"), encoding: .utf8)) ?? ""
@@ -55,9 +77,13 @@ final class DesignRulesTests: XCTestCase {
         let regex = try! NSRegularExpression(pattern: pattern)
         var out: [String] = []
         for file in files {
+            var debug = 0
             for (index, line) in file.lines.enumerated() {
                 let code = line.trimmingCharacters(in: .whitespaces)
-                if code.hasPrefix("//") || line.contains("ds-exception:") { continue }
+                // Lo de `#if DEBUG` (capturas y demos) no llega a quien usa la app.
+                if code.hasPrefix("#if") { if debug > 0 || code == "#if DEBUG" { debug += 1 }; continue }
+                if code.hasPrefix("#endif"), debug > 0 { debug -= 1; continue }
+                if debug > 0 || code.hasPrefix("//") || line.contains("ds-exception:") { continue }
                 let range = NSRange(line.startIndex..., in: line)
                 if regex.firstMatch(in: line, range: range) != nil {
                     out.append("\(file.path):\(index + 1): \(code.prefix(140))")
@@ -74,21 +100,25 @@ final class DesignRulesTests: XCTestCase {
     func testSourcesAreFound() {
         XCTAssertFalse(Self.screens.isEmpty, "No encontré las pantallas en \(Self.root.path)")
         XCTAssertFalse(Self.doc.isEmpty, "No encontré docs/sistema-diseno.md")
+        XCTAssertFalse(Self.table("design-patterns.txt").isEmpty, "No encontré scripts/design-patterns.txt")
+        // Cada exclusión existe y dice por qué; el lint mira la misma lista y los mismos patrones.
+        var problems = Self.excluded.filter { path, reason in
+            reason.isEmpty || !FileManager.default.fileExists(atPath: Self.root.appendingPathComponent(path).path)
+        }.map { "\($0.0): sin porqué o ya no existe" }
+        let lint = (try? String(contentsOf: Self.root.appendingPathComponent("scripts/lint-design.sh"), encoding: .utf8)) ?? ""
+        for name in ["design-sources.txt", "design-patterns.txt"] where !lint.contains(name) {
+            problems.append("scripts/lint-design.sh no lee \(name)")
+        }
+        check(problems, "Las guardias miran todo App/Shared salvo lo excluido con su porqué")
     }
 
     // MARK: Tokens
 
+    /// Números, colores, fuentes, animaciones y esperas: los patrones de
+    /// `scripts/design-patterns.txt`, sobre todo lo que arma la app (iPhone y Mac).
     func testScreensUseOnlyTokens() {
-        let rules: [(String, String)] = [
-            (#"(\.padding\(|spacing: |\.frame\(|cornerRadius: |lineWidth: |\.opacity\(|\.offset\(|\.scaleEffect\(|\.shadow\(|\.tracking\(|\.aspectRatio\(|minimumScaleFactor\(|radius: )([^)]*[^A-Za-z_.0-9])?(0?\.[0-9]+|[1-9][0-9]*(\.[0-9]+)?)"#,
-             "Número suelto: usa un token de Theme"),
-            (#"Color\(hex|Color\(red:|Color\.(white|black)\b"#, "Color a mano: usa un color de Theme"),
-            (#"\.system\(size|Font\.custom"#, "Fuente a mano: usa una de Font (screenTitle, rowTitle…)"),
-            (#"withAnimation\s*\{|withAnimation\((?!Theme\.Motion)"#, "Animación sin token: usa Theme.Motion"),
-            (#"\.easeInOut\(duration|\.spring\(|\.snappy\("#, "Curva a mano: usa Theme.Motion"),
-        ]
-        for (pattern, rule) in rules {
-            check(hits(pattern, in: Self.screens + Self.pieces), rule)
+        for (rule, pattern) in Self.table("design-patterns.txt") {
+            check(hits(pattern, in: Self.ui), rule)
         }
     }
 
@@ -97,7 +127,7 @@ final class DesignRulesTests: XCTestCase {
     /// otra medida, se nombra en `Theme` (como `rowY` o `inline`); nunca se suma.
     func testNoArithmeticBetweenTokens() {
         let files = Self.sources("App").filter { !$0.path.hasSuffix("Design/Theme.swift") }
-        check(hits(#"Theme\.(Space|Size|Radius|Reader)\.\w+\s*[-+/]\s*(Theme\.|\d)"#, in: files),
+        check(hits(#"Theme\.(Space|Size|Radius|Reader)\.\w+\s*[-+/*]\s*(Theme\.|\d|CGFloat\()"#, in: files),
               "Medida sumada a mano: nómbrala en Theme y úsala")
     }
 
@@ -195,17 +225,19 @@ final class DesignRulesTests: XCTestCase {
     func testScreensUseCatalogPieces() {
         let rules: [(String, String)] = [
             (#"\.pickerStyle\(\.segmented\)"#, "Opciones en texto: usa FilterBar"),
-            (#"ContentUnavailableView\("#, "Vacío: usa EmptyState"),
-            (#"\.buttonStyle\(\.(borderedProminent|bordered)\)"#, "Botón: usa PrimaryButton o SecondaryButton"),
+            (#"ContentUnavailableView\("#, "Vacío: usa EmptyState (en la Mac, MacEmptyState)"),
+            (#"\.buttonStyle\(\.(borderedProminent|bordered)\)"#, "Botón: usa PrimaryButton o SecondaryButton (en la Mac, .macMainAction())"),
             (#"DateFormatter\(\)"#, "Fechas: usa .formatted(…) o NoteRow.day"),
             (#"\b(RoundedRectangle\(|Capsule\(\)|Circle\(\)|Ellipse\(\))"#, "Forma a mano: es una pieza de Components.swift"),
             (#"struct \w+: (ButtonStyle|LabelStyle)"#, "Estilo nuevo: va en Components.swift"),
-            // 19 nov 2026: en Buscar, el campo de `.searchable` quedaba escondido y no había dónde escribir.
-            (#"\.searchable\("#, "Búsqueda: usa SearchField bajo el título"),
         ]
         for (pattern, rule) in rules {
             check(hits(pattern, in: Self.screens), rule)
         }
+        // 19 nov 2026: en Buscar, el campo de `.searchable` quedaba escondido y no había dónde escribir.
+        // En la Mac, la búsqueda vive en la barra de la ventana, como en toda app de Mac.
+        check(hits(#"\.searchable\("#, in: Self.screens.filter { !$0.path.hasPrefix("App/Shared/Mac/") }),
+              "Búsqueda: usa SearchField bajo el título")
     }
 
     /// Las piezas reciben datos y avisan con acciones; lo que necesita el estado de la app es una pantalla.
@@ -416,14 +448,26 @@ final class DesignRulesTests: XCTestCase {
     func testNoTextUnderTwelve() {
         var problems: [String] = []
         for file in Self.sources("App") {
-            for (index, line) in file.lines.enumerated() where line.contains(".caption2") && !line.contains("ds-exception:") {
+            for (index, line) in file.lines.enumerated()
+            where (line.contains(".caption2") || line.contains(".font(.badge)")) && !line.contains("ds-exception:") && !line.contains("static let badge") {
                 let around = file.lines[max(0, index - 1)...index].joined()
                 if !around.contains("Image(") && !around.contains(".icon") {
                     problems.append("\(file.path):\(index + 1): \(line.trimmingCharacters(in: .whitespaces))")
                 }
             }
         }
-        check(problems, "Letra de 11 pt (.caption2) en un texto: el mínimo es 12 (.caption)")
+        // 26 nov 2026 (SD-1): en el libro, el separador de página medía 0,72rem (≈ 11,5 px). Lo que
+        // reader.js escribe en rem o px mide al menos 12 px (1rem = 16 px); en em, al menos 0,75 de la letra del libro.
+        let size = try! NSRegularExpression(pattern: #"font(?:-size)?:\s*(?:[0-9]{3}\s+)?([0-9.]+)(rem|px|em)\b"#)
+        for (index, line) in Self.readerScript.components(separatedBy: "\n").enumerated() {
+            for match in size.matches(in: line, range: NSRange(line.startIndex..., in: line)) {
+                guard let number = Range(match.range(at: 1), in: line), let unit = Range(match.range(at: 2), in: line),
+                      let amount = Double(line[number]) else { continue }
+                let pixels = line[unit] == "px" ? amount : amount * 16
+                if pixels < 12 { problems.append("reader.js:\(index + 1): \(line.trimmingCharacters(in: .whitespaces))") }
+            }
+        }
+        check(problems, "Letra de 11 pt (.caption2, Font.badge) en un texto: el mínimo es 12 (.caption); es solo para íconos")
     }
 
     /// 30 oct 2026: Cinzel solo para la marca y los rótulos (BrandMark, SectionLabel).
@@ -475,8 +519,40 @@ final class DesignRulesTests: XCTestCase {
         let inherited = json?["heredado"] as? [String: [String: Int]] ?? [:]
         var problems = inherited.flatMap { rule, files in files.map { "\(rule): \($0.key) (\($0.value))" } }
         problems += hits(#"static let (m|inline): CGFloat"#, in: Self.sources("App/Shared/Design"))
+        // 26 nov 2026 (SD-1): el margen de 28 y los aires de 10, 14 y 20 rompían la escala con
+        // otro nombre. Toda medida de `Theme.Space` y todo margen del lector cae en la escala.
+        let scale: Set<Double> = [0, 4, 8, 16, 24, 32, 48, 64]
+        let theme = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Theme.swift") }?.lines ?? []
+        let margins = ["chromeInset", "chromeLift", "textMargin", "pageMarginTop", "pageMarginBottom", "folioFadeDrop", "topFade", "slitPadding"]
+        let value = try! NSRegularExpression(pattern: #"static let (\w+): CGFloat = (-?[0-9.]+)"#)
+        var inSpace = false
+        for (index, line) in theme.enumerated() {
+            if line.contains("enum Space {") { inSpace = true }
+            if inSpace, line.hasPrefix("    }") { inSpace = false }
+            guard let match = value.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+                  let name = Range(match.range(at: 1), in: line), let number = Range(match.range(at: 2), in: line),
+                  inSpace || margins.contains(String(line[name])), !line.contains("sistema-base: ignora"),
+                  let amount = Double(line[number]), !scale.contains(amount) else { continue }
+            problems.append("Theme.swift:\(index + 1): \(line[name]) = \(line[number])")
+        }
+        // Lo que el revisor de la casa vigila de Theme son esos mismos nombres (sistema-base.json).
+        let pattern = (json?["tokens"] as? [[String: Any]])?.first?["patron"] as? String ?? ""
+        for name in margins + ["rowY", "rowGap", "buttonX", "gutter", "screenTop", "screenBottom"] where !pattern.contains(name) {
+            problems.append("sistema-base.json no vigila \(name)")
+        }
+        // El libro (reader.js): márgenes, rellenos y huecos en px también en la escala.
+        let css = try! NSRegularExpression(pattern: #"(?:margin|padding|gap)[a-z-]*:\s*([0-9.]+)px"#)
+        for (index, line) in Self.readerScript.components(separatedBy: "\n").enumerated() {
+            for match in css.matches(in: line, range: NSRange(line.startIndex..., in: line)) {
+                guard let number = Range(match.range(at: 1), in: line), let amount = Double(line[number]),
+                      !scale.contains(amount) else { continue }
+                problems.append("reader.js:\(index + 1): \(line.trimmingCharacters(in: .whitespaces))")
+            }
+        }
         check(problems, "Espacio fuera de la escala común (SB-2): usa s, l, xl… y deja `heredado` en cero")
     }
+
+    static let readerScript = (try? String(contentsOf: root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
 
     /// Regla 6, botón principal oscuro en los dos modos: verde fichero con letra clara;
     /// en oscuro era un bloque verde menta que gritaba más que el libro.
@@ -579,10 +655,15 @@ final class DesignRulesTests: XCTestCase {
     }
 
     /// 26 nov 2026: la Mac decía «Renombrar en 1 libros». Una cifra y lo que cuenta salen de
-    /// `counted`, que concuerda «1 libro» y «2 libros».
+    /// `counted`, que concuerda «1 libro» y «2 libros». SD-1: la prueba no veía
+    /// `\(ReadingFormat.words(x)) palabras` (paréntesis dentro), ni «días», «resultados» o
+    /// «estrellas», y dejaba pasar todo renglón con `== 1`: «1 días» salía en la Mesa.
     func testCountsAgreeWithTheirNumber() {
-        let nouns = "libros|notas|subrayados|citas|sesiones|portadas|autores|series|etiquetas|palabras"
-        check(hits(#"\\\([^)]*\) (\#(nouns))\b(?!/)"#, in: Self.sources("App")).filter { !$0.contains("== 1") },
+        let nouns = "libros?|notas?|subrayados?|citas?|sesion(?:es)?|sesión|portadas?|autor(?:es)?|series|etiquetas?|palabras?|"
+            + "días?|resultados?|estrellas?|opcion(?:es)?|opción|archivos?|capítulos?|grupos?|encontrados?|minutos?|horas?|"
+            + "páginas?|veces|vez|formatos?|marcadores?|búsquedas?|tomos?|idiomas?"
+        let interpolation = #"\\\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)"#
+        check(hits(interpolation + #" (\#(nouns))\b(?![/a-z])"#, in: Self.sources("App")),
               "Cifra con su sustantivo armada a mano: usa n.counted(\"libro\", \"libros\")")
     }
 }

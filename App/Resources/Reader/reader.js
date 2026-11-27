@@ -44,7 +44,7 @@ const pageMarkCSS = ({ flow, textColor }) => {
     return `[data-gabinete-page]::before {
         content: attr(data-gabinete-page) !important;
         display: block !important; text-align: center !important; text-indent: 0 !important;
-        font: 500 0.72rem/1 -apple-system, system-ui, sans-serif !important;
+        font: 500 0.75rem/1 -apple-system, system-ui, sans-serif !important;
         letter-spacing: 0.04em; color: ${ink} !important; margin: 1.6em 0 !important;
         background: linear-gradient(${line}, ${line}) left center / calc(50% - 2.2em) 1px no-repeat,
                     linear-gradient(${line}, ${line}) right center / calc(50% - 2.2em) 1px no-repeat !important;
@@ -307,7 +307,7 @@ const chapterCSS = ({ linkColor }) => `
     [data-gabinete-chapter~="last"] { margin-bottom: 0 !important; padding-bottom: 1.4em !important; }
     [data-gabinete-chapter] * { font-style: inherit !important; font-weight: inherit !important; }
     [data-gabinete-chapter~="last"]::after {
-        content: '❦'; display: block; font-style: normal; font-size: 0.7em;
+        content: '❦'; display: block; font-style: normal; font-size: 0.75em;
         line-height: 1; margin-top: 0.6em; opacity: 0.5;
     }
     [data-gabinete-drop] { text-indent: 0 !important; }

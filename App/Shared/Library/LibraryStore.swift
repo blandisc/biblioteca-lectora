@@ -208,7 +208,7 @@ final class LibraryStore: ObservableObject {
         let folder = root, log = log
         Task.detached(priority: .utility) { [weak self] in
             CloudFiles.requestSmallFiles(in: folder)
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            try? await Task.sleep(for: CloudFiles.settle)
             // El registro se lee fuera del hilo de la interfaz: con años de lectura pesa (RB, A7).
             let changes = (try? log.readAll())?.changes
             await self?.reload(with: changes, ifStillAt: folder)
@@ -650,14 +650,14 @@ final class LibraryStore: ObservableObject {
             candidates = [MetadataCandidate(id: "ol:/works/\(work)", source: .openLibrary, title: book.title,
                                             workKey: "/works/\(work)")]
         } else {
-            candidates = Array(await service.lookup(book).candidates.prefix(3))
+            candidates = Array(await service.lookup(book).candidates.prefix(Theme.Lists.coverSources))
         }
         var urls: [URL] = []
         for candidate in candidates {
             let options = await service.coverOptions(for: candidate, language: book.language, title: book.title, limit: 8)
             for url in options where !urls.contains(url) { urls.append(url) }
         }
-        return Array(urls.prefix(12))
+        return Array(urls.prefix(Theme.Lists.coverOptions))
     }
 
     /// Cambia la portada por la elegida en la cuadrícula.

@@ -124,6 +124,11 @@ enum CabinetLocation {
 
 /// Archivos de iCloud Drive que aún no están en el dispositivo.
 enum CloudFiles {
+    /// Lo que se le da a iCloud para bajar los archivos chicos antes de volver a leer.
+    static let settle: Duration = .seconds(3)
+    /// Cada cuánto se pregunta si ya bajó un archivo.
+    static let poll: Duration = .milliseconds(500)
+
     /// El archivo no está bajado: en su lugar hay un «.nombre.icloud».
     static func isPlaceholder(_ file: URL) -> Bool {
         !FileManager.default.fileExists(atPath: file.path) && FileManager.default.fileExists(atPath:
@@ -143,7 +148,7 @@ enum CloudFiles {
         try? FileManager.default.startDownloadingUbiquitousItem(at: url)
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            try? await Task.sleep(nanoseconds: 500_000_000)
+            try? await Task.sleep(for: CloudFiles.poll)
             if isDownloaded(url) { return true }
         }
         return isDownloaded(url)

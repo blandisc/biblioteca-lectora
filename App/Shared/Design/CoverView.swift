@@ -68,7 +68,7 @@ struct CoverView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: style.illustration == .windmill ? .top : .topLeading)
                 }
 
-                LinearGradient(colors: [.black.opacity(Theme.CoverArt.spineShade), .clear], startPoint: .leading, endPoint: .trailing)
+                LinearGradient(colors: [Theme.shade.opacity(Theme.CoverArt.spineShade), .clear], startPoint: .leading, endPoint: .trailing)
                     .frame(width: max(Theme.CoverArt.spineMin, width * Theme.CoverArt.spine))
 
                 if showsRibbon {
@@ -77,7 +77,7 @@ struct CoverView: View {
                         .frame(width: max(Theme.CoverArt.ribbonMin, width * Theme.CoverArt.ribbon),
                                height: proxy.size.height + Theme.CoverArt.ribbonOverhang)
                         .offset(x: width * Theme.CoverArt.ribbonX, y: -Theme.CoverArt.ribbonRise)
-                        .shadow(color: .black.opacity(Theme.CoverArt.ribbonShade), radius: Theme.CoverArt.thinLine, y: Theme.CoverArt.thinLine)
+                        .shadow(color: Theme.shade.opacity(Theme.CoverArt.ribbonShade), radius: Theme.CoverArt.thinLine, y: Theme.CoverArt.thinLine)
                 }
             }
             .clipShape(coverShape)
@@ -87,12 +87,12 @@ struct CoverView: View {
                         .strokeBorder(Theme.ink.opacity(Theme.CoverArt.crispEdge), lineWidth: Theme.Size.hairline)
                 } else if style.bordered {
                     coverShape
-                        .strokeBorder(.black.opacity(Theme.CoverArt.edgeLine), lineWidth: Theme.Size.hairline)
+                        .strokeBorder(Theme.shade.opacity(Theme.CoverArt.edgeLine), lineWidth: Theme.Size.hairline)
                 }
             }
         }
         .aspectRatio(Theme.Size.coverAspect, contentMode: .fit)
-        .shadow(color: .black.opacity(crisp ? Theme.CoverArt.crispShadow : Theme.CoverArt.shadow),
+        .shadow(color: Theme.shade.opacity(crisp ? Theme.CoverArt.crispShadow : Theme.CoverArt.shadow),
                 radius: crisp ? Theme.CoverArt.crispShadowRadius : Theme.CoverArt.shadowRadius,
                 x: 0, y: crisp ? Theme.CoverArt.crispShadowY : Theme.CoverArt.shadowY)
         .accessibilityElement(children: .ignore)

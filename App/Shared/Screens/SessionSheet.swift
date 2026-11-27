@@ -13,7 +13,7 @@ struct SessionCard: View {
 
     /// Las palabras, o «Acabas de empezar» mientras no haya ninguna.
     private func words(_ session: ReadingSession) -> String {
-        session.words > 0 ? "\(ReadingFormat.words(session.words)) palabras" : "Acabas de empezar"
+        session.words > 0 ? session.words.counted("palabra", "palabras", shown: ReadingFormat.words(session.words)) : "Acabas de empezar"
     }
 
     /// El tramo más largo, solo si dice algo que la leyenda no dice ya: con una
@@ -253,7 +253,7 @@ enum SessionNote {
         let text = """
         # \(bookTitle), \(day)
 
-        Sesión de \(ReadingFormat.duration(session.readingSeconds)) en [[\(bookTitle)]]: \(ReadingFormat.words(session.words)) palabras, \(ReadingFormat.duration(session.seconds(in: .immersed))) inmersa.
+        Sesión de \(ReadingFormat.duration(session.readingSeconds)) en [[\(bookTitle)]]: \(session.words.counted("palabra", "palabras", shown: ReadingFormat.words(session.words))), \(ReadingFormat.duration(session.seconds(in: .immersed))) inmersa.
 
 
         """

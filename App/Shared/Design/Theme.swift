@@ -37,6 +37,9 @@ enum Theme {
     static let highlight = accent
     /// Letra sobre el verde (la tarjeta para compartir, la portada del dibujo de Ajustes).
     static let onAccent = Color(light: 0xFFFFFF, dark: 0x141413)
+    /// Sombras y penumbras de objeto (portada sobre el papel, lomo, hoja que se dobla): negro
+    /// en los dos modos, siempre con poca fuerza (`CoverArt.shadow`, `Reader.curlShadow`…).
+    static let shade = Color.black
 
     /// El verde de Gabinete, escrito una sola vez (26 nov 2026). De aquí salen `accent`,
     /// `highlight`, `action`, el color del sistema (enlaces, «Listo», alertas), las etapas
@@ -96,7 +99,9 @@ enum Theme {
     }
 
     // MARK: Espacio — la escala común de interoperabilidad (SB-2): 4 · 8 · 16 · 24 · 32 · 48.
-    // Sin 12 ni 6 desde el 26 nov 2026 (SD-2): el trinquete de Gabinete quedó en cero.
+    // Sin 12 ni 6 desde el 26 nov 2026 (SD-2): el trinquete de Gabinete quedó en cero. Las
+    // medidas con nombre también caen en la escala (SD-1, 26 nov 2026: 28, 10, 14 y 20 se
+    // fueron al paso más cercano); lo vigilan `sistema-base.json` y `testSpacingKeepsTheHouseScale`.
 
     enum Space {
         /// Medio paso, solo dentro de piezas chicas (dos renglones de una fila, un selector).
@@ -112,17 +117,22 @@ enum Theme {
         /// Separación mínima: entre las letras del índice A–Z.
         static let hair: CGFloat = 1 // sistema-base: ignora separación de un punto entre las letras del índice A–Z
         /// Aire arriba y abajo de una fila de lista (libro, dato, sesión, resultado).
-        static let rowY: CGFloat = 10
+        static let rowY: CGFloat = 8
         /// Entre la portada (o la raya de una cita) y su texto.
-        static let rowGap: CGFloat = 14
+        static let rowGap: CGFloat = 16
         /// Interior horizontal de un botón principal.
-        static let buttonX: CGFloat = 20
-        /// Margen lateral de toda pantalla. Igual a la izquierda y a la derecha.
-        static let gutter: CGFloat = 28
+        static let buttonX: CGFloat = 24
+        /// Margen lateral de toda pantalla. Igual a la izquierda y a la derecha, y el mismo
+        /// del texto del libro (`Reader.textMargin`).
+        static let gutter: CGFloat = 24
         /// Del área segura superior al título de la pantalla.
         static let screenTop: CGFloat = 24
         /// Aire al final del contenido, antes del dock.
         static let screenBottom: CGFloat = 32
+        /// Sangría de una entrada del índice del libro: un paso por nivel, hasta `Size.indentLevels`.
+        static func indent(_ depth: Int) -> CGFloat {
+            l * CGFloat(min(depth, Size.indentLevels))
+        }
     }
 
     // MARK: Radio
@@ -235,6 +245,8 @@ enum Theme {
         static let dragSlop: CGFloat = 6
         /// Alto de una fila de la gráfica de etapas, y de su marca.
         static let stageRow: CGFloat = 26
+        /// La gráfica de etapas entera: una fila por etapa.
+        static func stageChart(rows: Int) -> CGFloat { Size.stageRow * CGFloat(rows) }
         static let stageMark: CGFloat = 16
         /// Muestra de color en la leyenda de etapas.
         static let legendSwatch: CGFloat = 8
@@ -242,8 +254,11 @@ enum Theme {
         static let stageGap: CGFloat = 1
         /// Botón de reproducir del mini reproductor, con su anillo de avance.
         static let playRing: CGFloat = 38
-        /// Barras del ecualizador (audio sonando).
+        /// Barras del ecualizador (audio sonando): su grueso y el alto de cada una.
         static let equalizerBar: CGFloat = 2
+        static let equalizerBars: [CGFloat] = [0.5, 1, 0.7]
+        /// Dónde empieza un anillo de avance: arriba, como las manecillas.
+        static let ringStart = Angle.degrees(-90)
         /// Alto de las barras de la semana y del año en el diario.
         static let weekChart: CGFloat = 112
         static let yearChart: CGFloat = 80
@@ -277,6 +292,9 @@ enum Theme {
         static let spine: CGFloat = 0.05
         static let spineMin: CGFloat = 3
         static let spineShade = 0.28
+        /// Las portadas de atrás de una pila de serie, cada una un poco más en sombra.
+        static let stackNear = -0.05
+        static let stackFar = -0.1
         /// Cinta de «estás leyendo»: ancho, de dónde cuelga y cuánto sobresale.
         static let ribbon: CGFloat = 0.065
         static let ribbonMin: CGFloat = 5
@@ -348,10 +366,14 @@ enum Theme {
         /// El texto del libro a esta distancia de las orillas, en páginas y en continuo y
         /// en todo iPhone; el contenido de la tarjeta de abajo empieza en la misma línea
         /// (`chromeInset` + `panelInset`).
-        static let textMargin: CGFloat = 28
+        static let textMargin: CGFloat = 24
         /// Lo de adentro de la tarjeta de abajo, a esto del vidrio: así su contenido empieza
         /// en la misma línea que el texto del libro.
         static let panelInset: CGFloat = textMargin - chromeInset
+        /// La posición se da por asentada cuando el libro lleva esto quieto (para guardarla).
+        static let positionSettle: Duration = .milliseconds(1500)
+        /// La barra de avance con VoiceOver: cuánto mueve cada deslizar (1 %).
+        static let scrubStep = 0.01
         /// El texto normal de iOS con el tamaño de siempre: lo que crezca sobre esto
         /// (Ajustes › Pantalla › Tamaño del texto) crece también la letra del libro.
         static let textBase: CGFloat = 17
@@ -377,7 +399,7 @@ enum Theme {
         /// Lo más que se espera a que el lector acomode el libro al cambiar de forma
         /// (si avisa antes, no se espera de más).
         static let flowSettle: TimeInterval = 0.7
-        static let fadeDrift: CGFloat = 12
+        static let fadeDrift: CGFloat = 8
         /// La hoja de muestra en «Aa»: pausa entre vueltas (s) y sus renglones. La
         /// primera vuelta se adelanta `previewLead` (sale a 0,15 s de elegirla).
         static let previewPause: TimeInterval = 1
@@ -420,10 +442,10 @@ enum Theme {
         /// La vibración al pasar a la página siguiente: muy ligera (0 a 1).
         static let turnHaptic: CGFloat = 0.45
         /// Aire arriba del texto en páginas, bajo la orilla segura: arriba ya no va el
-        /// capítulo, así que el texto empieza justo debajo de la isla (antes 40).
-        static let pageMarginTop: CGFloat = 12
+        /// capítulo, así que el texto empieza justo debajo de la isla (antes 40, luego 12).
+        static let pageMarginTop: CGFloat = 16
         /// Abajo más aire: el pie y el contador van ahí, sobre la orilla del iPhone.
-        static let pageMarginBottom: CGFloat = 68
+        static let pageMarginBottom: CGFloat = 64
         /// En continuo, el papel es sólido hasta la orilla del folio y después se
         /// desvanece hacia el texto en este alto, con una
         /// curva de `folioFadeSteps` tramos (se aclara pronto: la letra se sigue viendo).
@@ -431,7 +453,7 @@ enum Theme {
         static let folioFadeSteps = 6
         /// En continuo, cuánto más abajo empieza el desvanecido del pie: el papel sólido
         /// llega justo arriba del pie y deja más texto a la vista (25 nov 2026).
-        static let folioFadeDrop: CGFloat = 20
+        static let folioFadeDrop: CGFloat = 24
         /// En continuo el texto corre hasta la orilla de la pantalla y se desvanece
         /// desde ahí hasta esto por debajo de la orilla segura (la isla).
         static let topFade: CGFloat = 24
@@ -457,6 +479,28 @@ enum Theme {
         static let spineWidth: CGFloat = 26
         static let spineShadeLight: CGFloat = 0.07
         static let spineShadeDark: CGFloat = 0.3
+    }
+
+    // MARK: Cuántos se enseñan
+
+    /// Cuántas cosas cabe enseñar de una lista antes de «Ver todo» o de cortar con «…».
+    enum Lists {
+        /// La pila de la Mesa: lo más reciente, sin el libro que lees.
+        static let desk = 6
+        /// Nombres en un aviso o un informe («Sin archivo: a, b, c…»).
+        static let preview = 5
+        /// Las sesiones más recientes en la ficha de un libro.
+        static let detailSessions = 5
+        /// Las sesiones más largas del periodo en el Diario.
+        static let longestSessions = 2
+        /// Libros para enlazar a una nota: sin buscar, los primeros de la biblioteca; al buscar, los que se proponen.
+        static let linkShelf = 20
+        static let linkSuggestions = 4
+        /// Libros encontrados de los que se piden portadas, y portadas para elegir.
+        static let coverSources = 3
+        static let coverOptions = 12
+        /// La sinopsis recortada en lo que se completó solo.
+        static let summaryLetters = 140
     }
 
     // MARK: Énfasis
@@ -492,6 +536,8 @@ enum Theme {
         static let aside = 0.3
         /// La perilla de la barra de avance crece así al arrastrarla.
         static let knobGrow = 1.4
+        /// Lo más bajo que llega una barra del ecualizador al moverse.
+        static let equalizerLow = 0.4
         /// Una etiqueta corta se achica hasta este tamaño antes de cortarse.
         static let labelMinScale: CGFloat = 0.8
     }
@@ -527,9 +573,19 @@ enum Theme {
 // MARK: Tipografía — New York para lo que es del libro, SF para la interfaz,
 // Cinzel (mayúsculas romanas) solo para la marca y los rótulos de sección
 
+extension Theme {
+    /// Tamaños de letra con nombre (lo demás sigue los estilos de iOS).
+    enum Letter {
+        /// El título de pantalla con el tamaño de texto de siempre; crece con él (`.largeTitle`).
+        static let screenTitle: CGFloat = 30
+    }
+}
+
 extension Font {
-    /// Título de pantalla («Biblioteca», «Cuaderno»).
-    static let screenTitle = Font.system(size: 30, weight: .medium, design: .serif)
+    /// Título de pantalla («Biblioteca», «Cuaderno»), al tamaño ya escalado (`ScreenTitle`).
+    static func screenTitle(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .medium, design: .serif)
+    }
     /// Título de un libro protagonista (Mesa, ficha). Los de abajo siguen el
     /// tamaño de texto de iOS (28, 17 y 16 pt con el tamaño de siempre).
     static let bookTitle = Font.system(.title, design: .serif, weight: .medium)
@@ -543,7 +599,28 @@ extension Font {
     static let brandMark = Font.custom("Cinzel", size: 16, relativeTo: .footnote)
     /// Rótulo de sección en mayúsculas romanas («EN LA MESA»).
     static let sectionLabel = Font.custom("Cinzel", size: 12, relativeTo: .caption).weight(.medium)
+    /// La «G» de Gabinete al centro del dibujo de Conexiones: la marca, no un rótulo.
+    static let hubLetter = Font.custom("Cinzel", size: Theme.Size.artHubLetter, relativeTo: .title3)
+    /// Íconos de acción (encabezados, botones redondos, opciones).
+    static let icon = Font.title3
+    /// La «A» grande del tamaño de letra en «Aa».
+    static let largeGlyph = Font.title2
+    /// Íconos chicos sobre otra cosa (la nube de iCloud, la palomita, la flecha de un orden).
+    /// Mide 11: nunca para texto (SB-3).
+    static let badge = Font.caption2.weight(.semibold)
 }
+
+#if os(iOS)
+extension UIFont {
+    /// Los títulos grandes del sistema (Ajustes, formularios) iguales a `Font.screenTitle`,
+    /// y que crecen con el tamaño de texto.
+    static var screenTitle: UIFont {
+        let base = UIFont.systemFont(ofSize: Theme.Letter.screenTitle, weight: .medium)
+        let serif = base.fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: Theme.Letter.screenTitle) } ?? base
+        return UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: serif)
+    }
+}
+#endif
 
 extension Theme {
     /// Espaciado de letras de la marca y los rótulos romanos (proporción del tamaño).

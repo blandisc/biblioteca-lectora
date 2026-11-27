@@ -107,7 +107,7 @@ extension BookDetailScreen {
                     .font(.caption)
                     .foregroundStyle(Theme.tertiaryInk)
                 VStack(spacing: 0) {
-                    ForEach(sessions.reversed().prefix(5)) { session in
+                    ForEach(sessions.reversed().prefix(Theme.Lists.detailSessions)) { session in
                         NavigationLink(value: SessionRef(id: session.id)) { SessionRow(session: session) }
                             .buttonStyle(.plain)
                     }
@@ -161,7 +161,7 @@ extension BookDetailScreen {
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryInk)
                 }
-                ForEach(highlights.prefix(3)) { highlight in
+                ForEach(highlights.prefix(Theme.Reader.foundHighlights)) { highlight in
                     QuoteBlock(text: highlight.quote, note: highlight.note)
                 }
             }
@@ -174,7 +174,7 @@ extension BookDetailScreen {
         let marker = "[[\(title)]] · [ir al pasaje]"
         let count = note.text.components(separatedBy: marker).count - 1
         guard count > 0 else { return nil }
-        return count == 1 ? "1 cita" : "\(count) citas"
+        return count.counted("cita", "citas")
     }
 }
 

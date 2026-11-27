@@ -12,6 +12,8 @@ struct MacBookInspector: View {
     @State private var draft = Draft()
     @State private var loaded = Draft()
     @State private var errorMessage: String?
+    /// Mientras se buscan los datos en internet: la ficha lo dice, no corre en silencio (C8).
+    @State private var finding = false
 
     private var books: [Book] { books(ids) }
 
@@ -22,8 +24,7 @@ struct MacBookInspector: View {
     var body: some View {
         Group {
             if books.isEmpty {
-                ContentUnavailableView("Elige un libro", systemImage: "book.closed",
-                                       description: Text("Con varios elegidos, lo que cambies aquí se aplica a todos."))
+                MacEmptyState(title: EmptyCopy.chooseBook.title, message: EmptyCopy.chooseBook.message, systemImage: "book.closed")
             } else if books.count == 1, let book = books.first {
                 single(book)
             } else {
@@ -38,11 +39,7 @@ struct MacBookInspector: View {
             load()
         }
         .onDisappear { if draft != loaded { save(ids) } }
-        .alert("No se pudo guardar", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("Volver a la ficha", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .errorAlert("No pude guardar los datos", message: $errorMessage, back: "Volver a la ficha")
     }
 
     // MARK: Un libro
@@ -56,40 +53,35 @@ struct MacBookInspector: View {
                               style: shelf?.cover ?? .generated(for: book.title), image: shelf?.coverImage)
                         .frame(width: Theme.Mac.inspectorCover.width, height: Theme.Mac.inspectorCover.height)
                     VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                        Text(book.title).font(.headline)
-                        Text(shelf?.author ?? "").foregroundStyle(.secondary)
+                        Text(book.title).font(.rowTitle)
+                        Text(shelf?.author ?? "").foregroundStyle(Theme.secondaryInk)
                         if let shelf, shelf.progress > 0 {
-                            Text("\(shelf.progress.percentText) leído").foregroundStyle(.secondary).monospacedDigit()
+                            Text("\(shelf.progress.percentText) leído").foregroundStyle(Theme.secondaryInk).monospacedDigit()
                         }
                     }
                 }
             }
-            Section("Libro") {
+            Section(BookSection.book.rawValue) {
                 TextField("Título", text: $draft.title)
-                TextField("Autores", text: $draft.authors, prompt: Text("Separados por comas"))
+                TextField("Autores", text: $draft.authors, prompt: Text("Sepáralos con &"))
                 TextField("Serie", text: $draft.series)
                 TextField("Número en la serie", text: $draft.seriesIndex)
                 if SeriesIndexInput(draft.seriesIndex).isInvalid {
-                    Text(SeriesIndexInput.hint).font(.footnote).foregroundStyle(.secondary)
+                    Text(SeriesIndexInput.hint).font(.footnote).foregroundStyle(Theme.secondaryInk)
                 }
-                TextField("Etiquetas", text: $draft.tags, prompt: Text("Separadas por comas"))
             }
-            Section("Edición") {
-                TextField("Idioma", text: $draft.language, prompt: Text("es, en, fr…"))
+            Section(BookSection.edition.rawValue) {
                 TextField("Editorial", text: $draft.publisher)
-                TextField("Publicado", text: $draft.published, prompt: Text("2016 o 2016-05-01"))
+                TextField("Publicado", text: $draft.published, prompt: Text(BookFields.publishedPrompt))
                 TextField("ISBN", text: $draft.isbn)
+                LanguagePicker(code: $draft.language)
             }
-            Section("Tu lectura") {
-                Picker("Estado", selection: $draft.status) {
-                    ForEach(ReadingStatus.allCases, id: \.self) { Text(Self.name($0)).tag(Optional($0)) }
-                }
-                Picker("Valoración", selection: $draft.rating) {
-                    Text("Sin valorar").tag(0)
-                    ForEach(1...5, id: \.self) { Text(String(repeating: "★", count: $0)).tag($0) }
-                }
+            Section(BookSection.reading.rawValue) {
+                StatusPicker(status: $draft.status)
+                LabeledContent("Valoración") { RatingPicker(rating: $draft.rating) }
+                TextField("Etiquetas", text: $draft.tags, prompt: Text("Sepáralas con comas"))
             }
-            Section("Sinopsis") {
+            Section(BookSection.summary.rawValue) {
                 // Con la letra y el fondo del resto de la ficha, no un recuadro blanco aparte.
                 TextEditor(text: $draft.summary)
                     .font(.body)
@@ -99,6 +91,7 @@ struct MacBookInspector: View {
             buttons(count: 1)
         }
         .formStyle(.grouped)
+        .formScreen()
     }
 
     // MARK: Varios libros
@@ -106,49 +99,58 @@ struct MacBookInspector: View {
     private func many(_ books: [Book]) -> some View {
         Form {
             Section {
-                Text(books.count.counted("libro elegido", "libros elegidos")).font(.headline)
+                Text(books.count.counted("libro elegido", "libros elegidos")).font(.rowTitle)
                 Text("Lo que escribas se aplica a todos. Lo que dejes en blanco no cambia.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.secondaryInk)
             }
-            Section("Libro") {
-                TextField("Autores", text: $draft.authors, prompt: Text(placeholder(BulkEdit.common(books) { $0.authors.joined(separator: ", ") })))
+            Section(BookSection.book.rawValue) {
+                TextField("Autores", text: $draft.authors, prompt: Text(placeholder(BulkEdit.common(books) { BookFields.authorsText($0.authors) })))
                 TextField("Serie", text: $draft.series, prompt: Text(placeholder(BulkEdit.common(books) { $0.series ?? "" })))
-                TextField("Agregar etiquetas", text: $draft.tags, prompt: Text("Separadas por comas"))
-                TextField("Quitar etiquetas", text: $draft.removeTags,
-                          prompt: Text(BulkEdit.sharedTags(books).joined(separator: ", ").nonEmpty ?? "Separadas por comas"))
             }
-            Section("Edición") {
-                TextField("Idioma", text: $draft.language, prompt: Text(placeholder(BulkEdit.common(books) { $0.language ?? "" })))
+            Section(BookSection.edition.rawValue) {
                 TextField("Editorial", text: $draft.publisher, prompt: Text(placeholder(BulkEdit.common(books) { $0.publisher ?? "" })))
+                LanguagePicker(code: $draft.language, none: BulkEdit.common(books) { $0.language ?? "" }
+                    .map { $0.isEmpty ? "Sin cambiar" : "Sin cambiar (\(BookFields.languageName($0)))" } ?? "Sin cambiar (\(BookFields.mixed.lowercased()))")
             }
-            Section("Tu lectura") {
-                Picker("Estado", selection: $draft.status) {
-                    Text("Sin cambiar").tag(ReadingStatus?.none)
-                    ForEach(ReadingStatus.allCases, id: \.self) { Text(Self.name($0)).tag(Optional($0)) }
-                }
+            Section(BookSection.reading.rawValue) {
+                StatusPicker(status: $draft.status, keeps: "Sin cambiar")
+                TextField("Agregar etiquetas", text: $draft.tags, prompt: Text("Sepáralas con comas"))
+                TextField("Quitar etiquetas", text: $draft.removeTags,
+                          prompt: Text(BookFields.tagsText(BulkEdit.sharedTags(books)).nonEmpty ?? "Sepáralas con comas"))
             }
             buttons(count: books.count)
         }
         .formStyle(.grouped)
+        .formScreen()
     }
 
     private func buttons(count: Int) -> some View {
         Group {
             Section {
-                Button(count == 1 ? "Buscar portada y datos" : "Buscar portada y datos para los \(count)") {
-                    let targets = ids
-                    Task { for id in targets { _ = await library.identify(id) } }
+                if finding {
+                    LoadingLine(text: "Buscando datos en internet…")
+                } else {
+                    Button {
+                        let targets = ids
+                        finding = true
+                        Task {
+                            for id in targets { _ = await library.identify(id) }
+                            finding = false
+                        }
+                    } label: {
+                        Label(LibraryAction.findData(count: count), systemImage: LibraryAction.findData.symbol)
+                    }
+                    .help("En Open Library (y Google Books, si pusiste su clave)")
                 }
-                .help("En Open Library (y Google Books, si pusiste su clave)")
             }
             Section {
                 HStack {
                     Button("Deshacer cambios") { draft = loaded }
                         .disabled(draft == loaded)
                     Spacer()
-                    Button(count == 1 ? "Guardar" : "Aplicar a los \(count)") { save(ids) }
+                    Button(count == 1 ? "Guardar cambios" : "Guardar en \(count.counted("libro", "libros"))") { save(ids) }
                         .keyboardShortcut("s")
-                        .buttonStyle(.borderedProminent)
+                        .macMainAction()
                         .disabled(draft == loaded || (count == 1 && SeriesIndexInput(draft.seriesIndex).isInvalid))
                 }
             }
@@ -156,7 +158,7 @@ struct MacBookInspector: View {
     }
 
     private func placeholder(_ common: String?) -> String {
-        guard let common else { return "Varios" }
+        guard let common else { return BookFields.mixed }
         return common.isEmpty ? "—" : common
     }
 
@@ -188,15 +190,6 @@ struct MacBookInspector: View {
         errorMessage = failed.isEmpty ? nil : failed.joined(separator: "\n")
         load()
     }
-
-    static func name(_ status: ReadingStatus) -> String {
-        switch status {
-        case .toRead: "Por leer"
-        case .reading: "Leyendo"
-        case .finished: "Leído"
-        case .abandoned: "Abandonado"
-        }
-    }
 }
 
 /// Lo que escribes en la ficha, como texto, antes de guardarlo en el libro.
@@ -212,52 +205,52 @@ private struct Draft: Equatable {
     var published = ""
     var isbn = ""
     var status: ReadingStatus? = .toRead
-    var rating = 0
+    var rating: Double?
     var summary = ""
 
     init() {}
 
     init(_ book: Book) {
         title = book.title
-        authors = book.authors.joined(separator: ", ")
+        authors = BookFields.authorsText(book.authors)
         series = book.series ?? ""
         seriesIndex = book.seriesIndex.flatMap(ShelfBook.number) ?? ""
-        tags = book.tags.joined(separator: ", ")
+        tags = BookFields.tagsText(book.tags)
         language = book.language ?? ""
         publisher = book.publisher ?? ""
         published = book.published ?? ""
         isbn = book.identifiers["isbn"] ?? ""
         status = book.readingStatus
-        rating = min(5, max(0, (book.rating ?? 0).safeInt ?? 0))
+        rating = (book.rating ?? 0).safeInt.map { min(5, max(0, $0)) }.flatMap { $0 == 0 ? nil : Double($0) }
         summary = book.summary ?? ""
     }
 
     func applied(to book: Book) -> Book {
         var book = book
         book.title = title.trimmingCharacters(in: .whitespaces).nonEmpty ?? book.title
-        book.authors = BulkEdit.list(authors)
+        book.authors = BookFields.authors(authors)
         book.series = series.trimmingCharacters(in: .whitespaces).nonEmpty
         book.seriesIndex = book.series == nil ? nil : SeriesIndexInput(seriesIndex).value(keeping: book.seriesIndex)
-        book.tags = BulkEdit.list(tags)
+        book.tags = BookFields.tags(tags)
         book.language = language.trimmingCharacters(in: .whitespaces).nonEmpty
         book.publisher = publisher.trimmingCharacters(in: .whitespaces).nonEmpty
         book.published = published.trimmingCharacters(in: .whitespaces).nonEmpty
-        book.identifiers["isbn"] = isbn.filter { $0.isNumber || $0 == "X" }.nonEmpty
+        book.identifiers["isbn"] = BookFields.isbn(isbn)
         book.readingStatus = status ?? book.readingStatus
-        book.rating = rating == 0 ? nil : Double(rating)
+        book.rating = rating
         book.summary = summary.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
         return book
     }
 
     /// Con varios libros: solo lo que escribiste.
     var bulk: BulkEdit {
-        BulkEdit(authors: BulkEdit.list(authors).nonEmpty,
+        BulkEdit(authors: BookFields.authors(authors).nonEmpty,
                  series: series.trimmingCharacters(in: .whitespaces).nonEmpty.map { .some($0) },
                  language: language.trimmingCharacters(in: .whitespaces).nonEmpty.map { .some($0) },
                  publisher: publisher.trimmingCharacters(in: .whitespaces).nonEmpty.map { .some($0) },
                  readingStatus: status,
-                 addTags: BulkEdit.list(tags),
-                 removeTags: BulkEdit.list(removeTags))
+                 addTags: BookFields.tags(tags),
+                 removeTags: BookFields.tags(removeTags))
     }
 }
 

@@ -54,7 +54,7 @@ struct RulesScreen: View {
                 Section {
                     Button("Aplicar a toda la biblioteca") {
                         let count = model.library.applyRulesToLibrary()
-                        appliedMessage = count == 1 ? "Cambió 1 libro." : "Cambiaron \(count) libros."
+                        appliedMessage = "\(count == 1 ? "Cambió" : "Cambiaron") \(count.counted("libro", "libros"))."
                     }
                 }
             }

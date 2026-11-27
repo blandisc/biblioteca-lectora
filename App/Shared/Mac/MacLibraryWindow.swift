@@ -8,7 +8,9 @@ enum MacSection: Hashable {
     case desk, notebook, search
     /// Posibles duplicados (CB-3).
     case duplicates
-    case all, reading, toRead, finished, review, noCover
+    case all, review, noCover
+    /// Por estado: los mismos nombres y la misma regla que los filtros del iPhone (C1).
+    case state(ReadingState)
     case author(String), series(String), tag(String), language(String)
     /// Un estante: búsqueda guardada (CB-1).
     case shelf(SavedShelf)
@@ -20,9 +22,7 @@ enum MacSection: Hashable {
         case .search: "Buscar"
         case .duplicates: "Posibles duplicados"
         case .all: "Biblioteca"
-        case .reading: "Leyendo"
-        case .toRead: "Por leer"
-        case .finished: "Leídos"
+        case .state(let state): state.group
         case .review: "Por revisar"
         case .noCover: "Sin portada"
         case .author(let name), .series(let name), .tag(let name), .language(let name): name
@@ -33,9 +33,7 @@ enum MacSection: Hashable {
     func contains(_ row: MacBookRow) -> Bool {
         switch self {
         case .desk, .notebook, .search, .duplicates, .all: true
-        case .reading: row.state == .reading
-        case .toRead: row.state == .toRead
-        case .finished: row.state == .finished
+        case .state(let state): row.state == state
         case .review: row.inReview
         case .noCover: !row.hasCover
         case .author(let name): row.book.authors.contains(name)
@@ -66,8 +64,8 @@ struct MacLibraryWindow: View {
                 case ("review", _): return .review
                 case ("noCover", _): return .noCover
                 case ("duplicates", _): return .duplicates
-                case ("finished", _): return .finished
-                case ("reading", _): return .reading
+                case ("finished", _): return .state(.finished)
+                case ("reading", _): return .state(.reading)
                 case ("author", let name): return .author(name)
                 case ("series", let name): return .series(name)
                 case ("tag", let name): return .tag(name)
@@ -116,7 +114,7 @@ private struct MacBatchBar: View {
         HStack(spacing: Theme.Space.l) {
             if progress.finished {
                 Image(systemName: progress.stopped ? "stop.circle" : "checkmark.circle")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.secondaryInk)
                 Text(progress.stopped ? "Detenido · \(progress.summary)" : progress.summary)
                 Spacer()
                 Button("Cerrar aviso", action: close)
@@ -131,7 +129,7 @@ private struct MacBatchBar: View {
                 Button("Detener búsqueda", action: stop)
             }
         }
-        .font(.callout)
+        .font(.subheadline)
         .padding(.horizontal, Theme.Space.l)
         .padding(.vertical, Theme.Space.s)
         .background(.bar)
@@ -150,7 +148,6 @@ private struct MacSidebar: View {
     @State private var renamingShelf: SavedShelf?
     /// Borrar un estante se confirma, como en el iPhone.
     @State private var deletingShelf: SavedShelf?
-    @State private var shelfName = ""
 
     var body: some View {
         let rows = MacBookTable.rows(library: library, shelf: shelf)
@@ -162,9 +159,13 @@ private struct MacSidebar: View {
             }
             Section("Biblioteca") {
                 item(.all, "books.vertical", rows.count)
-                item(.reading, "book", rows.filter { $0.state == .reading }.count)
-                item(.toRead, "bookmark", rows.filter { $0.state == .toRead }.count)
-                item(.finished, "checkmark.circle", rows.filter { $0.state == .finished }.count)
+                ForEach(ReadingState.allCases, id: \.self) { state in
+                    let count = rows.filter { $0.state == state }.count
+                    // «Abandonados» sale solo si hay alguno, igual que en el iPhone.
+                    if state != .abandoned || count > 0 || selection == .state(state) {
+                        item(.state(state), state.symbol, count)
+                    }
+                }
                 item(.review, "questionmark.circle", rows.filter(\.inReview).count)
                 item(.noCover, "photo", rows.filter { !$0.hasCover }.count)
                 let duplicates = library.duplicateGroups().count
@@ -179,10 +180,7 @@ private struct MacSidebar: View {
                             .badge(rows.filter { shelf.contains($0.book) }.count)
                             .tag(MacSection.shelf(shelf))
                             .contextMenu {
-                                Button("Renombrar estante…") {
-                                    shelfName = shelf.name
-                                    renamingShelf = shelf
-                                }
+                                Button("Renombrar estante…") { renamingShelf = shelf }
                                 Button("Borrar estante…", role: .destructive) { deletingShelf = shelf }
                             }
                     }
@@ -232,30 +230,14 @@ private struct MacSidebar: View {
             }
         }
         #endif
-        .alert("Renombrar estante", isPresented: Binding(
-            get: { renamingShelf != nil }, set: { if !$0 { renamingShelf = nil } }
-        )) {
-            TextField("Nombre", text: $shelfName)
-            Button("Guardar nombre") {
-                guard var shelf = renamingShelf, !shelfName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                let wasSelected = selection == .shelf(shelf)
-                shelf.name = shelfName.trimmingCharacters(in: .whitespaces)
-                library.saveShelf(shelf)
-                if wasSelected { selection = .shelf(shelf) }
-            }
-            Button("Dejar como está", role: .cancel) {}
+        .renameShelfAlert($renamingShelf) { shelf in
+            let wasSelected = selection.map { if case .shelf(let old) = $0 { old.id == shelf.id } else { false } } ?? false
+            library.saveShelf(shelf)
+            if wasSelected { selection = .shelf(shelf) }
         }
-        .confirmationDialog("¿Borrar el estante «\(deletingShelf?.name ?? "")»?", isPresented: Binding(
-            get: { deletingShelf != nil }, set: { if !$0 { deletingShelf = nil } }
-        ), titleVisibility: .visible) {
-            Button("Borrar el estante", role: .destructive) {
-                guard let shelf = deletingShelf else { return }
-                if case .shelf(shelf) = selection { selection = .all }
-                library.removeShelf(id: shelf.id)
-            }
-            Button("Conservar el estante", role: .cancel) {}
-        } message: {
-            Text("Tus libros se quedan donde están; solo se va el estante.")
+        .deleteShelfConfirmation($deletingShelf) { shelf in
+            if case .shelf(shelf) = selection { selection = .all }
+            library.removeShelf(id: shelf.id)
         }
         .sheet(item: $renaming) { target in
             MacCatalogSheet(target: target, values: values(for: target.field, rows), library: library) { final in

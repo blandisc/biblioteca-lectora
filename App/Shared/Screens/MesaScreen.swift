@@ -19,12 +19,8 @@ struct MesaScreen: View {
                         if let book = model.currentBook {
                             current(book)
                         } else {
-                            EmptyState(
-                                title: "Tu biblioteca está vacía",
-                                message: "Añade EPUB, PDF, MOBI o cómics. Leo sus datos, les busco portada y los guardo ordenados en una carpeta que Calibre también puede abrir.",
-                                actionTitle: "Añadir libros",
-                                action: { model.importing = true }
-                            )
+                            EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
+                                       actionTitle: "Añadir libros", systemImage: "plus") { model.importing = true }
                         }
                     }
                 }
@@ -128,7 +124,7 @@ struct MesaScreen: View {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Space.l) {
                     Text(ReadingFormat.duration(week.period.readingSeconds))
                         .font(.bookTitle)
-                    Text("\(ReadingFormat.words(week.period.words)) palabras · \(week.period.days()) días")
+                    Text("\(week.period.words.counted("palabra", "palabras", shown: ReadingFormat.words(week.period.words))) · \(week.period.days().counted("día", "días"))")
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryInk)
                 }

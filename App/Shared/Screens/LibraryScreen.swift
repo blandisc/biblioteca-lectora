@@ -46,7 +46,7 @@ struct LibraryScreen: View {
                             AccentIconButton(systemImage: "plus", label: "Añadir libro") { model.importing = true }
                         }
 
-                        FilterBar(items: LibraryFilter.allCases, selection: $filter) { $0.rawValue }
+                        FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
                             .padding(.top, Theme.Space.s)
 
                         CountLine(text: summary) {
@@ -73,10 +73,10 @@ struct LibraryScreen: View {
                         }
 
                         if model.shelf.isEmpty {
-                            EmptyState(title: "Todavía no hay libros",
-                                       message: "Toca + para añadir los primeros. También puedes migrar tu biblioteca de Calibre.")
+                            EmptyState(title: EmptyCopy.noBooks.title, message: EmptyCopy.noBooks.message,
+                                       actionTitle: "Añadir libros", systemImage: "plus") { model.importing = true }
                         } else if books.isEmpty {
-                            EmptyState(title: "Nada por aquí", message: "Ningún libro coincide con «\(filter.rawValue)».")
+                            EmptyState(title: EmptyCopy.noMatch(filter.title).title, message: EmptyCopy.noMatch(filter.title).message)
                         } else {
                             switch layout {
                             case .covers: grid(coverItems(books)).padding(.top, Theme.Space.l)

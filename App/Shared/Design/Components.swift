@@ -62,6 +62,11 @@ extension View {
             #endif
     }
 
+    /// El título de pantalla en serif, que crece con el tamaño de texto de iOS (antes fijo en 30).
+    func screenTitleFont() -> some View {
+        modifier(ScreenTitleFont())
+    }
+
     /// Contenedor de una pantalla con scroll: margen, aire arriba y abajo.
     func screenContent() -> some View {
         self
@@ -70,6 +75,14 @@ extension View {
             .gutter()
             .padding(.top, Theme.Space.screenTop)
             .padding(.bottom, Theme.Space.screenBottom)
+    }
+}
+
+private struct ScreenTitleFont: ViewModifier {
+    @ScaledMetric(relativeTo: .largeTitle) private var size = Theme.Letter.screenTitle
+
+    func body(content: Content) -> some View {
+        content.font(.screenTitle(size))
     }
 }
 
@@ -83,11 +96,11 @@ struct ScreenHeading<Trailing: View>: View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title)
-                    .font(.screenTitle)
+                    .screenTitleFont()
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
                 HStack(spacing: Theme.Space.l) { trailing }
-                    .font(.title3)
+                    .font(.icon)
                     .foregroundStyle(Theme.ink)
                     .buttonStyle(.plain)
             }
@@ -184,19 +197,29 @@ struct CapsText: View {
     }
 }
 
-/// Rótulo de una sección de libreta: versalitas y una línea finísima hasta la orilla
-/// («DONDE LO DEJASTE», «APARIENCIA»). Separa sin cajas.
-struct RuledLabel: View {
-    let text: String
+/// Cómo se anuncia toda sección (regla 3): versalitas, una línea finísima hasta la orilla y,
+/// si hace falta, lo que va a la derecha: una acción, una cifra o cerrar («NOTAS ——— Nota
+/// nueva»). Separa sin cajas. Antes había tres maneras (Cinzel sin línea, versalitas con
+/// línea y texto gris a mano) y en la misma Mesa se veían dos (SD-2, 26 nov 2026).
+struct SectionHeader<Trailing: View>: View {
+    let title: String
+    @ViewBuilder var trailing: Trailing
 
     var body: some View {
         HStack(spacing: Theme.Space.l) {
-            CapsText(text: text)
+            CapsText(text: title)
                 .fixedSize()
+                .accessibilityAddTraits(.isHeader)
             Hairline()
+                .accessibilityHidden(true)
+            trailing
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+extension SectionHeader where Trailing == EmptyView {
+    init(_ title: String) {
+        self.init(title: title) { EmptyView() }
     }
 }
 
@@ -499,7 +522,7 @@ struct RoundIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.title3)
+                .font(.icon)
                 .foregroundStyle(Theme.ink)
                 .frame(width: Theme.Size.control, height: Theme.Size.control)
                 .background(Theme.field, in: Circle())
@@ -629,7 +652,7 @@ struct ShelfCover: View {
             .overlay(alignment: .bottomTrailing) {
                 if book.inCloudOnly {
                     Image(systemName: "icloud")
-                        .font(.caption2.weight(.semibold))
+                        .font(.badge)
                         .foregroundStyle(Theme.ink)
                         .padding(Theme.Space.xs)
                         .background(.regularMaterial, in: Circle())
@@ -648,9 +671,9 @@ struct SeriesStack: View {
         ShelfCover(book: book)
             .background {
                 ZStack {
-                    CoverView(title: "", author: "", style: book.cover).brightness(-0.1)
+                    CoverView(title: "", author: "", style: book.cover).brightness(Theme.CoverArt.stackFar)
                         .offset(x: Theme.Space.s, y: -Theme.Space.s)
-                    CoverView(title: "", author: "", style: book.cover).brightness(-0.05)
+                    CoverView(title: "", author: "", style: book.cover).brightness(Theme.CoverArt.stackNear)
                         .offset(x: Theme.Space.xs, y: -Theme.Space.xs)
                 }
                 .accessibilityHidden(true)
@@ -781,7 +804,7 @@ struct QuoteBlock: View {
     private var hangingBody: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
             if let label {
-                RuledLabel(text: label)
+                SectionHeader(label)
             }
             Text(Found.marked("\(text)»", match))
                 .font(.quote)
@@ -851,16 +874,18 @@ struct EmptyState: View {
     let title: String
     let message: String
     var actionTitle: String? = nil
+    /// El símbolo de la acción, solo si dice lo mismo que ella («plus» para añadir; seguir leyendo no lleva).
+    var systemImage: String? = nil
     var action: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            RuledLabel(text: title)
+            SectionHeader(title)
             Text(message)
                 .font(.body)
                 .foregroundStyle(Theme.secondaryInk)
             if let actionTitle, let action {
-                PrimaryButton(title: actionTitle, systemImage: "plus", action: action)
+                PrimaryButton(title: actionTitle, systemImage: systemImage, action: action)
                     .padding(.top, Theme.Space.s)
             }
         }
@@ -1334,7 +1359,7 @@ struct ConnectionsArt: View {
 
     private var hub: some View {
         Text("G")
-            .font(.custom("Cinzel", size: Theme.Size.artHubLetter, relativeTo: .title3))
+            .font(.hubLetter)
             .frame(width: Theme.Size.artHub, height: Theme.Size.artHub)
             .background(Theme.paper, in: Circle())
             .overlay { Circle().strokeBorder(Theme.ink, lineWidth: Theme.Size.hairline) }
@@ -1407,8 +1432,8 @@ struct CabinetArt: View {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
                     node(symbol: "folder.fill", title: folder, tint: Theme.accent)
                     VStack(alignment: .leading, spacing: Theme.Space.s) {
-                        node(symbol: "folder", title: "Biblioteca", note: "forma de Calibre", figure: count(books, "libro", "libros"))
-                        node(symbol: "folder", title: "Notas", note: "Markdown", figure: count(notes, "nota", "notas"))
+                        node(symbol: "folder", title: "Biblioteca", note: "forma de Calibre", figure: books.counted("libro", "libros"))
+                        node(symbol: "folder", title: "Notas", note: "Markdown", figure: notes.counted("nota", "notas"))
                     }
                     .branch()
                 }
@@ -1417,7 +1442,7 @@ struct CabinetArt: View {
             .padding(.horizontal, Theme.Space.l)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Tu Gabinete \(place.title.lowercased()): \(count(books, "libro", "libros")) y \(count(notes, "nota", "notas"))")
+        .accessibilityLabel("Tu Gabinete \(place.title.lowercased()): \(books.counted("libro", "libros")) y \(notes.counted("nota", "notas"))")
         .animation(Theme.Motion.select, value: place)
     }
 
@@ -1452,11 +1477,6 @@ struct CabinetArt: View {
                     .fixedSize()
             }
         }
-    }
-
-    /// «1 libro», «1,250 libros», «0 notas».
-    private func count(_ value: Int, _ one: String, _ many: String) -> String {
-        value.counted(one, many)
     }
 }
 
@@ -1530,8 +1550,39 @@ struct RatingPicker: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel("\(star) estrellas")
+                .accessibilityLabel(star.counted("estrella", "estrellas"))
             }
+        }
+    }
+}
+
+/// El idioma de un libro por su nombre («Español», no «es»), igual en el iPhone y en la Mac.
+/// `none` es la opción vacía: «Sin indicar», o «Sin cambiar» con varios libros elegidos.
+struct LanguagePicker: View {
+    @Binding var code: String
+    var none = "Sin indicar"
+
+    var body: some View {
+        Picker("Idioma", selection: $code) {
+            Text(none).tag("")
+            ForEach(BookFields.languages, id: \.self) { Text(BookFields.languageName($0)).tag($0) }
+            if !code.isEmpty, !BookFields.languages.contains(code) {
+                Text(BookFields.languageName(code)).tag(code)
+            }
+        }
+    }
+}
+
+/// El estado de un libro, con los nombres de `ReadingState`, igual en los dos formularios.
+struct StatusPicker: View {
+    @Binding var status: ReadingStatus?
+    /// Con varios libros, la opción de no tocarlo.
+    var keeps: String? = nil
+
+    var body: some View {
+        Picker("Estado", selection: $status) {
+            if let keeps { Text(keeps).tag(ReadingStatus?.none) }
+            ForEach(ReadingState.allCases, id: \.self) { Text($0.name).tag(Optional($0.status)) }
         }
     }
 }
@@ -1549,7 +1600,7 @@ struct CandidateRow: View {
     }
 
     private var detail: String {
-        [candidate.authors.first, candidate.published.map { String($0.prefix(4)) }, candidate.publisher]
+        [candidate.authors.first, candidate.year, candidate.publisher]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
@@ -1853,6 +1904,251 @@ struct NoteBody: View {
     }
 }
 
+// MARK: - Piezas compartidas del iPhone y la Mac (SD-2, 26 nov 2026)
+
+/// Algo que tarda, diciendo qué hace («Buscando portadas en internet…»): una carga siempre
+/// dice qué carga (SB-1). Antes cada pantalla armaba su `ProgressView` con o sin texto.
+struct LoadingLine: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            ProgressView()
+            Text(text)
+        }
+        .font(.subheadline)
+        .foregroundStyle(Theme.secondaryInk)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// La ✕ para cerrar algo, en 44 pt y diciendo qué cierra («Cerrar la consulta»): en una
+/// tarjeta, gris y sin fondo; sobre la página, en su círculo de vidrio.
+struct CloseButton: View {
+    enum Style { case plain, glass }
+    let label: String
+    var style: Style = .plain
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            if style == .glass {
+                mark.font(.body.weight(.semibold)).foregroundStyle(Theme.ink).glassCircle()
+            } else {
+                mark.font(.footnote.weight(.semibold)).foregroundStyle(Theme.secondaryInk)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+
+    private var mark: some View {
+        Image(systemName: "xmark")
+            .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+            .contentShape(Rectangle())
+    }
+}
+
+/// Una fila como la de un libro (título serif y su detalle) para lo que no es un libro de tu
+/// biblioteca: uno de Readwise, uno de Calibre, un duplicado en la Mac, una fuente del lector.
+struct TitleDetailRow<Trailing: View>: View {
+    let title: String
+    var detail: String? = nil
+    @ViewBuilder var trailing: Trailing
+
+    var body: some View {
+        HStack(spacing: Theme.Space.rowGap) {
+            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                Text(title)
+                    .font(.rowTitle)
+                    .foregroundStyle(Theme.ink)
+                if let detail {
+                    Text(detail)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryInk)
+                }
+            }
+            Spacer(minLength: 0)
+            trailing
+                .font(.footnote)
+                .foregroundStyle(Theme.secondaryInk)
+        }
+        .padding(.vertical, Theme.Space.rowY)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) { Hairline() }
+    }
+}
+
+extension TitleDetailRow where Trailing == EmptyView {
+    init(title: String, detail: String? = nil) {
+        self.init(title: title, detail: detail) { EmptyView() }
+    }
+}
+
+/// La marca de lo elegido entre varios (el que se queda de unos duplicados): verde y llena
+/// la elegida, gris y hueca las demás.
+struct ChoiceMark: View {
+    let selected: Bool
+
+    var body: some View {
+        Image(systemName: selected ? "largecircle.fill.circle" : "circle")
+            .foregroundStyle(selected ? Theme.accent : Theme.secondaryInk)
+            .accessibilityHidden(true)
+    }
+}
+
+/// Lo que dice un vacío que existe en las dos plataformas: las mismas palabras en el iPhone
+/// (`EmptyState`) y en la Mac (`MacEmptyState`).
+enum EmptyCopy {
+    static let noBooks = (title: "Todavía no hay libros",
+                          message: "Añade EPUB, PDF, MOBI o cómics. Leo sus datos, les busco portada y los guardo ordenados en una carpeta que Calibre también puede abrir.")
+    static func noMatch(_ what: String) -> (title: String, message: String) {
+        ("Ningún libro aquí", "Ningún libro coincide con «\(what)».")
+    }
+    static let noDuplicates = (title: "Sin libros repetidos",
+                               message: "No encontré dos libros con el mismo título y un autor parecido, ni con el mismo ISBN.")
+    static let chooseBook = (title: "Elige un libro",
+                             message: "Con varios elegidos, lo que cambies aquí se aplica a todos.")
+}
+
+#if os(macOS)
+/// Un vacío en la Mac: la vista del sistema, con las mismas palabras que el iPhone (`EmptyCopy`).
+struct MacEmptyState: View {
+    let title: String
+    let message: String
+    var systemImage = "books.vertical"
+
+    var body: some View {
+        ContentUnavailableView(title, systemImage: systemImage, description: Text(message))
+    }
+}
+
+extension View {
+    /// La acción principal en la Mac: el botón del sistema en el verde hondo de la acción, el
+    /// mismo de `PrimaryButton` en los dos modos (regla 6), una por ventana.
+    func macMainAction() -> some View {
+        buttonStyle(.borderedProminent).tint(Theme.action)
+    }
+}
+#endif
+
+// MARK: - Avisos (B3, 26 nov 2026: la misma alerta estaba copiada 13 veces)
+
+extension View {
+    /// Algo salió mal: el título dice qué («No pude guardar la nota»), el mensaje por qué y
+    /// cómo seguir, y un solo botón que dice a dónde vuelves («Volver a la ficha»).
+    func errorAlert(_ title: String, message: Binding<String?>, back: String, onBack: @escaping () -> Void = {}) -> some View {
+        oneButtonAlert(title, message: message, back: back, onBack: onBack)
+    }
+
+    /// Algo que conviene saber (salió bien, o salió a medias): título que dice qué pasó
+    /// («Tu nota quedó guardada»), nunca «Aviso» ni «Nota».
+    func noticeAlert(_ title: String, message: Binding<String?>, back: String, onBack: @escaping () -> Void = {}) -> some View {
+        oneButtonAlert(title, message: message, back: back, onBack: onBack)
+    }
+
+    private func oneButtonAlert(_ title: String, message: Binding<String?>, back: String, onBack: @escaping () -> Void) -> some View {
+        alert(title, isPresented: Binding(get: { message.wrappedValue != nil }, set: { if !$0 { message.wrappedValue = nil } })) {
+            Button(back, role: .cancel, action: onBack)
+        } message: {
+            Text(message.wrappedValue ?? "")
+        }
+    }
+}
+
+// MARK: - Estantes (CB-1): guardar, renombrar y borrar, iguales en el iPhone y la Mac
+
+/// «Guardar como estante»: pide el nombre, con uno propuesto a partir de la búsqueda.
+struct SaveShelfAlert: ViewModifier {
+    @Binding var query: String?
+    let save: (SavedShelf) -> Void
+    @State private var name = ""
+
+    func body(content: Content) -> some View {
+        content
+            .alert("Guardar como estante", isPresented: Binding(
+                get: { query != nil }, set: { if !$0 { query = nil } }
+            )) {
+                TextField("Nombre", text: $name)
+                Button("Guardar estante") {
+                    if let query, !name.trimmingCharacters(in: .whitespaces).isEmpty {
+                        save(SavedShelf(name: name, query: query))
+                    }
+                    query = nil
+                }
+                Button("Dejar sin guardar", role: .cancel) { query = nil }
+            } message: {
+                Text("Se llena solo con los libros que cumplan «\(query ?? "")».")
+            }
+            .onChange(of: query) { _, new in
+                if let new { name = SavedShelf.suggestedName(for: new) }
+            }
+    }
+}
+
+/// «Renombrar estante»: el nombre de ahora para cambiarlo.
+struct RenameShelfAlert: ViewModifier {
+    @Binding var shelf: SavedShelf?
+    let save: (SavedShelf) -> Void
+    @State private var name = ""
+
+    func body(content: Content) -> some View {
+        content
+            .alert("Renombrar estante", isPresented: Binding(
+                get: { shelf != nil }, set: { if !$0 { shelf = nil } }
+            )) {
+                TextField("Nombre", text: $name)
+                Button("Guardar nombre") {
+                    let clean = name.trimmingCharacters(in: .whitespaces)
+                    if var renamed = shelf, !clean.isEmpty {
+                        renamed.name = clean
+                        save(renamed)
+                    }
+                    shelf = nil
+                }
+                Button("Dejar como está", role: .cancel) { shelf = nil }
+            }
+            .onChange(of: shelf) { _, new in
+                if let new { name = new.name }
+            }
+    }
+}
+
+/// Borrar un estante se confirma, y dice que los libros se quedan.
+struct DeleteShelfConfirmation: ViewModifier {
+    @Binding var shelf: SavedShelf?
+    let delete: (SavedShelf) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog("¿Borrar el estante «\(shelf?.name ?? "")»?", isPresented: Binding(
+                get: { shelf != nil }, set: { if !$0 { shelf = nil } }
+            ), titleVisibility: .visible) {
+                Button("Borrar el estante", role: .destructive) {
+                    if let shelf { delete(shelf) }
+                    shelf = nil
+                }
+                Button("Conservar el estante", role: .cancel) { shelf = nil }
+            } message: {
+                Text("Tus libros se quedan donde están; solo se va el estante.")
+            }
+    }
+}
+
+extension View {
+    func saveShelfAlert(query: Binding<String?>, save: @escaping (SavedShelf) -> Void) -> some View {
+        modifier(SaveShelfAlert(query: query, save: save))
+    }
+
+    func renameShelfAlert(_ shelf: Binding<SavedShelf?>, save: @escaping (SavedShelf) -> Void) -> some View {
+        modifier(RenameShelfAlert(shelf: shelf, save: save))
+    }
+
+    func deleteShelfConfirmation(_ shelf: Binding<SavedShelf?>, delete: @escaping (SavedShelf) -> Void) -> some View {
+        modifier(DeleteShelfConfirmation(shelf: shelf, delete: delete))
+    }
+}
+
 // MARK: - Fechas y números en español
 
 extension Locale {
@@ -1867,6 +2163,11 @@ extension Date {
     func es(_ style: Date.FormatStyle) -> String {
         formatted(style.locale(.gabinete))
     }
+
+    /// La fecha corta, igual en toda la app: «3 oct 2024».
+    var esShort: String { es(.dateTime.day().month(.abbreviated).year()) }
+    /// Día y mes: «12 nov».
+    var esDayMonth: String { es(.dateTime.day().month(.abbreviated)) }
 }
 
 extension Double {
@@ -1883,14 +2184,9 @@ extension Double {
     /// «57 %»: con espacio (como en español) que no se parte, igual en toda la app.
     /// Antes la Mesa decía «2 %» y el lector «3%» del mismo libro.
     var percentText: String { "\(percentNumber)\u{00A0}%" }
-}
 
-extension Int {
-    /// «1 libro», «1,250 libros», «0 notas»: la cifra concuerda con lo que cuenta, igual en
-    /// toda la app (26 nov 2026: la Mac decía «Renombrar en 1 libros»).
-    func counted(_ one: String, _ many: String) -> String {
-        "\(formatted(.number.locale(.gabinete))) \(self == 1 ? one : many)"
-    }
+    /// Segundos en milisegundos, para las esperas que se mandan al lector web.
+    var milliseconds: Int { Int((self * 1000).rounded()) }
 }
 
 // MARK: - Sesiones de lectura
@@ -2041,7 +2337,7 @@ struct StageChart: View {
             AxisMarks(position: .leading) { _ in AxisValueLabel() }
         }
         .chartPlotStyle { $0.background(Theme.paper) }
-        .frame(height: Theme.Size.stageRow * CGFloat(chartRows))
+        .frame(height: Theme.Size.stageChart(rows: chartRows))
         .accessibilityLabel("Etapas de la sesión en el tiempo")
     }
 }
@@ -2084,7 +2380,7 @@ struct SessionLine: View {
                 // Sin punto: el verde solo en el dato, las palabras de esta sesión.
                 // En la tarjeta del lector, en gris como la página; en la hoja de la sesión, el dato en verde.
                 (Text(compact ? "" : "Esta sesión · ")
-                 + Text("\(ReadingFormat.words(tracker.words)) palabras").foregroundStyle(compact ? Theme.ink.opacity(Theme.Emphasis.glassText) : Theme.accent))
+                 + Text(tracker.words.counted("palabra", "palabras", shown: ReadingFormat.words(tracker.words))).foregroundStyle(compact ? Theme.ink.opacity(Theme.Emphasis.glassText) : Theme.accent))
                     .monospacedDigit()
                     .lineLimit(1)
                 if !compact { Spacer(minLength: 0) }
@@ -2141,7 +2437,7 @@ struct FooterPreview: View {
         .overlay(alignment: .topTrailing) {
             if selected {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.caption2)
+                    .font(.badge)
                     .foregroundStyle(ink)
                     .background(Circle().fill(paper))
                     .padding(Theme.Space.xs)
@@ -2286,7 +2582,7 @@ struct ScrubberBar: View {
         .opacity(enabled ? Theme.Emphasis.rest : Theme.Emphasis.pressed)
         .accessibilityElement()
         .accessibilityAdjustableAction { direction in
-            let step = 0.01
+            let step = Theme.Reader.scrubStep
             onChange(min(max(value + (direction == .increment ? step : -step), 0), 1))
             onEnd()
         }
@@ -2324,7 +2620,7 @@ struct PlayRingButton: View {
                 Circle().stroke(Theme.track, lineWidth: Theme.Size.quoteRule)
                 Circle().trim(from: 0, to: progress)
                     .stroke(Theme.accent, style: StrokeStyle(lineWidth: Theme.Size.quoteRule, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
+                    .rotationEffect(Theme.Size.ringStart)
                 Image(systemName: playing ? "pause.fill" : "play.fill")
                     .font(.subheadline.weight(.semibold))
             }
@@ -2340,11 +2636,11 @@ struct PlayRingButton: View {
 struct EqualizerBars: View {
     var body: some View {
         HStack(alignment: .bottom, spacing: Theme.Space.xxs) {
-            ForEach([0.5, 1.0, 0.7], id: \.self) { height in
+            ForEach(Theme.Size.equalizerBars, id: \.self) { height in
                 Capsule()
                     .fill(Theme.accent)
                     .frame(width: Theme.Size.equalizerBar, height: Theme.Size.equalizerHeight * height)
-                    .phaseAnimator([1.0, 0.4]) { bar, phase in
+                    .phaseAnimator([Theme.Emphasis.rest, Theme.Emphasis.equalizerLow]) { bar, phase in
                         bar.scaleEffect(y: phase, anchor: .bottom)
                     } animation: { _ in Theme.Motion.equalizer(height) }
             }
@@ -2366,7 +2662,7 @@ struct TrailingIconLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: Theme.Space.xs) {
             configuration.title
-            configuration.icon.font(.caption2.weight(.semibold))
+            configuration.icon.font(.badge)
         }
     }
 }
@@ -2526,7 +2822,7 @@ struct SessionRow: View {
                 }
                 .font(.subheadline)
                 .foregroundStyle(Theme.ink)
-                Text("\(ReadingFormat.words(session.words)) palabras · \(session.fromFraction.percentNumber) → \(session.toFraction.percentText)")
+                Text("\(session.words.counted("palabra", "palabras", shown: ReadingFormat.words(session.words))) · \(session.fromFraction.percentNumber) → \(session.toFraction.percentText)")
                     .font(.footnote)
                     .foregroundStyle(Theme.tertiaryInk)
             }
@@ -2637,7 +2933,7 @@ struct ContentsRow: View {
                     .accessibilityLabel("Aquí vas")
             }
         }
-        .padding(.leading, Theme.Space.l * CGFloat(min(depth, Theme.Size.indentLevels)))
+        .padding(.leading, Theme.Space.indent(depth))
         .padding(.vertical, Theme.Space.rowY)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
@@ -2655,8 +2951,8 @@ struct SearchResultRow: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.Space.l) {
-            // Lo encontrado en verde y en negritas: no depende solo del color.
-            (Text(Self.lead(before)) + Text(match).bold().foregroundStyle(Theme.accent) + Text(Self.tail(after))) // ds-exception: lo buscado
+            // Lo encontrado en verde y en negritas, como en la Biblioteca (`Found`).
+            Text(Found.marked(Self.lead(before) + match + Self.tail(after), match))
                 .font(.prose)
                 .foregroundStyle(Theme.ink)
                 .lineLimit(3)
@@ -2735,7 +3031,7 @@ struct OptionRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Space.l) {
             Image(systemName: systemImage)
-                .font(.title3)
+                .font(.icon)
                 .foregroundStyle(selected ? Theme.accent : Theme.secondaryInk)
                 .frame(width: Theme.Size.tapTarget)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
@@ -2782,7 +3078,7 @@ struct SearchChapterHeading: View {
         .padding(.top, Theme.Space.l)
         .padding(.bottom, Theme.Space.xs)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title), \(count == 1 ? "1 resultado" : "\(count) resultados")")
+        .accessibilityLabel("\(title), \(count.counted("resultado", "resultados"))")
         .accessibilityAddTraits(.isHeader)
     }
 }
@@ -2831,7 +3127,7 @@ struct RecentSearchRow: View {
             .overlay(alignment: .bottom) { Hairline() }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Buscar otra vez «\(text)», \(count) resultados")
+        .accessibilityLabel("Buscar otra vez «\(text)», \(count.counted("resultado", "resultados"))")
     }
 }
 

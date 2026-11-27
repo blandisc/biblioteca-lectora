@@ -51,7 +51,7 @@ final class SessionStore: ObservableObject {
         let folder = log.directory
         Task.detached(priority: .utility) { [weak self] in
             CloudFiles.requestSmallFiles(in: folder)
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            try? await Task.sleep(for: CloudFiles.settle)
             await self?.reload()
         }
     }
