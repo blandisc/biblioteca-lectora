@@ -23,10 +23,11 @@ struct BookDetailScreen: View {
             VStack(spacing: Theme.Space.l) {
                 ShelfCover(book: live)
                     .frame(width: window.isShort ? Theme.Size.coverHeroShort : Theme.Size.coverDetail)
-                    .padding(.top, Theme.Space.l)
+                    .padding(.top, window.isShort ? 0 : Theme.Space.l)
                 VStack(spacing: Theme.Space.xs) {
                     // Número de ficha, como el id de Calibre que da nombre a la carpeta.
-                    if let number = record?.calibreID {
+                    // En una ventana baja el número cede su renglón: «Empezar a leer» se veía a medias.
+                    if let number = record?.calibreID, !window.isShort {
                         SectionLabel(text: "Nº \(number)")
                     }
                     WholeWordsText(live.title)
@@ -35,9 +36,10 @@ struct BookDetailScreen: View {
                         // En una ventana baja, a lo más tres renglones: con seis, «Empezar a leer»
                         // quedaba fuera de la vista (ronda 1, el Duo cerrado acostado).
                         .lineLimit(window.isShort ? Theme.Size.titleLinesShort : nil)
-                    Text(live.author)
+                    WholeWordsText(live.author)
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)
+                        .lineLimit(window.isShort ? 1 : nil)
                     if let series = live.series {
                         DotLine(parts: [series.isolated] + (live.seriesIndex.flatMap(ShelfBook.number).map { ["libro \($0)"] } ?? []),
                                 alignment: .center)

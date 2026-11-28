@@ -145,7 +145,7 @@ private struct ScreenContent: ViewModifier {
             .foregroundStyle(Theme.ink)
             .gutter()
             .modifier(ReadingColumn(active: !wide))
-            .padding(.top, window.isShort ? Theme.Space.s : Theme.Space.screenTop)
+            .padding(.top, window.isShort ? Theme.Space.l : Theme.Space.screenTop)
             .padding(.bottom, Theme.Space.screenBottom)
     }
 }
@@ -4318,11 +4318,27 @@ struct SearchField: View {
     let onSubmit: () -> Void
     var onClear: () -> Void = {}
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// Lo que mide la pista larga y lo que hay para ella: si no cabe, la corta. Antes solo con la letra
+    /// más grande, y en el Duo cerrado se leía «Buscar en libros, subrayados y no…» (ronda 1).
+    @State private var promptWidth: CGFloat = 0
+    @State private var room: CGFloat = .infinity
+
+    private var shownPrompt: String {
+        guard let shortPrompt else { return prompt }
+        return typeSize.isAccessibilitySize || promptWidth > room ? shortPrompt : prompt
+    }
 
     var body: some View {
         HStack(spacing: Theme.Space.s) {
             Image(systemName: "magnifyingglass").foregroundStyle(Theme.tertiaryInk)
-            TextField(typeSize.isAccessibilitySize ? shortPrompt ?? prompt : prompt, text: $text)
+            TextField(shownPrompt, text: $text)
+                .background(alignment: .leading) {
+                    Text(prompt)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .hidden()
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width.rounded(.up) } action: { promptWidth = $0 }
+                }
+                .onGeometryChange(for: CGFloat.self) { $0.size.width.rounded(.down) } action: { room = $0 }
                 .focused(focused)
                 .submitLabel(.search)
                 .autocorrectionDisabled()
@@ -4353,6 +4369,7 @@ struct OptionRow: View {
     var selected = false
     /// Apagada se ve apagada, como `LinkRow` (auditoría 5).
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.windowLayout) private var window
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Space.l) {
@@ -4362,7 +4379,12 @@ struct OptionRow: View {
                 .frame(width: Theme.Size.tapTarget)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 Text(title).font(.rowTitle).foregroundStyle(isEnabled ? Theme.ink : Theme.secondaryInk)
-                Text(detail).font(.subheadline).foregroundStyle(Theme.secondaryInk)
+                // En una ventana baja, dos renglones y «…» tras una palabra: con todo, el botón del paso
+                // quedaba fuera de la vista (ronda 1, el Duo cerrado acostado).
+                Group {
+                    if window.isShort { WordTailText(detail, lines: Theme.Size.labelLines) } else { Text(detail) }
+                }
+                .font(.subheadline).foregroundStyle(Theme.secondaryInk)
                     .multilineTextAlignment(.leading)
             }
             Spacer(minLength: 0)

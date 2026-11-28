@@ -208,8 +208,9 @@ struct ReaderView: View {
         // quedaba en claro (o en oscuro) aunque cambiara el sistema (UX-1b).
         .preferredColorScheme(palette.scheme)
         // Índice, buscar y marcas: en un pliego, en la página derecha con el libro a la vista; abierto
-        // y de pie, en la mitad de abajo con el libro arriba (D4-B).
-        .sidePanel(item: $tools, lowerHalf: true) { part in
+        // y de pie, en la mitad de abajo con el libro arriba (D4-B). Buscar no: ahí el teclado tapaba la
+        // mitad de abajo entera y no se veía ni un resultado (ronda 1); va en la hoja alta.
+        .sidePanel(item: $tools, lowerHalf: tools != .search) { part in
             ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
         }
         // Tras ir a un resultado: anterior y siguiente sin abrir otra vez la lista.
@@ -526,7 +527,7 @@ extension ReaderView {
                 Spacer(minLength: 0)
                 if showsChrome {
                     BottomPanel(title: title, location: controller.location,
-                                compact: window.isShort && !Duo.footerCard,
+                                compact: (window.isShort || (dynamicTypeSize.isAccessibilitySize && window.size.height < Theme.Window.slimFooterHeight)) && !Duo.footerCard,
                                 session: showsCounter ? controller.session : nil,
                                 onSession: openSession,
                                 onContents: { tools = .contents },
@@ -884,9 +885,9 @@ private struct BottomPanel: View {
     private var slim: some View {
         HStack(spacing: Theme.Space.l) {
             Button(action: onContents) {
-                Text(heading.title)
+                // «Capítulo…», nunca «Capítulo pr…» (ronda 1, con la letra más grande).
+                WordTailText(heading.title)
                     .font(.rowTitle)
-                    .lineLimit(1)
                     .frame(minHeight: Theme.Size.tapTarget)
                     .contentShape(Rectangle())
             }

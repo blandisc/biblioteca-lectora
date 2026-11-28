@@ -133,7 +133,7 @@ struct ReaderToolsSheet: View {
 
     private var search: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
-            SearchField(prompt: SearchWording.inBook, text: $query, focused: $searchFocused,
+            SearchField(prompt: SearchWording.inBook, shortPrompt: SearchWording.title, text: $query, focused: $searchFocused,
                         onSubmit: { controller.search(query); searchFocused = false },
                         onClear: { controller.clearSearch() })
             if let progress = controller.searchProgress {

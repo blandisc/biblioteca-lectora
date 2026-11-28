@@ -471,7 +471,7 @@ pruebas) y usa las mismas piezas, así un iPhone de pie no cambia y un iPhone ac
   quedaba angosta). En continuo con pliegue, el texto va en la página izquierda y la derecha es su margen (el
   título, el capítulo y, como en un libro anotado, tus subrayados de ese capítulo: tocar uno te lleva a él); de pie y abierto, una columna cómoda (`Reader.lineEms`, unas 32 letras de ancho de
   página) que cruza el pliegue de lado a lado, que ahí no corta renglones. La lectura guiada sombrea por página.
-  Las herramientas y «Aa» se abren en la página derecha y el libro sigue a la vista. En una ventana baja, el
+  Las herramientas y «Aa» se abren en la página derecha y el libro sigue a la vista. En una ventana baja (y, con la letra más grande, en una de menos de `Window.slimFooterHeight`), el
   pie es una línea delgada (capítulo, barra, página y herramientas).
 - **Las dos páginas** (ronda 1, 27 nov 2026): miden lo mismo, como el libro: con la franja de la hora a la
   derecha, la izquierda deja también ese ancho (`WindowLayout.page(_:even:)`, la única cuenta del ancho de una

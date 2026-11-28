@@ -148,6 +148,9 @@ enum Theme {
         /// Menos alto que esto, la ventana es baja (un iPhone acostado: 402 a 440; el Duo cerrado
         /// acostado: 466): encabezado de un renglón, el pie del libro delgado, portadas por alto.
         static let shortHeight: CGFloat = 500
+        /// Con la letra más grande, una ventana más baja que esto (el Duo cerrado de pie) también lleva el
+        /// pie delgado del libro: la tarjeta tapaba un tercio de la página (ronda 1).
+        static let slimFooterHeight: CGFloat = 700
         /// Lo que el sistema ocupa de un lado más que del otro para que sea una franja al costado
         /// (la hora y las pestañas del Duo cerrado, unos 84): las muescas de un iPhone acostado, iguales
         /// a los dos lados, no cuentan.
