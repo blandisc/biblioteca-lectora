@@ -138,7 +138,7 @@ coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 `Theme.shade` (negro) es la única sombra: oscurece portadas, la vuelta de la hoja y el lomo; nunca `.black` suelto.
 
 `Theme.Lists`: cuántos se enseñan antes de «Ver todos»: `desk` 6, `preview` 5, `detailSessions` 5, `longestSessions` 2,
-`linkShelf` 20, `linkSuggestions` 4, `coverSources` 3, `coverOptions` 12 y `summaryLetters` 140 (letras de una sinopsis corta) e `inspectorItems` 3 (subrayados y notas de un libro en la ficha de la Mac) y `marginNotes` 3 (tus subrayados del capítulo en la página de margen del libro).
+`linkShelf` 20, `linkSuggestions` 4, `coverSources` 3, `coverOptions` 12 y `summaryLetters` 140 (letras de una sinopsis corta) e `inspectorItems` 3 (subrayados y notas de un libro en la ficha de la Mac) `marginNotes` 3 (tus subrayados del capítulo en la página de margen del libro) y `filtersInline` 3 (con la letra más grande, más filtros que estos van en un menú con el elegido a la vista: la fila partida tapaba los libros, D6-B).
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -243,7 +243,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `BookmarkGlyph` | El ícono del marcador en 44: relleno y en verde si la página está marcada | Lector, arriba a la derecha |
 | `RatingPicker` | Cinco estrellas en verde (lo tuyo); tocar la misma la quita; cada una se toca en 44 | Editar datos |
 | `RoundIconButton` | Botón redondo secundario | Audiolibro |
-| `FilterBar` | Opciones en texto; la elegida en tinta con un trazo verde debajo (`Size.tabMark`) que se desliza; sin píldoras (SD-3). Lo que no cabe baja entero al renglón de abajo, nunca se corta en la orilla (UX-2b) | Filtros de Biblioteca, partes del Cuaderno, Diario |
+| `FilterBar` | Opciones en texto; la elegida en tinta con un trazo verde debajo (`Size.tabMark`) que se desliza; sin píldoras (SD-3). Lo que no cabe baja entero al renglón de abajo, nunca se corta en la orilla (UX-2b); con la letra más grande y más de `Lists.filtersInline` opciones, el elegido con su menú, para que se vean los libros (D6-B) | Filtros de Biblioteca, partes del Cuaderno, Diario |
 | `ShelfCover` / `CoverView` | Portada real o tipográfica, con lomo; una imagen que no es 2∶3 (más de `CoverArt.fitTolerance`) va en `FittedCover` | Toda portada |
 | `FittedCover` | Una imagen de portada entera en el marco 2∶3, sin estirarse ni recortarse, sobre sí misma desenfocada (`CoverArt.fitBlur`); toda portada que llega de fuera pasa por aquí (UX-2e) | Portadas cuadradas o apaisadas, candidatos de internet, elegir portada, Editar datos |
 | `DuplicateMark` | «Posible duplicado» con su ícono (`Duplicates`, los mismos de la Mac) bajo un libro que parece estar dos veces (UX-2d) | Biblioteca (portadas y lista) |

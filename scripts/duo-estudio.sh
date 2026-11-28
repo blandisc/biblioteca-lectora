@@ -119,60 +119,7 @@ title_of() { # nombre de archivo → título
 }
 
 sheet() {
-  python3 - "$OUT" "$SCREENS" "$DARK" "$BIG" <<'PY'
-import html, os, sys
-out, screens, dark, big = sys.argv[1], sys.argv[2], sys.argv[3].split(), sys.argv[4].split()
-modes = [("iphone-vertical", "iPhone normal · de pie", "402 × 874"),
-         ("iphone-horizontal", "iPhone normal · acostado", "874 × 402"),
-         ("cerrado-vertical", "Cerrado · de pie", "466 × 678"),
-         ("cerrado-horizontal", "Cerrado · acostado", "678 × 466"),
-         ("abierto-vertical", "Abierto · de pie", "669 × 951"),
-         ("abierto-horizontal", "Abierto · acostado", "951 × 669")]
-rows = []
-for line in screens.strip().splitlines():
-    name, title = line.split("|")[:2]
-    rows.append((name, title))
-    if name in dark: rows.append((name + "-oscuro", title + " · oscuro"))
-    if name in big: rows.append((name + "-ax5", title + " · letra AX5"))
-counts = {m: sum(os.path.exists(f"{out}/{m}/{n}.png") for n, _ in rows) for m, _, _ in modes}
-parts = ["""<!doctype html><html lang="es"><meta charset="utf-8"><title>Gabinete en el iPhone Duo · ronda %s</title>
-<style>
-body{font:15px -apple-system,system-ui,sans-serif;margin:24px;background:#f4f1ea;color:#222}
-h1{font-size:22px;margin:0 0 4px}p.nota{color:#555;max-width:70em;margin:0 0 16px}
-nav{columns:4;font-size:13px;margin:0 0 24px}nav a{display:block;color:#355}
-section{margin:0 0 36px;border-top:1px solid #d8d2c4;padding-top:12px}
-h2{font-size:17px;margin:0 0 10px}
-.fila{display:grid;grid-template-columns:.7fr 1.2fr .8fr 1.1fr 1.1fr 1.5fr;gap:14px;align-items:start}
-figure{margin:0}figcaption{font-size:12px;color:#666;margin-bottom:4px}
-img{width:100%%;height:auto;border-radius:10px;box-shadow:0 1px 4px #0002;background:#000}
-.falta{font-size:12px;color:#a33;padding:24px 8px;border:1px dashed #c99;border-radius:10px;text-align:center}
-</style>
-<h1>Gabinete en el iPhone Duo · ronda %s</h1>
-<p class="nota">Cada pantalla en un iPhone normal (para comparar) y en los cuatro modos del Duo, lado a lado. Simulador «Gabinete Duo» (iPhone Duo, iOS 27.2) con la
-bisagra y la orientación de verdad (nada aproximado): cerrado es la pantalla de afuera; abierto, la de adentro, con el
-pliegue al centro (de arriba abajo acostada, de lado a lado de pie). El iPhone normal (17 Pro, «Gabinete») se gira con
-la app (<code>-screenshot.turn</code>). Toca una captura para verla completa.<br>
-Capturas por modo: %s.</p><nav>""" % (os.path.basename(out), os.path.basename(out),
-    " · ".join(f"{label} {counts[m]}" for m, label, _ in modes))]
-for name, title in rows:
-    parts.append(f'<a href="#{name}">{html.escape(title)}</a>')
-parts.append("</nav>")
-for name, title in rows:
-    parts.append(f'<section id="{name}"><h2>{html.escape(title)}</h2><div class="fila">')
-    for m, label, size in modes:
-        path = f"{m}/{name}.png"
-        thumb = f"mini/{m}/{name}.jpg"
-        cap = f"<figcaption>{label} · {size}</figcaption>"
-        if os.path.exists(f"{out}/{path}"):
-            src = thumb if os.path.exists(f"{out}/{thumb}") else path
-            parts.append(f'<figure>{cap}<a href="{path}"><img loading="lazy" src="{src}" alt="{html.escape(title)}, {label}"></a></figure>')
-        else:
-            parts.append(f'<figure>{cap}<div class="falta">sin captura</div></figure>')
-
-    parts.append("</div></section>")
-open(f"{out}/index.html", "w").write("\n".join(parts))
-print(f"Hoja: {out}/index.html")
-PY
+  python3 scripts/duo/hoja.py "$OUT" "$SCREENS" "$DARK" "$BIG"
 }
 
 # Nada sobre el pliegue: con el Duo abierto y acostado, la franja de en medio (el lomo, `Space.fold`)
@@ -187,7 +134,7 @@ bad = []
 for path in sorted(glob.glob(f"{folder}/*.png")):
     im = Image.open(path).convert("L")
     w, h = im.size
-    mid, half = w // 2, int(w * 8 / 951)   # 8 pt a cada lado del pliegue (951 pt de ancho)
+    mid, half = w // 2, int(w * 16 / 951)  # 16 pt a cada lado del pliegue: con 8 caía entre dos palabras
     top, bottom = int(h * 0.08), int(h * 0.92)  # sin la barra de estado ni el dock
     band = im.crop((mid - half, top, mid + half, bottom))
     paper = band.getpixel((0, 0))
@@ -225,8 +172,15 @@ fi
 # «portrait», acostada (951 × 669): la bisagra manda.
 pose() { # closed|open, orientación
   local other=open; [ "$1" = open ] && other=closed
-  xcrun simctl spawn "$DEVICE" "$POSE" -position="$other" -deviceOrientation="$2" -duration=0 -wait
-  xcrun simctl spawn "$DEVICE" "$POSE" -position="$1" -deviceOrientation="$2" -duration=0 -wait
+  # Recién prendido, SpringBoard puede estar cambiando de pantalla («a display swap is already in
+  # flight»): se espera y se vuelve a intentar.
+  local tries
+  for target in "$other" "$1"; do
+    tries=0
+    until xcrun simctl spawn "$DEVICE" "$POSE" -position="$target" -deviceOrientation="$2" -duration=0 -wait; do
+      tries=$((tries + 1)); [ $tries -ge 6 ] && return 1; sleep 5
+    done
+  done
   sleep 2
 }
 
@@ -244,6 +198,7 @@ use_device() {
   xcrun simctl boot "$DEVICE" 2>/dev/null || true
   xcrun simctl bootstatus "$DEVICE" -b >/dev/null
   xcrun simctl ui "$DEVICE" content_size large
+  sleep 3  # que la letra normal llegue antes de la primera captura (otra sesión pudo dejar AX5)
   xcrun simctl status_bar "$DEVICE" override --time 9:41 --batteryState discharging --batteryLevel 100 \
     --cellularMode active --cellularBars 4 --wifiBars 3 >/dev/null 2>&1 || true
   seed
@@ -306,7 +261,8 @@ shoot() { # carpeta, nombre, pantalla (primary/primary-1), espera, argumentos…
   local data; data=$(xcrun simctl get_app_container "$DEVICE" "$BUNDLE" data)
   rm -f "$data/Documents/.lector-listo"
   # shellcheck disable=SC2086
-  xcrun simctl launch "$DEVICE" "$BUNDLE" -screenshot.frozen YES "$@" ${EXTRA:-} >/dev/null
+  # El fondo del libro no depende de la hora de la captura (de noche salía «Noche cálida»).
+  xcrun simctl launch "$DEVICE" "$BUNDLE" -screenshot.frozen YES -reader.autoNight NO "$@" ${EXTRA:-} >/dev/null
   # El lector: primero que el libro esté en su página (a lo más 40 s), luego su demostración.
   if [[ $name == lector-* ]]; then
     local waited=0

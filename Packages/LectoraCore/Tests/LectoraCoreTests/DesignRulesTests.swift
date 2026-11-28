@@ -1002,6 +1002,10 @@ final class DesignRulesTests: XCTestCase {
         where !(Self.screens.first { $0.path.hasSuffix("\(name).swift") }?.text.contains("Spread(") ?? false) {
             duo.append("\(name): una sola columna; va en dos partes con Spread")
         }
+        //     Con la letra más grande, muchos filtros van en un menú: la fila partida tapaba los libros.
+        if !(pieces.first { $0.name == "FilterBar" }?.body.contains("Theme.Lists.filtersInline") ?? false) {
+            duo.append("FilterBar: con la letra más grande, la fila de filtros llena la pantalla")
+        }
         //     Ninguna hoja del iPhone se abre al centro, encima del pliegue: toda va con `.sidePanel`,
         //     que con el Duo abierto la pone en una página (ronda 1: Traer de Calibre, «A una nota» y las
         //     de Por revisar salían sobre el lomo). Fuera: la Mac y el diccionario del sistema.

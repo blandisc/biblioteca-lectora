@@ -653,6 +653,8 @@ enum Theme {
         static let inspectorItems = 3
         /// Tus subrayados del capítulo en la página de margen del libro (Duo abierto, en continuo).
         static let marginNotes = 3
+        /// Filtros que van en fila con la letra más grande; con más, el elegido y su menú (`FilterBar`).
+        static let filtersInline = 3
     }
 
     // MARK: Énfasis

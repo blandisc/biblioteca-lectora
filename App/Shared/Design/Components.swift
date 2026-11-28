@@ -949,8 +949,48 @@ struct FilterBar<Item: Hashable & Identifiable>: View {
     @Binding var selection: Item
     let title: (Item) -> String
     @Namespace private var mark
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        // Con la letra más grande y muchas opciones, el elegido con su menú: la fila partida llenaba
+        // la pantalla y en una ventana baja no se veía ni un libro (D6-B, ronda 1).
+        if typeSize.isAccessibilitySize && items.count > Theme.Lists.filtersInline {
+            menu
+        } else {
+            row
+        }
+    }
+
+    private var menu: some View {
+        Menu {
+            ForEach(items) { item in
+                Button { withAnimation(Theme.Motion.select) { selection = item } } label: {
+                    if item == selection { Label(title(item), systemImage: "checkmark") } else { Text(title(item)) }
+                }
+            }
+        } label: {
+            HStack(spacing: Theme.Space.s) {
+                Text(title(selection))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Theme.ink)
+                Image(systemName: "chevron.down")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.secondaryInk)
+            }
+            .frame(minHeight: Theme.Size.tapTarget)
+            .overlay(alignment: .bottomLeading) {
+                Capsule()
+                    .fill(Theme.accent)
+                    .frame(width: Theme.Size.tabMark.width, height: Theme.Size.tabMark.height)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Filtro: \(title(selection))")
+        .accessibilityHint("Elige otro filtro")
+    }
+
+    private var row: some View {
         WrapRows(spacing: Theme.Space.xl) {
             ForEach(items) { item in
                 let selected = item == selection
