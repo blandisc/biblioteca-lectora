@@ -577,7 +577,8 @@ final class LibraryStore: ObservableObject {
             waitingForCloud = simulated == "downloading" || simulated == "gaveUp"
             cloudGaveUp = false
             // «gaveUp» pasa por el mismo camino que de verdad (auditoría 6): así se ve su aviso.
-            if simulated == "gaveUp" { giveUpOnCloud() }
+            // Después de leer los libros: con la lista aún vacía el aviso no salía (ronda 1 del Duo).
+            if simulated == "gaveUp" { Task { @MainActor [weak self] in self?.giveUpOnCloud() } }
             return
         }
         #endif
