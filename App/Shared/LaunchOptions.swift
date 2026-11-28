@@ -94,6 +94,27 @@ enum Duo {
     /// siempre (`-duo.footer card`).
     static var footerCard: Bool { chosen("duo.footer", "card") }
 
+    // Decisiones de la ronda 1 (críticas A y B, 27 nov 2026). Lo recomendado va por omisión; la
+    // otra opción, con su argumento, solo en Debug.
+
+    /// D1 · Ajustes con el Duo abierto y acostado: su propio pliego, los ajustes a la izquierda y
+    /// Tu Gabinete (o lo que abres: Reglas, una conexión) a la derecha (D1-B, recomendado). D1-C, en
+    /// la página derecha con tu lista atenuada a la izquierda (`-duo.settings page`).
+    static var wholePanelsInPage: Bool { chosen("duo.settings", "page") }
+    /// D2 · la página derecha de lista | detalle al llegar: ya abre la ficha del libro que lees o tu
+    /// nota más reciente (D2-B, recomendado). D2-A, un aviso «Elige un libro» (`-duo.right ask`).
+    static var rightAsks: Bool { chosen("duo.right", "ask") }
+    /// D4 · abierto y de pie, las herramientas del libro («Aa», índice, buscar, marcas) en la mitad
+    /// de abajo con el libro arriba (D4-B, recomendado). D4-A, la hoja alta de iOS (`-duo.half sheet`).
+    static var toolsTallSheet: Bool { chosen("duo.half", "sheet") }
+    /// D8 · abierto y acostado, las dos páginas del mismo ancho, como el libro: la franja de la hora se
+    /// reserva también a la izquierda (D8-A, recomendado). D8-B, la izquierda llega a la orilla y la
+    /// derecha mide 84 pt menos (`-duo.sides strip`).
+    static var sidesAsStrip: Bool { chosen("duo.sides", "strip") }
+    /// D13 · en la página derecha de un pliego, «atrás» arriba a la izquierda de su página (D13-B,
+    /// recomendado). D13-A, el de iOS, en la franja de la hora (`-duo.back system`).
+    static var systemBack: Bool { chosen("duo.back", "system") }
+
     private static func chosen(_ key: String, _ value: String) -> Bool {
         #if DEBUG
         UserDefaults.standard.string(forKey: key) == value

@@ -6,13 +6,14 @@ struct MesaScreen: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.bookOpeningNamespace) private var opening
     @ObservedObject private var sessions = SessionStore.shared
-    /// Capturas automáticas: `-screenshot.screen diary` abre el diario (en la Mac, con
-    /// `-screenshot.tab desk`). Se abre ya puesta la Mesa: empezar en `true` no empujaba nada en la Mac.
-    @State private var showsDiary = false
+    /// Lo empujado (el Diario, una sesión, un libro de la mesa). Capturas: `-screenshot.screen diary`
+    /// abre el Diario (en la Mac, con `-screenshot.tab desk`), ya puesta la Mesa: empezar con él no
+    /// empujaba nada en la Mac, y con `navigationDestination(isPresented:)` a veces no salía (ronda 1).
+    @State private var path = NavigationPath()
     @Environment(\.windowLayout) private var window
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if let book = model.currentBook {
                     // El libro que lees y, de acompañante, tu semana y la mesa: una bajo otra en un
@@ -46,13 +47,14 @@ struct MesaScreen: View {
             .navigationTitle("Mesa")
             #endif
             .screen()
-            .navigationDestination(isPresented: $showsDiary) { DiaryScreen() }
+            // En el pliego, lo empujado (el Diario, una sesión) trae su «atrás» arriba a la izquierda (D13-B).
+            .environment(\.inFoldDetail, window.verticalFold != nil)
             #if DEBUG
             .task {
                 guard LaunchOptions.screen == "diary" else { return }
                 // En la Mac la Mesa se arma dos veces al abrir: se espera a que se quede quieta.
                 try? await Task.sleep(for: .seconds(1))
-                showsDiary = true
+                if path.isEmpty { path.append(DiaryRef()) }
             }
             #endif
         }
@@ -88,6 +90,8 @@ struct MesaScreen: View {
 
             WholeWordsText(book.title)
                 .font(.bookTitle)
+                // En una ventana baja, a lo más tres renglones, como en la ficha.
+                .lineLimit(window.isShort ? Theme.Size.titleLinesShort : nil)
                 .padding(.top, Theme.Space.xl)
             Text(book.author)
                 .font(.subheadline)

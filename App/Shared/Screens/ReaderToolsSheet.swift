@@ -20,6 +20,7 @@ struct ReaderToolsSheet: View {
     private let dismiss = SheetDismiss()
     @State private var query = ""
     @FocusState private var searchFocused: Bool
+    @Environment(\.windowLayout) private var window
     @State private var recents: [RecentSearches.Item] = []
 
     private var highlights: [Annotation] {
@@ -60,7 +61,12 @@ struct ReaderToolsSheet: View {
                 recents = RecentSearches.load(bookID)
                 if part == .search { searchFocused = true }
             }
-            .onChange(of: controller.searchProgress == nil) { _, _ in recents = RecentSearches.load(bookID) }
+            .onChange(of: controller.searchProgress == nil) { _, done in
+                recents = RecentSearches.load(bookID)
+                // En una ventana baja el teclado tapaba todos los resultados (ronda 1, el Duo cerrado
+                // acostado): al terminar de buscar se baja solo; tocar el campo lo vuelve a abrir.
+                if done, window.isShort, !controller.searchResults.isEmpty { searchFocused = false }
+            }
         }
         .presentationDetents([.large])
     }
@@ -128,7 +134,7 @@ struct ReaderToolsSheet: View {
     private var search: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             SearchField(prompt: SearchWording.inBook, text: $query, focused: $searchFocused,
-                        onSubmit: { controller.search(query) },
+                        onSubmit: { controller.search(query); searchFocused = false },
                         onClear: { controller.clearSearch() })
             if let progress = controller.searchProgress {
                 // Cuánto lleva: los resultados van apareciendo abajo mientras busca.

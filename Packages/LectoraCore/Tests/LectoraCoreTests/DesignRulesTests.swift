@@ -928,7 +928,17 @@ final class DesignRulesTests: XCTestCase {
         cut += hits(#"\.prefix\([^)]*\)\)? *\+ *"…""#, in: Self.ui)
         let note = Self.sources("Packages/LectoraCore/Sources").first { $0.path.hasSuffix("Notes/Note.swift") }?.text ?? ""
         if !note.contains(".clipped(to: Self.previewLetters)") { cut.append("Note.preview no corta entre palabras con «…»") }
-        check(cut, "Un texto que se lee a medias: la razón de algo apagado va entera (ReasonLine) y lo cortado, entre palabras y con «…» (clipped(to:))")
+        //     Ronda 1 del Duo: «Don Quijote de la Manc…», «La casa de los espíri…». Un título con tope de
+        //     renglones termina en «…» tras una palabra entera (`WordTailText`): `WholeWordsText` lo usa
+        //     con el tope de quien lo pone y en su piso, y la fila de una sesión también.
+        let wholeWords = pieces.first { $0.name == "WholeWordsText" }?.body ?? ""
+        if !wholeWords.contains("@Environment(\\.lineLimit)") || !wholeWords.contains("WordTailText(text, lines: 1)") {
+            cut.append("WholeWordsText: con tope de renglones corta a media palabra; usa WordTailText")
+        }
+        if (pieces.first { $0.name == "SessionRow" }?.body.contains(".lineLimit(1)") ?? true) {
+            cut.append("SessionRow: el título del libro se corta a media palabra; usa WordTailText")
+        }
+        check(cut, "Un texto que se lee a medias: la razón de algo apagado va entera (ReasonLine) y lo cortado, entre palabras y con «…» (clipped(to:), WordTailText)")
 
         // 13. iPhone Duo (27 nov 2026). Cerrado, la hora va al costado y arriba no hay isla: los
         //     botones de arriba del lector subían `chromeLift` y se salían por arriba, cortados.
@@ -1053,6 +1063,21 @@ final class DesignRulesTests: XCTestCase {
                 if !body.contains("duoBars()") { duo.append("\(file.path):\(index + 1): \(code.prefix(100))") }
             }
         }
+        //     Ronda 1: con la letra más grande, la Mesa del Duo abierto salía en blanco (la página se
+        //     medía con decimales, se corría un pedacito y se volvía a medir sin parar). Lo que se acomoda
+        //     según su lugar lo mide en puntos enteros (`windowFrame`).
+        for hit in hits(#"frame\(in: \.global\)"#, in: Self.ui) where !hit.contains("let frame = self.frame(in: .global)") {
+            duo.append("\(hit) — se mide con decimales; usa windowFrame")
+        }
+        //     El ancho de una página sale de una sola cuenta (`WindowLayout.page`): estaba copiada seis
+        //     veces y cada copia reservaba la franja a su manera.
+        duo += hits(#"position - window\.leading|window\.trailing - fold\.position"#, in: Self.ui)
+            .map { "\($0) — el ancho de una página a mano; usa window.page(_:)" }
+        //     Los títulos de las dos páginas quedan a la misma altura: la acción de un rótulo de sección
+        //     no lo empuja hacia abajo («ESTA SEMANA» caía 13 pt bajo «GABINETE»).
+        if !(pieces.first { $0.name == "SectionHeader" }?.body.contains(".overlay(alignment: .trailing)") ?? false) {
+            duo.append("SectionHeader: su acción lo hace más alto y el rótulo baja respecto a la otra página")
+        }
         check(duo, "No cabe en el iPhone Duo (cerrado o abierto)")
 
         // 14. Auditoría 8 (27 nov 2026): con AX5 salía «Wake-/field», «Los detec-/tives» y
@@ -1069,7 +1094,7 @@ final class DesignRulesTests: XCTestCase {
         if !whole.contains("static let maxSteps = 3") || !whole.contains("$0 >= .large") || !whole.contains("prefix(maxSteps + 1)") {
             split.append("WholeWordsText: la letra baja sin piso (con AX5 el título quedaba diminuto)")
         }
-        if !whole.contains(".lineLimit(1).truncationMode(.tail)") || !whole.contains("floor.") {
+        if !whole.contains("WordTailText(text, lines: 1)") || !whole.contains("floor.") {
             split.append("WholeWordsText: en el piso el título no termina en «…»")
         }
         if !whole.contains("Self.words(text)") || whole.contains("Text(verbatim: $0)") {

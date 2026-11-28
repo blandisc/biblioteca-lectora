@@ -55,6 +55,20 @@ private struct WindowReader: ViewModifier {
     }
 }
 
+// MARK: - Dónde está algo en la ventana
+
+extension GeometryProxy {
+    /// Dónde está esta vista en la ventana, en puntos enteros. Las piezas que se acomodan según su
+    /// propio lugar (`Spread`, `ReadingColumn`, `SidePanel`, `FoldSplit`) lo miden así: con decimales,
+    /// una página que dependía de dónde quedaba se corría un pedacito, se volvía a medir y nunca se
+    /// quedaba quieta (la Mesa con la letra más grande y el Duo abierto salía en blanco, ronda 1).
+    var windowFrame: CGRect {
+        let frame = self.frame(in: .global)
+        return CGRect(x: frame.minX.rounded(), y: frame.minY.rounded(),
+                      width: frame.width.rounded(), height: frame.height.rounded())
+    }
+}
+
 // MARK: - Spread: el pliego
 
 /// Una pantalla en dos partes: lo principal (`leading`) y su acompañante (`trailing`). La pieza
@@ -117,8 +131,10 @@ struct Spread<Leading: View, Trailing: View>: View {
                     .screenContent(wide: !measured)
                 }
             case .pages(let left):
+                // Las dos páginas del mismo ancho, como el libro (D8-A): la izquierda deja también
+                // el ancho de la franja de la hora.
                 HStack(alignment: .top, spacing: 0) {
-                    page { leading }.frame(width: left)
+                    page { leading }.padding(.leading, evenInset).frame(width: left)
                     page { trailing }.frame(maxWidth: .infinity)
                 }
             case .halves(let top):
@@ -133,8 +149,11 @@ struct Spread<Leading: View, Trailing: View>: View {
                 }
             }
         }
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
+        .onGeometryChange(for: CGRect.self) { $0.windowFrame } action: { frame = $0 }
     }
+
+    /// Lo que la página izquierda deja de más para medir lo mismo que la derecha (D8-A).
+    private var evenInset: CGFloat { Duo.sidesAsStrip ? 0 : window.evenInset(.leading) }
 
     /// Una página: su desplazamiento, sus márgenes y, adentro, el renglón cómodo.
     private func page(measuring: Bool = false, @ViewBuilder _ content: () -> some View) -> some View {
@@ -183,7 +202,7 @@ struct ReadingColumn: ViewModifier {
             .frame(maxWidth: min(measure, beforeFold ?? .infinity))
             .frame(maxWidth: .infinity, alignment: beforeFold == nil ? .center : .leading)
             .onGeometryChange(for: ClosedRange<CGFloat>.self) { proxy in
-                let frame = proxy.frame(in: .global)
+                let frame = proxy.windowFrame
                 return frame.minX...max(frame.minX, frame.maxX)
             } action: { span = $0 }
     }
@@ -209,6 +228,11 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
     /// Se abre en la página `side` de la ventana entera aunque quien lo abre ocupe una sola (Ajustes
     /// desde la lista del Cuaderno: en la página de la lista quedaba angosto y la tapaba).
     var spansWindow = false
+    /// Con `spansWindow`: ocupa las dos páginas, sin nada atenuado (Ajustes como su propio pliego, D1-B).
+    var wholeWindow = false
+    /// Abierto y de pie (el pliegue de lado a lado): en la mitad de abajo, al pulgar, con lo de arriba
+    /// a la vista (las herramientas del libro, D4-B: como hoja tapaban tres cuartos de la página).
+    var lowerHalf = false
     @ViewBuilder let panel: () -> Panel
     @Environment(\.windowLayout) private var window
     @Environment(\.panelHost) private var host
@@ -220,7 +244,8 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
 
     private var inPage: Bool {
         #if os(iOS)
-        window.verticalFold != nil && !Duo.toolsAsSheets
+        guard !Duo.toolsAsSheets, let fold = window.fold else { return false }
+        return fold.axis == .vertical || (lowerHalf && !Duo.toolsTallSheet)
         #else
         false
         #endif
@@ -229,29 +254,32 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
     private var lifts: Bool { (pushed || spansWindow) && host != nil }
 
     /// Dónde se abre: lo que ocupa quien lo abre, o la ventana entera (`spansWindow`).
+    /// Subido a la raíz, cubre la página de arriba abajo: desde donde empieza su contenido dejaba a la
+    /// vista la barra de quien lo abrió («Editar» encima de «Editar datos», ronda 2).
     private var panelFrame: CGRect {
-        spansWindow ? CGRect(origin: .zero, size: window.size) : frame
+        if spansWindow { return CGRect(origin: .zero, size: window.size) }
+        return CGRect(x: frame.minX, y: 0, width: frame.width, height: max(frame.maxY, window.size.height))
     }
 
     func body(content: Content) -> some View {
         content
             .sheet(isPresented: Binding(get: { isPresented && !inPage }, set: { isPresented = $0 })) {
-                panel().duoBars()
+                panel().duoBars().environment(\.inFoldDetail, false)
             }
             .overlay {
                 if isPresented && inPage && !lifts {
-                    PanelPage(frame: frame, side: side, closeLabel: closeLabel, close: close, content: panel)
+                    PanelPage(frame: frame, side: side, whole: false, closeLabel: closeLabel, close: close, content: panel)
                         .transition(.opacity)
                 }
             }
             .animation(Theme.Motion.sheet, value: isPresented && inPage)
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
+            .onGeometryChange(for: CGRect.self) { $0.windowFrame } action: { frame = $0 }
             .onChange(of: isPresented && inPage && lifts, initial: true) { _, show in
                 guard let host else { return }
                 if show {
                     lifted = true
-                    host.show(PanelHost.Shown(frame: panelFrame, side: side, closeLabel: closeLabel, close: close,
-                                              content: AnyView(panel())))
+                    host.show(PanelHost.Shown(frame: panelFrame, side: side, whole: whole,
+                                              closeLabel: closeLabel, close: close, content: AnyView(panel())))
                 } else if lifted {
                     lifted = false
                     host.shown = nil
@@ -263,6 +291,9 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
     }
 
     private func close() { isPresented = false }
+
+    /// Las dos páginas (D1-B); con `-duo.settings page`, en la de `side` (D1-C).
+    private var whole: Bool { wholeWindow && spansWindow && !Duo.wholePanelsInPage }
 }
 
 /// Lo que un `SidePanel` empujado sube a la raíz: lo pinta `.measuresWindow()` encima de todo, en
@@ -272,6 +303,7 @@ final class PanelHost {
     struct Shown {
         var frame: CGRect
         var side: WindowLayout.Side
+        var whole: Bool
         var closeLabel: String?
         var close: () -> Void
         var content: AnyView
@@ -291,21 +323,30 @@ extension EnvironmentValues {
 private struct PanelPage<Panel: View>: View {
     let frame: CGRect
     let side: WindowLayout.Side
+    /// Las dos páginas, sin nada atenuado (Ajustes como su propio pliego).
+    let whole: Bool
     let closeLabel: String?
     let close: () -> Void
     @ViewBuilder let content: () -> Panel
     @Environment(\.windowLayout) private var window
 
     var body: some View {
-        let pages = window.pages(of: frame, minPage: Theme.Window.minPage)
-        HStack(spacing: 0) {
-            if let pages {
+        if whole {
+            sheet
+        } else if let halves = window.halves(of: frame, minHalf: Theme.Window.minPage) {
+            // Abierto y de pie: arriba lo que lo abrió, atenuado; el panel en la mitad de abajo.
+            VStack(spacing: 0) {
+                shade.frame(height: halves.top.height)
+                sheet
+            }
+        } else if let pages = window.pages(of: frame, minPage: Theme.Window.minPage) {
+            HStack(spacing: 0) {
                 if side == .trailing { shade.frame(width: pages.left.width) }
                 sheet
                 if side == .leading { shade.frame(width: pages.right.width) }
-            } else {
-                sheet
             }
+        } else {
+            sheet
         }
     }
 
@@ -321,6 +362,8 @@ private struct PanelPage<Panel: View>: View {
     private var sheet: some View {
         content()
             .environment(\.closePanel, PanelClose(action: close))
+            // Lo de adentro se cierra con su botón, no con el «atrás» del pliego.
+            .environment(\.inFoldDetail, false)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.paper.ignoresSafeArea())
             // Su ✕ arriba, en su propio renglón: encima del contenido tapaba la segunda letra de «Aa».
@@ -341,8 +384,8 @@ private struct PanelHostLayer: View {
     var body: some View {
         GeometryReader { proxy in
             if let shown = host.shown {
-                let origin = proxy.frame(in: .global).origin
-                PanelPage(frame: shown.frame, side: shown.side, closeLabel: shown.closeLabel,
+                let origin = proxy.windowFrame.origin
+                PanelPage(frame: shown.frame, side: shown.side, whole: shown.whole, closeLabel: shown.closeLabel,
                           close: shown.close) { shown.content }
                     .frame(width: shown.frame.width, height: shown.frame.height)
                     .offset(x: shown.frame.minX - origin.x, y: shown.frame.minY - origin.y)
@@ -358,12 +401,13 @@ private struct PanelHostLayer: View {
 private struct SidePanelItem<Item: Identifiable, Panel: View>: ViewModifier {
     @Binding var item: Item?
     let side: WindowLayout.Side
+    var lowerHalf = false
     @ViewBuilder let panel: (Item) -> Panel
     @State private var shown: Item?
 
     func body(content: Content) -> some View {
         content.modifier(SidePanelModifier(isPresented: Binding(get: { item != nil }, set: { if !$0 { item = nil } }),
-                                           side: side, closeLabel: nil) {
+                                           side: side, closeLabel: nil, lowerHalf: lowerHalf) {
             if let current = item ?? shown { panel(current) }
         })
         // Lo último que se enseñó, mientras el panel se va.
@@ -373,15 +417,17 @@ private struct SidePanelItem<Item: Identifiable, Panel: View>: ViewModifier {
 
 extension View {
     /// Una hoja que, con el Duo abierto y acostado, se abre en una página (ver `SidePanelModifier`).
+    /// `wholeWindow` (con `spansWindow`): las dos páginas. `lowerHalf`: abierto y de pie, en la mitad de abajo.
     func sidePanel(isPresented: Binding<Bool>, side: WindowLayout.Side = .trailing, closeLabel: String? = nil,
-                   spansWindow: Bool = false, @ViewBuilder content: @escaping () -> some View) -> some View {
+                   spansWindow: Bool = false, wholeWindow: Bool = false, lowerHalf: Bool = false,
+                   @ViewBuilder content: @escaping () -> some View) -> some View {
         modifier(SidePanelModifier(isPresented: isPresented, side: side, closeLabel: closeLabel,
-                                   spansWindow: spansWindow, panel: content))
+                                   spansWindow: spansWindow, wholeWindow: wholeWindow, lowerHalf: lowerHalf, panel: content))
     }
 
-    func sidePanel<Item: Identifiable>(item: Binding<Item?>, side: WindowLayout.Side = .trailing,
+    func sidePanel<Item: Identifiable>(item: Binding<Item?>, side: WindowLayout.Side = .trailing, lowerHalf: Bool = false,
                                        @ViewBuilder content: @escaping (Item) -> some View) -> some View {
-        modifier(SidePanelItem(item: item, side: side, panel: content))
+        modifier(SidePanelItem(item: item, side: side, lowerHalf: lowerHalf, panel: content))
     }
 }
 
@@ -406,27 +452,37 @@ struct SheetDismiss: DynamicProperty {
 struct FoldSplit<Root: View, Placeholder: View>: View {
     /// Lo empujado: en un iPhone, encima de la lista; en el pliego, en la página derecha.
     @Binding var path: NavigationPath
+    /// Lo que abre la página derecha al llegar, para que no se quede vacía (D2-B, ronda 1): la ficha
+    /// del libro que lees, tu nota más reciente. Solo en el pliego; en un iPhone no empuja nada.
+    var opens: ((inout NavigationPath) -> Void)? = nil
+    /// Lo que se abre en un panel de ventana entera (Ajustes): con D1-C ese panel va en una página y
+    /// aquí es una pila.
+    var wholePanel = false
     @ViewBuilder var root: Root
     @ViewBuilder var placeholder: Placeholder
     @Environment(\.windowLayout) private var window
     /// Dónde empieza la columna de la derecha en la ventana.
     @State private var detailMinX: CGFloat = .infinity
 
-    private var split: Bool {
+    private var split: Bool { Self.splits(window, wholePanel: wholePanel) }
+
+    /// Si en esta ventana va como pliego (también lo pregunta Ajustes, que cambia lo que pone a cada lado).
+    static func splits(_ window: WindowLayout, wholePanel: Bool) -> Bool {
         #if os(iOS)
-        window.verticalFold != nil && !Duo.onePane
+        window.verticalFold != nil && !Duo.onePane && !(wholePanel && Duo.wholePanelsInPage)
         #else
         false
         #endif
     }
 
     var body: some View {
-        if split, let fold = window.verticalFold {
+        if split, let fold = window.verticalFold, let sidebar = window.page(.leading) {
             // La lista llega justo al pliegue: con un ancho «ideal» iOS la dejaba en un tercio y la
             // página derecha cruzaba el pliegue (ronda 1); con mínimo y máximo iguales no la mueve.
-            let sidebar = fold.position - window.leading
             NavigationSplitView(columnVisibility: .constant(.all)) {
                 root
+                    // Las dos páginas del mismo ancho, como el libro (D8-A).
+                    .safeAreaPadding(.leading, Duo.sidesAsStrip ? 0 : window.evenInset(.leading))
                     .navigationSplitViewColumnWidth(min: sidebar, ideal: sidebar, max: sidebar)
                     #if os(iOS)
                     .toolbar(removing: .sidebarToggle)
@@ -438,12 +494,53 @@ struct FoldSplit<Root: View, Placeholder: View>: View {
                 // Si aun así iOS deja la lista angosta, lo de la derecha empieza en el pliegue, nunca encima.
                 NavigationStack(path: $path) { placeholder.screen() }
                     .padding(.leading, max(0, fold.position - detailMinX))
-                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minX } action: { detailMinX = $0 }
+                    .onGeometryChange(for: CGFloat.self) { $0.windowFrame.minX } action: { detailMinX = $0 }
             }
             .navigationSplitViewStyle(.balanced)
+            // En todo el pliego: lo que toca la lista se arma con los destinos de la lista, no de la derecha.
+            .environment(\.inFoldDetail, true)
+            .task {
+                // Después de lo que abren las capturas al aparecer: solo si la derecha sigue vacía.
+                await Task.yield()
+                if path.isEmpty, !Duo.rightAsks, let opens { opens(&path) }
+            }
         } else {
             NavigationStack(path: $path) { root }
         }
+    }
+}
+
+extension EnvironmentValues {
+    /// En la página derecha de un pliego (`FoldSplit`): ahí lo empujado trae su propio «atrás»
+    /// arriba a la izquierda de su página (D13-B), no el de iOS en la franja de la hora.
+    @Entry var inFoldDetail = false
+}
+
+/// El «atrás» de lo empujado en la página derecha de un pliego (D13-B, ronda 1): arriba a la
+/// izquierda de su página, donde lo buscas, y no en la franja de la hora del otro lado de la pantalla.
+/// `-duo.back system` deja el de iOS (D13-A).
+struct FoldBack: ViewModifier {
+    /// Sin barra (la raíz de Ajustes) no hay nada a dónde volver.
+    var bar = true
+    @Environment(\.inFoldDetail) private var inFoldDetail
+    @Environment(\.dismiss) private var dismiss
+
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        if bar, inFoldDetail, !Duo.systemBack {
+            content
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        BackButton(label: "Volver") { dismiss() }
+                    }
+                }
+        } else {
+            content
+        }
+        #else
+        content
+        #endif
     }
 }
 
@@ -501,7 +598,15 @@ struct FoldPlaceholder: View {
     let message: String
 
     var body: some View {
-        EmptyState(title: title, message: message)
+        // Si con la letra más grande no cabe, se desplaza: cortado a lo alto terminaba en «…a la vis…» (ronda 1).
+        ViewThatFits(in: .vertical) {
+            message(EmptyState(title: title, message: message))
+            ScrollView { message(EmptyState(title: title, message: message)) }
+        }
+    }
+
+    private func message(_ state: some View) -> some View {
+        state
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .gutter()
     }

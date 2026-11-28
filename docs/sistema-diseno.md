@@ -124,7 +124,7 @@ se nombra aquí y en `Theme` (lo vigila `testNoArithmeticBetweenTokens`).
 
 ### Tamaño (`Theme.Size`)
 
-`tapTarget 44 (`.sizeTarget()` lo da a lo que se ve chico) · labelLines 2 (renglones de una etiqueta con la letra más grande) · tapBleed 12 (lo que el toque de un ícono sobresale de su dibujo) · row 52 (fila de libreta) · tabMark 16 × 2 (el trazo del filtro elegido) · pageSwatch 78, swatchLine 3, swatchLines (las hojitas de Apariencia) · statusDot 6, statusDotLine 1 · equalizerHeight 12 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
+`tapTarget 44 (`.sizeTarget()` lo da a lo que se ve chico) · labelLines 2 (renglones de una etiqueta con la letra más grande) · titleLinesShort 3 (el título de un libro en una ventana baja) · tapBleed 12 (lo que el toque de un ícono sobresale de su dibujo) · row 52 (fila de libreta) · tabMark 16 × 2 (el trazo del filtro elegido) · pageSwatch 78, swatchLine 3, swatchLines (las hojitas de Apariencia) · statusDot 6, statusDotLine 1 · equalizerHeight 12 · control 46 · coverHero 132 · coverDetail 168 · coverEditor 84 · coverRow 40 ·
 coverMini 26 · gridColumns 3 (con la letra más grande, `gridColumnsLarge` 2 y el título en `coverCaptionLinesLarge` 3 renglones; son las de menos: en una pantalla ancha caben las que quepan sin que una portada pase de `coverCellWidest` 150, o `coverCellWidestLarge` 240) · fontColumns 2 (las letras de «Aa») · hairline 0.5 · progress 2 · quoteRule 2 · selection 2 · accentButton 44 ·
 stageBar 8 · stageBarThin 4 · footerPreview 64 · footerPicker 320 (el globo del pie) · deskMark 16 × 4 (el trazo verde del encabezado de la Mesa) · ghostLine 3 · scrubberKnob 14 · scrubberHeight 32 · scrubberReach 6 · excerptReach 60 (letras de contexto al encontrar algo en una nota) · dragSlop 6 · stageRow 26 · stageMark 16 · stageGap 1 · legendSwatch 8 · playRing 38 · equalizerBar 2 ·
 textEditor 120 · ribbon 12×64 · appearanceSheet 584 (solo mientras se mide; luego la hoja mide su contenido) · turnPreview 18×24 · macReader 720×820 (solo la ventana del libro, nunca una hoja) · readingMeasure 640 (lo más ancho que corre un renglón del libro en la Mac, unas 66 letras, centrado; MX-B) · readingPanel (esa columna con el aire de adentro de una tarjeta de vidrio: lo más ancha que es la tarjeta del lector) · screenMeasure (esa columna con el margen de pantalla a cada lado: lo más ancha que es una pantalla de texto en el iPhone, centrada; solo la alcanza el Duo abierto o un iPhone acostado) · weekChart 112 · yearChart 80 · weekBar 18 · dayCell 34 · shareCard 300×375 ·
@@ -251,6 +251,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `CoverCell` + `CoverGrid` | Celda y cuadrícula de 3 columnas (2 con la letra más grande), y más si sobra: las que quepan sin que una portada pase de `Size.coverCellWidest` ni de `Window.coverHeightShare` del alto de la ventana (`CoverColumns`, redondea hacia arriba): en una ventana baja se ve un libro entero | Biblioteca, Mesa, Elegir portada |
 | `BookRow` | Portada pequeña + título serif + detalle + extra | Lista, serie, Buscar, Cuaderno |
 | `WholeWordsText` | Un título que nunca se parte a media palabra: si su palabra más ancha no cabe a lo ancho, la letra baja un paso (el tamaño de iOS, o `CoverArt.titleScales` en la portada dibujada) hasta que cabe entera, como mucho `maxSteps` pasos y nunca por debajo de `.large` desde una letra de accesibilidad; en ese piso, un renglón que termina en «…». Mide las palabras con sus marcas (la negrita de lo buscado) (auditorías 8 y 9) | Todo título de libro o de nota: portadas, filas, la ficha, la Mesa, las notas |
+| `WordTailText` | Un texto con tope de renglones que, si no cabe, termina en «…» después de una palabra entera («Don Quijote de la…», nunca «…de la Manc…»): prueba el texto entero y luego con una palabra menos cada vez; `WholeWordsText` lo usa con el tope de quien lo pone y en su piso | Filas de libro y de sesión, portada dibujada, ficha y Mesa en una ventana baja |
 | `QuoteBlock` | Cita con raya de lápiz, etiqueta y nota; `hanging`: sin raya, rótulo en versalitas con línea fina y la comilla de apertura colgada en verde (ME-2) | «Donde lo dejaste» (hanging), subrayados |
 | `TurnPreview` | Hoja chiquita (`Size.turnPreview`) que pasa con su estilo en bucle y la misma curva que la real (`TurnMotion`); las dos hojas se turnan, sin salto más despacio que la real (`Reader.previewPace`); la Hoja es una esquina que se dobla (`Reader.previewPause`, `previewLead`, `previewTurn`, `previewShadow`, `previewLines`) | Estilos de la hoja en «Aa» |
 | `SegmentedChoice` | Opciones lado a lado; la elegida en papel sobre el carril (`Radius.segment`), la marca se desliza | Páginas o Continuo en «Aa» |
@@ -270,6 +271,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `.macPaper()`, `.macSidebarPaper()`, `.macWindowPaper()` | La Mac de papel (MX-B): la tabla y las listas sobre `paper` sin franjas, la barra lateral sobre `sunken` y la barra de la ventana en `paper`; los controles siguen siendo los de macOS | Ventana de la biblioteca, duplicados, Ajustes |
 | `LoadingLine` | Mientras algo tarda: la ruedita chica y qué estoy haciendo, en tinta secundaria («Buscando en internet…») | Ficha, Por revisar, Ajustes, Bienvenida, Conexiones, Calibre, Lector |
 | `CloseButton` | El ✕ que cierra, en 44 y con su nombre para VoiceOver («Cerrar la tarjeta»); `.plain` o `.glass` | Consultar, tarjeta del subrayado, lectura guiada, Sesión, Hendidura |
+| `BackButton` | «Atrás» en un círculo de vidrio, del tamaño de `CloseButton`: el de lo empujado en la página derecha de un pliego (`FoldBack`, D13-B), arriba a la izquierda de su página | Ficha, nota, serie, Reglas y conexiones con el Duo abierto y acostado |
 | `TitleDetailRow` | Título en tinta y su detalle en gris debajo, en una fila de libreta | Calibre, Readwise, Por revisar, Apariencia |
 | `ChoiceMark` | La palomita verde de lo elegido (o el círculo vacío) | Duplicados de la Mac, opciones |
 | `LanguagePicker`, `StatusPicker` | Elegir idioma (con su nombre: «Español») y estado de lectura (`ReadingState`) iguales en el iPhone y la Mac | Editar datos, ficha de la Mac |
@@ -471,6 +473,16 @@ pruebas) y usa las mismas piezas, así un iPhone de pie no cambia y un iPhone ac
   página) que cruza el pliegue de lado a lado, que ahí no corta renglones. La lectura guiada sombrea por página.
   Las herramientas y «Aa» se abren en la página derecha y el libro sigue a la vista. En una ventana baja, el
   pie es una línea delgada (capítulo, barra, página y herramientas).
+- **Las dos páginas** (ronda 1, 27 nov 2026): miden lo mismo, como el libro: con la franja de la hora a la
+  derecha, la izquierda deja también ese ancho (`WindowLayout.page(_:even:)`, la única cuenta del ancho de una
+  página; antes estaba copiada seis veces). Los títulos de las dos quedan a la misma altura (la acción de un
+  `SectionHeader` no lo empuja hacia abajo). La página derecha de lista | detalle no se queda vacía: al llegar
+  trae la ficha del libro que lees o tu nota más reciente (`FoldSplit(opens:)`); lo empujado ahí trae su «atrás»
+  arriba a la izquierda de su página (`FoldBack`, `BackButton`). Ajustes es su propio pliego: los ajustes a la
+  izquierda y Tu Gabinete, o lo que abres, a la derecha. Abierto y de pie, las herramientas del libro y «Aa» se
+  abren en la mitad de abajo, con el libro arriba (`.sidePanel(lowerHalf:)`), y la hendidura lee en la mitad de
+  arriba. Lo que se acomoda según su lugar se mide en puntos enteros (`windowFrame`): con decimales, la Mesa
+  con la letra más grande se volvía a medir sin parar y salía en blanco.
 - **Al doblar o desdoblar** la app no se rearma: sigues en la misma pantalla y en la misma página (lo mismo
   que al girar; se revisa con `-screenshot.turn landscape -screenshot.turnAfter 8`).
 - **Las otras opciones** viven en `enum Duo` (`LaunchOptions.swift`), apagadas; cada una se prueba en Debug con
@@ -478,7 +490,10 @@ pruebas) y usa las mismas piezas, así un iPhone de pie no cambia y un iPhone ac
   abierto, una sola página grande), `-duo.margin left` (en continuo, el texto a la derecha y el margen a la
   izquierda), `-duo.tall top` (de pie y abierto, el libro en la mitad de arriba), `-duo.panes one` (una
   pantalla a la vez también abierto), `-duo.tools sheet` (herramientas como hoja) y `-duo.footer card` (la
-  tarjeta de siempre también en una ventana baja).
+  tarjeta de siempre también en una ventana baja). De la ronda 1: `-duo.settings page` (D1-C, Ajustes en la
+  página derecha), `-duo.right ask` (D2-A, la página derecha pide que elijas), `-duo.half sheet` (D4-A, las
+  herramientas del libro de pie como hoja alta), `-duo.sides strip` (D8-B, la página izquierda hasta la orilla)
+  y `-duo.back system` (D13-A, el «atrás» de iOS en la franja).
 - **Simulador:** «Gabinete Duo» (iPhone Duo, iOS 27.2). `xcrun simctl` no dobla el aparato, pero
   `scripts/duo/duopose.m` sí: llama al servicio de pruebas de SpringBoard que mueve la bisagra
   (`xcrun simctl spawn <udid> duopose -position=open|closed -deviceOrientation=… -duration=0 -wait`) y fija

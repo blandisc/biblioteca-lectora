@@ -45,6 +45,21 @@ final class WindowLayoutTests: XCTestCase {
         XCTAssertNil(open.widthBeforeFold(from: 500, to: 927, minPage: 280))
     }
 
+    /// Una sola cuenta del ancho de cada página (antes copiada seis veces): la izquierda desde la orilla
+    /// segura y la derecha hasta la franja; con `even`, las dos iguales, como el libro (D8-A).
+    func testPageWidthsAreOneRule() {
+        let open = window(951, 669, leading: 0, trailing: 84)
+        XCTAssertEqual(open.page(.leading), 475.5)
+        XCTAssertEqual(open.page(.trailing), 391.5)
+        XCTAssertEqual(open.page(.leading, even: true), 391.5)
+        XCTAssertEqual(open.page(.trailing, even: true), 391.5)
+        XCTAssertEqual(open.evenInset(.leading), 84, "la franja se reserva también a la izquierda")
+        XCTAssertEqual(open.evenInset(.trailing), 0)
+        XCTAssertNil(window(669, 951).page(.leading), "de pie el pliegue no hace páginas lado a lado")
+        XCTAssertNil(window(402, 874).page(.trailing), "un iPhone no tiene páginas")
+        XCTAssertEqual(window(402, 874).evenInset(.leading), 0)
+    }
+
     func testHalvesSplitAtTheFoldOnlyStandingOpen() {
         let standing = window(669, 951)
         let halves = standing.halves(of: CGRect(x: 0, y: 0, width: 669, height: 951), minHalf: 280)

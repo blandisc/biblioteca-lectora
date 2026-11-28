@@ -67,6 +67,8 @@ extension View {
             .background(Theme.paper.ignoresSafeArea())
             .tint(Theme.ink)
             .toggleStyle(AccentSwitchStyle())
+            // Empujado en un pliego (Reglas, una conexión): su «atrás» arriba a la izquierda (D13-B).
+            .modifier(FoldBack())
     }
 
     /// Receta de pantalla empujada u hoja (ficha, serie, nota, Lector › herramientas…):
@@ -84,6 +86,8 @@ extension View {
             .barTitle(title, large: sheet)
             .tint(Theme.ink)
             .toggleStyle(AccentSwitchStyle())
+            // En la página derecha de un pliego, su «atrás» arriba a la izquierda de su página (D13-B).
+            .modifier(FoldBack(bar: bar))
         #if os(iOS)
         if bar { screen } else { screen.toolbar(.hidden, for: .navigationBar) }
         #else
@@ -441,13 +445,18 @@ struct SectionHeader<Trailing: View>: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     /// La acción de la derecha no se parte en renglones: si no cabe junto al rótulo,
-    /// baja a su propio renglón («Darlos por buenos» se partía en tres).
+    /// baja a su propio renglón («Darlos por buenos» se partía en tres). Junto al rótulo no lo
+    /// empuja hacia abajo: su toque (44 pt) cuelga sobre el renglón sin hacerlo más alto, así el
+    /// rótulo de una página queda a la altura del título de la otra («ESTA SEMANA» caía 13 pt más
+    /// abajo que «GABINETE» en la Mesa del Duo abierto, ronda 1).
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: Theme.Space.l) {
                 heading
-                trailing.fixedSize(horizontal: true, vertical: false)
+                // Aparta su ancho; se dibuja encima, centrada en el renglón.
+                trailing.fixedSize(horizontal: true, vertical: false).hidden().frame(height: 0)
             }
+            .overlay(alignment: .trailing) { trailing.fixedSize(horizontal: true, vertical: false) }
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 heading
                 trailing
@@ -1266,6 +1275,8 @@ struct WholeWordsText: View {
     /// Para la letra de medida fija (la portada dibujada): la letra a cada escala.
     var fixedFont: ((CGFloat) -> Font)? = nil
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// El tope de renglones de quien lo usa: si no cabe, termina en «…» tras una palabra entera.
+    @Environment(\.lineLimit) private var lines
 
     /// Cuántos pasos baja la letra como mucho: así `ViewThatFits` mide pocos candidatos, también en
     /// una lista larga (auditoría 9, B4).
@@ -1305,13 +1316,14 @@ struct WholeWordsText: View {
             }
             .fixedSize(horizontal: true, vertical: true)
             .hidden()
-            Text(text)
+            if let lines { WordTailText(text, lines: lines) } else { Text(text) }
         }
     }
 
-    /// En el piso: un renglón que termina en «…» antes que partir una palabra con guion.
+    /// En el piso: un renglón que termina en «…» tras una palabra entera, antes que partir una
+    /// palabra con guion.
     private var floor: some View {
-        Text(text).lineLimit(1).truncationMode(.tail)
+        WordTailText(text, lines: 1)
     }
 
     /// Las palabras del texto, sin repetir, cada una con sus marcas.
@@ -2929,6 +2941,26 @@ struct CloseButton: View {
     }
 }
 
+/// «Atrás» en un círculo de vidrio, del tamaño de `CloseButton`: el de la página derecha de un
+/// pliego (`FoldBack`, D13-B), donde el de iOS se iba a la franja de la hora.
+struct BackButton: View {
+    let label: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "chevron.backward")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Theme.ink)
+                .frame(width: Theme.Size.tapTarget, height: Theme.Size.tapTarget)
+                .contentShape(Rectangle())
+                .glassCircle()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+}
+
 /// Una fila como la de un libro (título serif y su detalle) para lo que no es un libro de tu
 /// biblioteca: uno de Readwise, uno de Calibre, un duplicado en la Mac, una fuente del lector.
 struct TitleDetailRow<Trailing: View>: View {
@@ -3998,6 +4030,99 @@ struct YearBars: View {
     }
 }
 
+/// Un texto con tope de renglones que, si no cabe, termina en «…» después de una palabra entera:
+/// «Don Quijote de la…», nunca «Don Quijote de la Manc…» (regla 9, ronda 1 del Duo). Prueba el
+/// texto entero y luego quitándole palabras del final (`WordTailLayout`, búsqueda binaria); si ni la
+/// primera palabra cabe, el corte de siempre.
+struct WordTailText: View {
+    let text: AttributedString
+    let lines: Int
+
+    init(_ text: String, lines: Int = 1) { self.init(AttributedString(text), lines: lines) }
+
+    init(_ text: AttributedString, lines: Int = 1) {
+        self.text = text
+        self.lines = max(1, lines)
+    }
+
+    var body: some View {
+        WordTailLayout {
+            // El tope: el alto de `lines` renglones en esta letra.
+            Text(Array(repeating: "X", count: lines).joined(separator: "\n")).lineLimit(nil)
+            ForEach(Array(Self.candidates(text).enumerated()), id: \.offset) { Text($0.element).lineLimit(nil) }
+            Text(text).lineLimit(lines).truncationMode(.tail)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(text))
+    }
+
+    /// El texto entero y luego cada vez con una palabra menos, terminado en «…» (sin la coma ni el
+    /// punto que quedaban antes de él).
+    static func candidates(_ text: AttributedString) -> [AttributedString] {
+        var result = [text]
+        let characters = text.characters
+        var ends: [AttributedString.Index] = []
+        var index = characters.startIndex
+        var inWord = false
+        while index < characters.endIndex {
+            let space = characters[index].isWhitespace
+            if space, inWord { ends.append(index) }
+            inWord = !space
+            index = characters.index(after: index)
+        }
+        for end in ends.reversed() {
+            var cut = AttributedString(text[characters.startIndex..<end])
+            while let last = cut.characters.last, ",;:·—–-".contains(last) {
+                cut.characters.removeLast()
+            }
+            cut.append(AttributedString("…"))
+            result.append(cut)
+        }
+        return result
+    }
+}
+
+/// Acomoda `WordTailText`: el primer hijo da el alto tope, los de en medio son los candidatos (del
+/// más largo al más corto) y el último, el corte de siempre. Solo se dibuja el que cabe.
+private struct WordTailLayout: Layout {
+    private func chosen(_ width: CGFloat?, _ subviews: Subviews) -> Int {
+        guard subviews.count > 2 else { return subviews.count - 1 }
+        let proposal = ProposedViewSize(width: width, height: nil)
+        let limit = subviews[0].sizeThatFits(proposal).height + 1
+        // Menos palabras siempre cabe mejor: la primera que cabe, por búsqueda binaria.
+        var low = 1, high = subviews.count - 2, best = subviews.count - 1
+        while low <= high {
+            let middle = (low + high) / 2
+            if subviews[middle].sizeThatFits(proposal).height <= limit {
+                best = middle
+                high = middle - 1
+            } else {
+                low = middle + 1
+            }
+        }
+        return best
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard !subviews.isEmpty else { return .zero }
+        let pick = chosen(proposal.width, subviews)
+        return subviews[pick].sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard !subviews.isEmpty else { return }
+        let pick = chosen(bounds.width, subviews)
+        for (index, subview) in subviews.enumerated() {
+            if index == pick {
+                subview.place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: nil))
+            } else {
+                // Fuera de la ventana: no se ven ni se leen (la etiqueta es la del texto entero).
+                subview.place(at: CGPoint(x: -10_000, y: -10_000), proposal: .zero)
+            }
+        }
+    }
+}
+
 /// Una sesión en una lista: cuándo, palabras y avance, y su duración.
 struct SessionRow: View {
     let session: ReadingSession
@@ -4010,7 +4135,7 @@ struct SessionRow: View {
                 HStack(spacing: Theme.Space.xs) {
                     Text(session.start.es(.dateTime.weekday(.abbreviated).day().hour().minute()))
                     if let bookTitle {
-                        Text("· \(bookTitle.isolated)").font(.rowTitle).lineLimit(1)
+                        WordTailText("· \(bookTitle.isolated)").font(.rowTitle)
                     }
                 }
                 .font(.subheadline)

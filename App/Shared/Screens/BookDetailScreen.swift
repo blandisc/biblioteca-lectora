@@ -32,6 +32,9 @@ struct BookDetailScreen: View {
                     WholeWordsText(live.title)
                         .font(.bookTitle)
                         .multilineTextAlignment(.center)
+                        // En una ventana baja, a lo más tres renglones: con seis, «Empezar a leer»
+                        // quedaba fuera de la vista (ronda 1, el Duo cerrado acostado).
+                        .lineLimit(window.isShort ? Theme.Size.titleLinesShort : nil)
                     Text(live.author)
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)

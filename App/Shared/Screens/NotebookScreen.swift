@@ -34,7 +34,8 @@ struct NotebookScreen: View {
 
     var body: some View {
         // Con el Duo abierto y acostado, la lista a la izquierda y la nota abierta a la derecha.
-        FoldSplit(path: $path) {
+        // Al llegar, la derecha ya trae tu nota más reciente (D2-B).
+        FoldSplit(path: $path, opens: { path in if let note = notes.first { path.append(NoteRef(fileName: note.fileName)) } }) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ScreenHeading(title: "Cuaderno") {
@@ -66,9 +67,9 @@ struct NotebookScreen: View {
             }
             .screen()
             #if os(iOS)
-            // Con el Duo abierto, Ajustes en la página derecha con tu lista a la vista (en la de la
-            // lista quedaba angosto y la tapaba, ronda 1).
-            .sidePanel(isPresented: $showsAccount, spansWindow: true) { SettingsScreen() }
+            // Con el Duo abierto, Ajustes es su propio pliego: los ajustes a la izquierda y Tu Gabinete o
+            // lo que abres a la derecha (D1-B). En la página de la lista quedaba angosto y la tapaba (ronda 1).
+            .sidePanel(isPresented: $showsAccount, spansWindow: true, wholeWindow: true) { SettingsScreen() }
             #endif
             .sidePanel(item: $toNote) { highlight in
                 NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled)

@@ -70,6 +70,29 @@ public struct WindowLayout: Equatable, Sendable {
     /// El pliegue de arriba abajo, si lo hay (el único que parte un renglón).
     public var verticalFold: Fold? { fold?.axis == .vertical ? fold : nil }
 
+    /// Lo que mide una página del pliegue de arriba abajo, de la orilla que deja libre el sistema
+    /// hasta el pliegue: la izquierda desde lo que ocupa el sistema a ese lado y la derecha hasta la
+    /// franja. Con `even`, las dos miden lo mismo: la franja se reserva también del otro lado, como
+    /// en el libro (D8-A, ronda 1: la página derecha medía 84 pt menos que la izquierda). `nil` sin
+    /// pliegue de arriba abajo. Es la única cuenta del ancho de una página: antes estaba copiada en
+    /// seis lugares (el lector, la hendidura, lista | detalle).
+    public func page(_ side: Side, even: Bool = false) -> CGFloat? {
+        guard let fold = verticalFold else { return nil }
+        let reserve = max(leading, trailing)
+        switch side {
+        case .leading: return fold.position - (even ? reserve : leading)
+        case .trailing: return size.width - (even ? reserve : trailing) - fold.position
+        }
+    }
+
+    /// Lo que hay que dejar de más junto a la orilla de `side` para que las dos páginas midan lo
+    /// mismo (`page(_:even:)`): la franja del otro lado, menos lo que el sistema ya ocupa en este.
+    public func evenInset(_ side: Side) -> CGFloat {
+        guard verticalFold != nil else { return 0 }
+        let reserve = max(leading, trailing)
+        return side == .leading ? reserve - leading : reserve - trailing
+    }
+
     /// Las dos páginas de un rectángulo (en puntos de la ventana) que el pliegue de arriba abajo
     /// cruza, partidas en el pliegue (cada página pone su margen junto a él: así queda el lomo);
     /// `nil` si no lo cruza o si alguna quedaría más angosta que `minPage`.

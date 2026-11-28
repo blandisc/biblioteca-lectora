@@ -132,12 +132,10 @@ struct ReaderView: View {
     /// La página donde van las herramientas (la tarjeta, la barra de lo elegido, la del subrayado),
     /// en un pliego: la derecha con dos páginas, o la de margen con una. `nil`: todo el ancho.
     private var toolsPage: ToolsPage? {
-        guard let fold = window.verticalFold else { return nil }
+        guard let left = window.page(.leading), let right = window.page(.trailing) else { return nil }
         let marginOnRight = textPageOnly != nil && !Duo.marginOnLeft
-        if spread.pages == 2 || marginOnRight {
-            return ToolsPage(edge: .trailing, width: window.size.width - window.trailing - fold.position)
-        }
-        if textPageOnly != nil { return ToolsPage(edge: .leading, width: fold.position - window.leading) }
+        if spread.pages == 2 || marginOnRight { return ToolsPage(edge: .trailing, width: right) }
+        if textPageOnly != nil { return ToolsPage(edge: .leading, width: left) }
         return nil
     }
 
@@ -209,8 +207,9 @@ struct ReaderView: View {
         // Siempre un modo, nunca `nil`: con `nil` iOS deja puesto el último y el lector se
         // quedaba en claro (o en oscuro) aunque cambiara el sistema (UX-1b).
         .preferredColorScheme(palette.scheme)
-        // Índice, buscar y marcas: en un pliego, en la página derecha con el libro a la vista.
-        .sidePanel(item: $tools) { part in
+        // Índice, buscar y marcas: en un pliego, en la página derecha con el libro a la vista; abierto
+        // y de pie, en la mitad de abajo con el libro arriba (D4-B).
+        .sidePanel(item: $tools, lowerHalf: true) { part in
             ReaderToolsSheet(controller: controller, bookID: bookID, part: part)
         }
         // Tras ir a un resultado: anterior y siguiente sin abrir otra vez la lista.
@@ -299,8 +298,9 @@ extension ReaderView {
     /// Lo último del cuerpo del lector: subrayados, selección, notas y avisos.
     fileprivate func tail(_ content: some View) -> some View {
         content
-        // «Aa»: en un pliego, en la página derecha; el libro cambia a la vista mientras eliges.
-        .sidePanel(isPresented: $showsAppearance, closeLabel: "Volver al libro") {
+        // «Aa»: en un pliego, en la página derecha; abierto y de pie, en la mitad de abajo. El libro
+        // cambia a la vista mientras eliges.
+        .sidePanel(isPresented: $showsAppearance, closeLabel: "Volver al libro", lowerHalf: true) {
             ReaderAppearanceSheet()
         }
         .overlay(alignment: .bottom) {
@@ -550,11 +550,9 @@ extension ReaderView {
     /// Dónde va el pie del libro en un pliego: bajo la página del texto (una sola) o bajo la de la
     /// derecha (dos), nunca al centro, sobre el pliegue.
     private var folioPage: ToolsPage? {
-        guard let fold = window.verticalFold else { return nil }
+        guard let left = window.page(.leading), let right = window.page(.trailing) else { return nil }
         if textPageOnly != nil {
-            return Duo.marginOnLeft
-                ? ToolsPage(edge: .trailing, width: window.size.width - window.trailing - fold.position)
-                : ToolsPage(edge: .leading, width: fold.position - window.leading)
+            return Duo.marginOnLeft ? ToolsPage(edge: .trailing, width: right) : ToolsPage(edge: .leading, width: left)
         }
         return toolsPage
     }

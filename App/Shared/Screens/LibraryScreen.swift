@@ -63,7 +63,8 @@ struct LibraryScreen: View {
         let books = self.books
         let indexed = showsLetterIndex(books)
         // Con el Duo abierto y acostado, la biblioteca a la izquierda y el libro que tocas a la derecha.
-        return FoldSplit(path: $path) {
+        // Al llegar, la derecha ya trae la ficha del libro que lees (D2-B).
+        return FoldSplit(path: $path, opens: { path in if let book = model.currentBook { path.append(book) } }) {
             ScrollViewReader { scroller in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {

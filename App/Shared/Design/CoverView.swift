@@ -61,10 +61,9 @@ struct CoverView: View {
                     Spacer(minLength: 0)
                     illustration(width: width)
                     if style.illustration != .windmill {
-                        Text(author.uppercased())
+                        WordTailText(author.uppercased())
                             .font(.system(size: width * Theme.CoverArt.author)) // ds-exception: portada dibujada
                             .spaced(Theme.CoverArt.authorTracking, author)
-                            .lineLimit(1)
                     }
                 }
                 .foregroundStyle(style.foreground)

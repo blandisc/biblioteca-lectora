@@ -75,6 +75,13 @@ struct SettingsScreen: View {
     @State private var opensRules = false
     @State private var opensConnector = false
     #endif
+    #if os(iOS)
+    @Environment(\.windowLayout) private var window
+    /// Lo que se abre adentro (Reglas, una conexión): en un pliego, en la página derecha.
+    @State private var path = NavigationPath()
+    /// Su propio pliego (D1-B) cuando ocupa la ventana entera del Duo abierto y acostado.
+    private var split: Bool { FoldSplit<EmptyView, EmptyView>.splits(window, wholePanel: true) }
+    #endif
 
     var body: some View {
         pages
@@ -154,7 +161,9 @@ extension SettingsScreen {
         }
         #endif
         #else
-        NavigationStack {
+        // Con el Duo abierto y acostado, su propio pliego (D1-B): los ajustes a la izquierda y Tu
+        // Gabinete a la derecha, donde también se abre lo que tocas (Reglas, una conexión).
+        FoldSplit(path: $path, wholePanel: true) {
             ScrollViewReader { scroller in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -166,12 +175,14 @@ extension SettingsScreen {
                     // AJ-D: cada grupo en su tarjeta, con el dibujo de lo que controla.
                     appearanceCard
                     readingCard
-                    cabinetSection
+                    if !split { cabinetSection }
                     bookDataCard
                     connectionsCard
-                    Colophon(version: Self.version)
-                        .padding(.top, Theme.Space.xl)
-                        .id(Self.colophon)
+                    if !split {
+                        Colophon(version: Self.version)
+                            .padding(.top, Theme.Space.xl)
+                            .id(Self.colophon)
+                    }
                 }
                 .screenContent()
             }
@@ -181,7 +192,7 @@ extension SettingsScreen {
             .task {
                 guard let demo = LaunchOptions.demo, demo.hasPrefix("settings") else { return }
                 try? await Task.sleep(for: .seconds(1))
-                if demo == "settingsEnd" { scroller.scrollTo(Self.colophon, anchor: .bottom) }
+                if demo == "settingsEnd" { scroller.scrollTo(split ? Self.connections : Self.colophon, anchor: .bottom) }
                 if demo == "settingsMiddle" { scroller.scrollTo(Self.bookData, anchor: .center) }
                 if demo == "settingsCabinet" || demo == "settingsTidy" { scroller.scrollTo(Self.cabinet, anchor: .center) }
                 // `settingsTidy` pide confirmar «Ordenar la biblioteca».
@@ -201,6 +212,26 @@ extension SettingsScreen {
             }
             #endif
             .pushedScreen(bar: false)
+        } placeholder: {
+            // La página derecha del pliego: Tu Gabinete y el colofón, nunca un aviso vacío.
+            ScrollViewReader { scroller in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        cabinetSection
+                        Colophon(version: Self.version)
+                            .padding(.top, Theme.Space.xl)
+                    }
+                    .screenContent()
+                }
+                #if DEBUG
+                .task {
+                    guard LaunchOptions.demo == "settingsCabinet" || LaunchOptions.demo == "settingsTidy" else { return }
+                    try? await Task.sleep(for: .seconds(1))
+                    scroller.scrollTo(Self.cabinet, anchor: .center)
+                }
+                #endif
+            }
+            .background(Theme.sunken.ignoresSafeArea())
         }
         #endif
     }
@@ -265,6 +296,7 @@ extension SettingsScreen {
             ConnectionsArt(services: Connector.allCases.map {
                 .init(letter: String($0.title.prefix(1)), name: $0.title, connected: connectors.isConnected($0))
             })
+            .id(Self.connections)
         } content: {
             ForEach(Connector.allCases) { connector in
                 let connected = connectors.isConnected(connector)
@@ -364,6 +396,7 @@ extension SettingsScreen {
     private static let colophon = "colofon"
     private static let bookData = "datos"
     private static let cabinet = "gabinete"
+    private static let connections = "conexiones"
 
     static var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""

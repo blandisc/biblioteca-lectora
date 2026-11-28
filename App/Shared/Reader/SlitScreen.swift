@@ -42,7 +42,7 @@ struct SlitScreen: View {
 
     var body: some View {
         Group {
-            if let fold = window.verticalFold {
+            if let left = window.page(.leading) {
                 HStack(spacing: 0) {
                     VStack(spacing: 0) {
                         closeRow
@@ -50,11 +50,28 @@ struct SlitScreen: View {
                         slit.padding(.horizontal, Theme.Reader.textMargin)
                         Spacer(minLength: 0)
                     }
-                    .frame(width: fold.position - window.leading)
+                    .frame(width: left)
                     VStack(spacing: 0) {
                         Spacer(minLength: 0)
                         controlBar
                     }
+                }
+            } else if window.fold?.axis == .horizontal {
+                // Abierto y de pie: la ranura al centro de la mitad de arriba y los controles en la de
+                // abajo, al pulgar. A media pantalla, la palabra que lees caía junto al pliegue (ronda 1).
+                VStack(spacing: 0) {
+                    VStack(spacing: 0) {
+                        closeRow
+                        Spacer(minLength: 0)
+                        slit
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxHeight: .infinity)
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        controlBar
+                    }
+                    .frame(maxHeight: .infinity)
                 }
             } else {
                 VStack(spacing: 0) {

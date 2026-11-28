@@ -244,6 +244,9 @@ enum Theme {
         /// Renglones de una etiqueta que con la letra más grande ya no cabe en uno (un mosaico,
         /// una fila de libro, el libro sobre la tarjeta del lector).
         static let labelLines = 2
+        /// El título de un libro en una ventana baja (ficha, Mesa): a lo más tres renglones y luego
+        /// «…» tras una palabra entera, para que su botón se vea sin desplazar.
+        static let titleLinesShort = 3
         /// Lo que el área de toque de un ícono (44) sobresale de su dibujo: se compensa para
         /// que el botón no empuje lo de al lado.
         static let tapBleed: CGFloat = 12
