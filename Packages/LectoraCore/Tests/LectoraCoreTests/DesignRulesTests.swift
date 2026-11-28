@@ -988,8 +988,19 @@ final class DesignRulesTests: XCTestCase {
         if !layout.contains("@Environment(\\.isPresented) private var pushed") || !layout.contains("PanelHostLayer(host: host)") {
             duo.append("SidePanel: el panel de una pantalla empujada no sube a la raíz")
         }
-        if !layout.contains("navigationSplitViewColumnWidth(min: sidebar, ideal: sidebar, max: sidebar)") {
+        //     Con eso solo, UIKit la topaba en un tercio de la ventana y la ficha cruzaba el pliegue
+        //     (ronda 1, medido en las capturas): el ancho se fija también en su columna de UIKit.
+        if !layout.contains("navigationSplitViewColumnWidth(min: sidebar, ideal: sidebar, max: sidebar)")
+            || !layout.contains(".background(PrimaryColumnWidth(width: sidebar))")
+            || !layout.contains("split.maximumPrimaryColumnWidth = width") {
             duo.append("FoldSplit: la lista no llega al pliegue")
+        }
+        //     Lo que se lee de un vistazo va en dos partes (`Spread`): la pregunta y su respuesta en la
+        //     bienvenida, la gráfica y sus libros en el Diario; así, acostado se ve el botón y con el Duo
+        //     abierto ninguna página queda vacía.
+        for name in ["WelcomeScreen", "DiaryScreen", "MesaScreen", "BookDetailScreen"]
+        where !(Self.screens.first { $0.path.hasSuffix("\(name).swift") }?.text.contains("Spread(") ?? false) {
+            duo.append("\(name): una sola columna; va en dos partes con Spread")
         }
         //     En el lector, la lectura guiada sigue la página del renglón (con dos páginas, la otra en
         //     penumbra) y la serie de la ficha no deja un «·» colgando al partirse.
@@ -1060,6 +1071,10 @@ final class DesignRulesTests: XCTestCase {
         }
         if !Self.piece("CoverCell").contains("components(separatedBy: \" · \")") {
             split.append("CoverCell: «Nuevo ·…» con la letra grande; el estado y el autor no bajan a su renglón")
+        }
+        // Ronda 1 del Duo: en Ajustes › Apariencia, lado a lado con AX5 salía «Sis-/tema».
+        if !Self.piece("PageSwatchPicker").contains(".fixedSize(horizontal: true, vertical: false)") {
+            split.append("PageSwatchPicker: el nombre de cada hojita puede partirse a media palabra")
         }
         check(split, "Una palabra partida a media palabra con la letra grande (regla 9)")
 

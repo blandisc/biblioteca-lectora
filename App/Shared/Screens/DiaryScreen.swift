@@ -37,26 +37,36 @@ struct DiaryScreen: View {
         model.currentBook == nil ? nil : { model.continueReading() }
     }
 
+    /// En dos partes (`Spread`): el periodo con su gráfica, y sus libros y sesiones. De pie, una bajo
+    /// otra como siempre; acostado, lado a lado; con el Duo abierto, cada una en su página.
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                ScreenHeading(title: "Diario")
-                FilterBar(items: Part.allCases, selection: $part) { $0.rawValue }
-                    .padding(.top, Theme.Space.l)
-                if store.sessions.isEmpty {
-                    EmptyState(title: "Tu diario empieza al leer",
-                               message: "Cada vez que abres un libro, Gabinete anota la sesión: cuánto leíste, a qué ritmo y cuánto tiempo sostuviste la atención. No hay metas que cumplir ni rachas que perder. Todo se queda en tu Gabinete.",
-                               actionTitle: model.currentBook.map { "Seguir leyendo \($0.title)" },
-                               action: continueAction)
-                } else {
+        Spread(spacing: Theme.Space.l) {
+            ScreenHeading(title: "Diario")
+            FilterBar(items: Part.allCases, selection: $part) { $0.rawValue }
+                .padding(.top, Theme.Space.l)
+            if store.sessions.isEmpty {
+                EmptyState(title: "Tu diario empieza al leer",
+                           message: "Cada vez que abres un libro, Gabinete anota la sesión: cuánto leíste, a qué ritmo y cuánto tiempo sostuviste la atención. No hay metas que cumplir ni rachas que perder. Todo se queda en tu Gabinete.",
+                           actionTitle: model.currentBook.map { "Seguir leyendo \($0.title)" },
+                           action: continueAction)
+            } else {
+                Group {
                     switch part {
-                    case .week: week.padding(.top, Theme.Space.l)
-                    case .month: month.padding(.top, Theme.Space.l)
-                    case .year: year.padding(.top, Theme.Space.l)
+                    case .week: week
+                    case .month: month
+                    case .year: year
                     }
                 }
+                .padding(.top, Theme.Space.l)
             }
-            .screenContent()
+        } trailing: {
+            if !store.sessions.isEmpty {
+                switch part {
+                case .week: weekDetails
+                case .month: monthDetails
+                case .year: yearDetails
+                }
+            }
         }
         .pushedScreen()
         .onChange(of: part) { _, _ in offset = 0 }
@@ -83,6 +93,15 @@ struct DiaryScreen: View {
             if let line = comparison(period, previous) {
                 Text(line).font(.subheadline).foregroundStyle(Theme.secondaryInk)
             }
+        }
+    }
+
+    /// Los libros y las sesiones de la semana.
+    @ViewBuilder
+    private var weekDetails: some View {
+        let interval = weekInterval
+        let period = all.between(interval.start, interval.end)
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
             booksSection(period)
             sessionsSection(period)
         }
@@ -119,6 +138,15 @@ struct DiaryScreen: View {
                           canGoForward: offset > 0, back: { offset += 1 }, forward: { offset -= 1 })
             PeriodTotal(period: period, days: calendar.range(of: .day, in: .month, for: interval.start)?.count ?? 30, calendar: calendar)
             MonthCalendar(days: period.days(from: interval.start, to: interval.end, calendar: calendar))
+        }
+    }
+
+    /// Lo más largo y lo terminado del mes.
+    @ViewBuilder
+    private var monthDetails: some View {
+        let interval = monthInterval
+        let period = all.between(interval.start, interval.end)
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
             let longest = period.sessions.sorted { $0.readingSeconds > $1.readingSeconds }.prefix(Theme.Lists.longestSessions)
             if !longest.isEmpty {
                 VStack(alignment: .leading, spacing: 0) {
@@ -137,10 +165,16 @@ struct DiaryScreen: View {
 
     // MARK: Año
 
+    private var yearBase: Date { calendar.date(byAdding: .year, value: -offset, to: Date()) ?? Date() }
+
+    private var yearInterval: DateInterval {
+        calendar.dateInterval(of: .year, for: yearBase) ?? DateInterval(start: yearBase, duration: 0)
+    }
+
     @ViewBuilder
     private var year: some View {
-        let base = calendar.date(byAdding: .year, value: -offset, to: Date()) ?? Date()
-        let interval = calendar.dateInterval(of: .year, for: base) ?? DateInterval(start: base, duration: 0)
+        let base = yearBase
+        let interval = yearInterval
         let period = all.between(interval.start, interval.end)
         let months = all.months(ofYearContaining: base, calendar: calendar)
         let current = offset == 0 ? calendar.component(.month, from: Date()) - 1 : -1
@@ -153,6 +187,15 @@ struct DiaryScreen: View {
                 .init(value: ReadingFormat.words(period.words), label: "palabras"),
             ])
             YearBars(months: months, current: current)
+        }
+    }
+
+    /// Tu atención y lo terminado del año.
+    @ViewBuilder
+    private var yearDetails: some View {
+        let interval = yearInterval
+        let period = all.between(interval.start, interval.end)
+        VStack(alignment: .leading, spacing: Theme.Space.l) {
             attention(period, interval: interval)
             finishedSection(period)
         }

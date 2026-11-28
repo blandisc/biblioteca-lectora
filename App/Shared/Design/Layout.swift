@@ -396,6 +396,9 @@ struct FoldSplit<Root: View, Placeholder: View>: View {
                     .navigationSplitViewColumnWidth(min: sidebar, ideal: sidebar, max: sidebar)
                     #if os(iOS)
                     .toolbar(removing: .sidebarToggle)
+                    // iOS no deja la lista pasar de un tercio aunque se le pida (ronda 1: la ficha
+                    // cruzaba el pliegue): el ancho se fija también en la columna de UIKit.
+                    .background(PrimaryColumnWidth(width: sidebar))
                     #endif
             } detail: {
                 NavigationStack(path: $path) { placeholder.screen() }
@@ -406,6 +409,42 @@ struct FoldSplit<Root: View, Placeholder: View>: View {
         }
     }
 }
+
+#if os(iOS)
+/// Fija el ancho de la lista de un `NavigationSplitView` en su `UISplitViewController`: SwiftUI pasa
+/// el ancho pedido, pero UIKit lo topa en un tercio de la ventana.
+private struct PrimaryColumnWidth: UIViewControllerRepresentable {
+    let width: CGFloat
+
+    func makeUIViewController(context: Context) -> Probe { Probe() }
+
+    func updateUIViewController(_ probe: Probe, context: Context) {
+        probe.width = width
+        probe.apply()
+    }
+
+    final class Probe: UIViewController {
+        var width: CGFloat = 0
+
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            apply()
+        }
+
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            apply()
+        }
+
+        func apply() {
+            guard width > 0, let split = splitViewController else { return }
+            if split.maximumPrimaryColumnWidth != width { split.maximumPrimaryColumnWidth = width }
+            if split.minimumPrimaryColumnWidth != width { split.minimumPrimaryColumnWidth = width }
+            if split.preferredPrimaryColumnWidth != width { split.preferredPrimaryColumnWidth = width }
+        }
+    }
+}
+#endif
 
 /// Lo que dice la página derecha de un pliego mientras no tocas nada a la izquierda.
 struct FoldPlaceholder: View {

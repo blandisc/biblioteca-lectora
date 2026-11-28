@@ -1960,6 +1960,10 @@ struct PageSwatchPicker<Option: Hashable & Identifiable>: View {
                         Text(title(option))
                             .font(.subheadline.weight(selected ? .semibold : .regular))
                             .foregroundStyle(selected ? Theme.ink : Theme.secondaryInk)
+                            // Entera: lado a lado, las hojitas cedían su ancho y salía «Sis-/tema» (Duo
+                            // cerrado y acostado con AX5, ronda 1); si no caben enteras, van una bajo otra.
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                     }
                     .contentShape(Rectangle())
                 }
