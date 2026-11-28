@@ -16,7 +16,7 @@ struct MacBookRow: Identifiable {
     var author: String { shelf.author }
     var seriesLabel: String {
         guard let series = book.series else { return "" }
-        return book.seriesIndex.flatMap(ShelfBook.number).map { "\(series) · \($0)" } ?? series
+        return book.seriesIndex.flatMap(ShelfBook.number).map { "\(series.isolated) · \($0)" } ?? series
     }
     var tagsLabel: String { book.tags.joined(separator: ", ") }
     var language: String { book.language.map(BookFields.languageName) ?? "" }

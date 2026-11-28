@@ -56,14 +56,18 @@ nuestro queda fuera.
   (auditoría 6): si otro trabajo de toda la biblioteca corre, no toco nada, te digo por qué y el
   deshacer se queda para después; y regresa solo los datos que ese cambio tocó, sobre el libro de
   ahora (`Book.revertingEdits`). Lo que se quedó sin guardar por un trabajo largo se busca de nuevo
-  en cuanto termina, y dice «espera», no «sin conexión». Mover el Gabinete no borra lo tuyo ni lo
+  en cuanto termina, y dice «espera», no «sin conexión»; y si mientras esperaba a internet abriste otro
+  Gabinete o el libro ya no está, no se escribe nada (`stillHere`, auditoría 9). Mover el Gabinete no borra lo tuyo ni lo
   de otro aparato: copia a carpetas de trabajo hermanas (`StagedMove`), todas de esa corrida, y
   solo al final las pone en su lugar sin pisar lo que haya llegado; si falla quita solo esas para
   que puedas volver a intentarlo; la copia se comprueba ni de menos ni de más, y su último repaso
   va en segundo plano: lo que escribes mientras lo anota `WriteJournal` y se copia justo antes
-  del cambio (auditorías 5 y 6; `AuditoriaCincoTests`, `AuditoriaSeisTests`).
-- Una carpeta nunca tiene una gemela que solo cambia en mayúsculas: iCloud y la Mac no las
-  distinguen y el iPhone sí. Si ya existe con otras mayúsculas, el libro entra a ella y el
+  del cambio (auditorías 5 y 6; `AuditoriaCincoTests`, `AuditoriaSeisTests`). Igual al añadir un libro
+  o traerlo de Calibre: se arma en una carpeta de trabajo hermana y entra a su lugar sin reemplazar
+  (`FolderMove.placeNew`); si algo falla, solo se quita lo que puse yo, nunca lo que llegó de otro
+  aparato con ese nombre (auditoría 9; `AuditoriaNueveTests`).
+- Una carpeta, y tampoco una nota («ideas.md» junto a «Ideas.md», `NoteFolder.freeName`, auditoría 9),
+  nunca tiene una gemela que solo cambia en mayúsculas: iCloud y la Mac no las distinguen y el iPhone sí. Si ya existe con otras mayúsculas, el libro entra a ella y el
   catálogo guarda el nombre que tiene en el disco (`FolderMove.createFolder`,
   `moveBookFolder`; auditoría 2, `AuditoriaDosTests`, también en un disco sensible). Tampoco
   al deshacer un cambio de carpeta; una ruta guardada antes con otras mayúsculas se corrige al

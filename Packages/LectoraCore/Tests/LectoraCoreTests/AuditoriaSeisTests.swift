@@ -77,7 +77,9 @@ final class AuditoriaSeisTests: XCTestCase {
     func testEmptyCloudLibraryShowsOnlyItsState() {
         let library = source("LibraryScreen.swift")
         XCTAssertTrue(library.contains("model.shelf.isEmpty && (model.library.waitingForCloud || model.library.cloudGaveUp)"))
-        XCTAssertEqual(library.components(separatedBy: "if !cloudEmpty {").count - 1, 3, "La vista, los filtros y la cuenta")
+        // Auditoría 8: tampoco con la biblioteca vacía de verdad («0 LIBROS» junto a «Todavía no hay…»).
+        XCTAssertEqual(library.components(separatedBy: "if !model.shelf.isEmpty {").count - 1, 2, "La vista y los filtros")
+        XCTAssertTrue(library.contains("if !model.shelf.isEmpty || (model.library.progressLine != nil && !cloudEmpty) {"), "La cuenta")
         XCTAssertTrue(store.contains("if simulated == \"gaveUp\" { giveUpOnCloud() }"), "La captura enseña el aviso de verdad")
         XCTAssertFalse(store.contains("\"Tu biblioteca no ha bajado de iCloud\""), "El título dice lo mismo que el aviso: algo sí llegó")
     }
@@ -146,11 +148,12 @@ final class AuditoriaSeisTests: XCTestCase {
         XCTAssertTrue(move.contains("to = staged.staging(folder)") && move.contains("LibraryStore.coordinatedCopy(from: from, to: to)"),
                       "Se copia a la carpeta de trabajo")
         XCTAssertTrue(move.contains("to = staged.staged(folder)"), "Los repasos también van a la de trabajo")
-        XCTAssertTrue(move.contains("placed = try staged.place()") && move.contains("staged.takeBack(placed)") && move.contains("staged.discard()"))
+        XCTAssertTrue(move.contains("{ try staged.place() }") && move.contains("staged.takeBack(placed)") && move.contains("staged.discard()"))
         XCTAssertFalse(move.contains("let created"), "Ya no se borra lo que no estaba al empezar")
-        guard let place = move.range(of: "placed = try staged.place()"), let remember = move.range(of: "CabinetLocation.remember(destination)"),
-              let last = move.range(of: "let written = journal.drain()") else { return XCTFail("Al final se pone en su lugar") }
-        XCTAssertTrue(last.upperBound <= place.lowerBound && place.upperBound <= remember.lowerBound)
+        guard let place = move.range(of: "{ try staged.place() }"), let remember = move.range(of: "CabinetLocation.remember(destination)"),
+              let written = move.range(of: "let written = journal.drain()"), let last = move.range(of: "let late = journal.drain()")
+        else { return XCTFail("Al final se pone en su lugar") }
+        XCTAssertTrue(written.upperBound <= place.lowerBound && place.upperBound <= last.lowerBound && last.upperBound <= remember.lowerBound)
         XCTAssertFalse(move[last.upperBound..<remember.lowerBound].contains("await"))
     }
 

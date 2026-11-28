@@ -268,10 +268,10 @@ private struct ReadwiseStep: View {
                           detail: "Con tu llave de readwise.io/access_token.", selected: connected)
             }
             .buttonStyle(.plain)
+            // Sin conectar, la salida es una sola: «Ir a la biblioteca», arriba (o al pie con la letra
+            // más grande). «Ahora no» hacía lo mismo sin decirlo (auditoría 8).
             if connected {
                 PrimaryButton(title: "Ir a mi Gabinete", fillsWidth: true, action: finish)
-            } else {
-                QuietButton(title: "Ahora no", action: finish)
             }
         }
     }

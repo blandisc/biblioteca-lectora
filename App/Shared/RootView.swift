@@ -120,6 +120,7 @@ struct RootView: View {
             // El libro se abre en su propia ventana (MG-1).
             .onChange(of: model.openBook) { _, book in
                 guard let book else { return }
+                model.openedWindows.insert(book)
                 openWindow(id: MacReaderWindow.id, value: book)
                 model.openBook = nil
             }

@@ -29,8 +29,8 @@ public struct MetadataRules: Codable, Equatable, Sendable {
     public var isEmpty: Bool { authors.isEmpty && tags.isEmpty }
 
     /// Deshace en las reglas de ahora solo lo que hizo un cambio que las llevó de `before` a
-    /// `after` (auditoría 7, M5): la regla que añadió se quita y la que cambió regresa como
-    /// estaba, y solo si siguen como las dejó. Las que hiciste o cambiaste después se quedan;
+    /// `after` (auditoría 7, M5): la regla que añadió se quita, la que cambió regresa como
+    /// estaba, y solo si siguen como las dejó; la que quitó vuelve (auditoría 8, M1). Las que hiciste o cambiaste después se quedan;
     /// antes deshacer ponía todas las reglas de antes encima.
     public func undoing(from before: MetadataRules, after: MetadataRules) -> MetadataRules {
         MetadataRules(authors: Self.undoing(authors, before: before.authors, after: after.authors),
@@ -40,10 +40,18 @@ public struct MetadataRules: Codable, Equatable, Sendable {
     private static func undoing(_ current: [Rule], before: [Rule], after: [Rule]) -> [Rule] {
         let old = Dictionary(before.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let touched = Dictionary(after.filter { old[$0.id] != $0 }.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        return current.compactMap { rule in
+        var result = current.compactMap { rule -> Rule? in
             guard let left = touched[rule.id], left == rule else { return rule }
             return old[rule.id]
         }
+        // La que ese cambio quitó regresa (auditoría 8, M1): deshacer quita la que añadió, y
+        // rehacer, que deshace el deshacer, la debe devolver. Solo si no la tienes ya; vuelve a su
+        // lugar de antes.
+        let kept = Set(after.map(\.id))
+        for (index, rule) in before.enumerated() where !kept.contains(rule.id) && !result.contains(where: { $0.id == rule.id }) {
+            result.insert(rule, at: min(index, result.count))
+        }
+        return result
     }
 
     public func apply(to book: Book) -> Book {

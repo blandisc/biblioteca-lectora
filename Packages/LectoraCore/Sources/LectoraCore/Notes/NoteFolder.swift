@@ -49,11 +49,12 @@ public struct NoteFolder: Sendable {
                 throw NoteFolderError.notDownloaded
             }
             name = fileName
-            if wanted != fileName, titleChanged(in: fileName, to: wanted), !CloudFile.isTaken(file(for: wanted)) {
+            if wanted != fileName, titleChanged(in: fileName, to: wanted),
+               let target = renameTarget(from: fileName, to: wanted) {
                 do {
-                    try FileManager.default.moveItem(at: file(for: fileName), to: file(for: wanted))
+                    try FileManager.default.moveItem(at: file(for: fileName), to: file(for: target))
                     WriteJournal.shared.note(file(for: fileName))
-                    name = wanted
+                    name = target
                 } catch {
                     // Si no se pudo renombrar, lo que escribiste no se pierde (auditoría de medios):
                     // se queda con su nombre; si su archivo ya no está, va con el nombre nuevo.
@@ -76,6 +77,22 @@ public struct NoteFolder: Sendable {
     private func titleChanged(in fileName: String, to wanted: String) -> Bool {
         guard let data = try? Data(contentsOf: file(for: fileName)) else { return true }
         return Self.fileName(forTitle: Note.title(of: String(decoding: data, as: UTF8.self)) ?? "") != wanted
+    }
+
+    /// El nombre nuevo cuando tú cambias el título: el del título o, si ya hay otra nota con ese
+    /// nombre, el siguiente libre («Ideas 2», auditoría 8, M4). Antes se quedaba con el nombre viejo
+    /// y ya nunca se renombraba. Si solo cambian mayúsculas, nil: en el disco es el mismo archivo.
+    /// Lo de «ocupado» se mira sin mayúsculas ni diferencias de Unicode contra lo que hay en la
+    /// carpeta (auditoría 9, M4): en el iPhone el disco las distingue y salía «ideas.md» junto a
+    /// «Ideas.md», que en iCloud y en la Mac chocan.
+    private func renameTarget(from fileName: String, to wanted: String) -> String? {
+        if Self.nameKey(wanted) == Self.nameKey(fileName) { return nil }
+        // Su propio nombre no la estorba: «Ideas 2» que vuelve a «Ideas» (ocupado) se queda «Ideas 2».
+        var taken = takenNames()
+        taken.remove(Self.nameKey(fileName))
+        guard taken.contains(Self.nameKey(wanted)) else { return wanted }
+        let free = Self.freeName(wanted, taken: taken)
+        return Self.nameKey(free) == Self.nameKey(fileName) ? nil : free
     }
 
     /// Notas de muestra que se escriben una sola vez: la que ya existe con ese título se
@@ -109,15 +126,36 @@ public struct NoteFolder: Sendable {
         return short.isEmpty ? "Sin título" : short
     }
 
-    /// «Ideas», «Ideas 2», «Ideas 3»…
+    /// «Ideas», «Ideas 2», «Ideas 3»…, libre en la carpeta sin contar mayúsculas.
     private func freeName(_ base: String) -> String {
+        Self.freeName(base, taken: takenNames())
+    }
+
+    /// El primer nombre libre entre los de la carpeta (`taken`, de `nameKey`): «Ideas» está ocupado
+    /// si ya hay «ideas.md» o «IDEAS.md», también si sigue en iCloud sin bajar.
+    public static func freeName(_ base: String, taken: Set<String>) -> String {
         var name = base
         var number = 2
-        while CloudFile.isTaken(file(for: name)) {
+        while taken.contains(nameKey(name)) {
             name = "\(base) \(number)"
             number += 1
         }
         return name
+    }
+
+    /// Cómo se comparan dos nombres de nota: sin mayúsculas. Las diferencias de Unicode (una «é»
+    /// escrita de dos formas) ya no cuentan: dos `String` iguales en Unicode son iguales en Swift.
+    public static func nameKey(_ name: String) -> String {
+        name.precomposedStringWithCanonicalMapping.lowercased()
+    }
+
+    /// Los nombres de nota de la carpeta (sin «.md»), con `nameKey`: también las que siguen en
+    /// iCloud sin bajar (`.Ideas.md.icloud`).
+    func takenNames() -> Set<String> {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []
+        return Set(names.map { CloudFile.realName(ofPlaceholder: $0) ?? $0 }
+            .filter { ($0 as NSString).pathExtension.lowercased() == Self.fileExtension }
+            .map { Self.nameKey(($0 as NSString).deletingPathExtension) })
     }
 }
 

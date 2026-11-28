@@ -45,7 +45,7 @@ public enum CalibreLibrary {
 
         public var errorDescription: String? {
             switch self {
-            case .notACalibreLibrary: "Esa carpeta no es una biblioteca de Calibre: no tiene metadata.db."
+            case .notACalibreLibrary: "Esa carpeta no es una biblioteca de Calibre: no encontré su catálogo. Elige la que abre Calibre con Biblioteca › Abrir la carpeta."
             case .unreadable(let message): "No pude leer la biblioteca de Calibre: \(message)"
             case .unsupported: "Este dispositivo no puede leer bases de Calibre."
             }

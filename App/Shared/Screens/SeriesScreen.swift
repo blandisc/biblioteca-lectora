@@ -1,3 +1,4 @@
+import LectoraCore
 import SwiftUI
 
 /// Los libros de una serie, en orden.
@@ -18,7 +19,7 @@ struct SeriesScreen: View {
                 LazyVStack(spacing: 0) {
                     ForEach(books) { book in
                         NavigationLink(value: book) {
-                            BookRow(book: book, detail: book.seriesIndex.flatMap(ShelfBook.number).map { "Libro \($0) · \(book.author)" })
+                            BookRow(book: book, detail: book.seriesIndex.flatMap(ShelfBook.number).map { "Libro \($0) · \(book.author.isolated)" })
                         }
                         .buttonStyle(.plain)
                     }

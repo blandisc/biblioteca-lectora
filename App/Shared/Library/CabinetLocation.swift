@@ -169,6 +169,9 @@ enum CloudFiles {
 
     /// ¿Está el archivo en el dispositivo? (Fuera de iCloud, siempre.)
     static func isDownloaded(_ url: URL) -> Bool {
+        // Solo su marcador de iCloud está aquí (auditoría 8, A1): no está bajado. Antes, sin archivo
+        // no había valores que leer y contaba como bajado, y el lector decía «Load failed».
+        if CloudFile.isPlaceholder(url) { return false }
         guard let values = try? url.resourceValues(forKeys: [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey]),
               values.isUbiquitousItem == true else { return true }
         return values.ubiquitousItemDownloadingStatus == .current

@@ -34,7 +34,9 @@ public struct Note: Identifiable, Hashable, Sendable {
     /// cambiaban el nombre del archivo).
     public var preview: String {
         let lines = text.components(separatedBy: .newlines)
-        let firstText = lines.firstIndex { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        // Después del renglón del título (el que sigue a un bloque de código, si la nota empieza así).
+        let firstText = Self.titleLine(of: lines)?.index
+            ?? lines.firstIndex { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         let body = Array(lines.dropFirst((firstText ?? 0) + 1))
         return NoteMarkdown.previewLines(body).filter { !$0.isEmpty }.joined(separator: " ").clipped(to: Self.previewLetters)
     }
@@ -55,13 +57,40 @@ public struct Note: Identifiable, Hashable, Sendable {
     /// conserva sus comillas. Si cambiara la forma de leerlo, tus notas cambiarían de nombre solas
     /// y se romperían sus enlaces en Obsidian.
     static func title(of text: String) -> String? {
-        for line in text.components(separatedBy: .newlines) {
+        titleLine(of: text.components(separatedBy: .newlines))?.title
+    }
+
+    /// El renglón del título y cómo se lee. Ni una cerca de código («```swift», auditoría 8) ni lo
+    /// que va dentro del bloque (auditoría 9, B8: «let a = 1» salía de título) lo son: se lee el
+    /// primer renglón de texto fuera del bloque; si no hay, no hay título (va el de siempre). El
+    /// bloque lo cierra una cerca del mismo signo, igual de larga o más, como en CommonMark. Los
+    /// números de una lista sí se quedan (auditoría 7).
+    static func titleLine(of lines: [String]) -> (index: Int, title: String)? {
+        var open: (mark: Character, length: Int)?
+        for (index, line) in lines.enumerated() {
+            if let current = open {
+                if let close = NoteMarkdown.fence(line), close.mark == current.mark, close.length >= current.length,
+                   close.info.allSatisfy({ $0 == " " || $0 == "\t" }) {
+                    open = nil
+                }
+                continue
+            }
             var trimmed = line.trimmingCharacters(in: .whitespaces)
+            if let start = NoteMarkdown.fence(line) {
+                open = (start.mark, start.length)
+                continue
+            }
+            if isFence(trimmed) { continue }
             while trimmed.hasPrefix("#") { trimmed.removeFirst() }
             trimmed = NoteMarkdown.plain(trimmed)
-            if !trimmed.isEmpty { return trimmed }
+            if !trimmed.isEmpty { return (index, trimmed) }
         }
         return nil
+    }
+
+    /// El renglón que abre o cierra un bloque de código: tres «`» o tres «~».
+    static func isFence(_ line: String) -> Bool {
+        line.hasPrefix("```") || line.hasPrefix("~~~")
     }
 }
 
@@ -222,8 +251,19 @@ public enum NoteMarkdown {
             } else if let marker = text.range(of: number, options: .regularExpression), isItem(index - 1) || isItem(index + 1) {
                 text.removeSubrange(marker)
             }
-            return plain(text).replacingOccurrences(of: "`", with: "")
+            return withoutEmphasis(plain(text).replacingOccurrences(of: "`", with: ""))
         }
+    }
+
+    /// Sin la cursiva de Markdown: «*cursiva*» y «_cursiva_» se leen «cursiva» (la negrita ya se
+    /// iba y la cursiva se quedaba, auditoría 8). Solo cuando la marca abre y cierra junto a una
+    /// palabra: `snake_case`, «2*3*4» y un asterisco suelto («5 * 3») se quedan como están.
+    static func withoutEmphasis(_ line: String) -> String {
+        let star = #"(?<![\p{L}\p{N}*\\])\*(?=[^\s*])([^*\n]*?[^\s*\\])\*(?![\p{L}\p{N}*])"#
+        let under = #"(?<![\p{L}\p{N}_\\])_(?=[^\s_])([^_\n]*?[^\s_\\])_(?![\p{L}\p{N}_])"#
+        return line
+            .replacingOccurrences(of: star, with: "$1", options: .regularExpression)
+            .replacingOccurrences(of: under, with: "$1", options: .regularExpression)
     }
 
     /// La marca de la nota de una sesión de lectura: un comentario que no se ve (ni en Gabinete

@@ -355,7 +355,7 @@ extension ReaderView {
         content
         .sheet(item: $controller.noteLinkTarget) { annotation in
             NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
-                controller.notice = "Quedó en «\(saved.title)»."
+                controller.notice = "Quedó en «\(saved.title.isolated)»."
             }
             .duoBars()
         }
@@ -367,11 +367,16 @@ extension ReaderView {
             Button("Guardar la nota") { controller.saveNote(noteText); noteText = "" }
             Button("Descartar la nota", role: .cancel) { noteText = "" }
         } message: {
-            Text(controller.noteTarget.map { "«\($0.quote)»" } ?? "")
+            Text(controller.noteTarget.map { "«\($0.quote.isolated)»" } ?? "")
         }
         .errorAlert("No pude abrir el libro", message: $controller.errorMessage, back: "Volver a la biblioteca") { dismiss() }
         .errorAlert("No pude guardar el subrayado", message: $controller.saveError, back: "Seguir leyendo")
         .noticeAlert("Llevé el pasaje a tu nota", message: $controller.notice, back: "Seguir leyendo")
+    }
+
+    /// Dónde está ahora el archivo de este libro en la biblioteca (nil si no es de la biblioteca).
+    private var currentFile: URL? {
+        bookID.flatMap { library.book(id: $0) }.flatMap { library.fileURL(for: $0) }
     }
 
     /// Al abrir y cuando cambia la letra, el tema o el modo: se lo dice al libro.
@@ -412,14 +417,27 @@ extension ReaderView {
             // Solo el avance (de un libro que se juntó con este): se abre a esa altura.
             let resumeFraction = resume == nil ? saved?.fraction : nil
             // En iCloud Drive el libro puede no estar en el dispositivo: primero se baja.
-            let file = bookFile
             Task { @MainActor in
-                guard await CloudFiles.ensureDownloaded(file) else {
-                    controller.errorMessage = "No pude bajar el libro de iCloud. Revisa tu conexión e inténtalo de nuevo."
-                    return
+                // Mientras bajaba, el libro pudo cambiar de carpeta (lo ordenaste o lo identificaste):
+                // se abre el de ahora, no la ruta de antes de esperar (auditoría 9, B1).
+                var file = currentFile ?? bookFile
+                for _ in 0..<Theme.Reader.followAttempts {
+                    guard await CloudFiles.ensureDownloaded(file) else {
+                        controller.errorMessage = "No pude bajar el libro de iCloud. Revisa tu conexión e inténtalo de nuevo."
+                        return
+                    }
+                    let now = currentFile ?? bookFile
+                    if now == file { break }
+                    file = now
                 }
                 controller.open(bookFile: file, bookID: bookID, lastCFI: resume, fraction: resumeFraction)
             }
+        }
+        // El libro que lees sigue abierto aunque cambie de carpeta (auditoría 8, A1): lo identificas,
+        // cambias su autor, ordenas o mueves el Gabinete. Su contenido ya está cargado y la página se
+        // guarda por su ID; si el lector vuelve a pedir el archivo, se lo doy de su carpeta nueva.
+        .onChange(of: currentFile) { _, file in
+            if let file { controller.follow(bookFile: file) }
         }
         // Capturas automáticas: el índice o una búsqueda, ya con el libro abierto.
         .onChange(of: controller.contents) { _, contents in
@@ -726,7 +744,9 @@ extension ReaderView {
         controller.pageBox = pageBox
         #endif
         controller.setColors(text: palette.text, link: palette.link)
-        controller.setFont(family: font.css, scale: scale * Self.systemTextScale)
+        // Con la letra de accesibilidad, a la izquierda: justificado dejaba huecos enormes entre
+        // palabras en un renglón de tres o cuatro (auditoría 8).
+        controller.setFont(family: font.css, scale: scale * Self.systemTextScale, justify: !dynamicTypeSize.isAccessibilitySize)
         controller.setScrolled(flow == .scrolled)
         #if os(iOS)
         controller.pageBackground = UIColor(palette.background)

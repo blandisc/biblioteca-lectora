@@ -176,6 +176,13 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         if isReady { evaluate(script) } else { pendingOpen = script }
     }
 
+    /// El archivo del libro abierto cambió de carpeta (auditoría 8, A1): no lo vuelvo a abrir (ya
+    /// está cargado); solo, si el lector lo vuelve a pedir, lo sirvo desde su carpeta nueva.
+    func follow(bookFile: URL) {
+        guard schemeHandler.bookFile != nil, schemeHandler.bookFile != bookFile else { return }
+        schemeHandler.bookFile = bookFile
+    }
+
     func next() { turn(forward: true) }
     func previous() { turn(forward: false) }
 
@@ -389,9 +396,9 @@ final class ReaderController: NSObject, ObservableObject, WKScriptMessageHandler
         }
     }
 
-    /// Tipografía (pila CSS) y tamaño relativo de la letra.
-    func setFont(family: String, scale: Double) {
-        let script = "window.lectora.setStyle({ fontFamily: \(Self.js(family)), fontScale: \(scale) })"
+    /// Tipografía (pila CSS), tamaño relativo de la letra y si el texto va justificado.
+    func setFont(family: String, scale: Double, justify: Bool) {
+        let script = "window.lectora.setStyle({ fontFamily: \(Self.js(family)), fontScale: \(scale), justify: \(justify) })"
         fontScript = script
         if isReady { evaluate(script) }
     }

@@ -29,14 +29,14 @@ struct BookDetailScreen: View {
                     if let number = record?.calibreID {
                         SectionLabel(text: "Nº \(number)")
                     }
-                    Text(live.title)
+                    WholeWordsText(live.title)
                         .font(.bookTitle)
                         .multilineTextAlignment(.center)
                     Text(live.author)
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)
                     if let series = live.series {
-                        DotLine(parts: [series] + (live.seriesIndex.flatMap(ShelfBook.number).map { ["libro \($0)"] } ?? []),
+                        DotLine(parts: [series.isolated] + (live.seriesIndex.flatMap(ShelfBook.number).map { ["libro \($0)"] } ?? []),
                                 alignment: .center)
                             .font(.subheadline)
                             .foregroundStyle(Theme.secondaryInk)
@@ -206,7 +206,7 @@ struct CoverPickerSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    if loading {
+                    if options.isEmpty, loading {
                         LoadingLine(text: "Buscando portadas…")
                             .padding(.vertical, Theme.Space.xl)
                     } else if options.isEmpty {
@@ -215,12 +215,17 @@ struct CoverPickerSheet: View {
                         Text("Primero las de ediciones en el idioma del libro.")
                             .font(.subheadline)
                             .foregroundStyle(Theme.secondaryInk)
+                        // Las que ya bajaron, sin esperar a las demás (auditoría 9, B2).
                         CoverGrid {
                             ForEach(allOptions, id: \.self) { option in
                                 CoverChoiceCell(option: option, selection: $choice)
                             }
                         }
                         .padding(.top, Theme.Space.l)
+                        if loading {
+                            LoadingLine(text: "Buscando más portadas…")
+                                .padding(.vertical, Theme.Space.l)
+                        }
                     }
                 }
                 .screenContent()
@@ -231,8 +236,11 @@ struct CoverPickerSheet: View {
                                                disabled: saving || !choosesRemote) { save() })
         }
         .task {
-            options = await model.library.coverOptions(for: bookID)
-            choice = current.map { .current($0) } ?? options.first.map { .remote($0) }
+            choice = current.map { .current($0) }
+            await model.library.coverOptions(for: bookID) { found in
+                options = found
+                if choice == nil { choice = found.first.map { .remote($0) } }
+            }
             loading = false
         }
         .errorAlert("No pude cambiar la portada", message: $errorMessage, back: "Elegir otra portada")

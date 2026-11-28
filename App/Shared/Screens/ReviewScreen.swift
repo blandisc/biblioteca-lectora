@@ -66,6 +66,12 @@ struct ReviewScreen: View {
                     EmptyState(title: "Todo en orden", message: "No hay libros pendientes de revisar.")
                 } else if !pending.isEmpty {
                     bulkActions.padding(.top, Theme.Space.s)
+                    if choosing {
+                        Text("Los que elijas se quedan con los datos que tienen ahora.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryInk)
+                            .padding(.bottom, Theme.Space.s)
+                    }
                     LazyVStack(spacing: 0) {
                         ForEach(pending) { book in
                             if let id = book.bookID { row(book, id) }
@@ -91,9 +97,9 @@ struct ReviewScreen: View {
         }
         .pushedScreen()
         .disabled(working)
-        .confirmationDialog(confirming?.title ?? "", isPresented: Binding(
+        .question(confirming?.title ?? "", isPresented: Binding(
             get: { confirming != nil }, set: { if !$0 { confirming = nil } }
-        ), titleVisibility: .visible, presenting: confirming) { batch in
+        ), presenting: confirming) { batch in
             Button(batch.action) { run(batch) }
             Button("Dejarlos por revisar", role: .cancel) {}
         } message: { batch in
@@ -176,7 +182,9 @@ struct ReviewScreen: View {
     }
 
     private func keepTitle(_ count: Int) -> String {
-        count == 0 ? "Elige los libros que se quedan como están" : "Mantener los datos de \(count.counted("libro", "libros"))"
+        // Corto: con la letra más grande la barra ocupaba cuatro renglones (auditoría 8). Lo que
+        // hace se explica arriba, sobre la lista.
+        count == 0 ? "Elige los libros" : "Mantener los datos de \(count.counted("libro", "libros"))"
     }
 
     private func run(_ batch: ReviewBatch) {
@@ -314,6 +322,8 @@ struct CandidatesScreen: View {
     @State private var pendingAsk: Ask?
     /// Cada vez que me encuentro ocupado, una espera nueva (aunque sea lo mismo).
     @State private var waits = 0
+    /// Ya lo estaba buscando (la vuelta de lo pendiente o el lote): espero ese resultado (auditoría 8, B2).
+    @State private var alreadySearching = false
 
     private var book: ShelfBook? { model.shelfBook(id: bookID.uuidString) }
     private var candidates: [MetadataCandidate] { model.library.reviews[bookID] ?? [] }
@@ -333,7 +343,7 @@ struct CandidatesScreen: View {
 
                 Group {
                     if searching {
-                        LoadingLine(text: "Buscando en internet…")
+                        LoadingLine(text: alreadySearching ? Self.alreadySearchingLine : "Buscando en internet…")
                             .padding(.vertical, Theme.Space.xl)
                     } else if let busyReason {
                         EmptyState(title: "Espera un momento",
@@ -415,10 +425,23 @@ struct CandidatesScreen: View {
         case other(title: String, author: String?, isbn: String?)
     }
 
+    /// Lo que digo mientras espero la búsqueda que ya corría de este libro.
+    static let alreadySearchingLine = "Ya lo estoy buscando; en cuanto termine te enseño lo que encontré…"
+
     private func run(_ ask: Ask) async -> MetadataService.Decision? {
+        // Ya lo estaba buscando (auditoría 8, B2): antes `identify` devolvía nil, el «Buscando» se
+        // quitaba y no salía nada. Espero esa búsqueda; si dejó candidatos, te los enseño, y si no
+        // (completó lo seguro o no lo encontró), busco lo que pediste.
+        if model.library.identifying.contains(bookID) {
+            alreadySearching = true
+            await model.library.waitUntilSearched(bookID)
+            alreadySearching = false
+            if Task.isCancelled { return nil }
+            if ask == .again, !candidates.isEmpty { return .review }
+        }
         switch ask {
-        case .again: await model.library.identify(bookID, askAlways: true)
-        case .other(let title, let author, let isbn): await model.library.search(title: title, author: author, isbn: isbn, for: bookID)
+        case .again: return await model.library.identify(bookID, askAlways: true)
+        case .other(let title, let author, let isbn): return await model.library.search(title: title, author: author, isbn: isbn, for: bookID)
         }
     }
 
@@ -456,7 +479,7 @@ struct CandidatePreview: View {
                     HStack(alignment: .top, spacing: Theme.Space.l) {
                         CandidateCover(candidate: candidate, width: Theme.Size.coverEditor)
                         VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                            Text(candidate.title).font(.rowTitle).foregroundStyle(Theme.ink)
+                            WholeWordsText(candidate.title).font(.rowTitle).foregroundStyle(Theme.ink)
                             Text(candidate.authors.first ?? "").font(.subheadline).foregroundStyle(Theme.secondaryInk)
                             Text("\(candidate.verdict) · \(candidate.source.rawValue)")
                                 .font(.caption)
@@ -495,7 +518,7 @@ struct CandidatePreview: View {
                                    old: book?.language.map(BookFields.languageName))
                         CompareRow(label: "ISBN", new: preview.identifiers["isbn"], old: book?.identifiers["isbn"])
                         CompareRow(label: "Serie", new: preview.series.map { name in
-                            preview.seriesIndex.flatMap(ShelfBook.number).map { "\(name) · \($0)" } ?? name
+                            preview.seriesIndex.flatMap(ShelfBook.number).map { "\(name.isolated) · \($0)" } ?? name
                         }, old: book?.series)
                         CompareRow(label: "Géneros", new: preview.tags.joined(separator: ", "), old: book?.tags.joined(separator: ", "))
                     }

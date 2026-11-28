@@ -68,8 +68,8 @@ struct LibraryScreen: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         ScreenHeading(title: "Biblioteca") {
-                            // Sin libros que ver mientras bajo (o dejé de esperar) no hay nada que acomodar.
-                            if !cloudEmpty {
+                            // Sin libros (o mientras bajo, o si dejé de esperar) no hay nada que acomodar.
+                            if !model.shelf.isEmpty {
                                 IconButton(systemImage: layout == .covers ? "list.bullet" : "square.grid.2x2",
                                            label: layout == .covers ? "Ver como lista" : "Ver portadas") {
                                     withAnimation(Theme.Motion.standard) { layout = layout == .covers ? .list : .covers }
@@ -80,7 +80,8 @@ struct LibraryScreen: View {
                             AccentIconButton(systemImage: LibraryAction.addBooks.symbol, label: LibraryAction.addBooks.title) { model.addBooks() }.disabled(model.addBooksBlocked != nil)
                         }
 
-                        if !cloudEmpty {
+                        // Sin libros no hay nada que filtrar (auditoría 8): el vacío dice qué hacer.
+                        if !model.shelf.isEmpty {
                             FilterBar(items: LibraryFilter.options(for: model.shelf), selection: $filter) { $0.title }
                                 .padding(.top, Theme.Space.s)
                         }
@@ -94,7 +95,8 @@ struct LibraryScreen: View {
                         VStack(alignment: .leading, spacing: 0) {
                             // Mientras bajo tu biblioteca de iCloud no digo «0 libros» (auditoría 5): el vacío dice qué pasa.
                             // Ni «0 libros» si dejé de esperar: el vacío dice que no ha bajado (auditoría 6).
-                            if !cloudEmpty {
+                            // Ni «0 libros» junto a «Todavía no hay libros» (auditoría 8); mientras añado, sí digo cómo voy.
+                            if !model.shelf.isEmpty || (model.library.progressLine != nil && !cloudEmpty) {
                                 CountLine(text: summary(books)) {
                                     // Sin libros a la vista no hay nada que ordenar (auditoría 4).
                                     if !books.isEmpty {

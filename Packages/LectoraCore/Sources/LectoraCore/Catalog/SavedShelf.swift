@@ -20,6 +20,26 @@ public struct SavedShelf: Codable, Hashable, Identifiable, Sendable {
         return !parsed.isEmpty && parsed.matches(book)
     }
 
+    /// El estante que ya guarda esta búsqueda, si hay (auditoría 8: «Guardar estos libros como
+    /// estante» seguía ofrecido después de guardarlo y se podía guardar dos veces). Sin distinguir
+    /// mayúsculas, acentos ni espacios de más, y en cualquier orden (auditoría 9, B6: «historia
+    /// idioma:en» e «idioma:en historia» encuentran lo mismo y son el mismo estante).
+    public static func saved(_ query: String, in shelves: [SavedShelf]) -> SavedShelf? {
+        let key = Self.key(query)
+        guard !key.isEmpty else { return nil }
+        return shelves.first { Self.key($0.query) == key }
+    }
+
+    /// La búsqueda normalizada: los filtros (`campo:valor`) y las palabras, cada grupo ordenado.
+    /// Las palabras que siguen a un filtro cuentan como palabras: se buscan en ese dato o en el
+    /// libro, igual que una palabra suelta.
+    static func key(_ query: String) -> String {
+        let parsed = LibraryQuery(query)
+        let filters = parsed.filters.map { "\($0.field.rawValue):\($0.value)" }.sorted()
+        let words = Set(parsed.words + parsed.filters.flatMap(\.more)).sorted()
+        return (filters + words).joined(separator: " ")
+    }
+
     /// Un nombre para proponer al guardar: la búsqueda sin los nombres de los filtros
     /// («etiqueta:historia idioma:en» → «Historia · En»).
     /// El idioma con su nombre: «idioma:en» → «Inglés», no «En».

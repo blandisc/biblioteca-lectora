@@ -48,11 +48,11 @@ struct MacDuplicatesView: View {
         }
         .navigationTitle(Duplicates.title)
         .navigationSubtitle(groups.isEmpty ? "" : groups.count.counted("grupo", "grupos"))
-        .confirmationDialog(confirmTitle, isPresented: Binding(
+        .question(confirmTitle, isPresented: Binding(
             get: { confirming != nil }, set: { if !$0 { confirming = nil } }
-        ), titleVisibility: .visible) {
+        )) {
             if let group = confirming {
-                Button("Juntar en «\(keeper(of: group)?.title ?? "")»") { merge(group) }
+                Button("Juntar en «\((keeper(of: group)?.title ?? "").isolated)»") { merge(group) }
             }
             Button("Dejarlos separados", role: .cancel) {}
         } message: {
@@ -101,7 +101,7 @@ struct MacDuplicatesView: View {
         guard let keeper = keeper(of: group) else { return "" }
         let others = group.filter { $0.id != keeper.id }
         let newFormats = Set(others.flatMap(\.formats)).subtracting(keeper.formats).sorted()
-        var lines = ["Se queda «\(keeper.title)» (\(keeper.formats.joined(separator: " · ")))."]
+        var lines = ["Se queda «\(keeper.title.isolated)» (\(keeper.formats.joined(separator: " · ")))."]
         if !newFormats.isEmpty { lines.append("Gana \(newFormats.joined(separator: " y ")) en su misma carpeta.") }
         lines.append("Completo sus datos con los de los otros, y sus subrayados y marcadores pasan a este.")
         lines.append("Los archivos repetidos van a la Papelera, de donde puedes recuperarlos.")
@@ -112,13 +112,13 @@ struct MacDuplicatesView: View {
         guard let keeper = keeper(of: group) else { return }
         do {
             let report = try library.merge(keep: keeper.id, others: group.map(\.id).filter { $0 != keeper.id })
-            var parts = ["Junté «\(keeper.title)»"]
+            var parts = ["Junté «\(keeper.title.isolated)»"]
             if !report.addedFormats.isEmpty { parts.append("ahora con \(report.addedFormats.joined(separator: " y "))") }
             if report.movedHighlights > 0 { parts.append(report.movedHighlights.counted("subrayado pasó", "subrayados pasaron")) }
             if report.trashed > 0 { parts.append(report.trashed.counted("archivo a la Papelera", "archivos a la Papelera")) }
             notice = parts.joined(separator: " · ") + "."
         } catch {
-            notice = "No pude juntar «\(keeper.title)»: \(error.localizedDescription)"
+            notice = "No pude juntar «\(keeper.title.isolated)»: \(error.localizedDescription)"
         }
         keep[group[0].id] = nil
     }

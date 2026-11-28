@@ -32,7 +32,8 @@ struct CalibreMigrationScreen: View {
                     case .reading: progress(title: "Leyendo tu biblioteca de Calibre…", value: nil)
                     // Mientras bajo tu biblioteca de iCloud, el plan saldría de una lista a medias (auditoría 6).
                     case .review(let source, let plan):
-                        ReviewStep(plan: plan, busyReason: model.library.busyReason ?? model.addBooksBlocked) { migrate(source: source, plan: plan) }
+                        ReviewStep(plan: plan, busyReason: model.library.busyReason ?? model.addBooksBlocked,
+                                   cloudIncomplete: model.library.cloudGaveUp) { migrate(source: source, plan: plan) }
                     case .migrating:
                         let done = model.library.progress
                         progress(title: done.map { "Trayendo \($0.done.counted("libro", "libros")) de \($0.total)…" } ?? "Trayendo…",
@@ -112,9 +113,9 @@ private struct ChooseStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.l) {
             SectionHeader("Una sola vez")
-            Text("Elige la carpeta de tu biblioteca de Calibre, la que tiene metadata.db (en Calibre: botón Biblioteca › Abrir la carpeta).")
+            Text("Elige la carpeta de tu biblioteca de Calibre: la que se abre en Calibre con el botón Biblioteca › Abrir la carpeta.")
                 .font(.body)
-            Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no la toco. Desde ahí, Gabinete es el dueño del catálogo y mantiene cada metadata.opf al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
+            Text("Copio tus libros con sus datos, portadas, series, etiquetas, calificaciones y los subrayados del visor de Calibre. Tu biblioteca de Calibre no la toco. Desde ahí, Gabinete es el dueño del catálogo y deja los datos de cada libro en su carpeta, al día: si vuelves a Calibre, su «Restaurar base de datos» la reconstruye.")
                 .font(.subheadline)
                 .foregroundStyle(Theme.secondaryInk)
             if let blocked {
@@ -131,6 +132,8 @@ private struct ReviewStep: View {
     let plan: CalibreMigrationPlan
     /// Otro trabajo de toda la biblioteca está corriendo (auditoría 4): traer espera.
     var busyReason: String?
+    /// iCloud no bajó toda tu biblioteca (auditoría 9, B10): se puede traer, pero lo digo antes.
+    var cloudIncomplete = false
     let migrate: () -> Void
 
     var body: some View {
@@ -154,6 +157,8 @@ private struct ReviewStep: View {
             } else {
                 if let busyReason {
                     ReasonLine(busyReason)
+                } else if cloudIncomplete {
+                    ReasonLine(EmptyCopy.calibreWhileCloudIncomplete)
                 }
                 PrimaryButton(title: "Traer \(plan.toImport.count.counted("libro", "libros"))", fillsWidth: true, action: migrate)
                     .disabled(busyReason != nil)

@@ -409,6 +409,8 @@ enum Theme {
         static let authorTop: CGFloat = 0.06
         static let authorTracking: CGFloat = 0.6
         static let titleMinScale: CGFloat = 0.7
+        /// Los pasos de la letra del título dibujado cuando su palabra más ancha no cabe (`WholeWordsText`).
+        static let titleScales: [CGFloat] = [1, 0.9, 0.8, 0.7]
         /// Lomo: sombra del borde izquierdo, nunca menor que `spineMin` puntos.
         static let spine: CGFloat = 0.05
         static let spineMin: CGFloat = 3
@@ -459,6 +461,8 @@ enum Theme {
         /// Toques en la página: izquierda (atrás) y derecha (adelante) son
         /// franjas iguales; el centro muestra los controles.
         static let edgeZone = 0.28
+        /// Cuántas veces sigo al libro que cambió de carpeta mientras bajaba de iCloud, antes de abrirlo.
+        static let followAttempts = 3
         /// Margen de los controles de vidrio, igual arriba y abajo, izquierda y derecha.
         static let chromeInset: CGFloat = 16
         /// Los botones de arriba suben esto hacia la isla, sin tocarla.
@@ -638,6 +642,8 @@ enum Theme {
         /// Libros encontrados de los que se piden portadas, y portadas para elegir.
         static let coverSources = 3
         static let coverOptions = 12
+        /// Cuántas se bajan como mucho para llegar a `coverOptions` distintas (auditoría 9, B2).
+        static let coverDownloads = 24
         /// La sinopsis recortada en lo que se completó solo.
         static let summaryLetters = 140
         /// Subrayados y notas de un libro en la ficha de la Mac, antes de «Leer» para ver el resto.
@@ -730,7 +736,8 @@ extension Theme {
         /// y lo que dicen está también en sus filas y en lo que lee VoiceOver.
         static let drawingLargest: DynamicTypeSize = .large
         /// Hasta dónde crece la letra de lo que flota sobre el libro (la tarjeta de abajo, la barra
-        /// de lo elegido, la tarjeta del subrayado): con AX5 la tarjeta tapaba casi media página.
+        /// de lo elegido, la tarjeta del subrayado) o queda fijo al pie de una lista (`BottomBar`):
+        /// con AX5 la tarjeta tapaba casi media página y la barra de «Por revisar», media lista.
         static let readerChromeLargest: DynamicTypeSize = .accessibility1
     }
 }

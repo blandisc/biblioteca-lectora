@@ -44,9 +44,9 @@ struct ShelfBook: Identifiable, Hashable {
 
     /// Línea corta bajo la portada: «43 % · Cervantes», «Nuevo · Kahneman»…
     var caption: String {
-        if isReading { return "\(progress.percentText) · \(author)" }
-        if isFinished { return "Leído · \(author)" }
-        if isNew { return "Nuevo · \(author)" }
+        if isReading { return "\(progress.percentText) · \(author.isolated)" }
+        if isFinished { return "Leído · \(author.isolated)" }
+        if isNew { return "Nuevo · \(author.isolated)" }
         return author
     }
 }
@@ -87,7 +87,7 @@ extension ShelfBook {
             cover: .generated(for: book.title),
             file: library.fileURL(for: book),
             note: book.series.map { series in
-                book.seriesIndex.flatMap(ShelfBook.number).map { "\(series) · \($0)" } ?? series
+                book.seriesIndex.flatMap(ShelfBook.number).map { "\(series.isolated) · \($0)" } ?? series
             // «Listo para leer» solo si no lo has empezado: junto a «2 % leído» se contradice.
             } ?? (progress > 0 ? nil : "Listo para leer"),
             seriesCount: seriesCount,

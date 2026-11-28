@@ -247,6 +247,9 @@ public struct StagedMove: Sendable {
             let target = destination.appendingPathComponent(folder, isDirectory: true)
             do {
                 guard !CloudFile.isTaken(target) else { throw Failure.occupied(folder) }
+                // Su marca va dentro (auditoría 8, M3): así, al regresarla, sé que es la mía aunque
+                // iCloud le cambie el nombre («Biblioteca 2») y otra ocupe «Biblioteca».
+                try mark(folder)
                 // `moveItem` no reemplaza: si llegó justo ahora, también falla.
                 try Self.coordinatedMove(from: staging(folder), to: target)
                 placed.append(folder)
@@ -262,15 +265,54 @@ public struct StagedMove: Sendable {
     /// Regresa a su carpeta de trabajo lo que `place` puso (solo eso: lo demás no es de esta corrida).
     /// Si no puede regresarla, la quita (auditoría 7, M6): es de esta corrida, y dejarla haría que
     /// el destino pareciera un Gabinete a medias. Lo tuyo sigue en el origen.
+    /// Solo toca la carpeta que lleva su marca (auditoría 8, M3): si en «Biblioteca» está la de otro
+    /// aparato (iCloud renombró la mía a «Biblioteca 2» al llegar las dos a la vez), esa no se mueve
+    /// ni se borra; busco la mía por su marca.
     public func takeBack(_ placed: [String]) {
         for folder in placed.reversed() {
-            let target = destination.appendingPathComponent(folder, isDirectory: true)
+            guard let mine = locate(folder) else { continue }
             do {
-                try Self.coordinatedMove(from: target, to: staging(folder))
+                try Self.coordinatedMove(from: mine, to: staging(folder))
             } catch {
-                try? FileManager.default.removeItem(at: target)
+                try? FileManager.default.removeItem(at: mine)
             }
         }
+    }
+
+    /// Ya está en su lugar y es el Gabinete en uso: quito las marcas (no se quedan en tu carpeta).
+    public func finish() {
+        for folder in folders {
+            let marker = destination.appendingPathComponent(folder, isDirectory: true).appendingPathComponent(Self.markerName)
+            if isMine(destination.appendingPathComponent(folder, isDirectory: true), folder) {
+                try? FileManager.default.removeItem(at: marker)
+            }
+        }
+    }
+
+    /// El archivo escondido que dice de qué corrida es una carpeta.
+    public static let markerName = ".gabinete-movimiento"
+
+    private func markText(_ folder: String) -> String { "\(token)\n\(folder)\n" }
+
+    private func mark(_ folder: String) throws {
+        try Data(markText(folder).utf8).write(to: staging(folder).appendingPathComponent(Self.markerName), options: .atomic)
+    }
+
+    /// ¿Es de esta corrida? Solo si lleva su marca, con su ficha y su nombre.
+    func isMine(_ url: URL, _ folder: String) -> Bool {
+        guard let data = try? Data(contentsOf: url.appendingPathComponent(Self.markerName)) else { return false }
+        return String(decoding: data, as: UTF8.self) == markText(folder)
+    }
+
+    /// Dónde quedó la carpeta de esta corrida: en su lugar o, si iCloud le cambió el nombre, en
+    /// otra carpeta del destino con su marca. nil si no está (nada que regresar).
+    func locate(_ folder: String) -> URL? {
+        let target = destination.appendingPathComponent(folder, isDirectory: true)
+        if isMine(target, folder) { return target }
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: destination.path)) ?? []
+        return names.sorted().lazy
+            .map { destination.appendingPathComponent($0, isDirectory: true) }
+            .first { $0 != staging(folder) && isMine($0, folder) }
     }
 
     /// Quita las carpetas de trabajo (solo esas: lo demás del destino no es de esta corrida).

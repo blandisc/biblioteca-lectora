@@ -31,7 +31,7 @@ struct MiniPlayer: View {
             CoverView(title: book.title, author: book.author, style: book.cover, image: book.coverImage)
                 .frame(width: Theme.Size.coverMini)
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text(book.title)
+                WholeWordsText(book.title)
                     .font(.rowTitle.weight(.medium))
                     .lineLimit(1)
                 HStack(spacing: Theme.Space.s) {

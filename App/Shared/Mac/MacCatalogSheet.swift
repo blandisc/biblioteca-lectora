@@ -50,11 +50,11 @@ struct MacCatalogSheet: View {
                 TextField(fieldName, text: $name, prompt: .fieldPrompt(target.value)).oneLine()
                     .onSubmit(apply)
                 if let existing {
-                    Text("Ya existe «\(existing)»: los junto en \(oneField).")
+                    Text("Ya existe «\(existing.isolated)»: los junto en \(oneField).")
                         .foregroundStyle(Theme.secondaryInk)
                 }
             } header: {
-                Text("Renombrar o juntar «\(target.value)»")
+                Text("Renombrar o juntar «\(target.value.isolated)»")
             }
             if !lookalikes.isEmpty {
                 Section("Parecidos: ¿son el mismo?") {

@@ -3,15 +3,27 @@ import Foundation
 /// Abrir un libro en el lector (auditoría 7): qué hacer con una ventana de libro que la Mac vuelve
 /// a abrir al arrancar y qué decir cuando el lector web no puede abrirlo.
 public enum ReaderOpening {
-    /// Una ventana de libro que la Mac restaura se queda solo si el libro sigue ahí: su archivo
-    /// existe y, si era de la biblioteca, la biblioteca lo tiene. Mientras bajo la biblioteca de
-    /// iCloud no la cierro (el libro puede llegar). Antes se abría en cada arranque con «Load failed»,
-    /// sin la ventana de la biblioteca, y no dejaba salir de la app.
+    /// Qué hago con una ventana de libro que la Mac vuelve a abrir al arrancar.
+    public enum RestoredWindow: Equatable, Sendable {
+        /// Todavía bajo tu biblioteca de iCloud: el libro puede llegar. Espero y decido después.
+        case wait
+        /// Se queda y abre el libro (si su archivo está en iCloud, lo bajo).
+        case keep
+        /// Ya no está: la cierro y abro la biblioteca.
+        case close
+    }
+
+    /// Lo decido una sola vez, al abrirse, y solo para una ventana restaurada (auditoría 8, A1): el
+    /// libro que abriste tú ya está, y el que lees no se cierra porque cambie de carpeta (lo
+    /// identificas, cambias su autor, ordenas o mueves el Gabinete). Un libro de la biblioteca se
+    /// decide por si la biblioteca lo tiene, con el archivo de ahora (`fileURL(for:)`, no la ruta de
+    /// cuando lo abriste); si su archivo sigue en iCloud cuenta como que está y lo bajo.
     /// `inLibrary` es nil si el libro no era de la biblioteca (un archivo suelto).
-    public static func keepsRestoredWindow(fileExists: Bool, inLibrary: Bool?, waitingForCloud: Bool) -> Bool {
-        guard fileExists else { return false }
-        guard let inLibrary, !waitingForCloud else { return true }
-        return inLibrary
+    /// Antes una ventana de un libro borrado se abría en cada arranque con «Load failed» (auditoría 7).
+    public static func restoredWindow(waitingForCloud: Bool, inLibrary: Bool?, fileExists: Bool, inCloud: Bool) -> RestoredWindow {
+        if waitingForCloud, inLibrary != nil { return .wait }
+        if inLibrary == false { return .close }
+        return fileExists || inCloud ? .keep : .close
     }
 
     /// Lo que dice el aviso «No pude abrir el libro», en español y en primera persona (regla 7):

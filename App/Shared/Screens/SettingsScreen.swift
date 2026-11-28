@@ -1,3 +1,4 @@
+import LectoraCore
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -84,10 +85,10 @@ struct SettingsScreen: View {
             case .failure(let error): errorMessage = error.localizedDescription
             }
         }
-        .confirmationDialog(dialogTitle, isPresented: Binding(
+        .question(dialogTitle, isPresented: Binding(
             get: { chosenFolder != nil },
             set: { if !$0 { chosenFolder = nil } }
-        ), titleVisibility: .visible) {
+        )) {
             if let folder = chosenFolder {
                 if CabinetLocation.hasLibrary(in: folder) {
                     Button("Abrir la biblioteca que ya está ahí") { run { try model.library.use(cabinet: folder) } }
@@ -99,7 +100,7 @@ struct SettingsScreen: View {
         } message: {
             Text(dialogMessage)
         }
-        .noticeAlert("Ordené tu biblioteca", message: Binding(
+        .noticeAlert(model.library.tidyReport?.notDone == nil ? "Ordené tu biblioteca" : "No ordené tu biblioteca", message: Binding(
             // El informe vive en la biblioteca: si saliste de Ajustes mientras ordenaba, sale al volver.
             get: { model.library.tidyReport.map(describe) }, set: { if $0 == nil { model.library.tidyReport = nil } }
         ), back: "Volver a Ajustes")
@@ -297,16 +298,17 @@ extension SettingsScreen {
                     .frame(minHeight: Theme.Size.row)
             } else {
                 Button { choosingFolder = true } label: { LinkRow(title: "Mover a iCloud Drive u otra carpeta") }
-                    .disabled(busy)
+                    .disabled(busy || model.cabinetChangeBlocked != nil)
                 if !model.library.isLocal {
                     Button { run { try model.library.useLocalCabinet() } } label: { LinkRow(title: "Volver a la carpeta de este dispositivo") }
-                        .disabled(busy)
+                        .disabled(busy || model.cabinetChangeBlocked != nil)
                 }
             }
             Button { migratingCalibre = true } label: { LinkRow(title: "Traer mi biblioteca de Calibre") }
                 .disabled(busy || model.addBooksBlocked != nil)
-            // Mientras bajo tu biblioteca de iCloud no traigo nada de Calibre (auditoría 6).
-            if let blocked = model.addBooksBlocked, !busy {
+            // Mientras bajo tu biblioteca de iCloud no muevo el Gabinete, no cambio de carpeta ni
+            // traigo nada de Calibre (auditorías 6 y 8): una sola razón para las tres.
+            if let blocked = model.cabinetChangeBlocked ?? model.addBooksBlocked, !busy {
                 ReasonLine(blocked)
                     .padding(.vertical, Theme.Space.s)
             }
@@ -320,10 +322,11 @@ extension SettingsScreen {
                     .frame(minHeight: Theme.Size.row)
             } else {
                 Button { confirmingTidy = true } label: { LinkRow(title: "Ordenar la biblioteca") }
-                    .disabled(busy)
-                    // La pregunta sale de la fila que tocaste: puesta en la tarjeta, su flecha
-                    // apuntaba al rótulo «Tu Gabinete».
-                    .confirmationDialog("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy, titleVisibility: .visible) {
+                    // Mientras bajo tu biblioteca de iCloud, apagado; su razón va arriba, con las demás.
+                    .disabled(busy || model.cabinetChangeBlocked != nil)
+                    // Toda pregunta es un aviso al centro con su botón para quedarse a la vista (regla 7):
+                    // como globo (`confirmationDialog` en iOS 26) escondía «Dejarla como está» (auditoría 8).
+                    .question("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy) {
                         Button("Ordenar la biblioteca") { Task { await model.library.tidy() } }
                         Button("Dejarla como está", role: .cancel) {}
                     } message: {
@@ -368,7 +371,7 @@ extension SettingsScreen {
 
     private var dialogTitle: String {
         guard let folder = chosenFolder else { return "" }
-        return CabinetLocation.hasLibrary(in: folder) ? "Ya hay un Gabinete aquí" : "¿Mover tu Gabinete a «\(folder.lastPathComponent)»?"
+        return CabinetLocation.hasLibrary(in: folder) ? "Ya hay un Gabinete aquí" : "¿Mover tu Gabinete a «\(folder.lastPathComponent.isolated)»?"
     }
 
     private var dialogMessage: String {
@@ -390,6 +393,8 @@ extension SettingsScreen {
     }
 
     private func describe(_ report: LibraryStore.TidyReport) -> String {
+        // No ordené nada: digo por qué (auditoría 9, B5).
+        if let notDone = report.notDone { return notDone }
         var lines = ["Revisé \(report.checked.counted("libro", "libros")); \(report.relocated.counted("cambió", "cambiaron")) de carpeta para quedar como en Calibre."]
         if !report.missing.isEmpty {
             lines.append("Sin archivo: \(report.missing.prefix(Theme.Lists.preview).joined(separator: ", "))\(report.missing.count > Theme.Lists.preview ? "…" : "").")

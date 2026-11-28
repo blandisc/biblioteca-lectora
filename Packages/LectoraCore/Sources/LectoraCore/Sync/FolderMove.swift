@@ -213,6 +213,32 @@ public enum FolderMove {
         return real
     }
 
+    /// El principio del nombre de la carpeta de trabajo de un libro nuevo (`placeNew`).
+    public static let newPrefix = ".gabinete-nuevo-"
+
+    /// Pone en `target` una carpeta nueva sin tocar nunca una que no es de esta corrida (auditoría 9,
+    /// M1). `fill` la arma en una carpeta de trabajo hermana (`.gabinete-nuevo-<uuid>`, que solo
+    /// conoce esta corrida) y al final se mueve a su lugar con `moveItem`, que no reemplaza. Si
+    /// mientras tanto iCloud bajó una carpeta con ese nombre (la de otro aparato), falla con
+    /// `occupied` y esa se queda como estaba; si algo falla, se quita solo la de trabajo.
+    /// Con `empty`, la carpeta de trabajo ya existe (vacía) cuando `fill` la recibe; si no, `fill` la
+    /// crea (p. ej. copiando otra carpeta a ella).
+    public static func placeNew(_ target: URL, empty: Bool = false, fill: (URL) throws -> Void) throws {
+        guard !CloudFile.isTaken(target) else { throw MoveError.occupied }
+        let staging = target.deletingLastPathComponent()
+            .appendingPathComponent(newPrefix + UUID().uuidString, isDirectory: true)
+        do {
+            if empty { try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: false) }
+            try fill(staging)
+            guard !CloudFile.isTaken(target) else { throw MoveError.occupied }
+            try StagedMove.coordinatedMove(from: staging, to: target)
+        } catch {
+            try? FileManager.default.removeItem(at: staging)
+            if !(error is MoveError), CloudFile.isTaken(target) { throw MoveError.occupied }
+            throw error
+        }
+    }
+
     /// El nombre con que está en el disco (en la Mac, la ruta puede venir con otras mayúsculas).
     private static func existingName(of folder: URL) -> String? {
         existingSpelling(of: folder.lastPathComponent, in: folder.deletingLastPathComponent(), preferring: folder.lastPathComponent)

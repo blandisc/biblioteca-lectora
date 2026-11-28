@@ -56,4 +56,34 @@ enum CoverImaging {
     static func forget(_ url: URL) {
         cache.removeObject(forKey: url as NSURL)
     }
+
+    /// Portadas de internet que ya bajó la cuadrícula para elegir (auditoría 9, B2): se dibujan y se
+    /// guardan con estos bytes, sin bajarlas dos veces.
+    private static let downloaded = NSCache<NSURL, NSData>()
+
+    static func remember(_ data: Data, for url: URL) {
+        downloaded.setObject(data as NSData, forKey: url as NSURL)
+        if cache.object(forKey: url as NSURL) == nil, let image = thumbnail(of: data) {
+            cache.setObject(image, forKey: url as NSURL)
+        }
+    }
+
+    static func remembered(_ url: URL) -> Data? {
+        downloaded.object(forKey: url as NSURL) as Data?
+    }
+
+    /// La imagen de una portada de internet que ya bajó (nil si no: se baja al dibujarla).
+    static func rememberedImage(_ url: URL) -> CGImage? {
+        remembered(url) == nil ? nil : cache.object(forKey: url as NSURL)
+    }
+
+    private static func thumbnail(of data: Data) -> CGImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: 600,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
 }

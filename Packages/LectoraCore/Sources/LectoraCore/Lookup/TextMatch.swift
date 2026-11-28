@@ -145,7 +145,11 @@ enum TextMatch {
 
     /// Escrito en alfabeto latino (con acentos y letras como ñ, ç, ø).
     static func isLatin(_ text: String) -> Bool {
-        let letters = text.unicodeScalars.filter(CharacterSet.letters.contains)
+        // Una marca que se combina (la tilde de «g̃» en guaraní, o un acento escrito aparte, como
+        // llegan los nombres desde la Mac) es de la letra de antes, no de otra escritura: «Ñandutí»
+        // decía «sin autor para comparar» aunque los dos traían autor (auditoría 8).
+        let letters = text.precomposedStringWithCanonicalMapping.unicodeScalars
+            .filter { CharacterSet.letters.contains($0) && !(0x0300...0x036F).contains($0.value) }
         guard !letters.isEmpty else { return false }
         return letters.allSatisfy { $0.value < 0x0250 || (0x1E00...0x1EFF).contains($0.value) }
     }

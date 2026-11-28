@@ -332,7 +332,7 @@ struct MacBookInspector: View {
         } else {
             let edit = draft.bulk
             for book in books where !edit.isEmpty {
-                do { _ = try library.update(edit.apply(to: book)) } catch { failed.append("«\(book.title)»: \(error.localizedDescription)") }
+                do { _ = try library.update(edit.apply(to: book)) } catch { failed.append("«\(book.title.isolated)»: \(error.localizedDescription)") }
             }
         }
         errorMessage = failed.isEmpty ? nil : failed.joined(separator: "\n")

@@ -21,6 +21,9 @@ final class AppModel: ObservableObject {
     let notes: NotesStore
     @Published var importing = false
     @Published var openBook: OpenBook?
+    /// Las ventanas de libro que abriste en esta sesión (en la Mac): no se revisan como las que la
+    /// Mac restaura al arrancar (auditoría 8, A1).
+    var openedWindows: Set<OpenBook> = []
     /// Resumen de una importación con duplicados o errores.
     @Published var importReport: String?
     /// «Volver a la bienvenida» desde una biblioteca que no bajó de iCloud (auditoría 4): la raíz la abre.
@@ -129,6 +132,12 @@ final class AppModel: ObservableObject {
         library.waitingForCloud ? EmptyCopy.addWhileDownloading : nil
     }
 
+    /// Por qué no puedo mover tu Gabinete ni cambiar de carpeta ahora (nil si puedo): mientras bajo
+    /// tu biblioteca de iCloud (auditoría 8, A2). Lo dicen Ajustes y la biblioteca misma.
+    var cabinetChangeBlocked: String? {
+        library.waitingForCloud ? EmptyCopy.cabinetWhileDownloading : nil
+    }
+
     /// El único camino para elegir libros que añadir (auditoría 5): el «+» de la Biblioteca, el de
     /// la Mac, Archivo › Añadir libros…, los vacíos y «Seguir leyendo» sin libro pasan por aquí.
     func addBooks() {
@@ -163,7 +172,7 @@ final class AppModel: ObservableObject {
         var lines: [String] = []
         if !duplicates.isEmpty {
             lines.append(duplicates.count == 1
-                ? "«\(duplicates[0])» ya estaba en tu biblioteca."
+                ? "«\(duplicates[0].isolated)» ya estaba en tu biblioteca."
                 : "\(duplicates.count.counted("libro", "libros")) ya estaban en tu biblioteca.")
         }
         // Qué archivo no entró y por qué (RB-4), no solo cuántos.
