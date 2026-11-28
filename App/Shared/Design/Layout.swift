@@ -32,10 +32,13 @@ extension View {
 
 private struct WindowReader: ViewModifier {
     @State private var layout = WindowLayout()
+    @State private var host = PanelHost()
 
     func body(content: Content) -> some View {
         #if os(iOS)
         content
+            .environment(\.panelHost, host)
+            .overlay { PanelHostLayer(host: host).environment(\.windowLayout, layout) }
             .environment(\.windowLayout, layout)
             .onGeometryChange(for: WindowLayout.self) { proxy in
                 let insets = proxy.safeAreaInsets
@@ -182,7 +185,12 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
     var closeLabel: String? = nil
     @ViewBuilder let panel: () -> Panel
     @Environment(\.windowLayout) private var window
+    @Environment(\.panelHost) private var host
+    /// Empujada (la ficha en lista | detalle): ahí una pila dentro de la pila hacía que iOS regresara
+    /// a la lista al abrir el panel (ronda 1), así que el panel sube a la raíz (`PanelHost`).
+    @Environment(\.isPresented) private var pushed
     @State private var frame: CGRect = .zero
+    @State private var lifted = false
 
     private var inPage: Bool {
         #if os(iOS)
@@ -192,35 +200,85 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
         #endif
     }
 
+    private var lifts: Bool { pushed && host != nil }
+
     func body(content: Content) -> some View {
         content
             .sheet(isPresented: Binding(get: { isPresented && !inPage }, set: { isPresented = $0 })) {
                 panel().duoBars()
             }
             .overlay {
-                if isPresented && inPage { pagePanel.transition(.opacity) }
+                if isPresented && inPage && !lifts {
+                    PanelPage(frame: frame, side: side, closeLabel: closeLabel, close: close, content: panel)
+                        .transition(.opacity)
+                }
             }
             .animation(Theme.Motion.sheet, value: isPresented && inPage)
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
+            .onChange(of: isPresented && inPage && lifts, initial: true) { _, show in
+                guard let host else { return }
+                if show {
+                    lifted = true
+                    host.show(PanelHost.Shown(frame: frame, side: side, closeLabel: closeLabel, close: close,
+                                              content: AnyView(panel())))
+                } else if lifted {
+                    lifted = false
+                    host.shown = nil
+                }
+            }
+            // Abierto antes de medirse (las capturas lo abren al aparecer): sigue a su presentador.
+            .onChange(of: frame) { _, frame in if lifted { host?.shown?.frame = frame } }
+            .onDisappear { if lifted { lifted = false; host?.shown = nil } }
     }
 
-    /// La página del panel y, si lo que lo abrió ocupa las dos, la otra atenuada.
-    @ViewBuilder
-    private var pagePanel: some View {
-        let close = { isPresented = false }
+    private func close() { isPresented = false }
+}
+
+/// Lo que un `SidePanel` empujado sube a la raíz: lo pinta `.measuresWindow()` encima de todo, en
+/// el mismo lugar de la ventana que tendría el panel.
+@Observable
+final class PanelHost {
+    struct Shown {
+        var frame: CGRect
+        var side: WindowLayout.Side
+        var closeLabel: String?
+        var close: () -> Void
+        var content: AnyView
+    }
+
+    var shown: Shown?
+
+    func show(_ panel: Shown) { shown = panel }
+}
+
+extension EnvironmentValues {
+    /// Dónde sube un `SidePanel` empujado (ver `PanelHost`).
+    @Entry var panelHost: PanelHost? = nil
+}
+
+/// La página del panel y, si lo que lo abrió ocupa las dos, la otra atenuada (tocarla cierra).
+private struct PanelPage<Panel: View>: View {
+    let frame: CGRect
+    let side: WindowLayout.Side
+    let closeLabel: String?
+    let close: () -> Void
+    @ViewBuilder let content: () -> Panel
+    @Environment(\.windowLayout) private var window
+
+    var body: some View {
         let pages = window.pages(of: frame, minPage: Theme.Window.minPage)
         HStack(spacing: 0) {
             if let pages {
-                if side == .trailing { shade(close).frame(width: pages.left.width) }
-                sheet(close)
-                if side == .leading { shade(close).frame(width: pages.right.width) }
+                if side == .trailing { shade.frame(width: pages.left.width) }
+                sheet
+                if side == .leading { shade.frame(width: pages.right.width) }
             } else {
-                sheet(close)
+                sheet
             }
         }
     }
 
-    private func shade(_ close: @escaping () -> Void) -> some View {
+    private var shade: some View {
         Theme.ink.opacity(Theme.Emphasis.panelShade)
             .ignoresSafeArea()
             .contentShape(Rectangle())
@@ -229,17 +287,39 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
             .accessibilityAddTraits(.isButton)
     }
 
-    private func sheet(_ close: @escaping () -> Void) -> some View {
-        panel()
+    private var sheet: some View {
+        content()
             .environment(\.closePanel, PanelClose(action: close))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.paper.ignoresSafeArea())
-            .overlay(alignment: .topTrailing) {
+            // Su ✕ arriba, en su propio renglón: encima del contenido tapaba la segunda letra de «Aa».
+            .safeAreaInset(edge: .top, spacing: 0) {
                 if let closeLabel {
                     CloseButton(label: closeLabel, style: .glass, action: close)
                         .padding(Theme.Reader.chromeInset)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
+    }
+}
+
+/// Pinta encima de todo el panel que subió un `SidePanel` empujado, en su lugar de la ventana.
+private struct PanelHostLayer: View {
+    let host: PanelHost
+
+    var body: some View {
+        GeometryReader { proxy in
+            if let shown = host.shown {
+                let origin = proxy.frame(in: .global).origin
+                PanelPage(frame: shown.frame, side: shown.side, closeLabel: shown.closeLabel,
+                          close: shown.close) { shown.content }
+                    .frame(width: shown.frame.width, height: shown.frame.height)
+                    .offset(x: shown.frame.minX - origin.x, y: shown.frame.minY - origin.y)
+                    .transition(.opacity)
+            }
+        }
+        .ignoresSafeArea()
+        .animation(Theme.Motion.sheet, value: host.shown != nil)
     }
 }
 
@@ -308,9 +388,12 @@ struct FoldSplit<Root: View, Placeholder: View>: View {
 
     var body: some View {
         if split, let fold = window.verticalFold {
+            // La lista llega justo al pliegue: con un ancho «ideal» iOS la dejaba en un tercio y la
+            // página derecha cruzaba el pliegue (ronda 1); con mínimo y máximo iguales no la mueve.
+            let sidebar = fold.position - window.leading
             NavigationSplitView(columnVisibility: .constant(.all)) {
                 root
-                    .navigationSplitViewColumnWidth(fold.position - window.leading)
+                    .navigationSplitViewColumnWidth(min: sidebar, ideal: sidebar, max: sidebar)
                     #if os(iOS)
                     .toolbar(removing: .sidebarToggle)
                     #endif

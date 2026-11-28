@@ -982,6 +982,15 @@ final class DesignRulesTests: XCTestCase {
                 }
             }
         }
+        //     Un panel abierto desde una pantalla empujada (la ficha en lista | detalle) sube a la raíz:
+        //     encima de la ficha, iOS regresaba a la lista y el panel no se veía (ronda 1). Y la lista
+        //     llega justo al pliegue (con solo el ancho ideal, iOS la dejaba en un tercio).
+        if !layout.contains("@Environment(\\.isPresented) private var pushed") || !layout.contains("PanelHostLayer(host: host)") {
+            duo.append("SidePanel: el panel de una pantalla empujada no sube a la raíz")
+        }
+        if !layout.contains("navigationSplitViewColumnWidth(min: sidebar, ideal: sidebar, max: sidebar)") {
+            duo.append("FoldSplit: la lista no llega al pliegue")
+        }
         //     En el lector, la lectura guiada sigue la página del renglón (con dos páginas, la otra en
         //     penumbra) y la serie de la ficha no deja un «·» colgando al partirse.
         let readerJS = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""
