@@ -85,12 +85,12 @@ struct SettingsScreen: View {
         )) {
             if let folder = chosenFolder {
                 if CabinetLocation.hasLibrary(in: folder) {
-                    Button("Abrir la biblioteca que ya está ahí") { run { try model.library.use(cabinet: folder) } }
+                    Button("Abrirla") { run { try model.library.use(cabinet: folder) } }
                 } else {
-                    Button("Mover mi Gabinete ahí") { run { try await model.library.move(toCabinet: folder) } }
+                    Button("Moverlo") { run { try await model.library.move(toCabinet: folder) } }
                 }
             }
-            Button("Dejar el Gabinete donde está", role: .cancel) {}
+            Button("Dejarlo así", role: .cancel) {}
         } message: {
             Text(dialogMessage)
         }
@@ -310,12 +310,12 @@ extension SettingsScreen {
                     // Mientras bajo tu biblioteca de iCloud, apagado; su razón va arriba, con las demás.
                     .disabled(busy || model.cabinetChangeBlocked != nil)
                     // Toda pregunta es un aviso al centro con su botón para quedarse a la vista (regla 7):
-                    // como globo (`confirmationDialog` en iOS 26) escondía «Dejarla como está» (auditoría 8).
+                    // como globo (`confirmationDialog` en iOS 26) escondía «Dejarla así» (auditoría 8).
                     .question("¿Ordenar tu biblioteca como Calibre?", isPresented: $confirmingTidy) {
-                        Button("Ordenar la biblioteca") { Task { await model.library.tidy() } }
-                        Button("Dejarla como está", role: .cancel) {}
+                        Button("Ordenarla") { Task { await model.library.tidy() } }
+                        Button("Dejarla así", role: .cancel) {}
                     } message: {
-                        Text("Reviso cada libro y muevo a su carpeta de Calibre (autor y título) los que no están donde deben. Solo muevo: no borro nada, y lo que no esté en el catálogo se queda donde está.")
+                        Text("Muevo a su carpeta de autor y título los libros que no están donde deben. No borro nada.")
                     }
             }
         }
@@ -356,7 +356,8 @@ extension SettingsScreen {
 
     private var dialogTitle: String {
         guard let folder = chosenFolder else { return "" }
-        return CabinetLocation.hasLibrary(in: folder) ? "Ya hay un Gabinete aquí" : "¿Mover tu Gabinete a «\(folder.lastPathComponent.isolated)»?"
+        return CabinetLocation.hasLibrary(in: folder) ? "¿Abrir la biblioteca que ya está en «\(folder.lastPathComponent.isolated)»?"
+            : "¿Mover tu Gabinete a «\(folder.lastPathComponent.isolated)»?"
     }
 
     private var dialogMessage: String {

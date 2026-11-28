@@ -52,9 +52,9 @@ struct MacDuplicatesView: View {
             get: { confirming != nil }, set: { if !$0 { confirming = nil } }
         )) {
             if let group = confirming {
-                Button("Juntar en «\((keeper(of: group)?.title ?? "").isolated)»") { merge(group) }
+                Button("Juntarlos") { merge(group) }
             }
-            Button("Dejarlos separados", role: .cancel) {}
+            Button("No juntar", role: .cancel) {}
         } message: {
             Text(confirming.map(confirmMessage) ?? "")
         }
@@ -103,8 +103,7 @@ struct MacDuplicatesView: View {
         let newFormats = Set(others.flatMap(\.formats)).subtracting(keeper.formats).sorted()
         var lines = ["Se queda «\(keeper.title.isolated)» (\(keeper.formats.joined(separator: " · ")))."]
         if !newFormats.isEmpty { lines.append("Gana \(newFormats.joined(separator: " y ")) en su misma carpeta.") }
-        lines.append("Completo sus datos con los de los otros, y sus subrayados y marcadores pasan a este.")
-        lines.append("Los archivos repetidos van a la Papelera, de donde puedes recuperarlos.")
+        lines.append("Le paso los datos, subrayados y marcadores de los otros; los repetidos van a la Papelera.")
         return lines.joined(separator: " ")
     }
 

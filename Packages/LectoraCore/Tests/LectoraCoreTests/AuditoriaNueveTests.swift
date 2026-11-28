@@ -74,6 +74,54 @@ final class AuditoriaNueveTests: XCTestCase {
         XCTAssertEqual(try manager.contentsOfDirectory(atPath: author.path).sorted(), ["Bestiario (2)", "Rayuela (1)"])
     }
 
+    /// Pantallas 9, punto 6: si la app se cierra a media copia, la carpeta de trabajo de un libro
+    /// nuevo no se queda para siempre. Solo se va la de nombre exacto, vieja y sin trabajo en curso;
+    /// lo demás se queda, y la escondida nunca cuenta como libro suelto al ordenar.
+    func testNewFolderLeftoversGoAway() throws {
+        let manager = FileManager.default
+        let library = try tempDir()
+        let author = library.appendingPathComponent("Julio Cortázar")
+        let lonely = library.appendingPathComponent("Clarice Lispector")
+        try manager.createDirectory(at: author.appendingPathComponent("Rayuela (1)"), withIntermediateDirectories: true)
+        try manager.createDirectory(at: lonely, withIntermediateDirectories: true)
+        let old = Date().addingTimeInterval(-2 * FolderMove.newLeftoverAge)
+        func work(_ folder: URL, _ name: String, age: Date?) throws -> URL {
+            let url = folder.appendingPathComponent(name)
+            try manager.createDirectory(at: url, withIntermediateDirectories: false)
+            let file = url.appendingPathComponent("libro.epub")
+            try Data("a medias".utf8).write(to: file)
+            if let age {
+                for item in [file, url] {
+                    try manager.setAttributes([.creationDate: age, .modificationDate: age], ofItemAtPath: item.path)
+                }
+            }
+            return url
+        }
+        let stale = FolderMove.newPrefix + UUID().uuidString
+        let staleAlone = FolderMove.newPrefix + UUID().uuidString
+        let fresh = FolderMove.newPrefix + UUID().uuidString
+        _ = try work(author, stale, age: old)
+        _ = try work(lonely, staleAlone, age: old)
+        _ = try work(author, fresh, age: nil)
+        _ = try work(author, FolderMove.newPrefix + "nada", age: old)
+        _ = try work(library, stale, age: old)
+
+        // Mientras un trabajo de toda la biblioteca corre, nada se toca.
+        XCTAssertEqual(FolderMove.removeNewLeftovers(in: library, busy: true), [])
+        XCTAssertTrue(manager.fileExists(atPath: author.appendingPathComponent(stale).path))
+
+        let removed = FolderMove.removeNewLeftovers(in: library, busy: false)
+        XCTAssertEqual(Set(removed), [stale, "Julio Cortázar/\(stale)", "Clarice Lispector/\(staleAlone)"])
+        let left = Set(try manager.contentsOfDirectory(atPath: author.path))
+        XCTAssertEqual(left, ["Rayuela (1)", fresh, FolderMove.newPrefix + "nada"],
+                       "La reciente (una copia que sigue), la de otro nombre y el libro se quedan")
+        XCTAssertFalse(manager.fileExists(atPath: lonely.path), "La carpeta de autor que quedó vacía también se va")
+
+        // Al ordenar, una carpeta escondida no es un libro suelto.
+        XCTAssertTrue(store.contains("title.hasDirectoryPath && !title.lastPathComponent.hasPrefix(\".\")"))
+        XCTAssertTrue(store.contains("FolderMove.removeNewLeftovers(in: library, busy: busy)"), "Se limpia al abrir la biblioteca")
+    }
+
     func testCalibreAndAddBookOnlyRemoveWhatTheyPlaced() {
         let migrate = body(of: "func migrateFromCalibre(", in: store)
         XCTAssertTrue(migrate.contains("FolderMove.placeNew(target)"), "Traer de Calibre copia a una carpeta de trabajo")

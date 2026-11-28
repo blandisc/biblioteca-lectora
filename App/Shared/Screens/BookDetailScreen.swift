@@ -9,6 +9,7 @@ struct BookDetailScreen: View {
     @State private var editing = false
     @State private var searching = false
     @State private var choosingCover = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     /// Datos al día: después de editar, la ficha se actualiza sola.
     private var live: ShelfBook { model.shelfBook(id: book.id) ?? book }
@@ -18,7 +19,7 @@ struct BookDetailScreen: View {
         ScrollView {
             VStack(spacing: Theme.Space.l) {
                 ShelfCover(book: live)
-                    .frame(width: Theme.Size.coverDetail)
+                    .frame(width: typeSize.isAccessibilitySize ? Theme.Size.coverDetailLarge : Theme.Size.coverDetail)
                     .padding(.top, Theme.Space.l)
                 VStack(spacing: Theme.Space.xs) {
                     // Número de ficha, como el id de Calibre que da nombre a la carpeta.
@@ -28,6 +29,7 @@ struct BookDetailScreen: View {
                     WholeWordsText(live.title)
                         .font(.bookTitle)
                         .multilineTextAlignment(.center)
+                        .lineLimit(typeSize.isAccessibilitySize ? Theme.Size.detailTitleLinesLarge : nil)
                     Text(live.author)
                         .font(.body)
                         .foregroundStyle(Theme.secondaryInk)

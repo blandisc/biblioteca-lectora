@@ -219,18 +219,22 @@ final class LibraryStore: ObservableObject {
     /// Quita las carpetas de trabajo que dejó un movimiento que no terminó (la app se cerró o se
     /// trabó a media copia, auditoría 7, M2): en el Gabinete en uso y en cada carpeta a la que
     /// este aparato empezó a copiar. Solo las de nombre exacto `.gabinete-copia-<token>-…`; las de
-    /// otro aparato, cuando llevan un día sin tocarse (podría estar copiando ahora).
+    /// otro aparato, cuando llevan un día sin tocarse (podría estar copiando ahora). Y las de un
+    /// libro nuevo que no terminó de copiarse (`.gabinete-nuevo-<uuid>`, auditoría 9), cuando llevan
+    /// unos minutos sin tocarse y ningún trabajo de toda la biblioteca corre.
     private func removeLeftoverCopies() {
         let pending = CabinetLocation.pendingStagings()
         let mine = Set(pending.map(\.token))
         let places = [cabinet] + pending.compactMap(\.destination)
         let folders = [CabinetLocation.libraryFolder, CabinetLocation.notesFolder]
+        let library = root, busy = lock.isBusy
         Task.detached(priority: .utility) {
             for place in places {
                 let accessing = place.startAccessingSecurityScopedResource()
                 StagedMove.removeLeftovers(in: place, folders: folders, mine: mine)
                 if accessing { place.stopAccessingSecurityScopedResource() }
             }
+            FolderMove.removeNewLeftovers(in: library, busy: busy)
             await MainActor.run { CabinetLocation.forgetStaging(tokens: mine) }
         }
     }
@@ -1042,7 +1046,8 @@ final class LibraryStore: ObservableObject {
         let authors = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
         for author in authors where !author.lastPathComponent.hasPrefix(".") && author.hasDirectoryPath {
             let titles = (try? manager.contentsOfDirectory(at: author, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
-            for title in titles where title.hasDirectoryPath {
+            // Una carpeta de trabajo escondida (`.gabinete-nuevo-…`) no es un libro suelto.
+            for title in titles where title.hasDirectoryPath && !title.lastPathComponent.hasPrefix(".") {
                 let relative = "\(author.lastPathComponent)/\(title.lastPathComponent)"
                 if !known.contains(relative) { report.strays.append(relative) }
             }

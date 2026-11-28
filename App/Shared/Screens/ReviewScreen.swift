@@ -100,8 +100,13 @@ struct ReviewScreen: View {
         .question(confirming?.title ?? "", isPresented: Binding(
             get: { confirming != nil }, set: { if !$0 { confirming = nil } }
         ), presenting: confirming) { batch in
-            Button(batch.action) { run(batch) }
-            Button("Dejarlos por revisar", role: .cancel) {}
+            // Cortos (pantallas 9): con la letra más grande, «Mantener los datos de 1 libro» usaba tres
+            // renglones y escondía «Dejarlos por revisar». La cifra va en el título.
+            switch batch {
+            case .completeSafe: Button("Completarlos") { run(batch) }
+            case .keep: Button("Mantener") { run(batch) }
+            }
+            Button("Dejarlos", role: .cancel) {}
         } message: { batch in
             Text(batch.message)
         }
@@ -291,16 +296,9 @@ enum ReviewBatch: Hashable {
     var message: String {
         switch self {
         case .completeSafe:
-            "Solo lleno lo que les falta (autor, año, editorial, ISBN, sinopsis, portada): lo que ya tienen no cambia. Puedes deshacerlo aquí mismo o dato por dato en «Lo que completé solo»."
+            "Solo lleno lo que les falta; lo que ya tienen no cambia. Puedes deshacerlo aquí mismo."
         case .keep:
             "Salen de «Por revisar» sin cambiar nada. Puedes deshacerlo aquí mismo."
-        }
-    }
-
-    var action: String {
-        switch self {
-        case .completeSafe: "Completar \(count)"
-        case .keep: "Mantener los datos de \(count)"
         }
     }
 }

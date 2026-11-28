@@ -248,6 +248,11 @@ enum Theme {
         static let control: CGFloat = 46
         static let coverHero: CGFloat = 132
         static let coverDetail: CGFloat = 168
+        /// En la ficha, con la letra más grande: la portada más chica y el título en hasta cuatro
+        /// renglones con «…», así «Empezar a leer» se ve sin deslizar (pantallas 9). El título entero
+        /// lo lee VoiceOver y está en Editar datos.
+        static let coverDetailLarge: CGFloat = 88
+        static let detailTitleLinesLarge = 4
         static let coverRow: CGFloat = 40
         static let coverMini: CGFloat = 26
         static let coverEditor: CGFloat = 84
@@ -448,6 +453,9 @@ enum Theme {
         static let openSettle: TimeInterval = 0.25
         /// La tarjeta de un subrayado muestra hasta estas líneas de la cita.
         static let highlightLines = 4
+        /// Letras de la cita en el aviso «Tu nota sobre el pasaje»: entera, con la letra más grande
+        /// llenaba el aviso y escondía sus botones (pantallas 9).
+        static let noteQuoteLetters = 120
         /// El resumen de Wikipedia en la tarjeta «Consultar».
         static let lookupLines = 5
         /// Fundido: el mismo resorte que la hoja (con menos fuerza duraría más el

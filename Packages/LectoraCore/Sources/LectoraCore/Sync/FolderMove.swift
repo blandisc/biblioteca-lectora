@@ -239,6 +239,62 @@ public enum FolderMove {
         }
     }
 
+    /// Lo que espero antes de quitar la carpeta de trabajo de un libro nuevo que quedó a medias:
+    /// copiar un libro tarda segundos, y una más nueva puede ser de una copia que sigue (de este
+    /// aparato o de otro, por iCloud).
+    public static let newLeftoverAge: TimeInterval = 15 * 60
+
+    /// ¿Es exactamente una carpeta de trabajo de `placeNew` (`.gabinete-nuevo-<uuid>`)?
+    public static func isNewLeftover(_ name: String) -> Bool {
+        name.hasPrefix(newPrefix) && UUID(uuidString: String(name.dropFirst(newPrefix.count))) != nil
+    }
+
+    /// Quita las carpetas de trabajo de libros nuevos que dejó una copia que no terminó (la app se
+    /// cerró a media copia, auditoría 9): en la biblioteca y en cada carpeta de autor. Solo las de
+    /// nombre exacto `.gabinete-nuevo-<uuid>`, que llevan `newLeftoverAge` sin tocarse (ni ellas ni
+    /// lo de dentro), y nunca mientras un trabajo de toda la biblioteca corre (`busy`: añadir o traer
+    /// de Calibre podrían estar llenándola). Devuelve las rutas que quitó, relativas a `library`.
+    @discardableResult
+    public static func removeNewLeftovers(in library: URL, busy: Bool, now: Date = Date()) -> [String] {
+        guard !busy else { return [] }
+        let manager = FileManager.default
+        let top = ((try? manager.contentsOfDirectory(atPath: library.path)) ?? []).sorted()
+        // La biblioteca misma y sus carpetas de autor (no las escondidas, como `.lectora`).
+        let places = [""] + top.filter { name in
+            var isFolder: ObjCBool = false
+            return !name.hasPrefix(".") && manager.fileExists(atPath: library.appendingPathComponent(name).path, isDirectory: &isFolder)
+                && isFolder.boolValue
+        }
+        var removed: [String] = []
+        for place in places {
+            let folder = place.isEmpty ? library : library.appendingPathComponent(place, isDirectory: true)
+            let names = place.isEmpty ? top : ((try? manager.contentsOfDirectory(atPath: folder.path)) ?? []).sorted()
+            var tookOne = false
+            for name in names where isNewLeftover(name) {
+                let url = folder.appendingPathComponent(name, isDirectory: true)
+                guard now.timeIntervalSince(lastTouched(url, now: now)) >= newLeftoverAge,
+                      (try? manager.removeItem(at: url)) != nil else { continue }
+                removed.append(place.isEmpty ? name : "\(place)/\(name)")
+                tookOne = true
+            }
+            // La carpeta del autor que se creó para ese libro y quedó vacía, también.
+            if tookOne, !place.isEmpty { removeIfEmpty(folder) }
+        }
+        return removed
+    }
+
+    /// La última vez que algo tocó la carpeta o lo que tiene dentro (una copia larga escribe en
+    /// su archivo, no en la carpeta).
+    private static func lastTouched(_ folder: URL, now: Date) -> Date {
+        let keys: Set<URLResourceKey> = [.creationDateKey, .contentModificationDateKey]
+        let inside = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: Array(keys))) ?? []
+        let dates = ([folder] + inside).flatMap { url -> [Date] in
+            let values = try? url.resourceValues(forKeys: keys)
+            return [values?.creationDate, values?.contentModificationDate].compactMap { $0 }
+        }
+        return dates.max() ?? now
+    }
+
     /// El nombre con que está en el disco (en la Mac, la ruta puede venir con otras mayúsculas).
     private static func existingName(of folder: URL) -> String? {
         existingSpelling(of: folder.lastPathComponent, in: folder.deletingLastPathComponent(), preferring: folder.lastPathComponent)

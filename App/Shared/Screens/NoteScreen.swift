@@ -76,8 +76,8 @@ struct NoteScreen: View {
             .environment(\.openURL, OpenURLAction(handler: open))
             .navigationDestination(item: $linkedBook) { BookDetailScreen(book: $0) }
             .question("¿Borrar «\((note?.title ?? "esta nota").isolated)»?", isPresented: $confirmingDelete) {
-                Button("Borrar nota", role: .destructive) { deleteNote() }
-                Button("Conservar la nota", role: .cancel) {}
+                Button("Borrarla", role: .destructive) { deleteNote() }
+                Button("Conservarla", role: .cancel) {}
             } message: {
                 Text("Borro su archivo de la carpeta Notas de tu Gabinete. Tus libros y subrayados se quedan.")
             }

@@ -936,15 +936,37 @@ final class DesignRulesTests: XCTestCase {
         //     letra baja un paso), el código corre de lado y el pie de una portada no deja «·» colgando.
         var split: [String] = []
         let whole = Self.piece("WholeWordsText")
-        if !whole.contains("ViewThatFits(in: .horizontal)") || !whole.contains("WordWidthLayout") || !whole.contains("titleScales") {
+        if !whole.contains("WholeWordsLayout(steps:") || !whole.contains("subviews[base].sizeThatFits(.unspecified).width <= width")
+            || !whole.contains("titleScales") {
             split.append("WholeWordsText: no baja la letra cuando su palabra más ancha no cabe")
         }
-        // Auditoría 9 (M2, B3): primero dos renglones, luego un poco más chico (como mucho tres pasos y,
+        // Pantallas 9: cada paso mide también lo alto (que quepa entero en sus renglones): en la lista,
+        // «Don / Quijote de…» se cortaba a tamaño completo. Y el piso usa los renglones de su lugar
+        // (las palabras que caben arriba y «…» en el último), no uno solo («Historia verd…»).
+        if !whole.contains("Text(text).lineLimit(nil).hidden()")
+            || !whole.contains("subviews[base + 1].sizeThatFits(proposal).height <= subviews[base + 2].sizeThatFits(proposal).height") {
+            split.append("WholeWordsText: no mide si el título cabe entero en sus renglones antes de cortarlo")
+        }
+        if !whole.contains("@Environment(\\.lineLimit)") || !whole.contains("split(head, tail, above: above)")
+            || !whole.contains("Text(tail).lineLimit(1).truncationMode(.tail)") {
+            split.append("WholeWordsText: en el piso cae a un renglón en vez de usar los de su lugar")
+        }
+        if !whole.contains(".accessibilityLabel(Text(text))") {
+            split.append("WholeWordsText: VoiceOver no lee el título entero")
+        }
+        // Pantallas 9: en la ficha, con AX5, un título larguísimo empujaba «Empezar a leer» fuera de la
+        // primera vista. Con la letra grande, tope de renglones y la portada más chica.
+        let detail = Self.sources("App/Shared/Screens").first { $0.path.hasSuffix("BookDetailScreen.swift") }?.text ?? ""
+        if !detail.contains(".lineLimit(typeSize.isAccessibilitySize ? Theme.Size.detailTitleLinesLarge : nil)")
+            || !detail.contains("Theme.Size.coverDetailLarge") {
+            split.append("BookDetailScreen: con la letra más grande el título empuja «Empezar a leer» fuera de la vista")
+        }
+        // Auditoría 9 (M2, B3): primero sus renglones, luego un poco más chico (como mucho tres pasos y,
         // con la letra grande, nunca menos que la normal) y al final «…»; las palabras se miden con sus marcas.
         if !whole.contains("static let maxSteps = 3") || !whole.contains("$0 >= .large") || !whole.contains("prefix(maxSteps + 1)") {
             split.append("WholeWordsText: la letra baja sin piso (con AX5 el título quedaba diminuto)")
         }
-        if !whole.contains(".lineLimit(1).truncationMode(.tail)") || !whole.contains("floor.") {
+        if !whole.contains(".lineLimit(1).truncationMode(.tail)") || !whole.contains("floor(heads, ranges)") {
             split.append("WholeWordsText: en el piso el título no termina en «…»")
         }
         if !whole.contains("Self.words(text)") || whole.contains("Text(verbatim: $0)") {
@@ -1330,6 +1352,56 @@ final class DesignRulesTests: XCTestCase {
         if !(Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }?.text ?? "")
             .contains("func question<A: View, M: View>(_ title: String, isPresented: Binding<Bool>,") {
             XCTFail("Falta .question en Components.swift")
+        }
+        // Pantallas 9 (27 nov 2026): con AX5, «Mantener los datos de 1 libro» usaba tres renglones y
+        // «Dejarlos por revisar» quedaba escondido; había que deslizar el aviso para verlo. Los botones
+        // de una pregunta dicen en una o dos palabras qué hacen («Mantener», «Dejarlos»), sin cifras ni
+        // nombres pegados; la cifra y el detalle van en el título y en un mensaje corto.
+        var long: [String] = []
+        for file in Self.ui {
+            for (index, line) in file.lines.enumerated() where line.contains(".question(") || line.contains(".alert(") {
+                let rest = file.lines[index...].prefix(16)
+                let block = rest.prefix { !$0.contains("} message:") && !$0.contains(".alertInk()") }
+                let messages = rest.drop { !$0.contains("} message:") }.prefix(4).joined(separator: "\n")
+                let where_ = "\(file.path):\(index + 1)"
+                for label in Self.captures(#"Button\("((?:[^"\\]|\\.)*)""#, in: block.joined(separator: "\n")) {
+                    let words = label.split(separator: " ").count
+                    if label.contains("\\(") || words > Self.questionLabelWords || label.count > Self.questionLabelLetters {
+                        long.append("\(where_): «\(label)»")
+                    }
+                }
+                if line.contains(".question("), block.joined().range(of: #"Button\([a-z]"#, options: .regularExpression) != nil {
+                    long.append("\(where_): botón con su nombre en una variable (escríbelo, corto)")
+                }
+                for text in Self.captures(#"Text\("((?:[^"\\]|\\.)*)"\)"#, in: messages) where text.count > Self.questionMessageLetters {
+                    long.append("\(where_): mensaje de \(text.count) letras")
+                }
+            }
+        }
+        check(long, "Pregunta con botones largos: una o dos palabras (hasta \(Self.questionLabelLetters) letras) y la cifra en el título")
+        // Regla 1: los botones de un aviso van en tinta, no en el verde de la app.
+        let ink = Self.ui.flatMap { file in
+            file.lines.enumerated().compactMap { index, line -> String? in
+                guard line.contains(".alert(") else { return nil }
+                return file.lines[index...].prefix(20).joined().contains(".alertInk()") ? nil : "\(file.path):\(index + 1)"
+            }
+        }
+        let pieces = Self.sources("App/Shared/Design").first { $0.path.hasSuffix("Components.swift") }?.text ?? ""
+        check(ink + (pieces.components(separatedBy: "message: message).alertInk()").count == 3 ? [] : ["Components.swift: .question sin .alertInk()"])
+              + (pieces.contains("func alertInk() -> some View {\n        #if os(iOS)\n        tint(Theme.ink)") ? [] : ["alertInk no tiñe de tinta"]),
+              "Aviso con sus botones en verde: termina en .alertInk() (regla 1)")
+    }
+
+    /// Lo largo que puede ser un botón de una pregunta y su mensaje (pantallas 9).
+    static let questionLabelWords = 2
+    static let questionLabelLetters = 14
+    static let questionMessageLetters = 120
+
+    /// Lo que atrapa el primer grupo de `pattern` en `text`.
+    static func captures(_ pattern: String, in text: String) -> [String] {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        return regex.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap {
+            Range($0.range(at: 1), in: text).map { String(text[$0]) }
         }
     }
 

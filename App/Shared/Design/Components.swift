@@ -1107,22 +1107,27 @@ struct ThinProgress: View {
 
 /// Un título que nunca parte una palabra con guion (regla 9, auditoría 8: «Wake-/field», «Los
 /// detec-/tives», «conquista-/dores» con la letra más grande). SwiftUI parte la palabra que no
-/// cabe en el renglón y no deja apagarlo; aquí, si la palabra más ancha no cabe a lo ancho, la
-/// letra baja un paso a la vez (el tamaño de texto de iOS, o la escala de una letra de medida
-/// fija), como mucho `maxSteps` pasos y, si tu letra es de las grandes de accesibilidad, nunca por
-/// debajo de `.large` (auditoría 9, M2: con AX5 el título quedaba diminuto). En el piso, si aún no
-/// cabe, el título va en un renglón y termina en «…», sin guion. Lo demás lo pone quien lo usa:
-/// `.font`, `.lineLimit`, la alineación. Lo usan todos los títulos de libro y de nota, bajo una
-/// portada y en la portada dibujada.
+/// cabe en el renglón y no deja apagarlo. Aquí va el primero que cabe, sin partir palabra y en los
+/// renglones de su `.lineLimit`: el título a la letra de ahora; si no, un paso más chico (el tamaño
+/// de texto de iOS, o la escala de una letra de medida fija), como mucho `maxSteps` pasos y, si tu
+/// letra es de las grandes de accesibilidad, nunca por debajo de `.large` (auditoría 9, M2). Cada
+/// paso mide lo ancho (su palabra más ancha) y lo alto (que quepa entero en sus renglones): en la
+/// lista, «Don / Quijote de…» se cortaba a tamaño completo mientras otros se achicaban (pantallas 9).
+/// En el piso, las palabras que caben en los renglones de arriba y, en el último, lo que sigue con
+/// «…» (puede cortar esa palabra, nunca con guion): antes caía a un renglón («Historia verd…»).
+/// Lo demás lo pone quien lo usa: `.font`, `.lineLimit`, la alineación. VoiceOver lee el título
+/// entero. Lo usan todos los títulos de libro y de nota, bajo una portada y en la portada dibujada.
 struct WholeWordsText: View {
     /// El texto, con lo que lo marca (lo buscado en verde, en `NoteRow`).
     let text: AttributedString
     /// Para la letra de medida fija (la portada dibujada): la letra a cada escala.
     var fixedFont: ((CGFloat) -> Font)? = nil
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.lineLimit) private var lineLimit
+    @Environment(\.multilineTextAlignment) private var alignment
 
-    /// Cuántos pasos baja la letra como mucho: así `ViewThatFits` mide pocos candidatos, también en
-    /// una lista larga (auditoría 9, B4).
+    /// Cuántos pasos baja la letra como mucho: así se miden pocos candidatos, también en una lista
+    /// larga (auditoría 9, B4).
     static let maxSteps = 3
 
     init(_ text: String, fixedFont: ((CGFloat) -> Font)? = nil) {
@@ -1135,57 +1140,101 @@ struct WholeWordsText: View {
     }
 
     var body: some View {
-        // La primera que cabe: la letra de ahora y, si su palabra más ancha no cabe, la siguiente; al
-        // final, en el piso, el título en un renglón que termina en «…».
-        ViewThatFits(in: .horizontal) {
+        let ranges = Self.wordRanges(text)
+        // Las palabras de arriba en el piso: de la mayor cantidad a una; solo con dos renglones o más.
+        let heads = (lineLimit ?? 2) >= 2 && ranges.count > 1 ? Array((1..<ranges.count).reversed()) : []
+        WholeWordsLayout(steps: fixedFont == nil ? Self.steps(from: typeSize).count : Self.scales.count, splits: heads.count) {
             if let fixedFont {
-                ForEach(Theme.CoverArt.titleScales.prefix(Self.maxSteps + 1), id: \.self) { scale in candidate.font(fixedFont(scale)) }
-                floor.font(fixedFont(Theme.CoverArt.titleScales.prefix(Self.maxSteps + 1).last ?? 1))
+                ForEach(Self.scales, id: \.self) { scale in candidate.font(fixedFont(scale)) }
+                floor(heads, ranges).font(fixedFont(Self.scales.last ?? 1))
             } else {
                 let steps = Self.steps(from: typeSize)
                 ForEach(steps, id: \.self) { size in candidate.dynamicTypeSize(size) }
-                floor.dynamicTypeSize(steps.last ?? typeSize)
+                floor(heads, ranges).dynamicTypeSize(steps.last ?? typeSize)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(text))
     }
 
-    /// El título, que a lo ancho dice medir lo que su palabra más ancha (`WordWidthLayout`). Las
-    /// palabras se miden con sus marcas (la negrita de lo buscado en `NoteRow`, auditoría 9, B3):
-    /// medidas sin ellas, una palabra en negritas parecía caber y se partía.
+    /// Las escalas de la letra de medida fija, de la normal hacia abajo.
+    private static var scales: [CGFloat] { Array(Theme.CoverArt.titleScales.prefix(maxSteps + 1)) }
+
+    /// El título entero: su palabra más ancha, el título sin tope de renglones (para saber si cabe
+    /// entero) y el que se ve.
     private var candidate: some View {
-        WordWidthLayout {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Self.words(text), id: \.self) { Text($0) }
-            }
-            .fixedSize(horizontal: true, vertical: true)
-            .hidden()
-            Text(text)
+        // Un `Group`: lo que se le pone (la letra de ese paso) va a los tres.
+        Group {
+            widest(Self.words(text))
+            Text(text).lineLimit(nil).hidden()
+            shown(Text(text))
         }
     }
 
-    /// En el piso: un renglón que termina en «…» antes que partir una palabra con guion.
-    private var floor: some View {
-        Text(text).lineLimit(1).truncationMode(.tail)
+    /// En el piso: cada corte con sus primeras palabras enteras arriba y lo que sigue en el último
+    /// renglón, que termina en «…»; al final, un renglón que termina en «…» antes que partir una
+    /// palabra con guion.
+    private func floor(_ heads: [Int], _ ranges: [Range<AttributedString.Index>]) -> some View {
+        let above = max((lineLimit ?? 2) - 1, 1)
+        return Group {
+            ForEach(heads, id: \.self) { count in
+                let head = AttributedString(text[text.startIndex..<ranges[count - 1].upperBound])
+                let tail = AttributedString(text[ranges[count].lowerBound..<text.endIndex])
+                widest(Self.words(head))
+                split(head, tail, above: nil).hidden()
+                shown(split(head, tail, above: above))
+            }
+            widest([])
+            Color.clear.hidden()
+            shown(Text(text).lineLimit(1).truncationMode(.tail))
+        }
+    }
+
+    /// Las palabras enteras arriba y lo demás en un renglón con «…».
+    private func split(_ head: AttributedString, _ tail: AttributedString, above: Int?) -> some View {
+        VStack(alignment: alignment.horizontal, spacing: 0) {
+            Text(head).lineLimit(above)
+            Text(tail).lineLimit(1).truncationMode(.tail)
+        }
+    }
+
+    /// Lo ancho de la palabra más ancha, escondido (se mide con sus marcas: medidas sin ellas, una
+    /// palabra en negritas parecía caber y se partía, auditoría 9, B3).
+    private func widest(_ words: [AttributedString]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(words, id: \.self) { Text($0) }
+        }
+        .fixedSize(horizontal: true, vertical: true)
+        .hidden()
+    }
+
+    /// El que se ve: si no es el elegido, no ocupa lugar ni se dibuja.
+    private func shown(_ view: some View) -> some View {
+        CollapseLayout { view }.clipped().accessibilityHidden(true)
     }
 
     /// Las palabras del texto, sin repetir, cada una con sus marcas.
     static func words(_ text: AttributedString) -> [AttributedString] {
         var seen = Set<AttributedString>()
-        var result: [AttributedString] = []
+        return wordRanges(text).map { AttributedString(text[$0]) }.filter { seen.insert($0).inserted }
+    }
+
+    /// Dónde está cada palabra del texto, en orden.
+    static func wordRanges(_ text: AttributedString) -> [Range<AttributedString.Index>] {
+        var result: [Range<AttributedString.Index>] = []
         let characters = text.characters
         var start: AttributedString.Index?
         var index = characters.startIndex
-        func close(at end: AttributedString.Index) {
-            guard let from = start else { return }
-            let word = AttributedString(text[from..<end])
-            if seen.insert(word).inserted { result.append(word) }
-            start = nil
-        }
         while index < characters.endIndex {
-            if characters[index].isWhitespace { close(at: index) } else if start == nil { start = index }
+            if characters[index].isWhitespace {
+                if let from = start { result.append(from..<index) }
+                start = nil
+            } else if start == nil {
+                start = index
+            }
             index = characters.index(after: index)
         }
-        close(at: characters.endIndex)
+        if let from = start { result.append(from..<characters.endIndex) }
         return result
     }
 
@@ -1197,19 +1246,69 @@ struct WholeWordsText: View {
     }
 }
 
-/// Mide un texto (el segundo) como si su ancho ideal fuera el de su palabra más ancha (el
-/// primero, escondido): así `ViewThatFits` sabe si cabe sin partir ninguna palabra.
-private struct WordWidthLayout: Layout {
+private extension TextAlignment {
+    var horizontal: HorizontalAlignment {
+        switch self {
+        case .leading: .leading
+        case .center: .center
+        case .trailing: .trailing
+        }
+    }
+}
+
+/// Elige el primer candidato de `WholeWordsText` que cabe. Cada uno llega en tres: su palabra más
+/// ancha (escondida), el título sin tope de renglones (escondido) y el que se ve. Cabe si su palabra
+/// más ancha cabe a lo ancho y, a ese ancho, entero en sus renglones (no lo corta su `.lineLimit`).
+/// Primero los `steps` pasos de letra; luego los `splits` cortes del piso (con menos palabras arriba
+/// cabe más, así que se buscan por mitades); al final, el renglón con «…».
+private struct WholeWordsLayout: Layout {
+    let steps: Int
+    let splits: Int
+
+    private func fits(_ index: Int, width: CGFloat, _ subviews: Subviews) -> Bool {
+        let base = index * 3
+        guard subviews[base].sizeThatFits(.unspecified).width <= width + 0.5 else { return false }
+        let proposal = ProposedViewSize(width: width, height: nil)
+        return subviews[base + 1].sizeThatFits(proposal).height <= subviews[base + 2].sizeThatFits(proposal).height + 0.5
+    }
+
+    private func choice(_ width: CGFloat?, _ subviews: Subviews) -> Int {
+        let count = subviews.count / 3
+        guard count > 1, let width else { return 0 }
+        if let step = (0..<min(steps, count - 1)).first(where: { fits($0, width: width, subviews) }) { return step }
+        var low = steps, high = min(steps + splits, count - 1)
+        while low < high {
+            let middle = (low + high) / 2
+            if fits(middle, width: width, subviews) { high = middle } else { low = middle + 1 }
+        }
+        return low
+    }
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        guard subviews.count == 2 else { return .zero }
-        let width = proposal.width ?? subviews[0].sizeThatFits(.unspecified).width
-        return subviews[1].sizeThatFits(ProposedViewSize(width: width, height: proposal.height))
+        guard subviews.count >= 3 else { return .zero }
+        let chosen = choice(proposal.width, subviews) * 3 + 2
+        return subviews[chosen].sizeThatFits(proposal)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        guard subviews.count == 2 else { return }
-        subviews[0].place(at: bounds.origin, proposal: .zero)
-        subviews[1].place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
+        guard subviews.count >= 3 else { return }
+        let chosen = choice(bounds.width, subviews) * 3 + 2
+        for index in subviews.indices {
+            subviews[index].place(at: bounds.origin, proposal: index == chosen ? ProposedViewSize(bounds.size) : .zero)
+        }
+    }
+}
+
+/// Lo de adentro, o nada si se le propone cero: así un candidato de `WholeWordsText` que no se
+/// eligió no ocupa lugar ni se ve (va con `.clipped()`).
+private struct CollapseLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let first = subviews.first, proposal != .zero else { return .zero }
+        return first.sizeThatFits(proposal)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews.first?.place(at: bounds.origin, proposal: proposal == .zero ? .zero : ProposedViewSize(bounds.size))
     }
 }
 
@@ -2993,16 +3092,19 @@ extension View {
     /// Una pregunta antes de hacer algo («¿Borrar la nota?»): un aviso al centro con su botón
     /// para quedarse siempre a la vista (regla 7). Como `confirmationDialog`, en iOS 26 salía como
     /// globo colgado de lo que la abrió, escondía el botón para quedarse y en «Por revisar» apuntaba
-    /// a un párrafo (auditoría 8).
+    /// a un párrafo (auditoría 8). Sus botones dicen en una o dos palabras qué hacen («Mantener»,
+    /// «Dejarlos»): la cifra y el detalle van en el título y en un mensaje corto. Con la letra más
+    /// grande, «Mantener los datos de 1 libro» usaba tres renglones y escondía el botón para quedarse
+    /// (pantallas 9). Y van en tinta, como toda acción (regla 1).
     func question<A: View, M: View>(_ title: String, isPresented: Binding<Bool>,
                                     @ViewBuilder actions: () -> A, @ViewBuilder message: () -> M) -> some View {
-        alert(title, isPresented: isPresented, actions: actions, message: message)
+        alert(title, isPresented: isPresented, actions: actions, message: message).alertInk()
     }
 
     /// La pregunta sobre algo en particular (el lote de «Por revisar»).
     func question<T, A: View, M: View>(_ title: String, isPresented: Binding<Bool>, presenting data: T?,
                                        @ViewBuilder actions: (T) -> A, @ViewBuilder message: (T) -> M) -> some View {
-        alert(title, isPresented: isPresented, presenting: data, actions: actions, message: message)
+        alert(title, isPresented: isPresented, presenting: data, actions: actions, message: message).alertInk()
     }
 
     /// Algo que conviene saber (salió bien, o salió a medias): título que dice qué pasó
@@ -3017,6 +3119,17 @@ extension View {
         } message: {
             Text(message.wrappedValue ?? "")
         }
+        .alertInk()
+    }
+
+    /// Los botones de un aviso en tinta, no en el verde de la app (regla 1, pantallas 9). En el
+    /// iPhone el aviso toma el tinte de lo que lo abre; en la Mac lo pinta el sistema, con su color.
+    func alertInk() -> some View {
+        #if os(iOS)
+        tint(Theme.ink)
+        #else
+        self
+        #endif
     }
 }
 
@@ -3038,18 +3151,19 @@ struct SaveShelfAlert: ViewModifier {
                 get: { query != nil }, set: { if !$0 { query = nil } }
             )) {
                 TextField(suggested, text: $name)
-                Button("Guardar estante") {
+                Button("Guardarlo") {
                     let clean = name.trimmingCharacters(in: .whitespaces)
                     if let query, !(clean.isEmpty ? suggested : clean).isEmpty {
                         save(SavedShelf(name: clean.isEmpty ? suggested : clean, query: query))
                     }
                     query = nil
                 }
-                Button("Dejar sin guardar", role: .cancel) { query = nil }
+                Button("No guardar", role: .cancel) { query = nil }
             } message: {
                 // Corto: en un iPhone chico, con la búsqueda entera y el nombre, no cabía.
                 Text("Se llena solo con esta búsqueda. Vacío, lo llamo «\(suggested.isolated)».")
             }
+            .alertInk()
             .onChange(of: query) { _, _ in name = "" }
     }
 }
@@ -3067,7 +3181,7 @@ struct RenameShelfAlert: ViewModifier {
                 get: { shelf != nil }, set: { if !$0 { shelf = nil } }
             )) {
                 TextField(shelf?.name ?? "", text: $name)
-                Button("Guardar nombre") {
+                Button("Renombrarlo") {
                     let clean = name.trimmingCharacters(in: .whitespaces)
                     if var renamed = shelf, !clean.isEmpty {
                         renamed.name = clean
@@ -3075,8 +3189,9 @@ struct RenameShelfAlert: ViewModifier {
                     }
                     shelf = nil
                 }
-                Button("Dejar como está", role: .cancel) { shelf = nil }
+                Button("Dejarlo así", role: .cancel) { shelf = nil }
             }
+            .alertInk()
             .onChange(of: shelf) { _, _ in name = "" }
     }
 }
@@ -3091,11 +3206,11 @@ struct DeleteShelfConfirmation: ViewModifier {
             .question("¿Borrar el estante «\((shelf?.name ?? "").isolated)»?", isPresented: Binding(
                 get: { shelf != nil }, set: { if !$0 { shelf = nil } }
             )) {
-                Button("Borrar el estante", role: .destructive) {
+                Button("Borrarlo", role: .destructive) {
                     if let shelf { delete(shelf) }
                     shelf = nil
                 }
-                Button("Conservar el estante", role: .cancel) { shelf = nil }
+                Button("Conservarlo", role: .cancel) { shelf = nil }
             } message: {
                 Text("Tus libros se quedan donde están; solo se va el estante.")
             }

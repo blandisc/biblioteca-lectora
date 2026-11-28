@@ -296,11 +296,12 @@ extension ReaderView {
             set: { if !$0 { controller.noteTarget = nil } }
         )) {
             TextField("Escribe tu nota", text: $noteText)
-            Button("Guardar la nota") { controller.saveNote(noteText); noteText = "" }
-            Button("Descartar la nota", role: .cancel) { noteText = "" }
+            Button("Guardarla") { controller.saveNote(noteText); noteText = "" }
+            Button("Descartarla", role: .cancel) { noteText = "" }
         } message: {
-            Text(controller.noteTarget.map { "«\($0.quote.isolated)»" } ?? "")
+            Text(controller.noteTarget.map { "«\($0.quote.clipped(to: Theme.Reader.noteQuoteLetters).isolated)»" } ?? "")
         }
+        .alertInk()
         .errorAlert("No pude abrir el libro", message: $controller.errorMessage, back: "Volver a la biblioteca") { dismiss() }
         .errorAlert("No pude guardar el subrayado", message: $controller.saveError, back: "Seguir leyendo")
         .noticeAlert("Llevé el pasaje a tu nota", message: $controller.notice, back: "Seguir leyendo")

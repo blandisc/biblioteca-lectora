@@ -31,8 +31,8 @@ struct ConnectorScreen: View {
         .inlineTitle(connector.title)
         .errorAlert("No pude conectarme", message: $errorMessage, back: "Volver a la conexión")
         .question("¿Desconectar \(connector.title) de tu Gabinete?", isPresented: $confirmingDisconnect) {
-            Button("Desconectar \(connector.title)", role: .destructive) { store.disconnect(connector) }
-            Button("Seguir conectado", role: .cancel) {}
+            Button("Desconectar", role: .destructive) { store.disconnect(connector) }
+            Button("Conservarla", role: .cancel) {}
         } message: {
             Text("Borro tu llave del Llavero. Lo que ya mandé se queda en \(connector.title) y lo de tu Gabinete se queda aquí.")
         }
