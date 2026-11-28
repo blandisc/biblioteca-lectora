@@ -106,6 +106,7 @@ también los espacios con nombre (`gutter`, `rowY`… y los márgenes del lector
 | `screenTop` | 24 (Mac 0) | Del área segura al título de pantalla. En la Mac no hay título en el contenido y la barra de la ventana ya deja su aire: el contenido empieza ahí (con 24 quedaba un hueco de 40 a 50 pt) |
 | `screenTopInSheet` | 16 | En la Mac, el aire de arriba de una hoja con scroll (la nota abierta desde la ficha), donde no hay barra que lo deje |
 | `screenBottom` | 32 | Aire antes del dock |
+| `screenAir` | `screenTop` + `screenBottom` | El aire de una pantalla arriba y abajo juntos: `Spread` lo suma para saber si lo principal cabe arriba del pliegue |
 | `hair` | 1 | Entre las letras del índice A–Z |
 | `letterIndex` | 24 | Lo que la lista deja libre a su derecha para el índice A–Z (su columna de 44 menos el margen, y aire) |
 | `rowY` | 8 | Aire arriba y abajo de una fila de lista |
@@ -137,7 +138,7 @@ coverAspect 2∶3 (toda portada) · indentLevels 3 (sangrías del índice)`
 `Theme.shade` (negro) es la única sombra: oscurece portadas, la vuelta de la hoja y el lomo; nunca `.black` suelto.
 
 `Theme.Lists`: cuántos se enseñan antes de «Ver todos»: `desk` 6, `preview` 5, `detailSessions` 5, `longestSessions` 2,
-`linkShelf` 20, `linkSuggestions` 4, `coverSources` 3, `coverOptions` 12 y `summaryLetters` 140 (letras de una sinopsis corta) e `inspectorItems` 3 (subrayados y notas de un libro en la ficha de la Mac).
+`linkShelf` 20, `linkSuggestions` 4, `coverSources` 3, `coverOptions` 12 y `summaryLetters` 140 (letras de una sinopsis corta) e `inspectorItems` 3 (subrayados y notas de un libro en la ficha de la Mac) y `marginNotes` 3 (tus subrayados del capítulo en la página de margen del libro).
 
 ### Portada tipográfica (`Theme.CoverArt`)
 
@@ -199,7 +200,7 @@ se acomode; lo que entra espera `enterDelay` a que se abra su lugar, en cascada 
 | `.question(título)` | Toda pregunta antes de hacer algo: un aviso al centro con la acción y su botón para quedarse a la vista (regla 7). `confirmationDialog` no: en iOS 26 sale como globo y esconde ese botón (auditoría 8) | Borrar una nota o un estante, desconectar, ordenar, mover el Gabinete, lotes de Por revisar |
 | `.screenContent()` | Margen `gutter`, aire `screenTop`/`screenBottom` (en una ventana baja, `Space.s` arriba), tinta; el texto en el renglón cómodo (`ReadingColumn`; `wide: true` en Mesa, Biblioteca y cada página de un `Spread`, donde mandan las portadas o la página ya mide lo suyo) | Todo contenido con scroll |
 | `WindowLayout` · `.measuresWindow()` | La forma de la ventana (del paquete, con su prueba): el pliegue (si los dos lados miden `Window.foldMinSide` o más, a la mitad del lado largo), si es baja (`Window.shortHeight`) y si el sistema ocupa una franja a un costado. La miden la raíz de las pestañas, el libro y la bienvenida; ninguna pantalla pregunta qué aparato es | Duo cerrado y abierto, iPhone acostado |
-| `Spread` | El pliego: lo principal y su acompañante, una bajo otra en un iPhone de pie (como siempre), lado a lado en una ventana baja (`Window.sideBySideShare`) y cada una en su página con el Duo abierto y acostado, nunca sobre el lomo. Lo que se lee de un vistazo va así: en la bienvenida la pregunta y su respuesta (acostado, el botón se ve sin desplazar), en el Diario la gráfica y sus libros | Mesa, ficha, bienvenida, Diario |
+| `Spread` | El pliego: lo principal y su acompañante, una bajo otra en un iPhone de pie (como siempre), lado a lado en una ventana baja (`Window.sideBySideShare`) y cada una en su página con el Duo abierto y acostado, nunca sobre el lomo; con el Duo abierto y de pie, lo principal arriba del pliegue y su acompañante abajo, al pulgar, si lo principal cabe entero arriba (`WindowLayout.halves`; si no, una bajo otra). Lo que se lee de un vistazo va así: en la bienvenida la pregunta y su respuesta (acostado, el botón se ve sin desplazar), en el Diario la gráfica y sus libros | Mesa, ficha, bienvenida, Diario |
 | `ReadingColumn` · `.readingColumn()` | El renglón cómodo: unas 68 letras del texto normal (`Size.readingLine`), que crecen con el tamaño de texto de iOS, centrado; si cruzaría el pliegue, se queda en la página izquierda. En la Mac no cambia nada | `.screenContent()`, `.formScreen()`, nota |
 | `.sidePanel(isPresented:)` · `.sidePanel(item:)` · `SheetDismiss` · `PanelClose` | Una hoja que, con el Duo abierto y acostado, se abre en una página (la otra a la vista, atenuada; tocarla cierra) y nunca sobre el pliegue; en lo demás, la hoja de siempre. Abierto desde una pantalla empujada (la ficha en lista | detalle), sube a la raíz (`PanelHost`): encima de la ficha iOS regresaba a la lista. Lo de adentro se cierra con `SheetDismiss`, no con `dismiss` | «Aa», herramientas, Resumen, Editar datos, Portada, Ajustes |
 | `FoldSplit` · `FoldPlaceholder` | La raíz de una pestaña: en un iPhone, la pila de siempre; con el Duo abierto y acostado, la lista en la página izquierda y lo que tocas en la derecha (`NavigationSplitView` con la lista justo hasta el pliegue, que sin pliegue se pliega solo a una pila; UIKit topa la lista en un tercio, así que `PrimaryColumnWidth` fija también su ancho en la columna de UIKit) | Biblioteca, Cuaderno, Buscar |
@@ -458,7 +459,7 @@ pruebas) y usa las mismas piezas, así un iPhone de pie no cambia y un iPhone ac
   `Window.shortHeight` (500) de alto; tiene **franja** si el sistema ocupa `Window.stripMin` más de un lado que
   del otro. iOS no dice dónde está el pliegue (`UIHingeInteraction` solo dice si está abierto): se deduce.
 - **Las piezas:** `ReadingColumn` (el renglón cómodo, ~68 letras, nunca sobre el pliegue), `Spread` (Mesa, ficha,
-  bienvenida y Diario: una bajo otra, lado a lado si es baja, una por página con pliegue), `FoldSplit` (Biblioteca,
+  bienvenida y Diario: una bajo otra, lado a lado si es baja, una por página con pliegue, una por mitad abierto de pie), `FoldSplit` (Biblioteca,
   Cuaderno, Buscar: lista | detalle con pliegue), `.sidePanel` (las hojas, en una página con pliegue),
   `CoverColumns` (las portadas por ancho y por alto), el encabezado compacto (en una ventana baja, el título de
   pantalla más chico y con menos aire: `Letter.screenTitleShort`), `LargeSheetTitle`, `DotLine` y, en el
@@ -466,7 +467,7 @@ pruebas) y usa las mismas piezas, así un iPhone de pie no cambia y un iPhone ac
 - **El libro:** acostado y abierto, dos páginas centradas en el pliegue, con lomo de verdad (`2 × Reader.textMargin`)
   aunque haya franja; cerrado de pie, los márgenes de cada lado son los suyos (con márgenes iguales la columna
   quedaba angosta). En continuo con pliegue, el texto va en la página izquierda y la derecha es su margen (el
-  título y el capítulo); de pie y abierto, una columna cómoda (`Reader.lineEms`, unas 32 letras de ancho de
+  título, el capítulo y, como en un libro anotado, tus subrayados de ese capítulo: tocar uno te lleva a él); de pie y abierto, una columna cómoda (`Reader.lineEms`, unas 32 letras de ancho de
   página) que cruza el pliegue de lado a lado, que ahí no corta renglones. La lectura guiada sombrea por página.
   Las herramientas y «Aa» se abren en la página derecha y el libro sigue a la vista. En una ventana baja, el
   pie es una línea delgada (capítulo, barra, página y herramientas).

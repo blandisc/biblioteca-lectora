@@ -18,7 +18,8 @@ struct CalibreMigrationScreen: View {
     }
 
     @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
+    /// Hoja o, con el Duo abierto y acostado, panel en una página: se cierra igual (`SheetDismiss`).
+    private let dismiss = SheetDismiss()
     @State private var step: Step = .choose
     @State private var choosing = false
     @State private var errorMessage: String?

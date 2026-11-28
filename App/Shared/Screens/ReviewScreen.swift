@@ -396,10 +396,10 @@ struct CandidatesScreen: View {
             guard !Task.isCancelled else { return }
             show(await run(ask), asked: ask)
         }
-        .sheet(item: $previewing) { candidate in
+        .sidePanel(item: $previewing) { candidate in
             CandidatePreview(bookID: bookID, candidate: candidate) { dismiss() }.duoBars()
         }
-        .sheet(isPresented: $searchingOther) {
+        .sidePanel(isPresented: $searchingOther) {
             if let record = model.library.book(id: bookID) {
                 OtherSearchSheet(book: record) { title, author, isbn in
                     Task {
@@ -410,7 +410,7 @@ struct CandidatesScreen: View {
                 .duoBars()
             }
         }
-        .sheet(isPresented: $editing) {
+        .sidePanel(isPresented: $editing) {
             if let record = model.library.book(id: bookID) { MetadataEditorView(book: record).duoBars() }
         }
     }
@@ -463,7 +463,8 @@ struct CandidatePreview: View {
     /// Al aplicar, también se cierra la pantalla de candidatos.
     let onApplied: () -> Void
     @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
+    /// Hoja o, con el Duo abierto y acostado, panel en una página: se cierra igual (`SheetDismiss`).
+    private let dismiss = SheetDismiss()
     @State private var coverOptions: [CoverChoiceRow.Option] = []
     @State private var coverChoice: CoverChoiceRow.Option?
     @State private var loadingCovers = true
@@ -587,7 +588,8 @@ struct CandidatePreview: View {
 struct OtherSearchSheet: View {
     let book: Book
     let onSearch: (String, String?, String?) -> Void
-    @Environment(\.dismiss) private var dismiss
+    /// Hoja o, con el Duo abierto y acostado, panel en una página: se cierra igual (`SheetDismiss`).
+    private let dismiss = SheetDismiss()
     @State private var title: String
     @State private var author: String
     @State private var isbn: String
@@ -632,7 +634,8 @@ struct OtherSearchSheet: View {
 struct FilledScreen: View {
     let bookID: UUID
     @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
+    /// Hoja o, con el Duo abierto y acostado, panel en una página: se cierra igual (`SheetDismiss`).
+    private let dismiss = SheetDismiss()
     @State private var errorMessage: String?
 
     private var book: ShelfBook? { model.shelfBook(id: bookID.uuidString) }

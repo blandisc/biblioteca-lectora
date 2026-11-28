@@ -127,6 +127,10 @@ struct RootView: View {
             #endif
             // La forma de la ventana (pliegue, baja, franja), para todo lo de adentro y sus hojas.
             .measuresWindow()
+            // Otra vez por fuera: el panel que sube a la raíz (`PanelHostLayer`) se pinta encima de
+            // todo, fuera de lo de adentro, y Editar datos y Portada lo necesitan (sin él, la app se
+            // cerraba al abrirlos desde la ficha con el Duo abierto, ronda 1).
+            .environmentObject(model)
     }
 
     @ViewBuilder

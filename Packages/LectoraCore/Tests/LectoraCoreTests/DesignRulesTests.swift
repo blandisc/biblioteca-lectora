@@ -1002,6 +1002,21 @@ final class DesignRulesTests: XCTestCase {
         where !(Self.screens.first { $0.path.hasSuffix("\(name).swift") }?.text.contains("Spread(") ?? false) {
             duo.append("\(name): una sola columna; va en dos partes con Spread")
         }
+        //     Ninguna hoja del iPhone se abre al centro, encima del pliegue: toda va con `.sidePanel`,
+        //     que con el Duo abierto la pone en una página (ronda 1: Traer de Calibre, «A una nota» y las
+        //     de Por revisar salían sobre el lomo). Fuera: la Mac y el diccionario del sistema.
+        for file in Self.ui where !file.path.contains("/Mac/") && !file.path.hasSuffix("Design/Layout.swift")
+            && !file.path.hasSuffix("LookupCard.swift") {
+            var macOnly = false
+            for (index, line) in file.lines.enumerated() {
+                let code = line.trimmingCharacters(in: .whitespaces)
+                if code.hasPrefix("#if os(macOS)") || code.hasPrefix("#else") { macOnly = code.hasPrefix("#if os(macOS)") || (code.hasPrefix("#else") && !macOnly) }
+                if code.hasPrefix("#endif") { macOnly = false }
+                if !macOnly, !code.hasPrefix("//"), code.contains(".sheet(") {
+                    duo.append("\(file.path):\(index + 1): hoja de iOS al centro; usa .sidePanel")
+                }
+            }
+        }
         //     En el lector, la lectura guiada sigue la página del renglón (con dos páginas, la otra en
         //     penumbra) y la serie de la ficha no deja un «·» colgando al partirse.
         let readerJS = (try? String(contentsOf: Self.root.appendingPathComponent("App/Resources/Reader/reader.js"), encoding: .utf8)) ?? ""

@@ -81,6 +81,17 @@ public struct WindowLayout: Equatable, Sendable {
         return (left, right)
     }
 
+    /// Las dos mitades de un rectángulo (en puntos de la ventana) que el pliegue de lado a lado cruza
+    /// (el Duo abierto y de pie): la de arriba hasta el pliegue y la de abajo desde él; `nil` si no lo
+    /// cruza o si alguna quedaría más baja que `minHalf`.
+    public func halves(of frame: CGRect, minHalf: CGFloat) -> (top: CGRect, bottom: CGRect)? {
+        guard let fold, fold.axis == .horizontal else { return nil }
+        let top = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: fold.position - frame.minY)
+        let bottom = CGRect(x: frame.minX, y: fold.position, width: frame.width, height: frame.maxY - fold.position)
+        guard top.height >= minHalf, bottom.height >= minHalf else { return nil }
+        return (top, bottom)
+    }
+
     /// Si algo que va de `minX` a `maxX` (en puntos de la ventana) cruzaría el pliegue, lo más
     /// ancho que puede ser para quedarse en la página izquierda (hasta el pliegue; su margen deja
     /// el lomo). `nil` si no lo cruza o si la página quedaría más angosta que `minPage`.

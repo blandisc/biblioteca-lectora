@@ -208,6 +208,9 @@ enum Theme {
         static let screenTopInSheet: CGFloat = 16
         /// Aire al final del contenido, antes del dock.
         static let screenBottom: CGFloat = 32
+        /// El aire de una pantalla arriba y abajo juntos (`Spread` lo suma para saber si lo principal
+        /// cabe arriba del pliegue).
+        static let screenAir: CGFloat = screenTop + screenBottom
         /// Sangría de una entrada del índice del libro: un paso por nivel, hasta `Size.indentLevels`.
         static func indent(_ depth: Int) -> CGFloat {
             l * CGFloat(min(depth, Size.indentLevels))
@@ -648,6 +651,8 @@ enum Theme {
         static let summaryLetters = 140
         /// Subrayados y notas de un libro en la ficha de la Mac, antes de «Leer» para ver el resto.
         static let inspectorItems = 3
+        /// Tus subrayados del capítulo en la página de margen del libro (Duo abierto, en continuo).
+        static let marginNotes = 3
     }
 
     // MARK: Énfasis

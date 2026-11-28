@@ -45,6 +45,20 @@ final class WindowLayoutTests: XCTestCase {
         XCTAssertNil(open.widthBeforeFold(from: 500, to: 927, minPage: 280))
     }
 
+    func testHalvesSplitAtTheFoldOnlyStandingOpen() {
+        let standing = window(669, 951)
+        let halves = standing.halves(of: CGRect(x: 0, y: 0, width: 669, height: 951), minHalf: 280)
+        XCTAssertEqual(halves?.top.height, 475.5)
+        XCTAssertEqual(halves?.bottom.minY, 475.5)
+        XCTAssertEqual(halves?.bottom.height, 475.5)
+        XCTAssertNil(standing.halves(of: CGRect(x: 0, y: 300, width: 669, height: 651), minHalf: 280),
+                     "si arriba del pliegue queda poco, no se parte")
+        XCTAssertNil(window(951, 669).halves(of: CGRect(x: 0, y: 0, width: 951, height: 669), minHalf: 280),
+                     "acostado, el pliegue de arriba abajo da páginas, no mitades")
+        XCTAssertNil(window(402, 874).halves(of: CGRect(x: 0, y: 0, width: 402, height: 874), minHalf: 280),
+                     "un iPhone no tiene pliegue")
+    }
+
     func testCoverColumnsRoundUpAndRespectHeight() {
         // Antes: tres portadas de 196 en 620 de ancho aunque el tope era 150.
         XCTAssertEqual(CoverColumns.count(width: 620, height: 0, fewest: 3, widest: 150, gap: 16, heightShare: 0.4, aspect: 2.0 / 3.0), 4)

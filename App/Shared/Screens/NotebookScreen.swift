@@ -66,9 +66,11 @@ struct NotebookScreen: View {
             }
             .screen()
             #if os(iOS)
-            .sidePanel(isPresented: $showsAccount) { SettingsScreen() }
+            // Con el Duo abierto, Ajustes en la página derecha con tu lista a la vista (en la de la
+            // lista quedaba angosto y la tapaba, ronda 1).
+            .sidePanel(isPresented: $showsAccount, spansWindow: true) { SettingsScreen() }
             #endif
-            .sheet(item: $toNote) { highlight in
+            .sidePanel(item: $toNote) { highlight in
                 NoteLinkSheet(annotation: highlight, bookTitle: shelfBook(highlight.bookID)?.title ?? highlight.bookTitle ?? MetadataCleaner.untitled)
                     .duoBars()
             }

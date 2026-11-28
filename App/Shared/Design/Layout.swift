@@ -61,6 +61,9 @@ private struct WindowReader: ViewModifier {
 /// decide sola cómo van:
 /// - **a cada lado del pliegue** si el pliegue de arriba abajo la cruza (el Duo abierto y acostado):
 ///   cada parte en su página, con su propio desplazamiento, y nada sobre el lomo;
+/// - **una en cada mitad** si el pliegue de lado a lado la cruza (el Duo abierto y de pie): lo
+///   principal arriba del pliegue y su acompañante abajo, al alcance del pulgar, cada una con su
+///   desplazamiento; solo si lo principal cabe entero arriba (si no, una bajo otra);
 /// - **lado a lado** en una ventana baja (un iPhone acostado, el Duo cerrado acostado): la primera
 ///   con `Window.sideBySideShare` del ancho; con la letra más grande, una bajo otra;
 /// - **una bajo otra**, en un solo desplazamiento, en todo lo demás: el iPhone de pie no cambia.
@@ -75,10 +78,13 @@ struct Spread<Leading: View, Trailing: View>: View {
     @Environment(\.windowLayout) private var window
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var frame: CGRect = .zero
+    /// Lo que mide lo principal (con su aire), para saber si cabe arriba del pliegue.
+    @State private var leadingHeight: CGFloat = 0
 
     private enum Arrangement: Equatable {
         case stacked
         case pages(left: CGFloat)
+        case halves(top: CGFloat)
         case sideBySide(first: CGFloat)
     }
 
@@ -86,6 +92,10 @@ struct Spread<Leading: View, Trailing: View>: View {
         #if os(iOS)
         if let pages = window.pages(of: frame, minPage: Theme.Window.minPage) {
             return .pages(left: pages.left.width)
+        }
+        if !typeSize.isAccessibilitySize, let halves = window.halves(of: frame, minHalf: Theme.Window.minPage),
+           leadingHeight > 0, leadingHeight <= halves.top.height {
+            return .halves(top: halves.top.height)
         }
         if window.isShort, !typeSize.isAccessibilitySize, frame.width >= 2 * Theme.Window.minPage {
             return .sideBySide(first: (frame.width * Theme.Window.sideBySideShare).rounded())
@@ -101,6 +111,7 @@ struct Spread<Leading: View, Trailing: View>: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: spacing) {
                         VStack(alignment: .leading, spacing: 0) { leading }
+                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { measure($0) }
                         VStack(alignment: .leading, spacing: 0) { trailing }
                     }
                     .screenContent(wide: !measured)
@@ -109,6 +120,11 @@ struct Spread<Leading: View, Trailing: View>: View {
                 HStack(alignment: .top, spacing: 0) {
                     page { leading }.frame(width: left)
                     page { trailing }.frame(maxWidth: .infinity)
+                }
+            case .halves(let top):
+                VStack(spacing: 0) {
+                    page(measuring: true) { leading }.frame(height: top)
+                    page { trailing }.frame(maxHeight: .infinity)
                 }
             case .sideBySide(let first):
                 HStack(alignment: .top, spacing: 0) {
@@ -121,11 +137,18 @@ struct Spread<Leading: View, Trailing: View>: View {
     }
 
     /// Una página: su desplazamiento, sus márgenes y, adentro, el renglón cómodo.
-    private func page(@ViewBuilder _ content: () -> some View) -> some View {
+    private func page(measuring: Bool = false, @ViewBuilder _ content: () -> some View) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) { content() }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { if measuring { measure($0) } }
                 .screenContent(wide: true)
         }
+    }
+
+    /// Lo principal con el aire de la pantalla arriba y abajo (lo que ocuparía arriba del pliegue).
+    private func measure(_ height: CGFloat) {
+        let total = height + Theme.Space.screenAir
+        if abs(total - leadingHeight) > 1 { leadingHeight = total }
     }
 }
 
@@ -183,6 +206,9 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
     let side: WindowLayout.Side
     /// Para lo que como hoja se cierra deslizando y no trae botón («Aa»): su ✕ en el panel.
     var closeLabel: String? = nil
+    /// Se abre en la página `side` de la ventana entera aunque quien lo abre ocupe una sola (Ajustes
+    /// desde la lista del Cuaderno: en la página de la lista quedaba angosto y la tapaba).
+    var spansWindow = false
     @ViewBuilder let panel: () -> Panel
     @Environment(\.windowLayout) private var window
     @Environment(\.panelHost) private var host
@@ -200,7 +226,12 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
         #endif
     }
 
-    private var lifts: Bool { pushed && host != nil }
+    private var lifts: Bool { (pushed || spansWindow) && host != nil }
+
+    /// Dónde se abre: lo que ocupa quien lo abre, o la ventana entera (`spansWindow`).
+    private var panelFrame: CGRect {
+        spansWindow ? CGRect(origin: .zero, size: window.size) : frame
+    }
 
     func body(content: Content) -> some View {
         content
@@ -219,7 +250,7 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
                 guard let host else { return }
                 if show {
                     lifted = true
-                    host.show(PanelHost.Shown(frame: frame, side: side, closeLabel: closeLabel, close: close,
+                    host.show(PanelHost.Shown(frame: panelFrame, side: side, closeLabel: closeLabel, close: close,
                                               content: AnyView(panel())))
                 } else if lifted {
                     lifted = false
@@ -227,7 +258,7 @@ private struct SidePanelModifier<Panel: View>: ViewModifier {
                 }
             }
             // Abierto antes de medirse (las capturas lo abren al aparecer): sigue a su presentador.
-            .onChange(of: frame) { _, frame in if lifted { host?.shown?.frame = frame } }
+            .onChange(of: frame) { _, _ in if lifted { host?.shown?.frame = panelFrame } }
             .onDisappear { if lifted { lifted = false; host?.shown = nil } }
     }
 
@@ -343,8 +374,9 @@ private struct SidePanelItem<Item: Identifiable, Panel: View>: ViewModifier {
 extension View {
     /// Una hoja que, con el Duo abierto y acostado, se abre en una página (ver `SidePanelModifier`).
     func sidePanel(isPresented: Binding<Bool>, side: WindowLayout.Side = .trailing, closeLabel: String? = nil,
-                   @ViewBuilder content: @escaping () -> some View) -> some View {
-        modifier(SidePanelModifier(isPresented: isPresented, side: side, closeLabel: closeLabel, panel: content))
+                   spansWindow: Bool = false, @ViewBuilder content: @escaping () -> some View) -> some View {
+        modifier(SidePanelModifier(isPresented: isPresented, side: side, closeLabel: closeLabel,
+                                   spansWindow: spansWindow, panel: content))
     }
 
     func sidePanel<Item: Identifiable>(item: Binding<Item?>, side: WindowLayout.Side = .trailing,
@@ -377,6 +409,8 @@ struct FoldSplit<Root: View, Placeholder: View>: View {
     @ViewBuilder var root: Root
     @ViewBuilder var placeholder: Placeholder
     @Environment(\.windowLayout) private var window
+    /// Dónde empieza la columna de la derecha en la ventana.
+    @State private var detailMinX: CGFloat = .infinity
 
     private var split: Bool {
         #if os(iOS)
@@ -401,7 +435,10 @@ struct FoldSplit<Root: View, Placeholder: View>: View {
                     .background(PrimaryColumnWidth(width: sidebar))
                     #endif
             } detail: {
+                // Si aun así iOS deja la lista angosta, lo de la derecha empieza en el pliegue, nunca encima.
                 NavigationStack(path: $path) { placeholder.screen() }
+                    .padding(.leading, max(0, fold.position - detailMinX))
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minX } action: { detailMinX = $0 }
             }
             .navigationSplitViewStyle(.balanced)
         } else {
@@ -431,6 +468,17 @@ private struct PrimaryColumnWidth: UIViewControllerRepresentable {
             apply()
         }
 
+        // iOS rehace la columna al aparecer y al acomodar (el modo oscuro, el giro): se vuelve a fijar.
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            apply()
+        }
+
+        override func viewDidLayoutSubviews() {
+            super.viewDidLayoutSubviews()
+            apply()
+        }
+
         override func didMove(toParent parent: UIViewController?) {
             super.didMove(toParent: parent)
             apply()
@@ -441,6 +489,7 @@ private struct PrimaryColumnWidth: UIViewControllerRepresentable {
             if split.maximumPrimaryColumnWidth != width { split.maximumPrimaryColumnWidth = width }
             if split.minimumPrimaryColumnWidth != width { split.minimumPrimaryColumnWidth = width }
             if split.preferredPrimaryColumnWidth != width { split.preferredPrimaryColumnWidth = width }
+            if split.preferredSplitBehavior != .tile { split.preferredSplitBehavior = .tile }
         }
     }
 }

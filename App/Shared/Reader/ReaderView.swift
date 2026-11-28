@@ -24,6 +24,7 @@ struct ReaderView: View {
     @AppStorage(AppearanceKeys.mode) private var mode: AppearanceMode = .system
     @State private var showsChrome = !LaunchOptions.hidesReaderChrome
     @ObservedObject private var library = LibraryStore.shared
+    @ObservedObject private var annotations = AnnotationStore.shared
     @State private var showsAppearance = false
     /// La hendidura (HE) a la vista, sobre el libro.
     @State private var slitting = false
@@ -116,6 +117,18 @@ struct ReaderView: View {
         return .init(leading: sides.leading, trailing: sides.trailing, bottom: bottom, columns: spread.pages)
     }
 
+    /// Tus subrayados del capítulo que lees, para la página de margen: los del mismo documento del
+    /// libro (la parte del CFI antes de «!»), en el orden del texto.
+    private var chapterNotes: [Annotation] {
+        guard let bookID, let here = controller.location?.cfi.map(Self.section) else { return [] }
+        return annotations.annotations(forBook: bookID)
+            .filter { $0.cfi.map(Self.section) == here }
+            .prefix(Theme.Lists.marginNotes)
+            .map { $0 }
+    }
+
+    private static func section(_ cfi: String) -> Substring { cfi.split(separator: "!").first ?? "" }
+
     /// La página donde van las herramientas (la tarjeta, la barra de lo elegido, la del subrayado),
     /// en un pliego: la derecha con dos páginas, o la de margen con una. `nil`: todo el ancho.
     private var toolsPage: ToolsPage? {
@@ -150,7 +163,8 @@ struct ReaderView: View {
                 // Con una sola página en un pliego, la otra es su margen: el capítulo y cuánto llevas.
                 .overlay {
                     if let tools = toolsPage, textPageOnly != nil, controller.isSettled {
-                        ReaderMarginPage(title: title, location: controller.folioLocation, ink: palette.textColor)
+                        ReaderMarginPage(title: title, location: controller.folioLocation, ink: palette.textColor,
+                                         notes: chapterNotes) { controller.goTo(target: $0) }
                             .onToolsPage(tools)
                     }
                 }
@@ -353,7 +367,7 @@ extension ReaderView {
     /// Notas, avisos y errores.
     fileprivate func alerts(_ content: some View) -> some View {
         content
-        .sheet(item: $controller.noteLinkTarget) { annotation in
+        .sidePanel(item: $controller.noteLinkTarget) { annotation in
             NoteLinkSheet(annotation: annotation, bookTitle: catalogTitle) { saved in
                 controller.notice = "Quedó en «\(saved.title.isolated)»."
             }
@@ -1322,26 +1336,47 @@ private struct ReaderMarginPage: View {
     let title: String
     let location: ReaderController.Location?
     let ink: Color
+    /// Tus subrayados de este capítulo, al margen como en un libro anotado: tocar uno te lleva a él.
+    var notes: [Annotation] = []
+    var go: (String) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
-            CapsText(text: title, tone: ink.opacity(Theme.Emphasis.folio))
-            if let chapter = location?.chapter {
-                Text(chapter)
-                    .font(.bookTitle)
-                    .foregroundStyle(ink)
-                    .lineLimit(Theme.Size.labelLines)
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                CapsText(text: title, tone: ink.opacity(Theme.Emphasis.folio))
+                if let chapter = location?.chapter {
+                    Text(chapter)
+                        .font(.bookTitle)
+                        .foregroundStyle(ink)
+                        .lineLimit(Theme.Size.labelLines)
+                }
+                if let done = location?.chapterDone {
+                    ChapterLine(done: done, ink: ink)
+                        .padding(.top, Theme.Space.s)
+                }
             }
-            if let done = location?.chapterDone {
-                ChapterLine(done: done, ink: ink)
-                    .padding(.top, Theme.Space.s)
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .combine)
+            if !notes.isEmpty {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
+                    CapsText(text: "Tus subrayados aquí", tone: ink.opacity(Theme.Emphasis.folio))
+                    ForEach(notes) { note in
+                        Button { if let cfi = note.cfi { go(cfi) } } label: {
+                            QuoteBlock(text: note.quote, note: note.note)
+                                .lineLimit(Theme.Reader.highlightLines)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Te lleva a este subrayado")
+                    }
+                }
+                .padding(.top, Theme.Space.xxl)
             }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, Theme.Reader.textMargin)
         .padding(.top, Theme.Reader.pageMarginTop)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .allowsHitTesting(false)
-        .accessibilityElement(children: .combine)
     }
 }

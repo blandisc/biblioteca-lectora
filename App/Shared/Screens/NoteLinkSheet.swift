@@ -8,7 +8,8 @@ struct NoteLinkSheet: View {
     let bookTitle: String
     var onSaved: (Note) -> Void = { _ in }
     @ObservedObject private var notes = NotesStore.shared
-    @Environment(\.dismiss) private var dismiss
+    /// Hoja o, con el Duo abierto y acostado, panel en una página: se cierra igual (`SheetDismiss`).
+    private let dismiss = SheetDismiss()
     @State private var newTitle = ""
     @State private var errorMessage: String?
 
